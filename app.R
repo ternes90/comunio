@@ -64,7 +64,7 @@ server <- function(input, output, session) {
         MW_vortag = mw_vortag,
         Diff_Abs = zeile$Hoechstgebot - mw_vortag,
         Diff_Prozent = round(100 * (zeile$Hoechstgebot - mw_vortag) / mw_vortag, 1),
-        Typ = "Höchstgebot"
+        Typ = "Hoechstgebot"
       )
       if (!is.na(zeile$Zweitgebot) & !is.na(zeile$Zweitbietender)) {
         res2 <- data.frame(
@@ -106,9 +106,9 @@ server <- function(input, output, session) {
       group_by(Bieter, MW_Klasse) %>%
       summarise(
         Anzahl_gesamt = n(),
-        Anzahl_Höchstgebote = sum(Typ == "Höchstgebot"),
+        Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
         Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
-        Ø_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), 1),
+        Durchschnitt_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), 1),
         Min = min(Diff_Prozent, na.rm = TRUE),
         Max = max(Diff_Prozent, na.rm = TRUE),
         .groups = "drop"
@@ -179,8 +179,8 @@ server <- function(input, output, session) {
         x = "",
         y = "Abweichung vom MW Vortag (%)"
       ) +
-      scale_color_manual(values = c("Höchstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      scale_fill_manual(values = c("Höchstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
       theme_minimal(base_size = 13) +
       theme(
         legend.position = "bottom",
