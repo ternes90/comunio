@@ -5,15 +5,40 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 
-# UI
+# ---- Custom JS für Copy-Button ----
+jsCode <- "
+Shiny.addCustomMessageHandler('copyText', function(message) {
+  var tempText = document.getElementById('tempClipboard');
+  if (!tempText) {
+    tempText = document.createElement('textarea');
+    tempText.id = 'tempClipboard';
+    tempText.style.position = 'fixed';
+    tempText.style.opacity = 0;
+    document.body.appendChild(tempText);
+  }
+  tempText.value = message;
+  tempText.select();
+  document.execCommand('copy');
+});
+"
+
+# ---- UI ----
 ui <- fluidPage(
   titlePanel("Comunio Bieterprofil Analyse"),
+  tags$script(HTML(jsCode)),   # Füge JS-Code ins UI ein
   sidebarLayout(
     sidebarPanel(
       fileInput("transfers", "Transfers_all.xlsx", accept = c(".xlsx")),
       fileInput("transfermarkt", "TM_all.xlsx", accept = c(".xlsx")),
       helpText("Beide Dateien laden. Es wird ausschließlich der Marktwert vom Vortag (oder davor) verwendet!"),
-      checkboxInput("show_table", "Zeige zusammengefasste MW-Klassen-Statistik", value = TRUE)
+      checkboxInput("show_table", "Zeige zusammengefasste MW-Klassen-Statistik", value = TRUE),
+      tags$hr(),
+      h4("Transfernews convert"),
+      textAreaInput("transfer_text", "Transfernews Text einfügen", height = "250px"),
+      actionButton("parse_text", "Konvertieren"),
+      br(),
+      uiOutput("copy_button_ui"),
+      verbatimTextOutput("parsed_transfers")
     ),
     mainPanel(
       tabsetPanel(
@@ -25,7 +50,7 @@ ui <- fluidPage(
   )
 )
 
-# SERVER
+# ---- SERVER ----
 server <- function(input, output, session) {
   # -- Daten laden und vorverarbeiten
   data_all <- reactive({
@@ -191,6 +216,72 @@ server <- function(input, output, session) {
   # -- Zusammenfassung als Tabelle
   output$mwclass_summary <- renderDT({
     if (input$show_table) datatable(mwclass_summary())
+  })
+  
+  # -- Transfernews Converter (inkl. Copy-to-Clipboard Button) ----
+  parsed_text_val <- reactiveVal("")
+  
+  observeEvent(input$parse_text, {
+    req(input$transfer_text)
+    text <- input$transfer_text
+    
+    lines <- unlist(strsplit(text, "\n"))
+    transfers <- list()
+    akt_datum <- NA
+    
+    for (i in seq_along(lines)) {
+      line <- lines[i]
+      
+      # 1. Hole aktuelles Datum, falls vorhanden (z.B. "06.06.25")
+      if (grepl("\\d{2}\\.\\d{2}\\.\\d{2}", line)) {
+        found <- regmatches(line, regexpr("\\d{2}\\.\\d{2}\\.\\d{2}", line))
+        if (length(found) > 0) akt_datum <- found[1]
+      }
+      
+      # 2. Nur relevante Transferzeilen weiter verarbeiten
+      if (grepl("wechselt für", line)) {
+        # --- Zeitstempel wie "11:34 - " entfernen
+        line_clean <- sub("^\\d{1,2}:\\d{2} -\\s*", "", line)
+        # Spielername extrahieren
+        spieler <- sub("^(.*?) wechselt für.*$", "\\1", line_clean)
+        # Rest wie gehabt
+        betrag <- sub(".*wechselt für ([0-9\\.]+) von .*", "\\1", line_clean)
+        besitzer <- sub(".*von (.*?) zu (.*)", "\\1", line_clean)
+        hoechstbietender <- sub(".*von (.*?) zu (.*)", "\\2", line_clean)
+        hoechstbietender <- sub("\\..*$", "", hoechstbietender)
+        zweitgebot <- ""
+        zweitbietender <- ""
+        if (i < length(lines) && grepl("Das zweithöchste Angebot", lines[i + 1])) {
+          zweitline <- lines[i + 1]
+          zweitgebot <- sub(".*betrug ([0-9\\.]+) von (.*)\\.", "\\1", zweitline)
+          zweitbietender <- sub(".*betrug [0-9\\.]+ von (.*)\\.", "\\1", zweitline)
+        }
+        transfers[[length(transfers) + 1]] <- c(
+          ifelse(is.na(akt_datum), "", akt_datum),
+          spieler, besitzer, betrag, hoechstbietender, zweitgebot, zweitbietender
+        )
+      }
+    }
+    
+    if (length(transfers) > 0) {
+      out <- sapply(transfers, function(x) paste(x, collapse = ", "))
+      out <- c("Datum, Spieler, Besitzer, Hoechstgebot, Hoechstbietender, Zweitgebot, Zweitbietender", out)
+      parsed_text_val(paste(out, collapse = "\n"))
+      output$parsed_transfers <- renderText(parsed_text_val())
+    } else {
+      parsed_text_val("Keine Transfers gefunden.")
+      output$parsed_transfers <- renderText("Keine Transfers gefunden.")
+    }
+  })
+  
+  # Copy-Button (nur anzeigen wenn Output vorhanden)
+  output$copy_button_ui <- renderUI({
+    req(parsed_text_val())
+    actionButton("copy_transfers", "Copy output to clipboard", icon = icon("clipboard"))
+  })
+  
+  observeEvent(input$copy_transfers, {
+    session$sendCustomMessage(type = 'copyText', message = parsed_text_val())
   })
 }
 
