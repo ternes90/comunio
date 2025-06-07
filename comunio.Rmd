@@ -1,0 +1,315 @@
+---
+title: "comunio"
+output: html_document
+date: "2025-06-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# Libraries
+library(tidyverse)
+library(lubridate)
+library(ggbeeswarm)
+
+# Excel-Dateien einlesen
+transfers <- read_excel("TRANSFERS_all.xlsx") %>%
+  mutate(Datum = as.Date(Datum)) %>% # Nur falls nicht schon Date!
+  mutate(
+    Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)
+  )
+
+transfermarkt <- read_excel("TM_all.xlsx")
+
+# Datumsfelder umwandeln (ggf. anpassen, falls deine Datumsfelder anders heißen!)
+transfers$Datum <- as.Date(transfers$Datum)
+transfermarkt$TM_Stand <- as.Date(transfermarkt$TM_Stand)
+
+# Funktion: MW vom Vortag zum Transferdatum suchen
+get_MW_vortag <- function(spieler, datum) {
+  tm <- transfermarkt %>%
+    filter(Spieler == spieler, TM_Stand <= (datum - days(1))) %>%
+    arrange(desc(TM_Stand)) %>%
+    slice(1)
+  if (nrow(tm) == 1) {
+    return(tm$Marktwert)
+  } else {
+    return(NA)
+  }
+}
+
+# Funktion: MW vom Vortag ODER, falls nicht vorhanden, nächstbekannter MW
+get_MW_vortag_or_next <- function(spieler, datum) {
+  tm_vorher <- transfermarkt %>%
+    filter(Spieler == spieler, TM_Stand <= (datum - days(1))) %>%
+    arrange(desc(TM_Stand)) %>%
+    slice(1)
+  if (nrow(tm_vorher) == 1) {
+    return(tm_vorher$Marktwert)
+  } else {
+    # Fallback: Frühest möglicher MW überhaupt
+    tm_nachher <- transfermarkt %>%
+      filter(Spieler == spieler) %>%
+      arrange(TM_Stand) %>%
+      slice(1)
+    if (nrow(tm_nachher) == 1) {
+      return(tm_nachher$Marktwert)
+    } else {
+      return(NA)
+    }
+  }
+}
+
+```
+
+```{r}
+
+
+# Für jedes Gebot (höchst/zweit) MW-Abstand berechnen
+gebotsprofil <- lapply(1:nrow(transfers), function(i) {
+  zeile <- transfers[i, ]
+  mw_vortag <- get_MW_vortag(zeile$Spieler, zeile$Datum)
+  
+  # Für höchstbietender
+  res <- data.frame(
+    Datum = zeile$Datum,
+    Spieler = zeile$Spieler,
+    Bieter = zeile$Hoechstbietender,
+    Gebot = zeile$Hoechstgebot,
+    MW_vortag = mw_vortag,
+    Diff_Abs = zeile$Hoechstgebot - mw_vortag,
+    Diff_Prozent = round(100 * (zeile$Hoechstgebot - mw_vortag) / mw_vortag, 1),
+    Typ = "Höchstgebot"
+  )
+  
+  # Für Zweitbietender (falls vorhanden)
+  if (!is.na(zeile$Zweitgebot) & !is.na(zeile$Zweitbietender)) {
+    res2 <- data.frame(
+      Datum = zeile$Datum,
+      Spieler = zeile$Spieler,
+      Bieter = zeile$Zweitbietender,
+      Gebot = zeile$Zweitgebot,
+      MW_vortag = mw_vortag,
+      Diff_Abs = zeile$Zweitgebot - mw_vortag,
+      Diff_Prozent = round(100 * (zeile$Zweitgebot - mw_vortag) / mw_vortag, 1),
+      Typ = "Zweitgebot"
+    )
+    res <- rbind(res, res2)
+  }
+  return(res)
+}) %>% bind_rows()
+
+# Filtere auf echte Mitspieler (nicht Computer)
+gebotsprofil_clean <- gebotsprofil %>%
+  filter(Bieter != "Computer")
+
+bieter_summary <- gebotsprofil_clean %>%
+  group_by(Bieter) %>%
+  summarise(
+    Anzahl_gesamt = n(),
+    Anzahl_Höchstgebote = sum(Typ == "Höchstgebot"),
+    Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+    Ø_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+    Min = min(Diff_Prozent, na.rm = TRUE),
+    Max = max(Diff_Prozent, na.rm = TRUE),
+    Eintraege = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
+  )
+
+
+print(bieter_summary)
+
+
+
+```
+
+```{r MW Klassen, fig.width=12, fig.height=12}
+
+
+# MW-Abweichung berechnen (Höchst- und Zweitgebot)
+gebotsprofil <- lapply(1:nrow(transfers), function(i) {
+  zeile <- transfers[i, ]
+  mw_vortag <- get_MW_vortag(zeile$Spieler, zeile$Datum)
+  
+  # Höchstgebot
+  res <- data.frame(
+    Datum = zeile$Datum,
+    Spieler = zeile$Spieler,
+    Bieter = zeile$Hoechstbietender,
+    Gebot = zeile$Hoechstgebot,
+    MW_vortag = mw_vortag,
+    Diff_Abs = zeile$Hoechstgebot - mw_vortag,
+    Diff_Prozent = round(100 * (zeile$Hoechstgebot - mw_vortag) / mw_vortag, 1),
+    Typ = "Höchstgebot"
+  )
+  # Zweitgebot (falls vorhanden)
+  if (!is.na(zeile$Zweitgebot) & !is.na(zeile$Zweitbietender)) {
+    res2 <- data.frame(
+      Datum = zeile$Datum,
+      Spieler = zeile$Spieler,
+      Bieter = zeile$Zweitbietender,
+      Gebot = zeile$Zweitgebot,
+      MW_vortag = mw_vortag,
+      Diff_Abs = zeile$Zweitgebot - mw_vortag,
+      Diff_Prozent = round(100 * (zeile$Zweitgebot - mw_vortag) / mw_vortag, 1),
+      Typ = "Zweitgebot"
+    )
+    res <- rbind(res, res2)
+  }
+  return(res)
+}) %>% bind_rows()
+
+# Filter auf echte Mitspieler (nicht Computer) und gültige MW_vortag
+gebotsprofil_clean <- gebotsprofil %>%
+  filter(Bieter != "Computer" & !is.na(MW_vortag))
+
+# MW-Klasse vergeben
+gebotsprofil_clean <- gebotsprofil_clean %>%
+  mutate(
+    MW_Klasse = case_when(
+      MW_vortag < 1e6 ~ "<1 Mio",
+      MW_vortag < 5e6 ~ "1–5 Mio",
+      MW_vortag >= 5e6 ~ ">5 Mio",
+      TRUE ~ "unbekannt"
+    )
+  )
+
+# Zusammenfassung je Bieter und MW_Klasse
+bieter_summary_mw <- gebotsprofil_clean %>%
+  group_by(Bieter, MW_Klasse) %>%
+  summarise(
+    Anzahl_gesamt = n(),
+    Anzahl_Höchstgebote = sum(Typ == "Höchstgebot"),
+    Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+    Ø_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), 1),
+    Min = min(Diff_Prozent, na.rm = TRUE),
+    Max = max(Diff_Prozent, na.rm = TRUE)
+  ) %>%
+  arrange(Bieter, MW_Klasse)
+
+print(bieter_summary_mw)
+
+write_excel_csv(bieter_summary_mw, file = "bieter_summary_mw_csv")
+
+# Datenbasis + richtige Reihenfolge
+plotdata <- gebotsprofil_clean %>%
+  filter(!is.na(Diff_Prozent)) %>%
+  mutate(
+    MW_Klasse = factor(MW_Klasse, levels = c("<1 Mio", "1–5 Mio", ">5 Mio")),
+    all = "all"
+  )
+
+# Mittelwerte je Facet berechnen
+means <- plotdata %>%
+  group_by(Bieter, MW_Klasse) %>%
+  summarise(Mean = mean(Diff_Prozent), .groups = "drop") %>%
+  mutate(all = "all")
+
+ggplot(plotdata, aes(x = all, y = Diff_Prozent, color = all)) +
+  geom_boxplot(aes(fill = all), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+  geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+  geom_text(
+    data = means,
+    aes(x = all, y = Mean, label = round(Mean, 1)),
+    inherit.aes = FALSE,
+    nudge_x = 0.33,
+    fontface = "bold",
+    size = 3.5,
+    color = "black"
+  ) +
+  facet_grid(Bieter ~ MW_Klasse, scales = "free_y") +
+  labs(
+    title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
+    x = "",
+    y = "Abweichung vom MW Vortag (%)"
+  ) +
+  scale_color_manual(values = c("all" = "#1f77b4")) +
+  scale_fill_manual(values = c("all" = "#1f77b4")) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold")
+  )
+
+
+```
+
+```{r plot, fig.width=12, fig.height=6}
+
+# Datenbasis: alle Einzeltransfers, für die Diff_Prozent vorhanden ist
+plotdata <- gebotsprofil_clean %>%
+  filter(!is.na(Diff_Prozent))
+
+# Medians je Bieter und Typ berechnen für das Annotieren
+medians <- plotdata %>%
+  group_by(Bieter, Typ) %>%
+  summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+
+ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+  geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+  geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+  geom_text(
+    data = medians,
+    aes(x = Typ, y = Mean, label = round(Mean, 1)),
+    color = "black",
+    nudge_x = 0.5,
+    fontface = "bold",
+    size = 3.5,
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
+  labs(
+    title = "Gebotsabweichungen je Konkurrent",
+    x = "",
+    y = "Abweichung vom MW Vortag (%)"
+  ) +
+  scale_color_manual(values = c("Höchstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+  scale_fill_manual(values = c("Höchstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold")
+  )
+
+```
+
+```{r plot 2, fig.width=12, fig.height=6}
+
+plotdata <- gebotsprofil_clean %>%
+  filter(!is.na(Diff_Prozent)) %>%
+  mutate(all = "all")
+
+# Für Annotation: Mittelwert (oder Median) je Bieter
+medians <- plotdata %>%
+  group_by(Bieter) %>%
+  summarise(Mean = mean(Diff_Prozent), .groups = "drop") %>%
+  mutate(all = "all")
+
+ggplot(plotdata, aes(x = all, y = Diff_Prozent, color = all)) +
+  geom_boxplot(aes(fill = all), width = 0.5, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.5)) +
+  geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8, dodge.width = 0.5) +
+  geom_text(
+    data = medians,
+    aes(x = all, y = Mean, label = round(Mean, 1)),
+    color = "black",
+    nudge_x = 0.35,
+    fontface = "bold",
+    size = 3.5,
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
+  labs(
+    title = "Gebotsabweichungen je Konkurrent (gepoolt)",
+    x = "",
+    y = "Abweichung vom MW Vortag (%)"
+  ) +
+  scale_color_manual(values = c("Höchstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+  scale_fill_manual(values = c("Höchstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold")
+  )
+
+
+```
