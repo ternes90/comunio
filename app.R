@@ -28,10 +28,10 @@ ui <- fluidPage(
   tags$script(HTML(jsCode)),   # Füge JS-Code ins UI ein
   sidebarLayout(
     sidebarPanel(
-      fileInput("transfers", "Transfers_all.xlsx", accept = c(".xlsx")),
       fileInput("transfermarkt", "TM_all.xlsx", accept = c(".xlsx")),
-      helpText("Beide Dateien laden. Es wird ausschließlich der Marktwert vom Vortag (oder davor) verwendet!"),
-      checkboxInput("show_table", "Zeige zusammengefasste MW-Klassen-Statistik", value = TRUE),
+      fileInput("transfers", "Transfers_all.xlsx", accept = c(".xlsx")),
+      #helpText("Beide Dateien laden. Es wird ausschließlich der Marktwert vom Vortag (oder davor) verwendet!"),
+      checkboxInput("show_table", "Zeige zusammengefasste MW-Klassen-Statistik", value = FALSE),
       tags$hr(),
       h4("Transfernews convert"),
       textAreaInput("transfer_text", "Transfernews Text einfügen", height = "250px"),
@@ -42,9 +42,11 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("MW-Klassen Plot", plotOutput("mwclassplot", height = 700)),
         tabPanel("Bieter-Profile (Punkte)", plotOutput("beeswarm", height = 700)),
-        tabPanel("Zusammenfassung", DTOutput("mwclass_summary"))
+        tabPanel("MW-Klassen Plot", plotOutput("mwclassplot", height = 700)),
+        tabPanel("Zusammenfassung", DTOutput("mwclass_summary")),
+        tabPanel("Entwicklung über Zeit", plotOutput("trendplot", height = 700)),
+        tabPanel("MW-Entwicklung (alle Spieler)", plotOutput("mw_evolution", height = 600))
       )
     )
   )
@@ -146,49 +148,98 @@ server <- function(input, output, session) {
     req(nrow(gebotsprofil_mwclass()) > 0)
     plotdata <- gebotsprofil_mwclass() %>%
       filter(!is.na(Diff_Prozent)) %>%
-      mutate(MW_Klasse = factor(MW_Klasse, levels = c("<1 Mio", "1–5 Mio", ">5 Mio")), all = "all")
+      mutate(
+        MW_Klasse = factor(MW_Klasse, levels = c("<1 Mio", "1–5 Mio", ">5 Mio"))
+      )
+    
+    # Farbpalette (alphabetisch sortierte Bieternamen)
+    bieter_levels <- sort(unique(plotdata$Bieter))
+    farben <- scales::hue_pal()(length(bieter_levels))
+    names(farben) <- bieter_levels
+    
+    # Für robustes beeswarm: Gruppengröße pro Facet
+    plotdata_beeswarm <- plotdata %>%
+      group_by(Bieter, MW_Klasse) %>%
+      mutate(n_pts = n()) %>%
+      ungroup()
+    
+    # Mittelwerte
     means <- plotdata %>%
       group_by(Bieter, MW_Klasse) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop") %>%
-      mutate(all = "all")
-    ggplot(plotdata, aes(x = all, y = Diff_Prozent, color = all)) +
-      geom_boxplot(aes(fill = all), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
+      geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
+      # Beeswarm nur für Gruppen mit mehr als 1 Punkt
+      geom_beeswarm(
+        data = subset(plotdata_beeswarm, n_pts > 1),
+        cex = 2, size = 2.5, alpha = 0.8, priority = "random"
+      ) +
+      # Einzelne Punkte (1 Wert pro Gruppe)
+      geom_point(
+        data = subset(plotdata_beeswarm, n_pts == 1),
+        size = 2.5, alpha = 0.8, shape = 21
+      ) +
+      # Mittelwert als Text (Bieter-Farbe)
       geom_text(
         data = means,
-        aes(x = all, y = Mean, label = round(Mean, 1)),
+        aes(x = Bieter, y = Mean, label = round(Mean, 1), color = "black"),
         inherit.aes = FALSE,
-        nudge_x = 0.33,
         fontface = "bold",
-        size = 3.5,
-        color = "black"
+        size = 3.5
       ) +
-      facet_grid(Bieter ~ MW_Klasse, scales = "free_y") +
+      facet_grid(. ~ MW_Klasse, scales = "free_y") +
       labs(
         title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
-        x = "",
+        x = "Bieter",
         y = "Abweichung vom MW Vortag (%)"
       ) +
-      scale_color_manual(values = c("all" = "#1f77b4")) +
-      scale_fill_manual(values = c("all" = "#1f77b4")) +
+      scale_color_manual(values = farben) +
+      scale_fill_manual(values = farben) +
       theme_minimal(base_size = 13) +
       theme(
         legend.position = "none",
-        strip.text = element_text(face = "bold")
+        strip.text = element_text(face = "bold"),
+        axis.text.x = element_text(angle = 30, hjust = 1)
       )
   })
+  
+  
   
   # -- Punktplot mit Facets (Bieter, Typ)
   output$beeswarm <- renderPlot({
     req(nrow(gebotsprofil_clean()) > 0)
     plotdata <- gebotsprofil_clean() %>%
       filter(!is.na(Diff_Prozent))
+    # Mittelwert über beide Typen je Bieter
+    mean_total <- plotdata %>%
+      group_by(Bieter) %>%
+      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+    # Mittelwerte je Typ
     medians <- plotdata %>%
       group_by(Bieter, Typ) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
     ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
       geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
       geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      # Gesamter Mittelwert als gestrichelte Linie und Text
+      geom_hline(
+        data = mean_total,
+        aes(yintercept = Mean_total),
+        linetype = "dashed", color = "grey80", linewidth = 0.9,
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = mean_total,
+        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "#9b2226", # Dunkelrot
+        fontface = "bold",
+        size = 4,
+        vjust = -0.7,
+        inherit.aes = FALSE
+      ) +
+      # Mittelwert je Typ als Text (wie gehabt)
       geom_text(
         data = medians,
         aes(x = Typ, y = Mean, label = round(Mean, 1)),
@@ -213,10 +264,64 @@ server <- function(input, output, session) {
       )
   })
   
-  # -- Zusammenfassung als Tabelle
+  
+
+  # -- Zusammenfassung als Tabelle ohne MW Klassen
   output$mwclass_summary <- renderDT({
-    if (input$show_table) datatable(mwclass_summary())
+    if (input$show_table) {
+      datatable(mwclass_summary())
+    } else {
+      dat <- gebotsprofil_clean() %>%
+        group_by(Bieter) %>%
+        summarise(
+          Anzahl_gesamt = n(),
+          Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+          Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+          Ø_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+          Min = min(Diff_Prozent, na.rm = TRUE),
+          Max = max(Diff_Prozent, na.rm = TRUE),
+          Eintraege = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
+        )
+      datatable(dat)
+    }
   })
+  
+  # --- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ---
+  mw_evolution_data <- reactive({
+    req(input$transfermarkt)
+    tm <- read_excel(input$transfermarkt$datapath) %>%
+      mutate(TM_Stand = as.Date(TM_Stand))
+    # Für jeden Spieler: erster MW als Start
+    tm %>%
+      group_by(Spieler) %>%
+      arrange(TM_Stand) %>%
+      mutate(MW_rel = Marktwert / first(Marktwert)) %>%
+      ungroup()
+  })
+  
+  output$mw_evolution <- renderPlot({
+    df <- mw_evolution_data()
+    # Tagesmittel und SD über alle Spieler
+    plotdata <- df %>%
+      group_by(TM_Stand) %>%
+      summarise(
+        MW_mean = mean(MW_rel, na.rm = TRUE),
+        MW_sd = sd(MW_rel, na.rm = TRUE),
+        .groups = "drop"
+      )
+    ggplot(plotdata, aes(x = TM_Stand, y = MW_mean)) +
+      geom_ribbon(aes(ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd), fill = "#b3cde0", alpha = 0.4) +
+      geom_line(color = "#005c99", linewidth = 1.1) +
+      geom_point(color = "#005c99", size = 1.5, alpha = 0.7) +
+      labs(
+        title = "Durchschnittliche (normierte) Marktwertentwicklung aller TM-Spieler",
+        subtitle = "Relativ zum ersten dokumentierten MW je Spieler · Schattierung = ±1 SD",
+        x = "Datum",
+        y = "MW relativ zum Startwert"
+      ) +
+      theme_minimal(base_size = 14)
+  })
+  
   
   # -- Transfernews Converter (inkl. Copy-to-Clipboard Button) ----
   parsed_text_val <- reactiveVal("")
@@ -283,6 +388,28 @@ server <- function(input, output, session) {
   observeEvent(input$copy_transfers, {
     session$sendCustomMessage(type = 'copyText', message = parsed_text_val())
   })
+  
+  output$trendplot <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent)) %>%
+      mutate(Datum = as.Date(Datum)) # falls nicht schon Date
+    
+    ggplot(plotdata, aes(x = Datum, y = Diff_Prozent)) +
+      geom_point(alpha = 0.7, size = 2, color = "#1f77b4") +
+      geom_smooth(se = FALSE, method = "loess", span = 0.6, color = "#d62728", linewidth = 1.3) +
+      facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
+      labs(
+        title = "Entwicklung des Gebotsverhaltens über die Zeit",
+        x = "Datum",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(
+        strip.text = element_text(face = "bold")
+      )
+  })
+  
 }
 
 # SHINY APP STARTEN

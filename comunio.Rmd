@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(lubridate)
 library(ggbeeswarm)
+library(readxl)
 
 # Excel-Dateien einlesen
 transfers <- read_excel("TRANSFERS_all.xlsx") %>%
