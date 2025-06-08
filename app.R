@@ -277,7 +277,7 @@ server <- function(input, output, session) {
           Anzahl_gesamt = n(),
           Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
           Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
-          Ø_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+          O_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
           Min = min(Diff_Prozent, na.rm = TRUE),
           Max = max(Diff_Prozent, na.rm = TRUE),
           Eintraege = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
