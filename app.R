@@ -28,8 +28,6 @@ ui <- fluidPage(
   tags$script(HTML(jsCode)),   # Füge JS-Code ins UI ein
   sidebarLayout(
     sidebarPanel(
-      fileInput("transfermarkt", "TM_all.xlsx", accept = c(".xlsx")),
-      fileInput("transfers", "Transfers_all.xlsx", accept = c(".xlsx")),
       #helpText("Beide Dateien laden. Es wird ausschließlich der Marktwert vom Vortag (oder davor) verwendet!"),
       checkboxInput("show_table", "Zeige zusammengefasste MW-Klassen-Statistik", value = FALSE),
       tags$hr(),
@@ -46,7 +44,23 @@ ui <- fluidPage(
         tabPanel("MW-Klassen Plot", plotOutput("mwclassplot", height = 700)),
         tabPanel("Zusammenfassung", DTOutput("mwclass_summary")),
         tabPanel("Entwicklung über Zeit", plotOutput("trendplot", height = 700)),
-        tabPanel("MW-Entwicklung (alle Spieler)", plotOutput("mw_evolution", height = 600))
+        tabPanel("MW-Entwicklung (alle Spieler)", plotOutput("mw_evolution", height = 600)),
+        tabPanel("Flip-Gesamtsumme je Spieler", plotOutput("flip_summarybar", height = 600)),
+        tabPanel("Flip-Gewinne (kumuliert)", plotOutput("flip_cumulative", height = 600)),
+        tabPanel("Flip-Ergebnis-Verhältnis", plotOutput("flip_effizienz", height = 600)),
+        tabPanel("Flip-Historie je Spieler", 
+                 sidebarLayout(
+                   sidebarPanel(
+                     selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
+                   ),
+                   mainPanel(
+                     DTOutput("flip_player_table")
+                   )
+                 )
+        )
+        
+        
+        
       )
     )
   )
@@ -54,15 +68,22 @@ ui <- fluidPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
-  # -- Daten laden und vorverarbeiten
+  
   data_all <- reactive({
-    req(input$transfers, input$transfermarkt)
-    transfers <- read_excel(input$transfers$datapath) %>%
+    transfers <- readxl::read_excel("TRANSFERS_all.xlsx") %>%
       mutate(Datum = as.Date(Datum)) %>%
       mutate(Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot))
-    transfermarkt <- read_excel(input$transfermarkt$datapath) %>%
+    
+    transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
       mutate(TM_Stand = as.Date(TM_Stand))
+    
     list(transfers = transfers, transfermarkt = transfermarkt)
+  })
+  
+  
+  observe({
+    updateSelectInput(session, "flip_player_select",
+                      choices = sort(unique(flip_data()$Besitzer)))
   })
   
   # -- Funktion MW vom Vortag suchen
@@ -119,13 +140,17 @@ server <- function(input, output, session) {
     gebotsprofil_clean() %>%
       mutate(
         MW_Klasse = case_when(
-          MW_vortag < 1e6 ~ "<1 Mio",
-          MW_vortag < 5e6 ~ "1–5 Mio",
-          MW_vortag >= 5e6 ~ ">5 Mio",
+          MW_vortag < 0.5e6 ~ "<0.5 Mio",
+          MW_vortag < 1e6 ~ "0.5–1 Mio",
+          MW_vortag < 2.5e6 ~ "1–2.5 Mio",
+          MW_vortag < 5e6 ~ "2.5–5 Mio",
+          MW_vortag < 10e6 ~ "5–10 Mio",
+          MW_vortag >= 10e6 ~ ">10 Mio",
           TRUE ~ "unbekannt"
         )
       )
   })
+  
   
   # -- Zusammenfassungstabelle für MW-Klassen
   mwclass_summary <- reactive({
@@ -143,14 +168,18 @@ server <- function(input, output, session) {
       arrange(Bieter, MW_Klasse)
   })
   
-  # -- MW-Klassen Boxplot+Beeswarm
+  ## ---- MW-Klassen Boxplot+Beeswarm ----
   output$mwclassplot <- renderPlot({
     req(nrow(gebotsprofil_mwclass()) > 0)
+    
     plotdata <- gebotsprofil_mwclass() %>%
       filter(!is.na(Diff_Prozent)) %>%
       mutate(
-        MW_Klasse = factor(MW_Klasse, levels = c("<1 Mio", "1–5 Mio", ">5 Mio"))
+        MW_Klasse = factor(MW_Klasse, levels = c(
+          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
+        ))
       )
+    
     
     # Farbpalette (alphabetisch sortierte Bieternamen)
     bieter_levels <- sort(unique(plotdata$Bieter))
@@ -168,34 +197,84 @@ server <- function(input, output, session) {
       group_by(Bieter, MW_Klasse) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
+    # Mittelwert je MW-Klasse über alle Bieter
+    means_klasse <- plotdata %>%
+      group_by(MW_Klasse) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    
     ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
       geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
+      
       # Beeswarm nur für Gruppen mit mehr als 1 Punkt
       geom_beeswarm(
         data = subset(plotdata_beeswarm, n_pts > 1),
         cex = 2, size = 2.5, alpha = 0.8, priority = "random"
       ) +
+      
       # Einzelne Punkte (1 Wert pro Gruppe)
       geom_point(
         data = subset(plotdata_beeswarm, n_pts == 1),
         size = 2.5, alpha = 0.8, shape = 21
       ) +
-      # Mittelwert als Text (Bieter-Farbe)
+      
+      # Mittelwert-Linie
+    geom_segment(
+      data = means,
+      aes(x = as.numeric(factor(Bieter)) - 0.4, 
+          xend = as.numeric(factor(Bieter)) + 0.4, 
+          y = Mean, 
+          yend = Mean),
+      color = "grey30",
+      linetype = "dashed",
+      linewidth = 0.8,
+      inherit.aes = FALSE
+    ) +
+      
+      # Mittelwert-Wert als Text
       geom_text(
         data = means,
-        aes(x = Bieter, y = Mean, label = round(Mean, 1), color = "black"),
-        inherit.aes = FALSE,
+        aes(x = as.numeric(factor(Bieter)), y = Mean, 
+            label = round(Mean, 1)),
+        color = "black",
         fontface = "bold",
-        size = 3.5
+        size = 3.5,
+        vjust = -0.7,
+        inherit.aes = FALSE
       ) +
+      
+      # -- Mittelwert-Linie je MW-Klasse --
+    geom_hline(
+      data = means_klasse,
+      aes(yintercept = Mean),
+      color = "#d62728",
+      linewidth = 1.2,
+      linetype = "solid",
+      inherit.aes = FALSE
+    ) +
+    # Mittelwert-Wert je MW-Klasse als Text
+    geom_text(
+      data = means_klasse,
+      aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
+      hjust = 1.1,
+      vjust = -0.7,
+      color = "#d62728",
+      fontface = "bold",
+      size = 3.5,
+      inherit.aes = FALSE
+    ) +
+      
       facet_grid(. ~ MW_Klasse, scales = "free_y") +
+      
       labs(
         title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
         x = "Bieter",
         y = "Abweichung vom MW Vortag (%)"
       ) +
+      
       scale_color_manual(values = farben) +
       scale_fill_manual(values = farben) +
+      
       theme_minimal(base_size = 13) +
       theme(
         legend.position = "none",
@@ -203,8 +282,6 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 30, hjust = 1)
       )
   })
-  
-  
   
   # -- Punktplot mit Facets (Bieter, Typ)
   output$beeswarm <- renderPlot({
@@ -263,10 +340,8 @@ server <- function(input, output, session) {
         strip.text = element_text(face = "bold")
       )
   })
-  
-  
 
-  # -- Zusammenfassung als Tabelle ohne MW Klassen
+  # ---- Zusammenfassung als Tabelle ohne MW Klassen ----
   output$mwclass_summary <- renderDT({
     if (input$show_table) {
       datatable(mwclass_summary())
@@ -286,10 +361,9 @@ server <- function(input, output, session) {
     }
   })
   
-  # --- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ---
+  # ---- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ----
   mw_evolution_data <- reactive({
-    req(input$transfermarkt)
-    tm <- read_excel(input$transfermarkt$datapath) %>%
+    tm <- data_all()$transfermarkt %>%
       mutate(TM_Stand = as.Date(TM_Stand))
     # Für jeden Spieler: erster MW als Start
     tm %>%
@@ -323,7 +397,7 @@ server <- function(input, output, session) {
   })
   
   
-  # -- Transfernews Converter (inkl. Copy-to-Clipboard Button) ----
+  # ---- Transfernews Converter (inkl. Copy-to-Clipboard Button) ----
   parsed_text_val <- reactiveVal("")
   
   observeEvent(input$parse_text, {
@@ -409,6 +483,167 @@ server <- function(input, output, session) {
         strip.text = element_text(face = "bold")
       )
   })
+  
+  # ---- FLIP-DATEN vorbereiten ----
+  # -- Flip-Gewinn vorbereiten (angenommen Einkaufspreise und Verkäufe in transfers)
+  
+  flip_data <- reactive({
+    req(data_all())
+    transfers <- data_all()$transfers
+    
+    # Käufe (nur echte Käufe durch Manager)
+    einkaeufe <- transfers %>%
+      filter(Hoechstbietender != "Computer") %>%
+      select(Spieler, Einkaufsdatum = Datum, Einkaufspreis = Hoechstgebot, Besitzer = Hoechstbietender) %>%
+      arrange(Besitzer, Spieler, Einkaufsdatum)
+    
+    # Verkäufe
+    verkaeufe <- transfers %>%
+      filter(Besitzer != Hoechstbietender) %>%
+      select(Spieler, Verkaufsdatum = Datum, Verkaufspreis = Hoechstgebot, Besitzer)
+    
+    # Flip-Paare bauen
+    flips <- list()
+    
+    for (i in 1:nrow(verkaeufe)) {
+      verkauf <- verkaeufe[i, ]
+      
+      # Suche den frühesten unbenutzten Kauf
+      kauf_kandidat <- einkaeufe %>%
+        filter(Spieler == verkauf$Spieler,
+               Besitzer == verkauf$Besitzer,
+               Einkaufsdatum < verkauf$Verkaufsdatum) %>%
+        arrange(Einkaufsdatum) %>%
+        slice(1)
+      
+      if (nrow(kauf_kandidat) == 1) {
+        # Flip speichern
+        flips[[length(flips) + 1]] <- data.frame(
+          Spieler = verkauf$Spieler,
+          Besitzer = verkauf$Besitzer,
+          Einkaufsdatum = kauf_kandidat$Einkaufsdatum,
+          Einkaufspreis = kauf_kandidat$Einkaufspreis,
+          Verkaufsdatum = verkauf$Verkaufsdatum,
+          Verkaufspreis = verkauf$Verkaufspreis,
+          Gewinn = verkauf$Verkaufspreis - kauf_kandidat$Einkaufspreis
+        )
+        
+        # Den Kauf aus der Liste entfernen (= "verbraucht")
+        einkaeufe <- einkaeufe %>%
+          filter(!(Spieler == kauf_kandidat$Spieler &
+                     Besitzer == kauf_kandidat$Besitzer &
+                     Einkaufsdatum == kauf_kandidat$Einkaufsdatum))
+      }
+    }
+    
+    if (length(flips) > 0) {
+      bind_rows(flips)
+    } else {
+      data.frame()  # leeres DF wenn keine Flips
+    }
+  })
+  
+  
+  # ---- FLIP-GESAMTSUMME (Balkendiagramm) ----
+  # -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
+  output$flip_summarybar <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    flip_data() %>%
+      group_by(Besitzer) %>%
+      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE)) %>%
+      ggplot(aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
+      geom_col(show.legend = FALSE) +
+      geom_text(aes(label = round(Gesamtgewinn, 0), 
+                    hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)), 
+                position = position_dodge(width = 1)) +
+      scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
+      coord_flip() +
+      labs(
+        title = "Flip-Gewinn/Verlust je Comunio-Spieler (gesamt)",
+        x = "Spieler",
+        y = "Gewinn/Verlust (€)"
+      ) +
+      theme_minimal(base_size = 14)
+  })
+  
+  
+  # ---- FLIP-KUMULIERT über Zeit ----
+  # -- Flip-Gewinne über Zeit (kumuliert)
+  output$flip_cumulative <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    flip_data() %>%
+      arrange(Besitzer, Verkaufsdatum) %>%
+      group_by(Besitzer) %>%
+      mutate(Kumuliert = cumsum(Gewinn)) %>%
+      ungroup() %>%
+      ggplot(aes(x = Verkaufsdatum, y = Kumuliert, color = Besitzer)) +
+      geom_line(linewidth = 1.2) +
+      geom_point(size = 2, alpha = 0.7) +
+      scale_color_brewer(palette = "Dark2") +
+      labs(
+        title = "Kumulierte Flip-Gewinne über die Zeit je Spieler",
+        x = "Datum",
+        y = "Kumulierte Gewinne (€)",
+        color = "Spieler"
+      ) +
+      theme_minimal(base_size = 14)
+  })
+  
+  # ---- FLIP-EFFIZIENZ (mit Kategorien) ----
+  output$flip_effizienz <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    flip_data() %>%
+      mutate(
+        Flip_Kategorie = case_when(
+          abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
+          abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
+          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
+        ),
+        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+        Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+      ) %>%
+      count(Besitzer, Flip_Label) %>%
+      ggplot(aes(x = Besitzer, y = n, fill = Flip_Label)) +
+      geom_col(position = "stack") +
+      scale_fill_manual(
+        values = c(
+          "Gewinn - Mini-Flip <50k" = "#a8e6a1",
+          "Gewinn - Mittel-Flip <250k" = "#4caf50",
+          "Gewinn - Mega-Flip ≥500k" = "#1b5e20",
+          "Verlust - Mini-Flip <50k" = "#fbb4b9",
+          "Verlust - Mittel-Flip <250k" = "#e41a1c",
+          "Verlust - Mega-Flip ≥500k" = "#67000d"
+        )
+      ) +
+      labs(
+        title = "Flip-Ergebnis nach Kategorien je Spieler",
+        x = "Spieler",
+        y = "Anzahl Flips",
+        fill = "Ergebnis - Kategorie"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  
+  # ---- FLIP-HISTORIE je Spieler ----
+  output$flip_player_table <- renderDT({
+    req(input$flip_player_select)
+    
+    flip_data() %>%
+      filter(Besitzer == input$flip_player_select) %>%
+      select(Verkaufsdatum, Spieler, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Gewinn) %>%
+      arrange(desc(Verkaufsdatum)) %>%
+      datatable(
+        options = list(pageLength = 10),
+        colnames = c("Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Gewinn/Verlust (€)")
+      )
+  })
+  
+  
   
 }
 
