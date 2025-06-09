@@ -364,7 +364,7 @@ server <- function(input, output, session) {
   # ---- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ----
   mw_evolution_data <- reactive({
     tm <- data_all()$transfermarkt %>%
-      mutate(TM_Stand = as.Date(TM_Stand))
+      mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
     # Für jeden Spieler: erster MW als Start
     tm %>%
       group_by(Spieler) %>%
