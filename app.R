@@ -75,7 +75,7 @@ server <- function(input, output, session) {
       mutate(Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot))
     
     transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
-      mutate(TM_Stand = as.Date(TM_Stand))
+      mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
     
     list(transfers = transfers, transfermarkt = transfermarkt)
   })
