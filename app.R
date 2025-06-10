@@ -46,8 +46,11 @@ ui <- fluidPage(
         tabPanel("Entwicklung über Zeit", plotOutput("trendplot", height = 700)),
         tabPanel("MW-Entwicklung (alle Spieler)",
                  checkboxInput("show_overlay", "Zeige Verlauf aller Mitspieler (Overlay)", value = FALSE),
+                 checkboxInput("show_sommerpause", "Zeige `24 Sommerpause-Kurve (Overlay)", value = TRUE),
+                 checkboxInput("show_sommerpause_21", "Zeige `21 Sommerpause-Kurve (Overlay)", value = TRUE),
                  plotOutput("mw_evolution", height = 600)
         ),
+        
         tabPanel("Flip-Gesamtsumme je Spieler", plotOutput("flip_summarybar", height = 600)),
         tabPanel("Flip-Gewinne (kumuliert)", plotOutput("flip_cumulative", height = 600)),
         tabPanel("Flip-Ergebnis-Verhältnis", plotOutput("flip_effizienz", height = 600)),
@@ -71,6 +74,34 @@ ui <- fluidPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
+  
+  sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
+    mutate(
+      # Erst Datum als Date parsen
+      Datum = as.Date(x),
+      # Dann Jahr auf 2025 setzen
+      Datum = as.Date(format(Datum, "2025-%m-%d")),
+    ) %>%
+    filter(Datum >= as.Date("2025-06-02")) %>%
+    arrange(Datum) %>%
+    mutate(
+      MW_startwert = y[Datum == as.Date("2025-06-02")][1],
+      MW_rel_normiert = y / MW_startwert
+    )
+  
+  sommerpause_21_df <- readr::read_csv("MW_Sommerpause_2021.csv") %>%
+    mutate(
+      # Erst Datum als Date parsen
+      Datum = as.Date(x),
+      # Dann Jahr auf 2025 setzen
+      Datum = as.Date(format(Datum, "2025-%m-%d")),
+    ) %>%
+    filter(Datum >= as.Date("2025-06-03")) %>%
+    arrange(Datum) %>%
+    mutate(
+      MW_startwert = y[Datum == as.Date("2025-06-03")][1],
+      MW_rel_normiert = y / MW_startwert
+    )
   
   nickname_mapping <- c(
     "Alfon" = "Alfons",
@@ -460,6 +491,8 @@ server <- function(input, output, session) {
         x = "Datum",
         y = "MW relativ zum Startwert"
       ) +
+      geom_vline(xintercept = as.Date("2025-08-22"), linetype="dotted", 
+                 color = "darkred", size=1.5) +
       theme_minimal(base_size = 14)
     
     # Overlay: Alle Spieler
@@ -474,6 +507,30 @@ server <- function(input, output, session) {
         guides(color = guide_legend(title = "Manager")) +
         guides(color = guide_legend(title = "Besitzer / Manager"))
     }
+    
+    if (isTRUE(input$show_sommerpause)) {
+      p <- p + geom_line(
+        data = sommerpause_df,
+        aes(x = Datum, y = MW_rel_normiert),
+        color = "red",
+        linewidth = 1.3,
+        linetype = "dashed"
+      )
+    }
+    
+    if (isTRUE(input$show_sommerpause_21)) {
+      p <- p + geom_line(
+        data = sommerpause_21_df,
+        aes(x = Datum, y = MW_rel_normiert),
+        color = "orange",
+        linewidth = 1.3,
+        linetype = "dashed"
+      )
+    }
+    
+    
+    
+    
     
     
     p
