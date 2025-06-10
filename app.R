@@ -44,7 +44,10 @@ ui <- fluidPage(
         tabPanel("MW-Klassen Plot", plotOutput("mwclassplot", height = 700)),
         tabPanel("Zusammenfassung", DTOutput("mwclass_summary")),
         tabPanel("Entwicklung über Zeit", plotOutput("trendplot", height = 700)),
-        tabPanel("MW-Entwicklung (alle Spieler)", plotOutput("mw_evolution", height = 600)),
+        tabPanel("MW-Entwicklung (alle Spieler)",
+                 checkboxInput("show_overlay", "Zeige Verlauf aller Mitspieler (Overlay)", value = FALSE),
+                 plotOutput("mw_evolution", height = 600)
+        ),
         tabPanel("Flip-Gesamtsumme je Spieler", plotOutput("flip_summarybar", height = 600)),
         tabPanel("Flip-Gewinne (kumuliert)", plotOutput("flip_cumulative", height = 600)),
         tabPanel("Flip-Ergebnis-Verhältnis", plotOutput("flip_effizienz", height = 600)),
@@ -68,6 +71,17 @@ ui <- fluidPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
+  
+  nickname_mapping <- c(
+    "Alfon" = "Alfons",
+    "Nico_2510" = "Nico",
+    "HenzgenT" = "Thomas",
+    "Hosche" = "Christoph",
+    "Crunch" = "Christian",
+    "Dr. Bier" = "Dominik",
+    "Calli" = "Pascal",
+    "Computer" = "Computer"
+  )
   
   data_all <- reactive({
     transfers <- readxl::read_excel("TRANSFERS_all.xlsx") %>%
@@ -361,17 +375,69 @@ server <- function(input, output, session) {
     }
   })
   
+  # ---- Besitzhistorie bauen ----
+  besitzhistorie <- reactive({
+    transfers <- data_all()$transfers
+    
+    # alle relevanten Wechsel (sortiert)
+    wechsel <- transfers %>%
+      arrange(Spieler, Datum) %>%
+      select(Spieler, Datum, Hoechstbietender) %>%
+      rename(Besitzer = Hoechstbietender)
+    
+    # initialen Eintrag pro Spieler (erste bekannte Besitzperiode)
+    first_transfer <- wechsel %>%
+      group_by(Spieler) %>%
+      slice(1) %>%
+      mutate(Startdatum = Datum, Enddatum = as.Date("2100-01-01")) %>%
+      ungroup()
+    
+    # alle Wechselpaare als Besitzzeiträume
+    besitz <- list()
+    
+    for (spieler in unique(wechsel$Spieler)) {
+      sub <- wechsel %>% filter(Spieler == spieler) %>% arrange(Datum)
+      for (i in 1:nrow(sub)) {
+        startdatum <- sub$Datum[i]
+        enddatum <- if (i < nrow(sub)) sub$Datum[i + 1] - 1 else as.Date("2100-01-01")
+        besitz[[length(besitz) + 1]] <- data.frame(
+          Spieler = spieler,
+          Besitzer = sub$Besitzer[i],
+          Startdatum = startdatum,
+          Enddatum = enddatum
+        )
+      }
+    }
+    
+    bind_rows(besitz)
+  })
+  
+  
   # ---- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ----
   mw_evolution_data <- reactive({
     tm <- data_all()$transfermarkt %>%
-      mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
-    # Für jeden Spieler: erster MW als Start
-    tm %>%
-      group_by(Spieler) %>%
+      mutate(
+        TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"),
+        Besitzer_eff = nickname_mapping[Besitzer]  # Mapping HIER anwenden!
+      )
+    
+    besitz <- besitzhistorie()
+    
+    # Join + Filter
+    tm_besitz <- tm %>%
+      left_join(besitz, by = "Spieler") %>%
+      filter(TM_Stand >= Startdatum, TM_Stand <= Enddatum)
+    
+    tm_besitz %>%
+      group_by(Spieler, Besitzer_eff) %>%
       arrange(TM_Stand) %>%
       mutate(MW_rel = Marktwert / first(Marktwert)) %>%
-      ungroup()
+      ungroup() %>%
+      select(TM_Stand, Spieler, Besitzer = Besitzer_eff, Marktwert, MW_rel)
   })
+  
+  
+  
   
   output$mw_evolution <- renderPlot({
     df <- mw_evolution_data()
@@ -383,7 +449,8 @@ server <- function(input, output, session) {
         MW_sd = sd(MW_rel, na.rm = TRUE),
         .groups = "drop"
       )
-    ggplot(plotdata, aes(x = TM_Stand, y = MW_mean)) +
+    
+    p <- ggplot(plotdata, aes(x = TM_Stand, y = MW_mean)) +
       geom_ribbon(aes(ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd), fill = "#b3cde0", alpha = 0.4) +
       geom_line(color = "#005c99", linewidth = 1.1) +
       geom_point(color = "#005c99", size = 1.5, alpha = 0.7) +
@@ -394,6 +461,22 @@ server <- function(input, output, session) {
         y = "MW relativ zum Startwert"
       ) +
       theme_minimal(base_size = 14)
+    
+    # Overlay: Alle Spieler
+    if (isTRUE(input$show_overlay)) {
+      p <- p +
+        geom_line(
+          data = df %>% filter(Besitzer != "Computer"),
+          aes(x = TM_Stand, y = MW_rel, group = interaction(Spieler, Besitzer), color = Besitzer),
+          alpha = 0.8, linewidth = 0.8, inherit.aes = FALSE
+        ) +
+        scale_color_brewer(palette = "Paired") +
+        guides(color = guide_legend(title = "Manager")) +
+        guides(color = guide_legend(title = "Besitzer / Manager"))
+    }
+    
+    
+    p
   })
   
   
@@ -581,7 +664,7 @@ server <- function(input, output, session) {
       ggplot(aes(x = Verkaufsdatum, y = Kumuliert, color = Besitzer)) +
       geom_line(linewidth = 1.2) +
       geom_point(size = 2, alpha = 0.7) +
-      scale_color_brewer(palette = "Dark2") +
+      scale_color_brewer(palette = "Paired") +
       labs(
         title = "Kumulierte Flip-Gewinne über die Zeit je Spieler",
         x = "Datum",
