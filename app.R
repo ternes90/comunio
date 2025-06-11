@@ -4,6 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
+library(writexl)
 
 # ---- Custom JS für Copy-Button ----
 jsCode <- "
