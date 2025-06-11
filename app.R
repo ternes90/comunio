@@ -4,8 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-install.packages("writexl")
-library(writexl)
+library(openxlsx)
 
 # ---- Custom JS für Copy-Button ----
 jsCode <- "
