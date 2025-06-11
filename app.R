@@ -4,7 +4,6 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-library(plotly)
 
 # ---- Custom JS für Copy-Button ----
 jsCode <- "
@@ -31,7 +30,7 @@ ui <- navbarPage(
   tabPanel("Bieterprofile",
            tabsetPanel(
              tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
-             tabPanel("MW-Klassen", plotlyOutput("mwclassplot", height = 700)),
+             tabPanel("MW-Klassen", plotOutput("mwclassplot", height = 700)),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
              tabPanel("Gebots-Frequenz",
                       plotOutput("gebote_pro_tag", height = 350),
@@ -276,7 +275,7 @@ server <- function(input, output, session) {
   
   
   ## ---- MW-Klassen Boxplot+Beeswarm ----
-  output$mwclassplot <- renderPlotly({
+  output$mwclassplot <- renderPlot({
     req(nrow(gebotsprofil_mwclass()) > 0)
     
     plotdata <- gebotsprofil_mwclass() %>%
@@ -367,7 +366,7 @@ server <- function(input, output, session) {
         axis.text.x = element_text(angle = 30, hjust = 1)
       )
     
-    ggplotly(p, tooltip = "text")
+    p
   })
   
   
