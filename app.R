@@ -23,54 +23,79 @@ Shiny.addCustomMessageHandler('copyText', function(message) {
 "
 
 # ---- UI ----
-ui <- fluidPage(
-  titlePanel("Comunio Bieterprofil Analyse"),
-  tags$script(HTML(jsCode)),   # Füge JS-Code ins UI ein
-  sidebarLayout(
-    sidebarPanel(
-      #helpText("Beide Dateien laden. Es wird ausschließlich der Marktwert vom Vortag (oder davor) verwendet!"),
-      checkboxInput("show_table", "Zeige zusammengefasste MW-Klassen-Statistik", value = FALSE),
-      tags$hr(),
-      h4("Transfernews convert"),
-      textAreaInput("transfer_text", "Transfernews Text einfügen", height = "250px"),
-      actionButton("parse_text", "Konvertieren"),
-      br(),
-      uiOutput("copy_button_ui"),
-      verbatimTextOutput("parsed_transfers")
-    ),
-    mainPanel(
-      tabsetPanel(
-        tabPanel("Bieter-Profile (Punkte)", plotOutput("beeswarm", height = 700)),
-        tabPanel("MW-Klassen Plot", plotOutput("mwclassplot", height = 700)),
-        tabPanel("Zusammenfassung", DTOutput("mwclass_summary")),
-        tabPanel("Entwicklung über Zeit", plotOutput("trendplot", height = 700)),
-        tabPanel("MW-Entwicklung (alle Spieler)",
-                 checkboxInput("show_overlay", "Zeige Verlauf aller Mitspieler (Overlay)", value = FALSE),
-                 checkboxInput("show_sommerpause", "Zeige `24 Sommerpause-Kurve (Overlay)", value = TRUE),
-                 checkboxInput("show_sommerpause_21", "Zeige `21 Sommerpause-Kurve (Overlay)", value = TRUE),
-                 plotOutput("mw_evolution", height = 600)
-        ),
-        
-        tabPanel("Flip-Gesamtsumme je Spieler", plotOutput("flip_summarybar", height = 600)),
-        tabPanel("Flip-Gewinne (kumuliert)", plotOutput("flip_cumulative", height = 600)),
-        tabPanel("Flip-Ergebnis-Verhältnis", plotOutput("flip_effizienz", height = 600)),
-        tabPanel("Flip-Historie je Spieler", 
-                 sidebarLayout(
-                   sidebarPanel(
-                     selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
-                   ),
-                   mainPanel(
-                     DTOutput("flip_player_table")
-                   )
-                 )
-        )
-        
-        
-        
-      )
-    )
+ui <- navbarPage(
+  "Comunio Analyse",
+  
+  # --- Bieterprofile
+  tabPanel("Bieterprofile",
+           tabsetPanel(
+             tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
+             tabPanel("MW-Klassen", plotOutput("mwclassplot", height = 700)),
+             tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
+             tabPanel("Zusammenfassung",
+                      tags$div(
+                        style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px;",
+                        tags$input(
+                          id = "show_table",
+                          type = "checkbox",
+                          style = "width: 20px; height: 20px; margin: 0 10px 0 0; vertical-align: middle; margin-top: 20px;"
+                        ),
+                        tags$label(
+                          "Zeige zusammengefasste MW-Klassen-Statistik",
+                          `for` = "show_table",
+                          style = "font-weight: 500; font-size: 16px; white-space: nowrap; vertical-align: middle; margin: 0;margin-top: 20px;"
+                        )
+                      ),
+                      DTOutput("mwclass_summary")
+             )
+             
+             
+             
+           )
+  ),
+  
+  # --- Marktwert-Entwicklung
+  tabPanel("Marktwert-Entwicklung",
+           tabsetPanel(
+             tabPanel("MW-Verlauf (alle)", 
+                      checkboxInput("show_overlay", "Zeige Verlauf aller Mitspieler (Overlay)", value = FALSE),
+                      checkboxInput("show_sommerpause", "Zeige `24 Sommerpause-Kurve (Overlay)", value = TRUE),
+                      checkboxInput("show_sommerpause_21", "Zeige `21 Sommerpause-Kurve (Overlay)", value = TRUE),
+                      plotOutput("mw_evolution", height = 600)
+             )
+           )
+  ),
+  
+  # --- Flip-Analyse
+  tabPanel("Flip-Analyse",
+           tabsetPanel(
+             tabPanel("Gesamtsumme", plotOutput("flip_summarybar", height = 600)),
+             tabPanel("Kategorien (gestapelt)", plotOutput("flip_effizienz", height = 600)),
+             tabPanel("Kumuliert", plotOutput("flip_cumulative", height = 600)),
+             tabPanel("Kumuliert nach Flip-Art", plotOutput("flip_cumcat", height = 600)),
+             tabPanel("Historie je Spieler", 
+                      sidebarLayout(
+                        sidebarPanel(
+                          selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
+                        ),
+                        mainPanel(
+                          DTOutput("flip_player_table")
+                        )
+                      )
+             )
+           )
+  ),
+  
+  # --- Tools
+  tabPanel("Tools & Import",
+           h4("Transfernews convert"),
+           textAreaInput("transfer_text", "Transfernews Text einfügen", height = "250px"),
+           actionButton("parse_text", "Konvertieren"),
+           uiOutput("copy_button_ui"),
+           verbatimTextOutput("parsed_transfers")
   )
 )
+
 
 # ---- SERVER ----
 server <- function(input, output, session) {
@@ -123,6 +148,21 @@ server <- function(input, output, session) {
       mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
     
     list(transfers = transfers, transfermarkt = transfermarkt)
+  })
+  
+  flip_kategorien_data <- reactive({
+    req(flip_data())
+    flip_data() %>%
+      mutate(
+        Flip_Kategorie = case_when(
+          abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
+          abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
+          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
+          TRUE ~ "Sonst"
+        ),
+        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+        Kategorie_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+      )
   })
   
   
@@ -388,7 +428,7 @@ server <- function(input, output, session) {
 
   # ---- Zusammenfassung als Tabelle ohne MW Klassen ----
   output$mwclass_summary <- renderDT({
-    if (input$show_table) {
+    if (!is.null(input$show_table) && input$show_table) {
       datatable(mwclass_summary())
     } else {
       dat <- gebotsprofil_clean() %>%
@@ -405,6 +445,9 @@ server <- function(input, output, session) {
       datatable(dat)
     }
   })
+  
+  
+  
   
   # ---- Besitzhistorie bauen ----
   besitzhistorie <- reactive({
@@ -767,6 +810,45 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
   })
+  
+  # ---- FLIP-KUMULIERT (Flip-Art) ----
+  output$flip_cumcat <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    flip_data() %>%
+      mutate(
+        Flip_Kategorie = case_when(
+          abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
+          abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
+          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
+          TRUE ~ "Sonst"
+        ),
+        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+        Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+      ) %>%
+      group_by(Besitzer, Flip_Ergebnis, Flip_Kategorie) %>%
+      summarise(Summe = sum(Gewinn), .groups = "drop") %>%
+      ggplot(aes(x = Besitzer, y = Summe, fill = interaction(Flip_Ergebnis, Flip_Kategorie))) +
+      geom_col(position = "stack") +
+      labs(
+        title = "Kumulierte Flip-Gewinne/Verluste je Spieler und Flip-Art",
+        x = "Spieler",
+        y = "Summe Gewinn/Verlust (€)",
+        fill = "Flip-Art"
+      ) +
+      scale_fill_manual(
+        values = c(
+          "Gewinn.Mini-Flip <50k" = "#a8e6a1",
+          "Gewinn.Mittel-Flip <250k" = "#4caf50",
+          "Gewinn.Mega-Flip ≥500k" = "#1b5e20",
+          "Verlust.Mini-Flip <50k" = "#fbb4b9",
+          "Verlust.Mittel-Flip <250k" = "#e41a1c",
+          "Verlust.Mega-Flip ≥500k" = "#67000d"
+        )
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
   
   
   # ---- FLIP-HISTORIE je Spieler ----
