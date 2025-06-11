@@ -33,6 +33,17 @@ ui <- navbarPage(
              tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
              tabPanel("MW-Klassen", plotlyOutput("mwclassplot", height = 700)),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
+             tabPanel("Gebots-Frequenz",
+                      plotOutput("gebote_pro_tag", height = 350),
+                      plotOutput("gebote_pro_tag_linie", height = 350)
+             ),
+             tabPanel("Gebots-Frequenz je Konkurrent",
+                      plotOutput("gebote_pro_tag_bieter", height = 600)
+             ),
+             tabPanel("Gebots-peaks",
+                      plotOutput("aktive_tage_plot", height = 350),
+                      plotOutput("peak_days_heatmap", height = 350)
+             ),
              tabPanel("Zusammenfassung",
                       tags$div(
                         style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px;",
@@ -166,7 +177,6 @@ server <- function(input, output, session) {
       )
   })
   
-  
   observe({
     updateSelectInput(session, "flip_player_select",
                       choices = sort(unique(flip_data()$Besitzer)))
@@ -241,6 +251,16 @@ server <- function(input, output, session) {
   # -- Zusammenfassungstabelle für MW-Klassen
   mwclass_summary <- reactive({
     gebotsprofil_mwclass() %>%
+      mutate(
+        MW_Klasse = factor(
+          MW_Klasse,
+          levels = c(
+            "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio",
+            "2.5–5 Mio", "5–10 Mio", ">10 Mio"
+          ),
+          ordered = TRUE
+        )
+      ) %>%
       group_by(Bieter, MW_Klasse) %>%
       summarise(
         Anzahl_gesamt = n(),
@@ -253,6 +273,7 @@ server <- function(input, output, session) {
       ) %>%
       arrange(Bieter, MW_Klasse)
   })
+  
   
   ## ---- MW-Klassen Boxplot+Beeswarm ----
   output$mwclassplot <- renderPlotly({
@@ -320,7 +341,8 @@ server <- function(input, output, session) {
         aes(yintercept = Mean),
         color = "#d62728",
         linewidth = 1,
-        linetype = "solid"
+        linetype = "solid",
+        inherit.aes = FALSE
       ) +
       geom_text(
         data = means_klasse,
@@ -347,6 +369,8 @@ server <- function(input, output, session) {
     
     ggplotly(p, tooltip = "text")
   })
+  
+  
   
   # -- Punktplot mit Facets (Bieter, Typ)
   output$beeswarm <- renderPlot({
@@ -405,6 +429,152 @@ server <- function(input, output, session) {
         strip.text = element_text(face = "bold")
       )
   })
+  
+  # ---- Gebote pro Tag ----
+  
+  output$gebote_pro_tag <- renderPlot({
+    df <- gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+    
+    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, fill = Bieter)) +
+      geom_col(position = "stack", alpha = 0.7) +
+      labs(
+        title = "Anzahl aller Gebote pro Tag (gestapelt nach Bieter)",
+        x = "Datum",
+        y = "Gebote pro Tag",
+        fill = "Bieter"
+      ) +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  # ---- Linienplot: Gebote je Konkurrent über Zeit ----
+  output$gebote_pro_tag_linie <- renderPlot({
+    df <- gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+    
+    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, color = Bieter)) +
+      geom_line(size = 1.2) +
+      geom_point(size = 2, alpha = 0.8) +
+      scale_color_brewer(palette = "Paired") +
+      labs(
+        title = "Gebote pro Tag je Konkurrent (Linienplot)",
+        x = "Datum",
+        y = "Gebote pro Tag",
+        color = "Bieter"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  
+  
+  # ---- Durchschnittliche Gebotszahl pro Tag je Konkurrent ----
+  
+  gebote_tag_bieter <- reactive({
+    gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+  })
+  
+  
+  output$gebote_pro_tag_bieter <- renderPlot({
+    df <- gebote_tag_bieter()
+    ggplot(df, aes(x = Bieter, y = Anzahl_Gebote, color = Bieter, fill = Bieter)) +
+      geom_boxplot(width = 0.5, alpha = 0.2, outlier.shape = NA) +
+      ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      labs(
+        title = "Gebotsanzahl pro Tag je Konkurrent (Boxplot + Beeswarm)",
+        x = "Bieter",
+        y = "Gebote pro Tag"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 14) +
+      theme(legend.position = "none", axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  # ---- Aktive Tage pro Spieler ----
+  
+  output$aktive_tage_plot <- renderPlot({
+    aktive_tage <- gebotsprofil_clean() %>%
+      group_by(Bieter) %>%
+      summarise(Aktive_Tage = n_distinct(Datum)) %>%
+      arrange(desc(Aktive_Tage))
+    
+    ggplot(aktive_tage, aes(x = reorder(Bieter, -Aktive_Tage), y = Aktive_Tage, fill = Bieter)) +
+      geom_col(show.legend = FALSE) +
+      labs(
+        title = "Anzahl aktiver Tage pro Spieler (mind. 1 Gebot/Tag)",
+        x = "Bieter",
+        y = "Aktive Tage"
+      ) +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 14)
+  })
+  
+  
+  
+  # ---- Gebots-Peaks ----
+  
+  output$peak_days_heatmap <- renderPlot({
+    # Alle möglichen Kombinationen Bieter x Datum erzeugen (auch 0 Gebote!)
+    all_dates <- seq.Date(
+      min(gebotsprofil_clean()$Datum, na.rm = TRUE),
+      max(gebotsprofil_clean()$Datum, na.rm = TRUE),
+      by = "day"
+    )
+    alle_bieter <- unique(gebotsprofil_clean()$Bieter)
+    full_grid <- expand.grid(Datum = all_dates, Bieter = alle_bieter, stringsAsFactors = FALSE)
+    
+    # Tatsächliche Gebotszahlen einfügen
+    gebote_tage <- gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+    full_heat <- full_grid %>%
+      left_join(gebote_tage, by = c("Datum", "Bieter")) %>%
+      mutate(Anzahl_Gebote = replace_na(Anzahl_Gebote, 0))
+    
+    # Markierung Wochenende und Saisonstart (z.B. 22.08.2025)
+    full_heat <- full_heat %>%
+      mutate(
+        Wochentag = weekdays(Datum, abbreviate = TRUE),
+        Wochenende = Wochentag %in% c("Sa", "So"),
+        Saisonstart = Datum == as.Date("2025-08-22")
+      )
+    
+    ggplot(full_heat, aes(x = Datum, y = Bieter, fill = Anzahl_Gebote)) +
+      geom_tile(color = "grey90") +
+      # Saisonstart als Outline
+      geom_tile(data = filter(full_heat, Saisonstart), color = "black", size = 1.2, fill = NA) +
+      # Wochenenden als Punkt-Overlay (optional, für bessere Sichtbarkeit)
+      geom_point(
+        data = filter(full_heat, Wochenende), aes(x = Datum, y = Bieter),
+        shape = 21, fill = "transparent", color = "black", size = 2, stroke = 1, inherit.aes = FALSE
+      ) +
+      scale_fill_gradient(
+        low = "white",
+        high = "#e41a1c",   # kräftiges Rot für viele Gebote
+        breaks = scales::pretty_breaks(n = 4)
+      ) +
+      labs(
+        title = "Gebots-Aktivität aller Spieler über die Zeit (Heatmap)",
+        x = "Datum",
+        y = "Bieter",
+        fill = "Gebote"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      )
+  })
+  
+  
+  
 
   # ---- Zusammenfassung als Tabelle ohne MW Klassen ----
   output$mwclass_summary <- renderDT({
