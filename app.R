@@ -32,12 +32,6 @@ ui <- navbarPage(
              tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
              tabPanel("MW-Klassen", plotOutput("mwclassplot", height = 700)),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
-             tabPanel("Gebots-Frequenz (Zeit)",
-                      plotOutput("gebote_pro_tag", height = 400)
-             ),
-             tabPanel("Gebots-Frequenz je Konkurrent",
-                      plotOutput("gebote_pro_tag_bieter", height = 600)
-             )
              tabPanel("Zusammenfassung",
                       tags$div(
                         style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px;",
@@ -169,23 +163,6 @@ server <- function(input, output, session) {
         Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
         Kategorie_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
       )
-  })
-  
-  # Reaktiver Dataframe für Gebote pro Tag (alle Bieter, beide Typen)
-  gebote_zeit <- reactive({
-    gebotsprofil_clean() %>%
-      group_by(Datum) %>%
-      summarise(
-        Anzahl_Gebote = n()
-      ) %>%
-      arrange(Datum)
-  })
-  
-  # Reaktiver Dataframe: Gebote pro Tag und Bieter
-  gebote_tag_bieter <- reactive({
-    gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
   })
   
   
@@ -447,38 +424,6 @@ server <- function(input, output, session) {
         legend.position = "bottom",
         strip.text = element_text(face = "bold")
       )
-  })
-  
-  # ---- Gebote pro Tag ----
-  
-  output$gebote_pro_tag <- renderPlot({
-    df <- gebote_zeit()
-    ggplot(df, aes(x = Datum, y = Anzahl_Gebote)) +
-      geom_col(fill = "#1f77b4", alpha = 0.7) +
-      geom_line(color = "#d62728", size = 1.3, alpha = 0.7) +
-      geom_point(size = 2, color = "#d62728", alpha = 0.9) +
-      labs(
-        title = "Anzahl aller Gebote pro Tag (Erst- und Zweitgebot)",
-        x = "Datum",
-        y = "Gebote pro Tag"
-      ) +
-      theme_minimal(base_size = 14)
-  })
-  
-  # ---- Durchschnittliche Gebotszahl pro Tag je Konkurrent ----
-  
-  output$gebote_pro_tag_bieter <- renderPlot({
-    df <- gebote_tag_bieter()
-    ggplot(df, aes(x = Bieter, y = Anzahl_Gebote, color = Bieter, fill = Bieter)) +
-      geom_boxplot(width = 0.5, alpha = 0.2, outlier.shape = NA) +
-      ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      labs(
-        title = "Gebotsanzahl pro Tag je Konkurrent (Boxplot + Beeswarm)",
-        x = "Bieter",
-        y = "Gebote pro Tag"
-      ) +
-      theme_minimal(base_size = 14) +
-      theme(legend.position = "none", axis.text.x = element_text(angle = 30, hjust = 1))
   })
 
   # ---- Zusammenfassung als Tabelle ohne MW Klassen ----
