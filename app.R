@@ -341,8 +341,7 @@ server <- function(input, output, session) {
         aes(yintercept = Mean),
         color = "#d62728",
         linewidth = 1,
-        linetype = "solid",
-        inherit.aes = FALSE
+        linetype = "solid"
       ) +
       geom_text(
         data = means_klasse,
@@ -393,8 +392,7 @@ server <- function(input, output, session) {
       geom_hline(
         data = mean_total,
         aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey80", linewidth = 0.9,
-        inherit.aes = FALSE
+        linetype = "dashed", color = "grey80", linewidth = 0.9
       ) +
       geom_text(
         data = mean_total,
