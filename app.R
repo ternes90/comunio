@@ -4,7 +4,6 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-library(openxlsx)
 
 # ---- Custom JS für Copy-Button ----
 jsCode <- "
@@ -167,81 +166,6 @@ server <- function(input, output, session) {
     
     list(transfers = transfers, transfermarkt = transfermarkt)
   })
-  
-  ## ---- transfers append ----
-  observeEvent(input$parse_text, {
-    req(input$transfer_text)
-    text <- input$transfer_text
-    lines <- unlist(strsplit(text, "\n"))
-    transfers <- list()
-    akt_datum <- NA
-    
-    for (i in seq_along(lines)) {
-      line <- lines[i]
-      if (grepl("\\d{2}\\.\\d{2}\\.\\d{2}", line)) {
-        found <- regmatches(line, regexpr("\\d{2}\\.\\d{2}\\.\\d{2}", line))
-        if (length(found) > 0) akt_datum <- found[1]
-      }
-      if (grepl("wechselt für", line)) {
-        line_clean <- sub("^\\d{1,2}:\\d{2} -\\s*", "", line)
-        spieler <- sub("^(.*?) wechselt für.*$", "\\1", line_clean)
-        betrag <- sub(".*wechselt für ([0-9\\.]+) von .*", "\\1", line_clean)
-        besitzer <- sub(".*von (.*?) zu (.*)", "\\1", line_clean)
-        hoechstbietender <- sub(".*von (.*?) zu (.*)", "\\2", line_clean)
-        hoechstbietender <- sub("\\..*$", "", hoechstbietender)
-        zweitgebot <- ""
-        zweitbietender <- ""
-        if (i < length(lines) && grepl("Das zweithöchste Angebot", lines[i + 1])) {
-          zweitline <- lines[i + 1]
-          zweitgebot <- sub(".*betrug ([0-9\\.]+) von (.*)\\.", "\\1", zweitline)
-          zweitbietender <- sub(".*betrug [0-9\\.]+ von (.*)\\.", "\\1", zweitline)
-        }
-        transfers[[length(transfers) + 1]] <- c(
-          ifelse(is.na(akt_datum), "", akt_datum),
-          spieler, besitzer, betrag, hoechstbietender, zweitgebot, zweitbietender
-        )
-      }
-    }
-    
-    if (length(transfers) > 0) {
-      parsed_transfers_df <- do.call(rbind, lapply(transfers, function(x) {
-        data.frame(
-          Datum = as.Date(x[1], format = "%d.%m.%y"),
-          Spieler = str_trim(x[2]),
-          Besitzer = str_trim(x[3]),
-          Hoechstgebot = as.numeric(gsub("\\.", "", x[4])),
-          Hoechstbietender = str_trim(x[5]),
-          Zweitgebot = as.numeric(gsub("\\.", "", x[6])),
-          Zweitbietender = str_trim(x[7]),
-          stringsAsFactors = FALSE
-        )
-      }))
-      
-      original_path <- "TRANSFERS_all.xlsx"
-      backup_folder <- "archiv"
-      if (!dir.exists(backup_folder)) dir.create(backup_folder)
-      backup_path <- file.path(backup_folder, paste0(Sys.Date(), "_TRANSFERS_all.xlsx"))
-      
-      file.copy(original_path, backup_path, overwrite = TRUE)
-      
-      alt_data <- readxl::read_excel(original_path) %>%
-        mutate(Datum = as.Date(Datum))
-      
-      parsed_transfers_df <- parsed_transfers_df %>%
-        mutate(Datum = as.Date(Datum))
-      
-      combined_data <- bind_rows(alt_data, parsed_transfers_df) %>%
-        mutate(Datum = as.Date(Datum))
-      
-      writexl::write_xlsx(combined_data, original_path)
-      
-      showNotification("Backup erstellt und TRANSFERS_all.xlsx erfolgreich aktualisiert.", type = "message")
-    } else {
-      showNotification("Keine Transfers gefunden.", type = "error")
-    }
-  })
-  
-  
   
   ## ---- gebotsprofil_clean (MW nur Vortag oder davor!) ----
   gebotsprofil_clean <- reactive({
