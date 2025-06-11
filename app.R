@@ -4,7 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-#library(plotly)
+library(plotly)
 
 # ---- Custom JS für Copy-Button ----
 jsCode <- "
@@ -276,98 +276,99 @@ server <- function(input, output, session) {
   
   
   ## ---- MW-Klassen Boxplot+Beeswarm ----
-  # output$mwclassplot <- renderPlotly({
-  #   req(nrow(gebotsprofil_mwclass()) > 0)
-  #   
-  #   plotdata <- gebotsprofil_mwclass() %>%
-  #     filter(!is.na(Diff_Prozent)) %>%
-  #     mutate(
-  #       MW_Klasse = factor(
-  #         MW_Klasse,
-  #         levels = c("<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"),
-  #         ordered = TRUE
-  #       )
-  #     )
-  #   
-  #   # Mittelwerte
-  #   means <- plotdata %>%
-  #     group_by(Bieter, MW_Klasse) %>%
-  #     summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-  #   # Annahme: plotdata enthält alle Bieter, MW_Klasse etc.
-  #   means_klasse <- plotdata %>%
-  #     group_by(MW_Klasse) %>%
-  #     summarise(
-  #       Mean = mean(Diff_Prozent, na.rm = TRUE),
-  #       letzter_Bieter = Bieter[which.max(as.numeric(factor(Bieter)))]
-  #     ) %>%
-  #     mutate(Mean_label = Mean + 10)  # <-- 7 Punkte nach oben, anpassen nach Bedarf
-  #   
-  #   
-  #   
-  #   p <- ggplot(plotdata, aes(
-  #     x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter,
-  #     text = paste0(
-  #       "Spieler: ", Spieler, "<br>",
-  #       "Bieter: ", Bieter, "<br>",
-  #       "MW-Klasse: ", MW_Klasse, "<br>",
-  #       "Abweichung: ", Diff_Prozent, "%<br>",
-  #       "Datum: ", format(Datum, "%d.%m.%Y")
-  #     )
-  #   )) +
-  #     geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
-  #     geom_point(size = 2.5, alpha = 0.8, shape = 21) +   # Punkte interaktiv
-  #     geom_segment(
-  #       data = means,
-  #       aes(x = as.numeric(factor(Bieter)) - 0.4, 
-  #           xend = as.numeric(factor(Bieter)) + 0.4, 
-  #           y = Mean, yend = Mean),
-  #       color = "grey30",
-  #       linetype = "dashed",
-  #       linewidth = 0.8,
-  #       inherit.aes = FALSE
-  #     ) +
-  #     geom_text(
-  #       data = means,
-  #       aes(x = as.numeric(factor(Bieter)), y = Mean, 
-  #           label = round(Mean, 1)),
-  #       color = "black",
-  #       fontface = "bold",
-  #       size = 3,
-  #       vjust = -0.7,
-  #       inherit.aes = FALSE
-  #     ) +
-  #     geom_hline(
-  #       data = means_klasse,
-  #       aes(yintercept = Mean),
-  #       color = "#d62728",
-  #       linewidth = 1,
-  #       linetype = "solid"
-  #     ) +
-  #     geom_text(
-  #       data = means_klasse,
-  #       aes(x = letzter_Bieter, y = Mean_label, label = paste0("Ø ", round(Mean, 1), " %")),
-  #       color = "#d62728",
-  #       fontface = "bold",
-  #       size = 3.5,
-  #       inherit.aes = FALSE
-  #     ) +
-  #     facet_grid(. ~ MW_Klasse, scales = "free_y") +
-  #     labs(
-  #       title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
-  #       x = "",
-  #       y = "Abweichung vom MW Vortag (%)"
-  #     ) +
-  #     scale_color_brewer(palette = "Paired") +
-  #     scale_fill_brewer(palette = "Paired") +
-  #     theme_minimal(base_size = 13) +
-  #     theme(
-  #       legend.position = "none",
-  #       strip.text = element_text(face = "bold"),
-  #       axis.text.x = element_text(angle = 30, hjust = 1)
-  #     )
-  #   
-  #   ggplotly(p, tooltip = "text")
-  # })
+  output$mwclassplot <- renderPlotly({
+    req(nrow(gebotsprofil_mwclass()) > 0)
+    
+    plotdata <- gebotsprofil_mwclass() %>%
+      filter(!is.na(Diff_Prozent)) %>%
+      mutate(
+        MW_Klasse = factor(
+          MW_Klasse,
+          levels = c("<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"),
+          ordered = TRUE
+        )
+      )
+    
+    # Mittelwerte
+    means <- plotdata %>%
+      group_by(Bieter, MW_Klasse) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    # Annahme: plotdata enthält alle Bieter, MW_Klasse etc.
+    means_klasse <- plotdata %>%
+      group_by(MW_Klasse) %>%
+      summarise(
+        Mean = mean(Diff_Prozent, na.rm = TRUE),
+        letzter_Bieter = Bieter[which.max(as.numeric(factor(Bieter)))]
+      ) %>%
+      mutate(Mean_label = Mean + 10)  # <-- 7 Punkte nach oben, anpassen nach Bedarf
+    
+    
+    
+    p <- ggplot(plotdata, aes(
+      x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter,
+      text = paste0(
+        "Spieler: ", Spieler, "<br>",
+        "Bieter: ", Bieter, "<br>",
+        "MW-Klasse: ", MW_Klasse, "<br>",
+        "Abweichung: ", Diff_Prozent, "%<br>",
+        "Datum: ", format(Datum, "%d.%m.%Y")
+      )
+    )) +
+      geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
+      geom_point(size = 2.5, alpha = 0.8, shape = 21) +   # Punkte interaktiv
+      geom_segment(
+        data = means,
+        aes(x = as.numeric(factor(Bieter)) - 0.4, 
+            xend = as.numeric(factor(Bieter)) + 0.4, 
+            y = Mean, yend = Mean),
+        color = "grey30",
+        linetype = "dashed",
+        linewidth = 0.8,
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = means,
+        aes(x = as.numeric(factor(Bieter)), y = Mean, 
+            label = round(Mean, 1)),
+        color = "black",
+        fontface = "bold",
+        size = 3,
+        vjust = -0.7,
+        inherit.aes = FALSE
+      ) +
+      geom_hline(
+        data = means_klasse,
+        aes(yintercept = Mean),
+        color = "#d62728",
+        linewidth = 1,
+        linetype = "solid",
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = means_klasse,
+        aes(x = letzter_Bieter, y = Mean_label, label = paste0("Ø ", round(Mean, 1), " %")),
+        color = "#d62728",
+        fontface = "bold",
+        size = 3.5,
+        inherit.aes = FALSE
+      ) +
+      facet_grid(. ~ MW_Klasse, scales = "free_y") +
+      labs(
+        title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
+        x = "",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "none",
+        strip.text = element_text(face = "bold"),
+        axis.text.x = element_text(angle = 30, hjust = 1)
+      )
+    
+    ggplotly(p, tooltip = "text")
+  })
   
   
   
@@ -392,7 +393,8 @@ server <- function(input, output, session) {
       geom_hline(
         data = mean_total,
         aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey80", linewidth = 0.9
+        linetype = "dashed", color = "grey80", linewidth = 0.9,
+        inherit.aes = FALSE
       ) +
       geom_text(
         data = mean_total,
