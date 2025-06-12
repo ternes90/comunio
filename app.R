@@ -881,24 +881,44 @@ server <- function(input, output, session) {
     flip_data() %>%
       mutate(
         Flip_Kategorie = case_when(
-          abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
-          abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
+          abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
+          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
+          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
+          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
           abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
         ),
         Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
         Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+      ) %>%
+      mutate(
+        Flip_Label = factor(Flip_Label, levels = c(
+          "Gewinn - Micro-Flip <25k",
+          "Gewinn - Mini-Flip 25–99k",
+          "Gewinn - Klein-Flip 100–249k",
+          "Gewinn - Mittel-Flip 250–499k",
+          "Gewinn - Mega-Flip ≥500k",
+          "Verlust - Micro-Flip <25k",
+          "Verlust - Mini-Flip 25–99k",
+          "Verlust - Klein-Flip 100–249k",
+          "Verlust - Mittel-Flip 250–499k",
+          "Verlust - Mega-Flip ≥500k"
+        ))
       ) %>%
       count(Besitzer, Flip_Label) %>%
       ggplot(aes(x = Besitzer, y = n, fill = Flip_Label)) +
       geom_col(position = "stack") +
       scale_fill_manual(
         values = c(
-          "Gewinn - Mini-Flip <50k" = "#a8e6a1",
-          "Gewinn - Mittel-Flip <250k" = "#4caf50",
-          "Gewinn - Mega-Flip ≥500k" = "#1b5e20",
-          "Verlust - Mini-Flip <50k" = "#fbb4b9",
-          "Verlust - Mittel-Flip <250k" = "#e41a1c",
-          "Verlust - Mega-Flip ≥500k" = "#67000d"
+          "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
+          "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
+          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
+          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
+          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
+          "Verlust - Micro-Flip <25k"      = "#ffcdd2",
+          "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
+          "Verlust - Klein-Flip 100–249k"  = "#e57373",
+          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
+          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
         )
       ) +
       labs(
@@ -911,23 +931,40 @@ server <- function(input, output, session) {
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
   })
   
+  
+  
   ## ---- FLIP-Kumuliert je Flip-Art ----
   output$flip_cumcat <- renderPlot({
     req(nrow(flip_data()) > 0)
     flip_data() %>%
       mutate(
         Flip_Kategorie = case_when(
-          abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
-          abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
-          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
-          TRUE ~ "Sonst"
+          abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
+          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
+          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
+          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
+          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
         ),
         Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
         Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
       ) %>%
-      group_by(Besitzer, Flip_Ergebnis, Flip_Kategorie) %>%
+      mutate(
+        Flip_Label = factor(Flip_Label, levels = c(
+          "Gewinn - Micro-Flip <25k",
+          "Gewinn - Mini-Flip 25–99k",
+          "Gewinn - Klein-Flip 100–249k",
+          "Gewinn - Mittel-Flip 250–499k",
+          "Gewinn - Mega-Flip ≥500k",
+          "Verlust - Micro-Flip <25k",
+          "Verlust - Mini-Flip 25–99k",
+          "Verlust - Klein-Flip 100–249k",
+          "Verlust - Mittel-Flip 250–499k",
+          "Verlust - Mega-Flip ≥500k"
+        ))
+      ) %>%
+      group_by(Besitzer, Flip_Label) %>%
       summarise(Summe = sum(Gewinn), .groups = "drop") %>%
-      ggplot(aes(x = Besitzer, y = Summe, fill = interaction(Flip_Ergebnis, Flip_Kategorie))) +
+      ggplot(aes(x = Besitzer, y = Summe, fill = Flip_Label)) +
       geom_col(position = "stack") +
       labs(
         title = "Kumulierte Flip-Gewinne/Verluste je Spieler und Flip-Art",
@@ -937,17 +974,22 @@ server <- function(input, output, session) {
       ) +
       scale_fill_manual(
         values = c(
-          "Gewinn.Mini-Flip <50k" = "#a8e6a1",
-          "Gewinn.Mittel-Flip <250k" = "#4caf50",
-          "Gewinn.Mega-Flip ≥500k" = "#1b5e20",
-          "Verlust.Mini-Flip <50k" = "#fbb4b9",
-          "Verlust.Mittel-Flip <250k" = "#e41a1c",
-          "Verlust.Mega-Flip ≥500k" = "#67000d"
+          "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
+          "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
+          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
+          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
+          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
+          "Verlust - Micro-Flip <25k"      = "#ffcdd2",
+          "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
+          "Verlust - Klein-Flip 100–249k"  = "#e57373",
+          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
+          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
         )
       ) +
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
   })
+  
   
   ## ---- Flip-Historie je Spieler ----
   output$flip_player_table <- renderDT({
