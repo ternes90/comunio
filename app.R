@@ -207,21 +207,21 @@ server <- function(input, output, session) {
       filter(Bieter != "Computer" & !is.na(MW_vortag))
   })
   
-  ## ---- flip_kategorien_data ----
-  flip_kategorien_data <- reactive({
-    req(flip_data())
-    flip_data() %>%
-      mutate(
-        Flip_Kategorie = case_when(
-          abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
-          abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
-          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
-          TRUE ~ "Sonst"
-        ),
-        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
-        Kategorie_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
-      )
-  })
+  # ## ---- flip_kategorien_data ----
+  # flip_kategorien_data <- reactive({
+  #   req(flip_data())
+  #   flip_data() %>%
+  #     mutate(
+  #       Flip_Kategorie = case_when(
+  #         abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
+  #         abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
+  #         abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
+  #         TRUE ~ "Sonst"
+  #       ),
+  #       Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+  #       Kategorie_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+  #     )
+  # })
   
   ## ---- flip_player_select ----
   observe({
