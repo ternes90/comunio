@@ -93,7 +93,17 @@ ui <- navbarPage(
                           DTOutput("flip_player_table")
                         )
                       )
+             ),
+             tabPanel("Kapitalübersicht",
+                      DTOutput("kapital_uebersicht_table"),
+                      tags$hr(),
+                      h4("Aktuelle Teamwerte (für Kreditberechnung)"),
+                      helpText("Format: Name gefolgt von Kaderwert, z.B. 'Thomas Henzgen67.160.000-0'"),
+                      textAreaInput("teamwerte_text", label = NULL, height = "200px", placeholder = "Thomas Henzgen67.160.000-0\nAlfons Laubenthal63.420.000-0\n..."),
+                      actionButton("parse_teamwerte", "Teamwerte verarbeiten"),
+                      verbatimTextOutput("teamwerte_status")
              )
+             
            )
   ),
   
@@ -103,7 +113,13 @@ ui <- navbarPage(
            textAreaInput("transfer_text", "Transfernews Text einfügen", height = "250px"),
            actionButton("parse_text", "Konvertieren"),
            uiOutput("copy_button_ui"),
-           verbatimTextOutput("parsed_transfers")
+           verbatimTextOutput("parsed_transfers"),
+           
+           h4("Transfer-Annulierungen, Boni & Strafen convert"),
+           textAreaInput("transactions_text", "Text für Annulierungen / Boni / Strafen einfügen", height = "300px"),
+           actionButton("parse_transactions", "Konvertieren"),
+           verbatimTextOutput("parsed_transactions_output")
+           
   )
 )
 
@@ -159,6 +175,7 @@ server <- function(input, output, session) {
   data_all <- reactive({
     transfers <- readxl::read_excel("TRANSFERS_all.xlsx") %>%
       mutate(Datum = as.Date(Datum)) %>%
+      # Korrekturen manuell anpassen, nicht über Boni/Disziplinarstrafen arbeiten
       mutate(Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot))
     
     transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
@@ -1005,33 +1022,194 @@ server <- function(input, output, session) {
       )
   })
   
-  # ---- TOOLS & IMPORT: convert Transfernews ----
+  ## ---- Kontostände je Spieler ----
+  
+  # Hilfsfunktion: Nur Vornamen extrahieren
+  vorname <- function(name) {
+    strsplit(name, " ")[[1]][1]
+  }
+  
+  # Fixe Startkapitalwerte (vollständige Namen als Keys)
+  startkapital_fix <- c(
+    "Alfons" = 45000000 - 30770000,
+    "Nico" = 45000000 - 29470000,
+    "Andreas" = 45000000 - 29210000,
+    "Pascal" = 45000000 - 29200000,
+    "Thomas" = 45000000 - 28170000,
+    "Christoph" = 45000000 - 27360000,
+    "Christian" = 45000000 - 26860000,
+    "Dominik" = 45000000 - 26960000
+  )
+  
+  # Vornamen-Index für Startkapital
+  startkapital_fix_vornamen <- startkapital_fix
+  names(startkapital_fix_vornamen) <- sapply(names(startkapital_fix), vorname)
+  
+  # ReactiveVal für geparste Teamwerte
+  teamwerte_val <- reactiveVal(data.frame(Manager = character(), Kaderwert = numeric(), stringsAsFactors = FALSE))
+  
+  # Parsing der Teamwerte bei Klick
+  observeEvent(input$parse_teamwerte, {
+    req(input$teamwerte_text)
+    lines <- unlist(strsplit(input$teamwerte_text, "\n"))
+    
+    parse_line <- function(line) {
+      line <- trimws(line)
+      line <- sub("^\\d+\\.\\s*", "", line)  # führende Nummern entfernen
+      line <- sub("-.*$", "", line)           # Minus und dahinter entfernen
+      m <- regexpr("(\\d{1,3}(?:\\.\\d{3})+)$", line, perl=TRUE)
+      if (m == -1) return(NULL)
+      wert_str <- regmatches(line, m)
+      wert_num <- as.numeric(gsub("\\.", "", wert_str))
+      manager <- substr(line, 1, m - 1)
+      manager <- trimws(manager)
+      if (is.na(wert_num) || wert_num <= 0 || nchar(manager) == 0) return(NULL)
+      data.frame(Manager = manager, Kaderwert = wert_num, stringsAsFactors = FALSE)
+    }
+    
+    df_list <- lapply(lines, parse_line)
+    df <- do.call(rbind, df_list)
+    if (is.null(df)) df <- data.frame(Manager = character(), Kaderwert = numeric())
+    
+    df$Vorname <- sapply(df$Manager, vorname)
+    
+    teamwerte_val(df)
+    
+    output$teamwerte_status <- renderText({
+      paste0("Erfasste Teamwerte: ", nrow(df))
+    })
+  })
+  
+  # Kapitalübersicht-Tabelle
+  output$kapital_uebersicht_table <- renderDT({
+    # Transfers und Transactions laden (hier Beispiel für Daten_all Funktion)
+    dat <- data_all()
+    transfers <- dat$transfers
+    transactions <- readxl::read_excel("TRANSACTIONS_all.xlsx") %>%
+      mutate(Spieler = as.character(Spieler)) %>%
+      group_by(Spieler) %>%
+      summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
+    
+    alle_manager <- names(startkapital_fix)
+    
+    # Summen aus Transfers
+    ausgaben <- transfers %>%
+      group_by(Hoechstbietender) %>%
+      summarise(Ausgaben = sum(Hoechstgebot, na.rm = TRUE)) %>%
+      rename(Manager = Hoechstbietender)
+    
+    einnahmen <- transfers %>%
+      group_by(Besitzer) %>%
+      summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
+      rename(Manager = Besitzer)
+    
+    kader_df <- teamwerte_val()
+    
+    # Falls keine Teamwerte geparst, ein leeres DF mit Vornamen erzeugen (um Fehler zu vermeiden)
+    if(nrow(kader_df) == 0){
+      kader_df <- data.frame(Manager = character(), Kaderwert = numeric(), Vorname = character(), stringsAsFactors = FALSE)
+    }
+    
+    # Vornamen für Join
+    if (!"Vorname" %in% names(kader_df)) {
+      kader_df$Vorname <- sapply(kader_df$Manager, vorname)
+    }
+    
+    kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE)
+    kapital_df$Vorname <- sapply(kapital_df$Manager, vorname)
+    
+    kapital_df <- kapital_df %>%
+      left_join(kader_df %>% select(Vorname, Kaderwert), by = "Vorname") %>%
+      mutate(
+        Startkapital = startkapital_fix_vornamen[Vorname],
+        Kreditrahmen = round(ifelse(is.na(Kaderwert), 0, Kaderwert) / 4),
+        Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
+        Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
+        Transaction_Summe = ifelse(is.na(transactions$Transaction_Summe[match(Manager, transactions$Manager)]), 0, transactions$Transaction_Summe[match(Manager, transactions$Manager)]),
+        Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe,
+        Verfügbares_Kapital = Aktuelles_Kapital + Kreditrahmen
+      ) %>%
+      select(Manager, Startkapital, Kaderwert, Kreditrahmen, Ausgaben, Einnahmen, Transaction_Summe, Aktuelles_Kapital, Verfügbares_Kapital)
+    
+    datatable(
+      kapital_df,
+      colnames = c(
+        "Manager",
+        "Startkapital (€)",
+        "Kaderwert (€)",
+        "Kreditrahmen (¼ Kaderwert) (€)",
+        "Transfer-Ausgaben (€)",
+        "Transfer-Einnahmen (€)",
+        "Disziplinar-/Bonus-Transaktionen (€)",
+        "Aktuelles Kapital (€)",
+        "Verfügbares Kapital (€)"
+      ),
+      options = list(
+        pageLength = 10,
+        autoWidth = TRUE,
+        order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc'))  # DT indiziert ab 0
+      )
+    ) %>%
+      formatStyle(
+        'Aktuelles_Kapital',
+        backgroundColor = styleInterval(0, c('salmon', NA)),
+        fontWeight = styleInterval(0, c('bold', NA))
+      )
+    
+  })
+  
+  # ---- TOOLS & IMPORT ----
+  ## ---- Convert Transfernews ----
+  # Gemeinsame Hilfsfunktion zur Datumskonvertierung
+  format_datum <- function(datumsstring) {
+    teile <- unlist(strsplit(datumsstring, "\\."))
+    if(length(teile) == 3) {
+      tag <- teile[1]
+      monat <- teile[2]
+      jahr <- teile[3]
+      if(nchar(jahr) == 2) jahr <- paste0("20", jahr)
+      sprintf("%02d.%02d.%s", as.integer(tag), as.integer(monat), jahr)
+    } else {
+      NA
+    }
+  }
+  
+  ## ---- Convert Transfernews ----
   parsed_text_val <- reactiveVal("")
   
   observeEvent(input$parse_text, {
     req(input$transfer_text)
-    text <- input$transfer_text
-    
-    lines <- unlist(strsplit(text, "\n"))
+    lines <- unlist(strsplit(input$transfer_text, "\n"))
     transfers <- list()
     akt_datum <- NA
     
     for (i in seq_along(lines)) {
-      line <- lines[i]
+      line <- trimws(lines[i])
       
-      # 1. Hole aktuelles Datum, falls vorhanden (z.B. "06.06.25")
-      if (grepl("\\d{2}\\.\\d{2}\\.\\d{2}", line)) {
+      # Datum aus 'Zuletzt geändert: 17.05.25' extrahieren
+      if (grepl("Zuletzt geändert: \\d{2}\\.\\d{2}\\.\\d{2}", line)) {
         found <- regmatches(line, regexpr("\\d{2}\\.\\d{2}\\.\\d{2}", line))
-        if (length(found) > 0) akt_datum <- found[1]
+        if (length(found) > 0) {
+          akt_datum <- format_datum(found)
+        }
+        next
       }
       
-      # 2. Nur relevante Transferzeilen weiter verarbeiten
+      # "Heute" erkennen
+      if (tolower(line) == "heute") {
+        akt_datum <- format(Sys.Date(), "%d.%m.%Y")
+        next
+      }
+      
+      # Reine Datumszeilen (z.B. "17.05.25")
+      if (grepl("^\\d{2}\\.\\d{2}\\.\\d{2,4}$", line)) {
+        akt_datum <- format_datum(line)
+        next
+      }
+      
       if (grepl("wechselt für", line)) {
-        # --- Zeitstempel wie "11:34 - " entfernen
         line_clean <- sub("^\\d{1,2}:\\d{2} -\\s*", "", line)
-        # Spielername extrahieren
         spieler <- sub("^(.*?) wechselt für.*$", "\\1", line_clean)
-        # Rest wie gehabt
         betrag <- sub(".*wechselt für ([0-9\\.]+) von .*", "\\1", line_clean)
         besitzer <- sub(".*von (.*?) zu (.*)", "\\1", line_clean)
         hoechstbietender <- sub(".*von (.*?) zu (.*)", "\\2", line_clean)
@@ -1051,9 +1229,9 @@ server <- function(input, output, session) {
     }
     
     if (length(transfers) > 0) {
-      out <- sapply(transfers, function(x) paste(x, collapse = ", "))
-      out <- c("Datum, Spieler, Besitzer, Hoechstgebot, Hoechstbietender, Zweitgebot, Zweitbietender", out)
-      parsed_text_val(paste(out, collapse = "\n"))
+      out <- sapply(transfers, function(x) paste(x, collapse = "; "))
+      header <- "Datum; Spieler; Besitzer; Hoechstgebot; Hoechstbietender; Zweitgebot; Zweitbietender"
+      parsed_text_val(paste(c(header, out), collapse = "\n"))
       output$parsed_transfers <- renderText(parsed_text_val())
     } else {
       parsed_text_val("Keine Transfers gefunden.")
@@ -1061,7 +1239,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # Copy-Button (nur anzeigen wenn Output vorhanden)
   output$copy_button_ui <- renderUI({
     req(parsed_text_val())
     actionButton("copy_transfers", "Copy output to clipboard", icon = icon("clipboard"))
@@ -1071,7 +1248,84 @@ server <- function(input, output, session) {
     session$sendCustomMessage(type = 'copyText', message = parsed_text_val())
   })
   
+  
+  
+  ## ---- Convert Boni & Strafen ----
+  parsed_transactions_val <- reactiveVal("")
+  
+  observeEvent(input$parse_transactions, {
+    req(input$transactions_text)
+    lines <- unlist(strsplit(input$transactions_text, "\n"))
+    out <- list()
+    aktuelles_datum <- NA
+    
+    for (line in lines) {
+      line <- trimws(line)
+      
+      if (tolower(line) == "heute") {
+        aktuelles_datum <- format(Sys.Date(), "%d.%m.%Y")
+        next
+      }
+      
+      if (grepl("^\\d{2}\\.\\d{2}\\.\\d{2,4}$", line)) {
+        aktuelles_datum <- format_datum(line)
+        next
+      }
+      
+      if (grepl("Transfer des Spielers .* annulliert von", line)) {
+        m <- regmatches(line, regexec("Transfer des Spielers (.*?) für ([0-9\\.]+) EUR .* annulliert von (.*)", line))[[1]]
+        if (length(m) == 4) {
+          spieler <- m[2]
+          betrag <- as.numeric(gsub("\\.", "", m[3]))
+          begruendung <- paste("Transfer annulliert von", m[4])
+          out[[length(out) + 1]] <- paste(aktuelles_datum, spieler, -betrag, begruendung, sep = ";")
+        }
+        next
+      }
+      
+      if (grepl("Gutschrift: .* gutgeschrieben\\. Begründung:", line)) {
+        m <- regmatches(line, regexec("Gutschrift: ([0-9\\.]+) wurden (.*?) vom Communityleiter .* gutgeschrieben\\. Begründung: (.*)", line))[[1]]
+        if (length(m) == 4) {
+          betrag <- as.numeric(gsub("\\.", "", m[2]))
+          spieler <- m[3]
+          begruendung <- paste("Bonus:", m[4])
+          datum <- ifelse(is.na(aktuelles_datum), format(Sys.Date(), "%d.%m.%Y"), aktuelles_datum)
+          out[[length(out) + 1]] <- paste(datum, spieler, betrag, begruendung, sep = ";")
+        }
+        next
+      }
+      
+      if (grepl("Disziplinarstrafe: .* abgezogen\\. Begründung:", line)) {
+        m <- regmatches(line, regexec("Disziplinarstrafe: ([0-9\\.]+) wurden (.*?) .* abgezogen\\. Begründung: (.*)", line))[[1]]
+        if (length(m) == 4) {
+          betrag <- -as.numeric(gsub("\\.", "", m[2]))
+          spieler <- m[3]
+          begruendung <- paste("Disziplinarstrafe:", m[4])
+          datum <- ifelse(is.na(aktuelles_datum), format(Sys.Date(), "%d.%m.%Y"), aktuelles_datum)
+          out[[length(out) + 1]] <- paste(datum, spieler, betrag, begruendung, sep = ";")
+        }
+        next
+      }
+    }
+    
+    if (length(out) == 0) {
+      parsed_transactions_val("Keine gültigen Einträge gefunden.")
+    } else {
+      header <- "Datum;Spieler;Transaktion;Begründung"
+      parsed_transactions_val(paste(c(header, out), collapse = "\n"))
+    }
+  })
+  
+  output$parsed_transactions_output <- renderText({
+    parsed_transactions_val()
+  })
+  
+  
 }
+
+
+
+
 
 # SHINY APP STARTEN
 shinyApp(ui, server)
