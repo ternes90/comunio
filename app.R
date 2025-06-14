@@ -173,10 +173,13 @@ server <- function(input, output, session) {
   
   ## ---- data_all ----
   data_all <- reactive({
-    transfers <- readxl::read_excel("TRANSFERS_all.xlsx") %>%
-      mutate(Datum = as.Date(Datum)) %>%
-      # Korrekturen manuell anpassen, nicht über Boni/Disziplinarstrafen arbeiten
-      mutate(Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot))
+    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
+      mutate(
+        Datum = as.Date(Datum, format = "%d.%m.%Y"),
+        Hoechstgebot = as.numeric(Hoechstgebot),
+        Zweitgebot = as.numeric(Zweitgebot),
+        Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)
+      )
     
     transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
       mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
