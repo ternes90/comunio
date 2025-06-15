@@ -102,12 +102,6 @@ ui <- navbarPage(
   
   ## ---- Tools ----
   tabPanel("Tools & Import",
-           h4("Transfernews convert"),
-           textAreaInput("transfer_text", "Transfernews Text einfügen", height = "250px"),
-           actionButton("parse_text", "Konvertieren"),
-           uiOutput("copy_button_ui"),
-           verbatimTextOutput("parsed_transfers"),
-           
            h4("Transfer-Annulierungen, Boni & Strafen convert"),
            textAreaInput("transactions_text", "Text für Annulierungen / Boni / Strafen einfügen", height = "300px"),
            actionButton("parse_transactions", "Konvertieren"),
@@ -1157,83 +1151,7 @@ server <- function(input, output, session) {
       NA
     }
   }
-  
-  ## ---- Convert Transfernews ----
-  parsed_text_val <- reactiveVal("")
-  
-  observeEvent(input$parse_text, {
-    req(input$transfer_text)
-    lines <- unlist(strsplit(input$transfer_text, "\n"))
-    transfers <- list()
-    akt_datum <- NA
-    
-    for (i in seq_along(lines)) {
-      line <- trimws(lines[i])
-      
-      # Datum aus 'Zuletzt geändert: 17.05.25' extrahieren
-      if (grepl("Zuletzt geändert: \\d{2}\\.\\d{2}\\.\\d{2}", line)) {
-        found <- regmatches(line, regexpr("\\d{2}\\.\\d{2}\\.\\d{2}", line))
-        if (length(found) > 0) {
-          akt_datum <- format_datum(found)
-        }
-        next
-      }
-      
-      # "Heute" erkennen
-      if (tolower(line) == "heute") {
-        akt_datum <- format(Sys.Date(), "%d.%m.%Y")
-        next
-      }
-      
-      # Reine Datumszeilen (z.B. "17.05.25")
-      if (grepl("^\\d{2}\\.\\d{2}\\.\\d{2,4}$", line)) {
-        akt_datum <- format_datum(line)
-        next
-      }
-      
-      if (grepl("wechselt für", line)) {
-        line_clean <- sub("^\\d{1,2}:\\d{2} -\\s*", "", line)
-        spieler <- sub("^(.*?) wechselt für.*$", "\\1", line_clean)
-        betrag <- sub(".*wechselt für ([0-9\\.]+) von .*", "\\1", line_clean)
-        besitzer <- sub(".*von (.*?) zu (.*)", "\\1", line_clean)
-        hoechstbietender <- sub(".*von (.*?) zu (.*)", "\\2", line_clean)
-        hoechstbietender <- sub("\\..*$", "", hoechstbietender)
-        zweitgebot <- ""
-        zweitbietender <- ""
-        if (i < length(lines) && grepl("Das zweithöchste Angebot", lines[i + 1])) {
-          zweitline <- lines[i + 1]
-          zweitgebot <- sub(".*betrug ([0-9\\.]+) von (.*)\\.", "\\1", zweitline)
-          zweitbietender <- sub(".*betrug [0-9\\.]+ von (.*)\\.", "\\1", zweitline)
-        }
-        transfers[[length(transfers) + 1]] <- c(
-          ifelse(is.na(akt_datum), "", akt_datum),
-          spieler, besitzer, betrag, hoechstbietender, zweitgebot, zweitbietender
-        )
-      }
-    }
-    
-    if (length(transfers) > 0) {
-      out <- sapply(transfers, function(x) paste(x, collapse = "; "))
-      header <- "Datum; Spieler; Besitzer; Hoechstgebot; Hoechstbietender; Zweitgebot; Zweitbietender"
-      parsed_text_val(paste(c(header, out), collapse = "\n"))
-      output$parsed_transfers <- renderText(parsed_text_val())
-    } else {
-      parsed_text_val("Keine Transfers gefunden.")
-      output$parsed_transfers <- renderText("Keine Transfers gefunden.")
-    }
-  })
-  
-  output$copy_button_ui <- renderUI({
-    req(parsed_text_val())
-    actionButton("copy_transfers", "Copy output to clipboard", icon = icon("clipboard"))
-  })
-  
-  observeEvent(input$copy_transfers, {
-    session$sendCustomMessage(type = 'copyText', message = parsed_text_val())
-  })
-  
-  
-  
+
   ## ---- Convert Boni & Strafen ----
   parsed_transactions_val <- reactiveVal("")
   
