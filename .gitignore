@@ -5,20 +5,16 @@
 push_updates.bat
 venv/
 archiv/
-
 # RStudio-Dateien
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-
 # Windows/Batch-Dateien
 push_updates.bat
 *.bat
-
 # Virtuelle Umgebung
 venv/
-
 # Python-typisch
 __pycache__/
 *.py[cod]
@@ -27,11 +23,10 @@ __pycache__/
 *.tmp
 *.sqlite3
 *.db
-
 # VS Code & Jupyter
 .vscode/
 .ipynb_checkpoints/
-
 # Sonstiges
 .DS_Store
 *.bak
+scrape_comunio_transfermarkt.py
