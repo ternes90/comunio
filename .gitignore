@@ -30,3 +30,4 @@ __pycache__/
 .DS_Store
 *.bak
 scrape_comunio_transfermarkt.py
+comunio_kader.csv
