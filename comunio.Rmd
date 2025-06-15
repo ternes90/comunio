@@ -81,8 +81,12 @@ transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) 
     Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)
   )
 
-transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
+# transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
   mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
+
+transfermarkt <- readr::read_csv2("TRANSFERMARKT.csv") %>%
+  mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
+
 
 # Besitzhistorie bauen
 wechsel <- transfers %>%
@@ -405,7 +409,7 @@ p <- ggplot() +
   # Ribbon als Fill mit Typ
   geom_ribbon(
     data = plotdata_base,
-    aes(x = TM_Stand, ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd, fill = "± 1 SD"),
+    aes(x = Datum, ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd, fill = "± 1 SD"),
     alpha = 0.4
   ) +
   # Linie Durchschnitt mit Farbe
