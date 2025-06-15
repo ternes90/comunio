@@ -69,7 +69,6 @@ ui <- navbarPage(
   tabPanel("Marktwert-Entwicklung",
            tabsetPanel(
              tabPanel("MW-Verlauf (alle)", 
-                      checkboxInput("show_overlay", "Zeige Verlauf aller Mitspieler (Overlay)", value = FALSE),
                       checkboxInput("show_sommerpause", "Zeige `24 Sommerpause-Kurve (Overlay)", value = TRUE),
                       checkboxInput("show_sommerpause_21", "Zeige `21 Sommerpause-Kurve (Overlay)", value = TRUE),
                       plotOutput("mw_evolution", height = 600)
@@ -181,7 +180,7 @@ server <- function(input, output, session) {
         Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)
       )
     
-    transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
+    transfermarkt <- readr::read_csv2("TRANSFERMARKT.csv") %>%
       mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
     
     list(transfers = transfers, transfermarkt = transfermarkt)
@@ -722,19 +721,6 @@ server <- function(input, output, session) {
       geom_vline(xintercept = as.Date("2025-08-22"), linetype="dotted", 
                  color = "darkred", size=1.5) +
       theme_minimal(base_size = 14)
-    
-    # Overlay: Alle Spieler
-    if (isTRUE(input$show_overlay)) {
-      p <- p +
-        geom_line(
-          data = df %>% filter(Besitzer != "Computer"),
-          aes(x = TM_Stand, y = MW_rel, group = interaction(Spieler, Besitzer), color = Besitzer),
-          alpha = 0.8, linewidth = 0.8, inherit.aes = FALSE
-        ) +
-        scale_color_brewer(palette = "Paired") +
-        guides(color = guide_legend(title = "Manager")) +
-        guides(color = guide_legend(title = "Besitzer / Manager"))
-    }
     
     if (isTRUE(input$show_sommerpause)) {
       p <- p + geom_line(
