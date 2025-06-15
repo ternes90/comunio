@@ -3,3 +3,34 @@
 .RData
 .Ruserdata
 push_updates.bat
+venv/
+
+# RStudio-Dateien
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Windows/Batch-Dateien
+push_updates.bat
+*.bat
+
+# Virtuelle Umgebung
+venv/
+
+# Python-typisch
+__pycache__/
+*.py[cod]
+*.pyo
+*.log
+*.tmp
+*.sqlite3
+*.db
+
+# VS Code & Jupyter
+.vscode/
+.ipynb_checkpoints/
+
+# Sonstiges
+.DS_Store
+*.bak
