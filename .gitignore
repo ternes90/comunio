@@ -4,6 +4,7 @@
 .Ruserdata
 push_updates.bat
 venv/
+archiv/
 
 # RStudio-Dateien
 .Rproj.user
