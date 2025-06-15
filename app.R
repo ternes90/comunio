@@ -95,12 +95,6 @@ ui <- navbarPage(
              ),
              tabPanel("Kapitalübersicht",
                       DTOutput("kapital_uebersicht_table"),
-                      tags$hr(),
-                      h4("Aktuelle Teamwerte (für Kreditberechnung)"),
-                      helpText("Format: Name gefolgt von Kaderwert, z.B. 'Thomas Henzgen67.160.000-0'"),
-                      textAreaInput("teamwerte_text", label = NULL, height = "200px", placeholder = "Thomas Henzgen67.160.000-0\nAlfons Laubenthal63.420.000-0\n..."),
-                      actionButton("parse_teamwerte", "Teamwerte verarbeiten"),
-                      verbatimTextOutput("teamwerte_status")
              )
              
            )
@@ -184,6 +178,14 @@ server <- function(input, output, session) {
       mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
     
     list(transfers = transfers, transfermarkt = transfermarkt)
+  })
+  
+  standings_df <- reactive({
+    req(file.exists("STANDINGS.csv"))
+    readr::read_csv2("STANDINGS.csv", col_types = cols(
+      Manager = col_character(),
+      Teamwert = col_double()
+    ))
   })
   
   ## ---- gebotsprofil_clean (MW nur Vortag oder davor!) ----
@@ -1071,7 +1073,6 @@ server <- function(input, output, session) {
   
   # Kapitalübersicht-Tabelle
   output$kapital_uebersicht_table <- renderDT({
-    # Transfers und Transactions laden (hier Beispiel für Daten_all Funktion)
     dat <- data_all()
     transfers <- dat$transfers
     transactions <- readxl::read_excel("TRANSACTIONS_all.xlsx") %>%
@@ -1092,40 +1093,34 @@ server <- function(input, output, session) {
       summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
       rename(Manager = Besitzer)
     
-    kader_df <- teamwerte_val()
+    # Standings-Daten laden
+    kader_df <- standings_df()
     
-    # Falls keine Teamwerte geparst, ein leeres DF mit Vornamen erzeugen (um Fehler zu vermeiden)
-    if(nrow(kader_df) == 0){
-      kader_df <- data.frame(Manager = character(), Kaderwert = numeric(), Vorname = character(), stringsAsFactors = FALSE)
-    }
-    
-    # Vornamen für Join
-    if (!"Vorname" %in% names(kader_df)) {
-      kader_df$Vorname <- sapply(kader_df$Manager, vorname)
-    }
+    # Falls nötig: Vornamen extrahieren oder sonstiges Mapping, hier nehmen wir Manager-Namen direkt
+    # Optional: teamnamen bereinigen oder anpassen, wenn deine Startkapitalnamen anders sind
     
     kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE)
-    kapital_df$Vorname <- sapply(kapital_df$Manager, vorname)
     
     kapital_df <- kapital_df %>%
-      left_join(kader_df %>% select(Vorname, Kaderwert), by = "Vorname") %>%
+      left_join(kader_df, by = "Manager") %>%
       mutate(
-        Startkapital = startkapital_fix_vornamen[Vorname],
-        Kreditrahmen = round(ifelse(is.na(Kaderwert), 0, Kaderwert) / 4),
+        Teamwert = ifelse(is.na(Teamwert), 0, Teamwert),
+        Startkapital = startkapital_fix[Manager],
+        Kreditrahmen = round(Teamwert / 4),
         Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
         Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
         Transaction_Summe = ifelse(is.na(transactions$Transaction_Summe[match(Manager, transactions$Manager)]), 0, transactions$Transaction_Summe[match(Manager, transactions$Manager)]),
         Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe,
         Verfügbares_Kapital = Aktuelles_Kapital + Kreditrahmen
       ) %>%
-      select(Manager, Startkapital, Kaderwert, Kreditrahmen, Ausgaben, Einnahmen, Transaction_Summe, Aktuelles_Kapital, Verfügbares_Kapital)
+      select(Manager, Startkapital, Teamwert, Kreditrahmen, Ausgaben, Einnahmen, Transaction_Summe, Aktuelles_Kapital, Verfügbares_Kapital)
     
     datatable(
       kapital_df,
       colnames = c(
         "Manager",
         "Startkapital (€)",
-        "Kaderwert (€)",
+        "Teamwert (€)",
         "Kreditrahmen (¼ Kaderwert) (€)",
         "Transfer-Ausgaben (€)",
         "Transfer-Einnahmen (€)",
@@ -1136,7 +1131,7 @@ server <- function(input, output, session) {
       options = list(
         pageLength = 10,
         autoWidth = TRUE,
-        order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc'))  # DT indiziert ab 0
+        order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc'))
       )
     ) %>%
       formatStyle(
@@ -1144,8 +1139,8 @@ server <- function(input, output, session) {
         backgroundColor = styleInterval(0, c('salmon', NA)),
         fontWeight = styleInterval(0, c('bold', NA))
       )
-    
   })
+  
   
   # ---- TOOLS & IMPORT ----
   ## ---- Convert Transfernews ----
