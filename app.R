@@ -26,6 +26,32 @@ Shiny.addCustomMessageHandler('copyText', function(message) {
 ui <- navbarPage(
   "Comunio Analyse",
   
+  ## ---- Marktwert-Entwicklung ----
+  tabPanel("Marktwert-Entwicklung",
+           tabPanel("MW-Verlauf (alle)", 
+                    
+                    # Zentrale Legende oben
+                    div(
+                      style = "text-align: center; margin-bottom: 10px;",
+                      HTML("
+      <b>Legende:</b><br>
+      <span style='color:#005c99; font-weight:bold;'>▍</span> Ø MW TM-Spieler &nbsp;&nbsp;
+      <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
+      <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
+      <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
+    ")
+                    ),
+                    
+                    # Plot
+                    plotOutput("mw_evolution", height = 600)
+           )
+  ),
+  
+  ## ---- Kaderwert-Entwicklung ----
+  tabPanel("Kaderwert-Entwicklung",
+           plotOutput("kaderwert_plot", height = 600)
+  ),
+  
   ## ---- Bieterprofile ----
   tabPanel("Bieterprofile",
            tabsetPanel(
@@ -62,17 +88,6 @@ ui <- navbarPage(
              
              
              
-           )
-  ),
-  
-  ## ---- Marktwert-Entwicklung ----
-  tabPanel("Marktwert-Entwicklung",
-           tabsetPanel(
-             tabPanel("MW-Verlauf (alle)", 
-                      checkboxInput("show_sommerpause", "Zeige `24 Sommerpause-Kurve (Overlay)", value = TRUE),
-                      checkboxInput("show_sommerpause_21", "Zeige `21 Sommerpause-Kurve (Overlay)", value = TRUE),
-                      plotOutput("mw_evolution", height = 600)
-             )
            )
   ),
   
@@ -177,7 +192,6 @@ server <- function(input, output, session) {
       slice_max(Datum, with_ties = FALSE) %>%
       ungroup()
   }) 
-  
   
   ## ---- gebotsprofil_clean (MW nur Vortag oder davor!) ----
   gebotsprofil_clean <- reactive({
@@ -461,6 +475,29 @@ server <- function(input, output, session) {
       )
   })
   
+  ## ---- Gebotsverhalten über die Zeit ----
+  
+  output$trendplot <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent)) %>%
+      mutate(Datum = as.Date(Datum)) # falls nicht schon Date
+    
+    ggplot(plotdata, aes(x = Datum, y = Diff_Prozent)) +
+      geom_point(alpha = 0.7, size = 2, color = "#1f77b4") +
+      geom_smooth(se = FALSE, method = "loess", span = 0.6, color = "#d62728", linewidth = 1.3) +
+      facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
+      labs(
+        title = "Entwicklung des Gebotsverhaltens über die Zeit",
+        x = "Datum",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(
+        strip.text = element_text(face = "bold")
+      )
+  })
+  
   ## ---- Gebote pro Tag ----
   
   output$gebote_pro_tag <- renderPlot({
@@ -602,9 +639,6 @@ server <- function(input, output, session) {
       )
   })
   
-  
-  
-
   ## ---- Zusammenfassung als Tabelle ohne MW Klassen ----
   output$mwclass_summary <- renderDT({
     if (!is.null(input$show_table) && input$show_table) {
@@ -630,22 +664,12 @@ server <- function(input, output, session) {
   besitzhistorie <- reactive({
     transfers <- data_all()$transfers
     
-    # alle relevanten Wechsel (sortiert)
     wechsel <- transfers %>%
       arrange(Spieler, Datum) %>%
       select(Spieler, Datum, Hoechstbietender) %>%
       rename(Besitzer = Hoechstbietender)
     
-    # initialen Eintrag pro Spieler (erste bekannte Besitzperiode)
-    first_transfer <- wechsel %>%
-      group_by(Spieler) %>%
-      slice(1) %>%
-      mutate(Startdatum = Datum, Enddatum = as.Date("2100-01-01")) %>%
-      ungroup()
-    
-    # alle Wechselpaare als Besitzzeiträume
     besitz <- list()
-    
     for (spieler in unique(wechsel$Spieler)) {
       sub <- wechsel %>% filter(Spieler == spieler) %>% arrange(Datum)
       for (i in 1:nrow(sub)) {
@@ -659,22 +683,19 @@ server <- function(input, output, session) {
         )
       }
     }
-    
     bind_rows(besitz)
   })
-  
   
   ## ---- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ----
   mw_evolution_data <- reactive({
     tm <- data_all()$transfermarkt %>%
       mutate(
         TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"),
-        Besitzer_eff = nickname_mapping[Besitzer]  # Mapping HIER anwenden!
+        Besitzer_eff = nickname_mapping[Besitzer]
       )
     
     besitz <- besitzhistorie()
     
-    # Join + Filter
     tm_besitz <- tm %>%
       left_join(besitz, by = "Spieler") %>%
       filter(TM_Stand >= Startdatum, TM_Stand <= Enddatum)
@@ -687,12 +708,51 @@ server <- function(input, output, session) {
       select(TM_Stand, Spieler, Besitzer = Besitzer_eff, Marktwert, MW_rel)
   })
   
+  ## ---- Gesamtmarktwerte ----
+  
+  # Manuell zusätzliche Tagesdaten ergänzen
+  manuelle_werte <- tibble::tibble(
+    Datum = as.Date(c(
+      "2025-06-01", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05",
+      "2025-06-06", "2025-06-07", "2025-06-08", "2025-06-09", "2025-06-10",
+      "2025-06-11", "2025-06-12", "2025-06-13", "2025-06-14", "2025-06-15"
+    )),
+    Marktwert = c(
+      1487390000, 1458940000, 1530070000, 1527560000, 1568600000,
+      1566740000, 1609040000, 1575690000, 1603080000, 1569800000,
+      1587530000, 1556450000, 1587250000, 1537530000, 1549230000
+    )
+  )
   
   
+  # CSV + manuelle Werte kombinieren
+  gesamt_mw_roh <- readr::read_delim(
+    file = "ALL_PLAYERS.csv",
+    delim = ";",
+    locale = locale(encoding = "UTF-8"),
+    show_col_types = FALSE,
+    trim_ws = TRUE
+  ) %>%
+    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) %>%
+    bind_rows(manuelle_werte)
   
+  # Summieren + Normieren
+  gesamt_mw_df <- gesamt_mw_roh %>%
+    group_by(Datum) %>%
+    summarise(
+      MW_gesamt = sum(Marktwert, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      MW_rel_normiert = MW_gesamt / 1487390000  # Referenzwert vom 01.06.2025
+    )
+  
+  
+  ## ---- Ausgabe-Plot ----
   output$mw_evolution <- renderPlot({
     df <- mw_evolution_data()
-    # Tagesmittel und SD über alle Spieler
+    
+    # Mittelwert + SD der TM-Spieler pro Tag
     plotdata <- df %>%
       group_by(TM_Stand) %>%
       summarise(
@@ -701,71 +761,127 @@ server <- function(input, output, session) {
         .groups = "drop"
       )
     
-    p <- ggplot(plotdata, aes(x = TM_Stand, y = MW_mean)) +
-      geom_ribbon(aes(ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd), fill = "#b3cde0", alpha = 0.4) +
-      geom_line(color = "#005c99", linewidth = 1.1) +
-      geom_point(color = "#005c99", size = 1.5, alpha = 0.7) +
-      labs(
-        title = "Durchschnittliche (normierte) Marktwertentwicklung aller TM-Spieler",
-        subtitle = "Relativ zum ersten dokumentierten MW je Spieler · Schattierung = ±1 SD",
-        x = "Datum",
-        y = "MW relativ zum Startwert"
-      ) +
-      geom_vline(xintercept = as.Date("2025-08-22"), linetype="dotted", 
-                 color = "darkred", size=1.5) +
-      theme_minimal(base_size = 14)
+    # Kombinierte Daten für Linienplot
+    lines_df <- bind_rows(
+      plotdata %>%
+        transmute(Datum = TM_Stand, Wert = MW_mean, Typ = "Durchschnitt TM-Spieler"),
+      gesamt_mw_df %>%
+        transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
+    )
     
-    if (isTRUE(input$show_sommerpause)) {
-      p <- p + geom_line(
+    p <- ggplot() +
+      # Schattierung für SD
+      geom_ribbon(
+        data = plotdata,
+        aes(x = TM_Stand, ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd),
+        fill = "#b3cde0", alpha = 0.4
+      ) +
+      # Linien für MW-Verläufe
+      geom_line(
+        data = lines_df,
+        aes(x = Datum, y = Wert, color = Typ),
+        linewidth = 1.2
+      ) +
+      geom_point(
+        data = plotdata,
+        aes(x = TM_Stand, y = MW_mean),
+        color = "#005c99", size = 1.5, alpha = 0.7
+      ) +
+      geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
+                 color = "darkred", size = 1.5) +
+      annotate(
+        "text",
+        x = as.Date("2025-08-22"),
+        y = 1.02,  # ggf. anpassen je nach Plot-Skalierung
+        label = "Saisonstart",
+        color = "darkred",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
+      ) +
+      labs(
+        title = "Marktwertentwicklung (relativ zum Startwert)",
+        subtitle = "Schattierung = ±1 SD (TM Spieler)",
+        x = "Datum",
+        y = "Relativer Marktwert",
+        color = "Linientyp"
+      ) +
+      scale_color_manual(values = c(
+        "Durchschnitt TM-Spieler" = "#005c99",
+        "Gesamtmarktwert" = "darkgrey"
+      )) +
+      theme_minimal(base_size = 14) +
+      theme(legend.position = "none") +
+      geom_line(
         data = sommerpause_df,
         aes(x = Datum, y = MW_rel_normiert),
         color = "red",
         linewidth = 1.3,
-        linetype = "dashed"
-      )
-    }
-    
-    if (isTRUE(input$show_sommerpause_21)) {
-      p <- p + geom_line(
+        linetype = "dashed") + 
+          geom_line(
         data = sommerpause_21_df,
         aes(x = Datum, y = MW_rel_normiert),
         color = "orange",
         linewidth = 1.3,
-        linetype = "dashed"
-      )
-    }
-    
-    
-    
-    
-    
+        linetype = "dashed")
     
     p
   })
   
+  # ---- Kaderwert-Entwicklung ----
+  
+  manuelle_standings <- tibble::tibble(
+    Manager = rep(c(
+      "Thomas", "Alfons", "Christoph", "Pascal",
+      "Andreas", "Dominik", "Nico", "Christian"
+    ), each = 2),
+    Datum = rep(as.Date(c("2025-05-27", "2025-06-01")), times = 8),
+    Teamwert = c(
+      28170000, 49340000,  # Thomas
+      30770000, 47310000,  # Alfons
+      27380000, 52050000,  # Christoph
+      29200000, 42330000,  # Pascal
+      29210000, 36280000,  # Andreas
+      26960000, 40120000,  # Dominik
+      29470000, 41190000,  # Nico
+      26860000, 38500000   # Christian
+    )
+  )
   
   
-  
-  output$trendplot <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent)) %>%
-      mutate(Datum = as.Date(Datum)) # falls nicht schon Date
+  standings_history_df <- reactive({
+    req(file.exists("STANDINGS.csv"))
     
-    ggplot(plotdata, aes(x = Datum, y = Diff_Prozent)) +
-      geom_point(alpha = 0.7, size = 2, color = "#1f77b4") +
-      geom_smooth(se = FALSE, method = "loess", span = 0.6, color = "#d62728", linewidth = 1.3) +
-      facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
-      labs(
-        title = "Entwicklung des Gebotsverhaltens über die Zeit",
-        x = "Datum",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      theme_minimal(base_size = 13) +
-      theme(
-        strip.text = element_text(face = "bold")
-      )
+    # CSV laden
+    original_df <- readr::read_csv2("STANDINGS.csv", col_types = cols(
+      Manager = col_character(),
+      Teamwert = col_double(),
+      Datum = col_character()
+    )) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+    
+    # Kombinieren mit manuellen Einträgen
+    bind_rows(original_df, manuelle_standings)
   })
+  
+  output$kaderwert_plot <- renderPlot({
+    df <- standings_history_df()
+    
+    ggplot(df, aes(x = Datum, y = Teamwert, color = Manager)) +
+      geom_line(linewidth = 1.2) +
+      geom_point(size = 2, alpha = 0.7) +
+      scale_color_brewer(palette = "Paired") +
+      labs(
+        title = "Kaderwert-Entwicklung",
+        subtitle = "Teamwert pro Manager über die Zeit",
+        x = "Datum",
+        y = "Teamwert (€)",
+        color = "Manager"
+      ) +
+      theme_minimal(base_size = 14)
+  })
+  
   
   # ---- FLIP-ANALYSE ----
   
