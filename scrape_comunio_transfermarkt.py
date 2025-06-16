@@ -15,7 +15,9 @@ URL = "https://www.comunio.de/exchangemarket"
 CSV_PATH = "TRANSFERMARKT.csv"
 
 options = webdriver.ChromeOptions()
-options.add_argument("--headless=new")  # Für Debug sichtbar lassen
+options.add_argument("--headless=new")  # Erzwinge Headless-Modus für Batch
+options.add_argument("--disable-gpu")  # Oft nötig bei Windows
+options.add_argument("--window-size=1920,1080")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 wait = WebDriverWait(driver, 30)
 
