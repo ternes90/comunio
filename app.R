@@ -98,15 +98,6 @@ ui <- navbarPage(
              )
              
            )
-  ),
-  
-  ## ---- Tools ----
-  tabPanel("Tools & Import",
-           h4("Transfer-Annulierungen, Boni & Strafen convert"),
-           textAreaInput("transactions_text", "Text für Annulierungen / Boni / Strafen einfügen", height = "300px"),
-           actionButton("parse_transactions", "Konvertieren"),
-           verbatimTextOutput("parsed_transactions_output")
-           
   )
 )
 
@@ -1149,89 +1140,6 @@ server <- function(input, output, session) {
         backgroundColor = styleInterval(0, c('salmon', NA)),
         fontWeight = styleInterval(0, c('bold', NA))
       )
-  })
-  
-  
-  # ---- TOOLS & IMPORT ----
-  ## ---- Convert Transfernews ----
-  # Gemeinsame Hilfsfunktion zur Datumskonvertierung
-  format_datum <- function(datumsstring) {
-    teile <- unlist(strsplit(datumsstring, "\\."))
-    if(length(teile) == 3) {
-      tag <- teile[1]
-      monat <- teile[2]
-      jahr <- teile[3]
-      if(nchar(jahr) == 2) jahr <- paste0("20", jahr)
-      sprintf("%02d.%02d.%s", as.integer(tag), as.integer(monat), jahr)
-    } else {
-      NA
-    }
-  }
-
-  ## ---- Convert Boni & Strafen ----
-  parsed_transactions_val <- reactiveVal("")
-  
-  observeEvent(input$parse_transactions, {
-    req(input$transactions_text)
-    lines <- unlist(strsplit(input$transactions_text, "\n"))
-    out <- list()
-    aktuelles_datum <- NA
-    
-    for (line in lines) {
-      line <- trimws(line)
-      
-      if (tolower(line) == "heute") {
-        aktuelles_datum <- format(Sys.Date(), "%d.%m.%Y")
-        next
-      }
-      
-      if (grepl("^\\d{2}\\.\\d{2}\\.\\d{2,4}$", line)) {
-        aktuelles_datum <- format_datum(line)
-        next
-      }
-      
-      if (grepl("Transfer des Spielers .* annulliert von", line)) {
-        m <- regmatches(line, regexec("Transfer des Spielers (.*?) für ([0-9\\.]+) EUR .* annulliert von (.*)", line))[[1]]
-        if (length(m) == 4) {
-          spieler <- m[2]
-          betrag <- as.numeric(gsub("\\.", "", m[3]))
-          begruendung <- paste("Transfer annulliert von", m[4])
-          out[[length(out) + 1]] <- paste(aktuelles_datum, spieler, -betrag, begruendung, sep = ";")
-        }
-        next
-      }
-      
-      if (grepl("Gutschrift: .* gutgeschrieben\\. Begründung:", line)) {
-        m <- regmatches(line, regexec("Gutschrift: ([0-9\\.]+) wurden (.*?) vom Communityleiter .* gutgeschrieben\\. Begründung: (.*)", line))[[1]]
-        if (length(m) == 4) {
-          betrag <- as.numeric(gsub("\\.", "", m[2]))
-          spieler <- m[3]
-          begruendung <- paste("Bonus:", m[4])
-          datum <- ifelse(is.na(aktuelles_datum), format(Sys.Date(), "%d.%m.%Y"), aktuelles_datum)
-          out[[length(out) + 1]] <- paste(datum, spieler, betrag, begruendung, sep = ";")
-        }
-        next
-      }
-      
-      if (grepl("Disziplinarstrafe: .* abgezogen\\. Begründung:", line)) {
-        m <- regmatches(line, regexec("Disziplinarstrafe: ([0-9\\.]+) wurden (.*?) .* abgezogen\\. Begründung: (.*)", line))[[1]]
-        if (length(m) == 4) {
-          betrag <- -as.numeric(gsub("\\.", "", m[2]))
-          spieler <- m[3]
-          begruendung <- paste("Disziplinarstrafe:", m[4])
-          datum <- ifelse(is.na(aktuelles_datum), format(Sys.Date(), "%d.%m.%Y"), aktuelles_datum)
-          out[[length(out) + 1]] <- paste(datum, spieler, betrag, begruendung, sep = ";")
-        }
-        next
-      }
-    }
-    
-    if (length(out) == 0) {
-      parsed_transactions_val("Keine gültigen Einträge gefunden.")
-    } else {
-      header <- "Datum;Spieler;Transaktion;Begründung"
-      parsed_transactions_val(paste(c(header, out), collapse = "\n"))
-    }
   })
   
   output$parsed_transactions_output <- renderText({
