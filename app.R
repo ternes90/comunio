@@ -165,7 +165,7 @@ server <- function(input, output, session) {
         Datum = as.Date(Datum, format = "%d.%m.%Y"),
         Hoechstgebot = as.numeric(Hoechstgebot),
         Zweitgebot = as.numeric(Zweitgebot),
-        Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)
+        Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot) #Umwandeln von Fehlgebot von Alfons
       )
     
     transfermarkt <- readr::read_csv2("TRANSFERMARKT.csv") %>%
@@ -178,9 +178,15 @@ server <- function(input, output, session) {
     req(file.exists("STANDINGS.csv"))
     readr::read_csv2("STANDINGS.csv", col_types = cols(
       Manager = col_character(),
-      Teamwert = col_double()
-    ))
-  })
+      Teamwert = col_double(),
+      Datum = col_character()
+    )) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) %>%
+      group_by(Manager) %>%
+      slice_max(Datum, with_ties = FALSE) %>%
+      ungroup()
+  }) 
+  
   
   ## ---- gebotsprofil_clean (MW nur Vortag oder davor!) ----
   gebotsprofil_clean <- reactive({
@@ -222,7 +228,7 @@ server <- function(input, output, session) {
       filter(Bieter != "Computer" & !is.na(MW_vortag))
   })
   
-  # ## ---- flip_kategorien_data ----
+  ## ---- flip_kategorien_data ----
   # flip_kategorien_data <- reactive({
   #   req(flip_data())
   #   flip_data() %>%
@@ -1016,15 +1022,16 @@ server <- function(input, output, session) {
   
   # Fixe Startkapitalwerte (vollständige Namen als Keys)
   startkapital_fix <- c(
-    "Alfons" = 45000000 - 30770000,
-    "Nico" = 45000000 - 29470000,
-    "Andreas" = 45000000 - 29210000,
-    "Pascal" = 45000000 - 29200000,
-    "Thomas" = 45000000 - 28170000,
-    "Christoph" = 45000000 - 27360000,
-    "Christian" = 45000000 - 26860000,
-    "Dominik" = 45000000 - 26960000
-  )
+  "Alfons" = 14230000,
+  "Nico" = 15530000,
+  "Andreas" = 15790000,
+  "Pascal" = 15800000,
+  "Thomas" = 16830000,
+  "Christoph" = 17640000,
+  "Christian" = 18140000,
+  "Dominik" = 18040000
+)
+
   
   # Vornamen-Index für Startkapital
   startkapital_fix_vornamen <- startkapital_fix
@@ -1069,15 +1076,18 @@ server <- function(input, output, session) {
   output$kapital_uebersicht_table <- renderDT({
     dat <- data_all()
     transfers <- dat$transfers
-    # transactions <- readxl::read_excel("TRANSACTIONS_all.xlsx") %>%
-    #   mutate(Spieler = as.character(Spieler)) %>%
-    #   group_by(Spieler) %>%
-    #   summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
-    
-    transactions <- readr::read_delim("TRANSACTIONS.csv", delim = ";", 
-                                      locale = locale(encoding = "UTF-8"), show_col_types = FALSE) %>%
-      mutate(Spieler = as.character(Spieler)) %>%
-      group_by(Spieler) %>%
+    transactions <- readr::read_delim(
+      "TRANSACTIONS.csv",
+      delim = ";",
+      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ""),
+      show_col_types = FALSE
+    ) %>%
+      mutate(
+        Spieler = as.character(Spieler),
+        Manager = word(Spieler, 1)  # nimmt das erste Wort → also den Vornamen
+      ) %>%
+      filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000)) %>%  #Rausfiltern von Fehlgebot von Alfons
+      group_by(Manager) %>%
       summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
     
     alle_manager <- names(startkapital_fix)
