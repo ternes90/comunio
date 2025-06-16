@@ -1069,7 +1069,13 @@ server <- function(input, output, session) {
   output$kapital_uebersicht_table <- renderDT({
     dat <- data_all()
     transfers <- dat$transfers
-    transactions <- readxl::read_excel("TRANSACTIONS_all.xlsx") %>%
+    # transactions <- readxl::read_excel("TRANSACTIONS_all.xlsx") %>%
+    #   mutate(Spieler = as.character(Spieler)) %>%
+    #   group_by(Spieler) %>%
+    #   summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
+    
+    transactions <- readr::read_delim("TRANSACTIONS.csv", delim = ";", 
+                                      locale = locale(encoding = "UTF-8"), show_col_types = FALSE) %>%
       mutate(Spieler = as.character(Spieler)) %>%
       group_by(Spieler) %>%
       summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
