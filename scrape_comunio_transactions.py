@@ -16,7 +16,7 @@ PASSWORD = "123Hase"
 URL = "https://www.comunio.de/"
 
 options = webdriver.ChromeOptions()
-#options.add_argument("--headless=new")
+options.add_argument("--headless=new")
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 wait = WebDriverWait(driver, 25)
 
@@ -77,7 +77,7 @@ def scrape_transactions():
     while True:
         try:
             last_dates = driver.find_elements(By.CLASS_NAME, "news_date")
-            if last_dates and any("12.05.25" in el.text for el in last_dates):
+            if last_dates and any("27.05.25" in el.text for el in last_dates):
                 break
             btn = driver.find_element(By.ID, "btn_load_more_news")
             driver.execute_script("arguments[0].click();", btn)
