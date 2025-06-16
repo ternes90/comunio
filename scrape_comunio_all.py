@@ -18,6 +18,9 @@ USERNAME = "Dr. Bier"
 PASSWORD = "123Hase"
 URL = "https://www.comunio.de/"
 CSV_PATH = "TRANSFERMARKT.csv"
+CSV_PATH_2 = "ALL_PLAYERS.csv"
+TODAY = date.today().strftime("%d.%m.%Y")
+
 
 options = webdriver.ChromeOptions()
 options.add_argument("--headless=new")
@@ -259,6 +262,60 @@ def scrape_standings():
     df_gesamt = pd.concat([df_alt, df_new], ignore_index=True).drop_duplicates(subset=["Manager", "Datum"], keep="last")
     df_gesamt.to_csv(pfad, index=False, sep=";", encoding="utf-8-sig")
     print(f"✅ Standings gespeichert: {len(df_new)} neue, insgesamt {len(df_gesamt)}")
+    
+    # ---- Scraper für alle Spieler ----
+def scrape_all_players():
+    print("📋 Starte Scraping aller Spieler …")
+    driver.get("https://www.comunio.de/players/search?limit=40")
+    time.sleep(2)
+
+    try:
+        headline = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "headline")))
+        total_text = headline.text.split()[0]
+        total_players = int(total_text.replace(".", ""))
+        print(f"🔢 Gesamtanzahl Spieler: {total_players}")
+    except:
+        print("❌ Spieleranzahl konnte nicht ermittelt werden.")
+        return
+
+    players_per_page = 40
+    clicks_needed = max(0, math.ceil((total_players - players_per_page) / players_per_page))
+
+    for i in range(clicks_needed):
+        try:
+            btn = wait.until(EC.element_to_be_clickable((By.ID, "btn_load_more_news")))
+            driver.execute_script("arguments[0].click();", btn)
+            time.sleep(1.5)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(0.5)
+            print(f"↪️  Seite {i + 2} geladen …")
+        except:
+            print("⚠️ Kein weiterer Button gefunden – eventuell alles geladen.")
+            break
+
+    result = []
+    player_blocks = driver.find_elements(By.CLASS_NAME, "player-list-item")
+
+    for player in player_blocks:
+        try:
+            name = player.find_element(By.CLASS_NAME, "tradable-name").text.strip()
+        except:
+            name = ""
+        try:
+            mw = player.find_element(By.CLASS_NAME, "market-value").text.strip().replace(".", "").replace("€", "")
+        except:
+            mw = ""
+        result.append([name, mw, TODAY])
+
+    df_new = pd.DataFrame(result, columns=["Spieler", "Marktwert", "Datum"])
+    if os.path.exists(CSV_PATH_2):
+        df_existing = pd.read_csv(CSV_PATH_2, sep=";", encoding="utf-8-sig")
+        df_final = pd.concat([df_existing, df_new], ignore_index=True)
+    else:
+        df_final = df_new
+
+    df_final.to_csv(CSV_PATH_2, index=False, sep=";", encoding="utf-8-sig")
+    print(f"✅ Spieler gespeichert: {len(df_new)} neue Einträge, Gesamt: {len(df_final)}")
 
 try:
     login()
@@ -266,5 +323,6 @@ try:
     scrape_transactions()
     scrape_transfermarkt()
     scrape_standings()
+    scrape_all_players()
 finally:
     driver.quit()
