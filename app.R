@@ -800,6 +800,7 @@ server <- function(input, output, session) {
         fontface = "bold",
         size = 4
       ) +
+      coord_cartesian(ylim = c(0.75, 1.4)) +
       labs(
         title = "Marktwertentwicklung (relativ zum Startwert)",
         subtitle = "Schattierung = ±1 SD (TM Spieler)",
