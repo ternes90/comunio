@@ -47,10 +47,14 @@ ui <- navbarPage(
            )
   ),
   
-  ## ---- Kaderwert-Entwicklung ----
-  tabPanel("Kaderwert-Entwicklung",
-           plotOutput("kaderwert_plot", height = 600)
+  ## ---- Kader-Entwicklung ----
+  tabPanel("Kader-Entwicklung",
+           tabsetPanel(
+             tabPanel("Kaderübersicht", uiOutput("kader_uebersicht_ui")),
+             tabPanel("Kaderwert-Plot", plotOutput("kaderwert_plot", height = 600))
+           )
   ),
+  
   
   ## ---- Bieterprofile ----
   tabPanel("Bieterprofile",
@@ -308,7 +312,7 @@ server <- function(input, output, session) {
   }
   
   # ---- BIETERPROFILE ----
-  # -- Punktplot mit Facets (Bieter, Typ)
+  ## ---- Einzeln (Bieter, Typ) ----
   output$beeswarm <- renderPlot({
     req(nrow(gebotsprofil_clean()) > 0)
     plotdata <- gebotsprofil_clean() %>%
@@ -318,7 +322,7 @@ server <- function(input, output, session) {
       group_by(Bieter) %>%
       summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
     # Mittelwerte je Typ
-    medians <- plotdata %>%
+    means <- plotdata %>%
       group_by(Bieter, Typ) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
@@ -329,29 +333,28 @@ server <- function(input, output, session) {
       geom_hline(
         data = mean_total,
         aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey80", linewidth = 0.9,
+        linetype = "dashed", color = "grey60", linewidth = 0.9,
         inherit.aes = FALSE
       ) +
       geom_text(
         data = mean_total,
         aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "#9b2226", # Dunkelrot
+        color = "black", # Dunkelrot
         fontface = "bold",
-        size = 4,
-        vjust = -0.7,
+        size = 5,
+        vjust = -0.25,
         inherit.aes = FALSE
       ) +
       # Mittelwert je Typ als Text (wie gehabt)
       geom_text(
-        data = medians,
-        aes(x = Typ, y = Mean, label = round(Mean, 1)),
-        color = "black",
-        nudge_x = 0.5,
+        data = means,
+        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
+        nudge_x = 0.4,
         fontface = "bold",
-        size = 3.5,
+        size = 5,
         inherit.aes = FALSE
       ) +
-      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      facet_wrap(~ Bieter, ncol = 4) +
       labs(
         title = "Gebotsabweichungen je Konkurrent",
         x = "",
@@ -362,7 +365,7 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 13) +
       theme(
         legend.position = "bottom",
-        strip.text = element_text(face = "bold")
+        strip.text = element_text(face = "bold", size = 16)
       )
   })
   
@@ -468,7 +471,7 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 13) +
       theme(
         legend.position = "none",
-        strip.text = element_text(face = "bold"),
+        strip.text = element_text(face = "bold", size = 16),
         axis.text.x = element_text(angle = 30, hjust = 1)
       )
   })
@@ -492,7 +495,7 @@ server <- function(input, output, session) {
       ) +
       theme_minimal(base_size = 13) +
       theme(
-        strip.text = element_text(face = "bold")
+        strip.text = element_text(face = "bold", size = 16)
       )
   })
   
@@ -828,8 +831,67 @@ server <- function(input, output, session) {
     p
   })
   
-  # ---- Kaderwert-Entwicklung ----
+  # ---- KADER-ENTWICKLUNG ----
   
+  ## ---- Kader ----
+  
+  output$kader_uebersicht_ui <- renderUI({
+    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+    
+    manager_list <- sort(unique(teams_df$Manager))
+    
+    create_kader_table <- function(manager_name) {
+      df <- teams_df %>% filter(Manager == manager_name)
+      df$Position <- factor(df$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
+      df <- df %>% arrange(Position, Spieler)
+      
+      rows <- c()
+      current_pos <- NULL
+      for(i in seq_len(nrow(df))) {
+        pos <- as.character(df$Position[i])
+        spieler <- df$Spieler[i]
+        if(is.null(current_pos) || pos != current_pos) {
+          rows <- c(rows, sprintf("<tr><th colspan='1' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos))
+          current_pos <- pos
+        }
+        rows <- c(rows, sprintf("<tr><td style='padding-left:15px;'>%s</td></tr>", spieler))
+      }
+      
+      table_html <- paste0(
+        "<table style='border-collapse: collapse; width: 100%; margin-bottom: 20px;'>",
+        paste(rows, collapse = "\n"),
+        "</table>"
+      )
+      
+      tagList(
+        tags$h4(manager_name, style = "margin-top: 0; margin-bottom: 5px;"),
+        HTML(table_html)
+      )
+    }
+    
+    # Tabellen für alle Manager erstellen
+    tables_ui <- lapply(manager_list, create_kader_table)
+    
+    # Gruppen von jeweils 4 Tabellen in flex-containern (Reihen)
+    rows_ui <- split(tables_ui, ceiling(seq_along(tables_ui) / 4))
+    
+    # Jede Gruppe als flex-row mit 4 Spalten nebeneinander
+    tagList(
+      lapply(rows_ui, function(row_tables) {
+        tags$div(
+          style = "display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 30px;",
+          lapply(row_tables, function(tab) {
+            tags$div(
+              style = "flex: 1 1 22%; box-sizing: border-box;",
+              tab
+            )
+          })
+        )
+      })
+    )
+  })
+  
+  ## ---- Kaderwert-Entwicklung ----
   manuelle_standings <- tibble::tibble(
     Manager = rep(c(
       "Thomas", "Alfons", "Christoph", "Pascal",
@@ -880,7 +942,6 @@ server <- function(input, output, session) {
       ) +
       theme_minimal(base_size = 14)
   })
-  
   
   # ---- FLIP-ANALYSE ----
   
