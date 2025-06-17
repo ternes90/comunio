@@ -1,0 +1,123 @@
+﻿Manager;Spieler;Position
+Thomas;Bruun Larsen;Sturm
+Thomas;Burkardt;Sturm
+Thomas;Diehl;Sturm
+Thomas;Dietz;Sturm
+Thomas;Neuhaus;Mittelfeld
+Thomas;Musiala;Mittelfeld
+Thomas;Doan;Mittelfeld
+Thomas;M. Eggestein;Mittelfeld
+Thomas;Wätjen;Mittelfeld
+Thomas;Mittelstädt;Abwehr
+Thomas;Wahl;Abwehr
+Thomas;Telle;Abwehr
+Thomas;Meyer;Tor
+Thomas;Heuer Fernandes;Tor
+Thomas;Petersson;Tor
+Alfons;Boniface;Sturm
+Alfons;Dinkçi;Sturm
+Alfons;Matanović;Sturm
+Alfons;Undav;Sturm
+Alfons;Tietz;Sturm
+Alfons;Maier;Mittelfeld
+Alfons;J. Hofmann;Mittelfeld
+Alfons;Martel;Mittelfeld
+Alfons;Querfeld;Abwehr
+Alfons;Rosenfelder;Abwehr
+Alfons;Süle;Abwehr
+Alfons;Kristensen;Abwehr
+Alfons;Ginter;Abwehr
+Alfons;Gulácsi;Tor
+Christoph;Uzun;Sturm
+Christoph;B. Touré;Sturm
+Christoph;Hack;Sturm
+Christoph;Götze;Mittelfeld
+Christoph;Vermeeren;Mittelfeld
+Christoph;Amiri;Mittelfeld
+Christoph;Chaves;Abwehr
+Christoph;Henrichs;Abwehr
+Christoph;Weiser;Abwehr
+Christoph;Gouweleeuw;Abwehr
+Christoph;Finkgräfe;Abwehr
+Christoph;F. Müller;Tor
+Christoph;Atubolu;Tor
+Christoph;Tschernuth;Tor
+Pascal;Kramarić;Sturm
+Pascal;Bittencourt;Mittelfeld
+Pascal;Larsson;Mittelfeld
+Pascal;Irvine;Mittelfeld
+Pascal;Skhiri;Mittelfeld
+Pascal;Kainz;Mittelfeld
+Pascal;Friedl;Abwehr
+Pascal;Trimmel;Abwehr
+Pascal;A. Jung;Abwehr
+Pascal;W. Orbán;Abwehr
+Pascal;Kim;Abwehr
+Pascal;Caci;Abwehr
+Pascal;Elvedi;Abwehr
+Pascal;Koulierakis;Abwehr
+Pascal;Baumann;Tor
+Andreas;Conteh;Sturm
+Andreas;André Silva;Sturm
+Andreas;Hollerbach;Sturm
+Andreas;Tiago Tomás;Sturm
+Andreas;M. El Mala;Sturm
+Andreas;Dompé;Sturm
+Andreas;Svanberg;Mittelfeld
+Andreas;Tousart;Mittelfeld
+Andreas;Keitel;Mittelfeld
+Andreas;Tohumcu;Mittelfeld
+Andreas;Schmid;Mittelfeld
+Andreas;Röhl;Mittelfeld
+Andreas;Alvero;Mittelfeld
+Andreas;Millot;Mittelfeld
+Andreas;Christensen;Mittelfeld
+Andreas;Fischer;Abwehr
+Andreas;Chiarodia;Abwehr
+Andreas;Hincapié;Abwehr
+Andreas;Matsima;Abwehr
+Andreas;Pauli;Abwehr
+Andreas;Vandevoordt;Tor
+Andreas;Omlin;Tor
+Dominik;Adli;Sturm
+Dominik;Sieb;Sturm
+Dominik;Baumgartner;Mittelfeld
+Dominik;Wanner;Mittelfeld
+Dominik;Haberer;Mittelfeld
+Dominik;P. Nebel;Mittelfeld
+Dominik;Stach;Mittelfeld
+Dominik;Groß;Mittelfeld
+Dominik;P. Aaronson;Mittelfeld
+Dominik;N. Schlotterbeck;Abwehr
+Dominik;Ritzka;Abwehr
+Dominik;Netz;Abwehr
+Dominik;Ogbus;Abwehr
+Dominik;Nsoki;Abwehr
+Dominik;Malatini;Abwehr
+Dominik;Chase;Abwehr
+Dominik;Al-Dakhil;Abwehr
+Dominik;Chabot;Abwehr
+Dominik;Klostermann;Abwehr
+Dominik;Hübers;Abwehr
+Dominik;Neuer;Tor
+Nico;Gregoritsch;Sturm
+Nico;Wahi;Sturm
+Nico;Pavlović;Mittelfeld
+Nico;Schäfer;Mittelfeld
+Nico;Dorsch;Mittelfeld
+Nico;Knauff;Mittelfeld
+Nico;Hendriks;Abwehr
+Nico;Doekhi;Abwehr
+Nico;Saliakas;Abwehr
+Nico;Muheim;Abwehr
+Nico;Zentner;Tor
+Christian;Zivzivadze;Sturm
+Christian;Ekitiké;Sturm
+Christian;Khedira;Mittelfeld
+Christian;Chaïbi;Mittelfeld
+Christian;Schöppner;Mittelfeld
+Christian;Reis;Mittelfeld
+Christian;Tapsoba;Abwehr
+Christian;Raphaël Guerreiro;Abwehr
+Christian;Elfadli;Abwehr
+Christian;Grabara;Tor

@@ -23,6 +23,17 @@ CSV_PATH = "TRANSFERMARKT.csv"
 CSV_PATH_2 = "ALL_PLAYERS.csv"
 TODAY = date.today().strftime("%d.%m.%Y")
 
+# Managerliste (Name + URL)
+MANAGER_URLS = {
+    "Thomas": "https://www.comunio.de/users/13023580",
+    "Alfons": "https://www.comunio.de/users/13024246",
+    "Christoph": "https://www.comunio.de/users/13022574",
+    "Pascal": "https://www.comunio.de/users/13778221",
+    "Andreas": "https://www.comunio.de/users/13718087",
+    "Dominik": "https://www.comunio.de/users/13720358",
+    "Nico": "https://www.comunio.de/users/13280827",
+    "Christian": "https://www.comunio.de/users/13778645"
+}
 
 options = webdriver.ChromeOptions()
 options.add_argument("--headless=new")
@@ -80,7 +91,7 @@ def format_datum(dt):
     return dt.strftime("%d.%m.%Y")
 
 def scrape_transfers():
-    print("🗞️  Starte Scraping Transfers (News) …")
+    print("\n🗞️  Starte Scraping Transfers (News) …")
     wait.until(EC.url_contains("dashboard"))
     time.sleep(2)
     while True:
@@ -126,7 +137,7 @@ def load_existing_transactions():
     return pd.DataFrame(columns=["Datum", "Spieler", "Transaktion", "Begründung"])
 
 def scrape_transactions():
-    print("💸  Starte Scraping Transaktionen …")
+    print("\n💸  Starte Scraping Transaktionen …")
     wait.until(EC.url_contains("dashboard"))
     time.sleep(2)
     while True:
@@ -178,7 +189,7 @@ def scrape_transactions():
     print(f"✅ {len(df_new)} neue Transaktionen gespeichert. Gesamt: {len(combined)}")
 
 def scrape_transfermarkt():
-    print("📊  Starte Scraping Transfermarkt …")
+    print("\n📊  Starte Scraping Transfermarkt …")
     driver.get("https://www.comunio.de/exchangemarket")
     print("🌐  Aufruf Transfermarkt …")
     try:
@@ -229,7 +240,7 @@ def scrape_transfermarkt():
     print(f"✅ Transfermarkt gespeichert mit insgesamt {len(df_final)} Einträgen.")
 
 def lade_standings_csv(pfad="STANDINGS.csv"):
-    print("🏆  Starte Scraping Standings …")
+    print("\n🏆 Starte Scraping Standings …")
     if not os.path.exists(pfad):
         return pd.DataFrame(columns=["Manager", "Teamwert", "Datum"])
     try:
@@ -241,7 +252,6 @@ def lade_standings_csv(pfad="STANDINGS.csv"):
         return pd.DataFrame(columns=["Manager", "Teamwert", "Datum"])
 
 def scrape_standings():
-    print("🌐  Aufruf Standings …")
     driver.get("https://www.comunio.de/standings/season/total")
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, "standingstable")))
     time.sleep(3)
@@ -282,7 +292,7 @@ def show_progress(current, total):
         sys.stdout.flush()
 
 def scrape_all_players():
-    print("📋 Starte Scraping aller Spieler …")
+    print("\n📋 Starte Scraping aller Spieler …")
     driver.get("https://www.comunio.de/players/search?limit=40")
     time.sleep(2)
 
@@ -310,7 +320,7 @@ def scrape_all_players():
                 driver.execute_script("arguments[0].click();", btn)
                 clicks_done += 1
                 show_progress(clicks_done, expected_clicks if expected_clicks else 999)
-                time.sleep(2)
+                time.sleep(1)
             else:
                 print("\n🛑 Keine weiteren Spieler gefunden – fertig.")
                 break
@@ -318,7 +328,7 @@ def scrape_all_players():
             print(f"\n⚠️ Kein Button gefunden oder klickbar – möglicherweise fertig. Fehler: {e}")
             break
 
-    print("\n📦 Extrahiere Spielerblöcke …")
+    print("📦 Extrahiere Spielerblöcke …")
     player_blocks = driver.find_elements(By.CLASS_NAME, "player-list-item")
     print(f"📦 Anzahl geladener Spieler: {len(player_blocks)}")
 
@@ -346,6 +356,43 @@ def scrape_all_players():
     print(f"✅ Spieler gespeichert: {len(df_new)} neue Einträge, Gesamt: {len(df_final)}")
 
 
+def scrape_kader():
+    print("\n👥 Starte Scraping aller Kader …")
+    result = []
+
+    for manager, url in MANAGER_URLS.items():
+        print(f"🔍 Lade Kader von {manager} …")
+        driver.get(url)
+        time.sleep(3)
+
+        try:
+            wait.until(EC.presence_of_element_located((By.ID, "current-squad-user-info")))
+            time.sleep(1)
+
+            spieler_container = driver.find_elements(By.CLASS_NAME, "tradable-name-container")
+            for container in spieler_container:
+                try:
+                    name_elem = container.find_element(By.CSS_SELECTOR, "a.tradable-name")
+                    spielername = name_elem.text.strip()
+
+                    # Versuche Position im Elterncontainer zu finden
+                    parent = container.find_element(By.XPATH, "..")  # Direkt übergeordneter Container
+                    try:
+                        position_elem = parent.find_element(By.CLASS_NAME, "position-name")
+                        position = position_elem.text.strip()
+                    except:
+                        position = "?"
+
+                    if spielername:
+                        result.append([manager, spielername, position])
+                except:
+                    continue
+        except Exception as e:
+            print(f"⚠️ Fehler bei {manager}: {e}")
+
+    df = pd.DataFrame(result, columns=["Manager", "Spieler", "Position"])
+    df.to_csv("TEAMS_all.csv", index=False, sep=";", encoding="utf-8-sig")
+    print(f"✅ {len(df)} Spieler gespeichert.")
 
 try:
     login()
@@ -354,5 +401,6 @@ try:
     scrape_transfermarkt()
     scrape_standings()
     scrape_all_players()
+    scrape_kader()
 finally:
     driver.quit()

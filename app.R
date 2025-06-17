@@ -308,6 +308,64 @@ server <- function(input, output, session) {
   }
   
   # ---- BIETERPROFILE ----
+  # -- Punktplot mit Facets (Bieter, Typ)
+  output$beeswarm <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent))
+    # Mittelwert über beide Typen je Bieter
+    mean_total <- plotdata %>%
+      group_by(Bieter) %>%
+      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+    # Mittelwerte je Typ
+    medians <- plotdata %>%
+      group_by(Bieter, Typ) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      # Gesamter Mittelwert als gestrichelte Linie und Text
+      geom_hline(
+        data = mean_total,
+        aes(yintercept = Mean_total),
+        linetype = "dashed", color = "grey80", linewidth = 0.9,
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = mean_total,
+        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "#9b2226", # Dunkelrot
+        fontface = "bold",
+        size = 4,
+        vjust = -0.7,
+        inherit.aes = FALSE
+      ) +
+      # Mittelwert je Typ als Text (wie gehabt)
+      geom_text(
+        data = medians,
+        aes(x = Typ, y = Mean, label = round(Mean, 1)),
+        color = "black",
+        nudge_x = 0.5,
+        fontface = "bold",
+        size = 3.5,
+        inherit.aes = FALSE
+      ) +
+      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      labs(
+        title = "Gebotsabweichungen je Konkurrent",
+        x = "",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "bottom",
+        strip.text = element_text(face = "bold")
+      )
+  })
+  
   ## ---- MW-Klassen Boxplot+Beeswarm ----
   output$mwclassplot <- renderPlot({
     req(nrow(gebotsprofil_mwclass()) > 0)
@@ -412,66 +470,6 @@ server <- function(input, output, session) {
         legend.position = "none",
         strip.text = element_text(face = "bold"),
         axis.text.x = element_text(angle = 30, hjust = 1)
-      )
-  })
-  
-  
-  
-  # -- Punktplot mit Facets (Bieter, Typ)
-  output$beeswarm <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent))
-    # Mittelwert über beide Typen je Bieter
-    mean_total <- plotdata %>%
-      group_by(Bieter) %>%
-      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
-    # Mittelwerte je Typ
-    medians <- plotdata %>%
-      group_by(Bieter, Typ) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
-      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      # Gesamter Mittelwert als gestrichelte Linie und Text
-      geom_hline(
-        data = mean_total,
-        aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey80", linewidth = 0.9,
-        inherit.aes = FALSE
-      ) +
-      geom_text(
-        data = mean_total,
-        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "#9b2226", # Dunkelrot
-        fontface = "bold",
-        size = 4,
-        vjust = -0.7,
-        inherit.aes = FALSE
-      ) +
-      # Mittelwert je Typ als Text (wie gehabt)
-      geom_text(
-        data = medians,
-        aes(x = Typ, y = Mean, label = round(Mean, 1)),
-        color = "black",
-        nudge_x = 0.5,
-        fontface = "bold",
-        size = 3.5,
-        inherit.aes = FALSE
-      ) +
-      facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
-      labs(
-        title = "Gebotsabweichungen je Konkurrent",
-        x = "",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      theme_minimal(base_size = 13) +
-      theme(
-        legend.position = "bottom",
-        strip.text = element_text(face = "bold")
       )
   })
   
