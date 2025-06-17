@@ -12,6 +12,8 @@ import pandas as pd
 import os
 import time
 import re
+import sys
+import math
 from datetime import datetime, date, timedelta
 
 USERNAME = "Dr. Bier"
@@ -264,38 +266,63 @@ def scrape_standings():
     print(f"✅ Standings gespeichert: {len(df_new)} neue, insgesamt {len(df_gesamt)}")
     
     # ---- Scraper für alle Spieler ----
+
+import math
+import sys
+
+def show_progress(current, total):
+    try:
+        percent = int(current / total * 100)
+        bar = "█" * (percent // 5) + "-" * (20 - percent // 5)
+        sys.stdout.write(f"\r⏳ Lade Spieler: [{bar}] {percent}%")
+        sys.stdout.flush()
+    except:
+        dots = "." * (current % 20)
+        sys.stdout.write(f"\r⏳ Lade weitere Spieler{dots}   ")
+        sys.stdout.flush()
+
 def scrape_all_players():
     print("📋 Starte Scraping aller Spieler …")
     driver.get("https://www.comunio.de/players/search?limit=40")
     time.sleep(2)
 
+    total_players = None
     try:
         headline = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "headline")))
         total_text = headline.text.split()[0]
+        print(f"🔍 Spieler gefunden: {headline.text}")
         total_players = int(total_text.replace(".", ""))
         print(f"🔢 Gesamtanzahl Spieler: {total_players}")
-    except:
-        print("❌ Spieleranzahl konnte nicht ermittelt werden.")
-        return
+    except Exception as e:
+        print("❌ Spieleranzahl konnte nicht ermittelt werden. Fehler:", e)
 
     players_per_page = 40
-    clicks_needed = max(0, math.ceil((total_players - players_per_page) / players_per_page))
+    expected_clicks = math.ceil((total_players - players_per_page) / players_per_page) if total_players else None
+    clicks_done = 0
 
-    for i in range(clicks_needed):
+    while True:
         try:
-            btn = wait.until(EC.element_to_be_clickable((By.ID, "btn_load_more_news")))
-            driver.execute_script("arguments[0].click();", btn)
-            time.sleep(1.5)
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(0.5)
-            print(f"↪️  Seite {i + 2} geladen …")
-        except:
-            print("⚠️ Kein weiterer Button gefunden – eventuell alles geladen.")
+            time.sleep(2)
+
+            btn = wait.until(EC.presence_of_element_located((By.ID, "btn_load_more_news")))
+            if btn.is_displayed():
+                driver.execute_script("arguments[0].click();", btn)
+                clicks_done += 1
+                show_progress(clicks_done, expected_clicks if expected_clicks else 999)
+                time.sleep(2)
+            else:
+                print("\n🛑 Keine weiteren Spieler gefunden – fertig.")
+                break
+        except Exception as e:
+            print(f"\n⚠️ Kein Button gefunden oder klickbar – möglicherweise fertig. Fehler: {e}")
             break
 
-    result = []
+    print("\n📦 Extrahiere Spielerblöcke …")
     player_blocks = driver.find_elements(By.CLASS_NAME, "player-list-item")
+    print(f"📦 Anzahl geladener Spieler: {len(player_blocks)}")
 
+    result = []
     for player in player_blocks:
         try:
             name = player.find_element(By.CLASS_NAME, "tradable-name").text.strip()
@@ -310,12 +337,15 @@ def scrape_all_players():
     df_new = pd.DataFrame(result, columns=["Spieler", "Marktwert", "Datum"])
     if os.path.exists(CSV_PATH_2):
         df_existing = pd.read_csv(CSV_PATH_2, sep=";", encoding="utf-8-sig")
-        df_final = pd.concat([df_existing, df_new], ignore_index=True)
+        df_combined = pd.concat([df_existing, df_new], ignore_index=True)
     else:
-        df_final = df_new
+        df_combined = df_new
 
+    df_final = df_combined.drop_duplicates(subset=["Spieler", "Datum"], keep="last")
     df_final.to_csv(CSV_PATH_2, index=False, sep=";", encoding="utf-8-sig")
     print(f"✅ Spieler gespeichert: {len(df_new)} neue Einträge, Gesamt: {len(df_final)}")
+
+
 
 try:
     login()
