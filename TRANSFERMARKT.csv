@@ -1,782 +1,1482 @@
-﻿Spieler;Marktwert;Besitzer;TM_Stand;Datum
-Öztunali;190.000;Computer;29.05.2025;
-Mikelbrencis;1.600.000;Computer;29.05.2025;
-Atubolu;2.990.000;Computer;29.05.2025;
-Šeško;11.620.000;Computer;29.05.2025;
-F. Müller;400.000;Computer;29.05.2025;
-Ekitiké;13.980.000;Computer;31.05.2025;
-At. Szalai;160.000;Computer;01.06.2025;
-Manzambi;4.630.000;Pascal;01.06.2025;
-Sakar;160.000;Pascal;01.06.2025;
-Poller;300.000;Nico;01.06.2025;
-Raab;220.000;Nico;01.06.2025;
-Goretzka;8.330.000;Alfons;02.06.2025;
-L. Grill;190.000;Thomas;02.06.2025;
-Buta;940.000;Thomas;02.06.2025;
-Fischer;1.070.000;Computer;02.06.2025;
-Conteh;930.000;Computer;02.06.2025;
-Obert;370.000;Nico;02.06.2025;
-S. Burchert;160.000;Thomas;03.06.2025;
-Huth;160.000;Computer;03.06.2025;
-Özcan;1.510.000;Christian;03.06.2025;
-Haidara;1.660.000;Christian;03.06.2025;
-Keitel;660.000;Computer;03.06.2025;
-Stanišić;6.920.000;Thomas;03.06.2025;
-F. Becker;500.000;Thomas;03.06.2025;
-Ullrich;1.080.000;Christian;03.06.2025;
-Paçarada;2.950.000;Pascal;03.06.2025;
-Batz;220.000;Computer;04.06.2025;
-Poulsen;1.540.000;Pascal;04.06.2025;
-Berisha;1.910.000;Pascal;04.06.2025;
-Hollerbach;6.630.000;Computer;04.06.2025;
-Gleiber;190.000;Christoph;04.06.2025;
-L. Reis;2.670.000;Alfons;04.06.2025;
-Dong;660.000;Pascal;04.06.2025;
-Ngankam;470.000;Dominik;05.06.2025;
-Stiller;11.740.000;Christoph;05.06.2025;
-Dźwigała;200.000;Christoph;05.06.2025;
-Hranáč;190.000;Alfons;05.06.2025;
-Chaves;2.580.000;Computer;05.06.2025;
-Swider;160.000;Christoph;05.06.2025;
-Čović;200.000;Computer;05.06.2025;
-Friedrich;840.000;Dominik;06.06.2025;
-Geiger;980.000;Nico;06.06.2025;
-Burke;4.630.000;Dominik;06.06.2025;
-Muslija;450.000;Dominik;06.06.2025;
-Koudossou;440.000;Dominik;06.06.2025;
-Čvančara;1.180.000;Computer;06.06.2025;
-Pesch;200.000;Nico;06.06.2025;
-G. Orban;1.850.000;Nico;07.06.2025;
-Agyekum;340.000;Computer;07.06.2025;
-Ma. Müller;220.000;Dominik;08.06.2025;
-Gerhardt;810.000;Christian;08.06.2025;
-Lainer;760.000;Dominik;08.06.2025;
-Widmer;680.000;Alfons;08.06.2025;
-Král;480.000;Computer;08.06.2025;
-Alvero;320.000;Computer;08.06.2025;
-B. Dárdai;1.830.000;Dominik;08.06.2025;
-Tabaković;1.730.000;Alfons;08.06.2025;
-Hermann;160.000;Computer;08.06.2025;
-K. Müller;1.770.000;Christoph;09.06.2025;
-B. Jatta;2.340.000;Thomas;09.06.2025;
-La. Günther;170.000;Computer;09.06.2025;
-Juranović;1.600.000;Nico;09.06.2025;
-Can;3.780.000;Dominik;10.06.2025;
-Perea;160.000;Computer;10.06.2025;
-N. Collins;2.470.000;Computer;10.06.2025;
-Kovář;360.000;Computer;10.06.2025;
-Vasilj;3.130.000;Dominik;10.06.2025;
-Vermeeren;2.320.000;Christoph;10.06.2025;
-Pavlešić;160.000;Computer;10.06.2025;
-Hennrich;160.000;Dominik;10.06.2025;
-Kusi-Asare;810.000;Computer;10.06.2025;
-Zetterer;2.540.000;Christoph;11.06.2025;
-Schöppner;3.090.000;Alfons;11.06.2025;
-Vagnoman;2.180.000;Nico;11.06.2025;
-Millot;6.600.000;Computer;11.06.2025;
-Skarke;1.300.000;Thomas;11.06.2025;
-Traoré;1.330.000;Christoph;11.06.2025;
-Eduardo;160.000;Computer;11.06.2025;
-Prtajin;280.000;Alfons;11.06.2025;
-Elfadli;3.480.000;Dominik;11.06.2025;
-Höfler;510.000;Alfons;12.06.2025;
-Beste;3.450.000;Dominik;12.06.2025;
-Fukuda;390.000;Alfons;12.06.2025;
-Sander;2.180.000;Dominik;12.06.2025;
-Klaus;160.000;Computer;12.06.2025;
-Schmitz;160.000;Thomas;12.06.2025;
-Ljubičić;750.000;Alfons;12.06.2025;
-Vidić;160.000;Computer;12.06.2025;
-Kilian;290.000;Computer;13.06.2025;
-Schlager;3.650.000;Dominik;13.06.2025;
-Noll;170.000;Dominik;13.06.2025;
-Milošević;260.000;Computer;13.06.2025;
-B. Touré;2.390.000;Christoph;13.06.2025;
-Diks;3.520.000;Computer;13.06.2025;
-Osterhage;2.200.000;Thomas;14.06.2025;
-L. Philipp;320.000;Computer;14.06.2025;
-Højlund;1.290.000;Alfons;14.06.2025;
-Suhonen;180.000;Computer;14.06.2025;
-W. Orbán;5.610.000;Pascal;15.06.2025;
-Bittencourt;980.000;Pascal;15.06.2025;
-Elvedi;3.880.000;Pascal;15.06.2025;
-Kramarić;9.300.000;Pascal;15.06.2025;
-A. Jung;1.770.000;Pascal;15.06.2025;
-Kainz;3.510.000;Pascal;15.06.2025;
-Friedl;3.490.000;Pascal;15.06.2025;
-Dahmen;2.900.000;Thomas;15.06.2025;
-Trimmel;1.650.000;Pascal;15.06.2025;
-Jäkel;200.000;Computer;15.06.2025;
-Skhiri;4.790.000;Pascal;15.06.2025;
-Caci;4.760.000;Pascal;15.06.2025;
-Larsson;6.510.000;Pascal;15.06.2025;
-Stergiou;1.160.000;Christian;15.06.2025;
-Irvine;3.890.000;Pascal;15.06.2025;
-Koulierakis;3.010.000;Pascal;15.06.2025;
-Gomis;1.280.000;Thomas;15.06.2025;
-Hämmerle;160.000;Computer;15.06.2025;
-Ilaix Moriba;290.000;Andreas;16.06.2025;
-Veratschnig;350.000;Christoph;16.06.2025;
-Preu;350.000;Christoph;16.06.2025;
-Neuer;1.810.000;Dominik;16.06.2025;
-Jatta;1.830.000;Thomas;16.06.2025;
-Götze;3.480.000;Christoph;16.06.2025;
-Amiri;12.800.000;Christoph;16.06.2025;
-Dina Ebimbe;400.000;Alfons;16.06.2025;
-García;6.650.000;Christoph;16.06.2025;
-Al-Dakhil;830.000;Dominik;17.06.2025;
-Chase;710.000;Dominik;17.06.2025;
-Ogbus;370.000;Dominik;17.06.2025;
-Sieb;1.430.000;Dominik;17.06.2025;
-Malatini;770.000;Dominik;17.06.2025;
-P. Aaronson;2.180.000;Dominik;17.06.2025;
-Nsoki;420.000;Dominik;17.06.2025;
-Chabot;4.830.000;Dominik;17.06.2025;
-Wanner;4.260.000;Dominik;17.06.2025;
-Adli;4.570.000;Dominik;17.06.2025;
-Stach;6.110.000;Dominik;17.06.2025;
-Netz;1.220.000;Dominik;17.06.2025;
-P. Nebel;11.480.000;Dominik;17.06.2025;
-N. Schlotterbeck;7.320.000;Dominik;17.06.2025;
-Baumgartner;2.460.000;Dominik;17.06.2025;
-Ritzka;610.000;Dominik;17.06.2025;
-Hübers;3.170.000;Dominik;17.06.2025;
-Klostermann;2.700.000;Dominik;17.06.2025;
-Haberer;1.130.000;Dominik;17.06.2025;
-Groß;5.190.000;Dominik;17.06.2025;
-Hack;5.460.000;Christoph;17.06.2025;
-Finkgräfe;2.160.000;Christoph;17.06.2025;
-Kim;4.870.000;Pascal;17.06.2025;
-Tschernuth;160.000;Christoph;17.06.2025;
-Telle;170.000;Thomas;17.06.2025;
-Petersson;160.000;Thomas;17.06.2025;
-Schäfer;1.500.000;Nico;17.06.2025;
-Wahi;2.830.000;Nico;17.06.2025;
-Jeltsch;3.460.000;Computer;17.06.2025;
-Moerstedt;1.200.000;Computer;17.06.2025;
-Breithaupt;190.000;Computer;17.06.2025;
-Maza;8.640.000;Computer;17.06.2025;
-Bernardo;4.710.000;Computer;17.06.2025;
-Boniface;7.780.000;Alfons;17.06.2025;
-Martel;4.370.000;Alfons;17.06.2025;
-Maier;810.000;Alfons;17.06.2025;
-Rosenfelder;2.450.000;Alfons;17.06.2025;
-Querfeld;3.690.000;Alfons;17.06.2025;
-Kristensen;6.890.000;Alfons;17.06.2025;
-Gulácsi;2.800.000;Alfons;17.06.2025;
-Mittelstädt;9.140.000;Thomas;17.06.2025;
-Heuer Fernandes;2.480.000;Thomas;17.06.2025;
-Neuhaus;3.310.000;Thomas;17.06.2025;
-Burkardt;14.370.000;Thomas;17.06.2025;
-Musiala;17.730.000;Thomas;17.06.2025;
-Diehl;840.000;Thomas;17.06.2025;
-Wätjen;260.000;Thomas;17.06.2025;
-Bruun Larsen;1.460.000;Thomas;17.06.2025;
-Gregoritsch;2.550.000;Nico;17.06.2025;
-Muheim;3.740.000;Nico;17.06.2025;
-Hendriks;1.130.000;Nico;17.06.2025;
-Pavlović;8.550.000;Nico;17.06.2025;
-Dorsch;1.650.000;Nico;17.06.2025;
-Zentner;3.300.000;Nico;17.06.2025;
-M. El Mala;420.000;Andreas;17.06.2025;
-Dietz;170.000;Thomas;17.06.2025;
-Saliakas;2.970.000;Nico;17.06.2025;
-Doekhi;3.460.000;Nico;17.06.2025;
-Knauff;5.320.000;Nico;17.06.2025;
-Suzuki;6.460.000;Computer;17.06.2025;
-Ceesay;290.000;Computer;17.06.2025;
-Ouédraogo;1.940.000;Computer;17.06.2025;
-Mets;600.000;Computer;17.06.2025;
-Černý;1.050.000;Computer;17.06.2025;
-Vranckx;670.000;Computer;17.06.2025;
-Stöger;5.650.000;Computer;17.06.2025;
-Süle;3.590.000;Alfons;17.06.2025;
-Undav;10.940.000;Alfons;17.06.2025;
-Doan;11.540.000;Thomas;17.06.2025;
-M. Eggestein;3.920.000;Thomas;17.06.2025;
-Wahl;3.070.000;Thomas;17.06.2025;
-Meyer;210.000;Thomas;17.06.2025;
-Uzun;4.110.000;Christoph;17.06.2025;
-Ginter;4.290.000;Alfons;17.06.2025;
-Tietz;3.780.000;Alfons;17.06.2025;
-Dinkçi;2.500.000;Alfons;17.06.2025;
-Matanović;2.960.000;Alfons;17.06.2025;
-J. Hofmann;4.700.000;Alfons;17.06.2025;
-Kaufmann;290.000;Computer;17.06.2025;
-Heintz;1.520.000;Computer;17.06.2025;
-Heitmann;180.000;Computer;17.06.2025;
-A. Jung;1550000;;;17.06.2025
-A. Németh;170000;;;17.06.2025
-Ache;6630000;;;17.06.2025
-Adamu;1900000;;;17.06.2025
-Adamyan;270000;;;17.06.2025
-Adeh;160000;;;17.06.2025
-Adeyemi;10480000;;;17.06.2025
-Adli;4570000;;;17.06.2025
-Afolayan;2590000;;;17.06.2025
-Agu;3490000;;;17.06.2025
-Agyekum;340000;;;17.06.2025
-Ahlstrand;180000;;;17.06.2025
-Aigbekaen;190000;;;17.06.2025
-Akpoguma;1930000;;;17.06.2025
-Al-Dakhil;830000;;;17.06.2025
-Alajbegović;350000;;;17.06.2025
-Alvero;450000;;;17.06.2025
-Amenda;570000;;;17.06.2025
-Amiri;12540000;;;17.06.2025
-Amoako;160000;;;17.06.2025
-Amoura;9440000;;;17.06.2025
-André Silva;1210000;;;17.06.2025
-Andrich;4000000;;;17.06.2025
-Angély;160000;;;17.06.2025
-Ansah;3130000;;;17.06.2025
-Anton;5860000;;;17.06.2025
-Arnold;7310000;;;17.06.2025
-Arthur;1380000;;;17.06.2025
-Asllani;7210000;;;17.06.2025
-Assignon;5640000;;;17.06.2025
-At. Szalai;170000;;;17.06.2025
-Atubolu;3300000;;;17.06.2025
-Avdullahu;5790000;;;17.06.2025
-Azhil;190000;;;17.06.2025
-Aznou;1770000;;;17.06.2025
-B. Dárdai;1520000;;;17.06.2025
-B. Touré;2100000;;;17.06.2025
-Backhaus;710000;;;17.06.2025
-Bahoya;5440000;;;17.06.2025
-Bakatukanda;160000;;;17.06.2025
-Baku;5560000;;;17.06.2025
-Baldé;800000;;;17.06.2025
-Banzuzi;2950000;;;17.06.2025
-Batshuayi;3320000;;;17.06.2025
-Batz;170000;;;17.06.2025
-Bauer;310000;;;17.06.2025
-Baum;1990000;;;17.06.2025
-Baumann;2840000;;;17.06.2025
-Baumgartner;2460000;;;17.06.2025
-Bebou;2470000;;;17.06.2025
-Beck;3140000;;;17.06.2025
-Beier;8890000;;;17.06.2025
-Beljo;700000;;;17.06.2025
-Bell;1330000;;;17.06.2025
-Bellingham;17910000;;;17.06.2025
-Belocian;830000;;;17.06.2025
-Bénes;1300000;;;17.06.2025
-Bensebaini;4420000;;;17.06.2025
-Berisha;1340000;;;17.06.2025
-Bernardo;4710000;;;17.06.2025
-Beste;3190000;;;17.06.2025
-Bischof;11120000;;;17.06.2025
-Bitshiabu;3480000;;;17.06.2025
-Bittencourt;940000;;;17.06.2025
-Blaswich;300000;;;17.06.2025
-Bobzien;270000;;;17.06.2025
-Boey;1190000;;;17.06.2025
-Boniface;7780000;;;17.06.2025
-Borges Sanches;210000;;;17.06.2025
-Bornauw;1810000;;;17.06.2025
-Bos;1150000;;;17.06.2025
-Brandt;8300000;;;17.06.2025
-Braun;160000;;;17.06.2025
-Bredlow;170000;;;17.06.2025
-Breithaupt;190000;;;17.06.2025
-Breunig;500000;;;17.06.2025
-Brown;6890000;;;17.06.2025
-Bruun Larsen;1460000;;;17.06.2025
-Buchmann;240000;;;17.06.2025
-Bülter;5700000;;;17.06.2025
-Burcu;1220000;;;17.06.2025
-Burkardt;14370000;;;17.06.2025
-Burke;5150000;;;17.06.2025
-Busch;850000;;;17.06.2025
-Buta;420000;;;17.06.2025
-Caci;4650000;;;17.06.2025
-Campbell;250000;;;17.06.2025
-Can;3500000;;;17.06.2025
-Carstensen;180000;;;17.06.2025
-Castrop;2140000;;;17.06.2025
-Ceesay;290000;;;17.06.2025
-Černý;1050000;;;17.06.2025
-Chabot;4830000;;;17.06.2025
-Chaïbi;1860000;;;17.06.2025
-Chandler;180000;;;17.06.2025
-Chase;710000;;;17.06.2025
-Chaves;1980000;;;17.06.2025
-Chiarodia;1320000;;;17.06.2025
-Christensen;300000;;;17.06.2025
-Claude-Maurice;8620000;;;17.06.2025
-Čolina;380000;;;17.06.2025
-Coman;7750000;;;17.06.2025
-Conté;170000;;;17.06.2025
-Conteh;1050000;;;17.06.2025
-Couto;1710000;;;17.06.2025
-Čović;210000;;;17.06.2025
-Cozza;170000;;;17.06.2025
-Čvančara;950000;;;17.06.2025
-D. Klein;160000;;;17.06.2025
-D. Nemeth;1760000;;;17.06.2025
-da Costa;1550000;;;17.06.2025
-Dahaba;170000;;;17.06.2025
-Dahmen;2780000;;;17.06.2025
-Dahoud;370000;;;17.06.2025
-Dal;170000;;;17.06.2025
-Damar;3800000;;;17.06.2025
-Davies;5430000;;;17.06.2025
-Deman;250000;;;17.06.2025
-Demirović;7440000;;;17.06.2025
-Dickes;190000;;;17.06.2025
-Diehl;840000;;;17.06.2025
-Dietz;170000;;;17.06.2025
-Diks;3460000;;;17.06.2025
-Dina Ebimbe;410000;;;17.06.2025
-Dinkçi;2500000;;;17.06.2025
-Diogo Leite;4840000;;;17.06.2025
-Doan;11540000;;;17.06.2025
-Doekhi;3460000;;;17.06.2025
-Dompé;5790000;;;17.06.2025
-Dong;310000;;;17.06.2025
-Dorsch;1650000;;;17.06.2025
-Downs;2620000;;;17.06.2025
-Drljača;160000;;;17.06.2025
-Ducksch;9460000;;;17.06.2025
-Duranville;2270000;;;17.06.2025
-Đurić;160000;;;17.06.2025
-Dźwigała;200000;;;17.06.2025
-Eduardo;510000;;;17.06.2025
-Ekitiké;11710000;;;17.06.2025
-Elfadli;3280000;;;17.06.2025
-Elmas;680000;;;17.06.2025
-Elvedi;3700000;;;17.06.2025
-Erlein;170000;;;17.06.2025
-Essende;1270000;;;17.06.2025
-F. Becker;550000;;;17.06.2025
-F. Müller;240000;;;17.06.2025
-F. Nmecha;7900000;;;17.06.2025
-Faghir;200000;;;17.06.2025
-Feller;290000;;;17.06.2025
-Fernandes;310000;;;17.06.2025
-Finkgräfe;2160000;;;17.06.2025
-Fischer;1410000;;;17.06.2025
-Flekken;3820000;;;17.06.2025
-Föhrenbach;400000;;;17.06.2025
-Franjić;160000;;;17.06.2025
-Fraulo;330000;;;17.06.2025
-Friedl;3450000;;;17.06.2025
-Friedrich;890000;;;17.06.2025
-Führich;6540000;;;17.06.2025
-Fukuda;360000;;;17.06.2025
-G. Orban;1830000;;;17.06.2025
-García;7130000;;;17.06.2025
-Gazibegović;1040000;;;17.06.2025
-Gebel;180000;;;17.06.2025
-Geertruida;2220000;;;17.06.2025
-Geiger;1060000;;;17.06.2025
-Gendrey;1920000;;;17.06.2025
-Gerhardt;1170000;;;17.06.2025
-Giannoulis;3910000;;;17.06.2025
-Gimber;1640000;;;17.06.2025
-Ginter;4290000;;;17.06.2025
-Gittens;5660000;;;17.06.2025
-Glatzel;4330000;;;17.06.2025
-Gleiber;160000;;;17.06.2025
-Gnabry;7080000;;;17.06.2025
-Gomis;1110000;;;17.06.2025
-Goretzka;7900000;;;17.06.2025
-Götze;3590000;;;17.06.2025
-Gouweleeuw;4550000;;;17.06.2025
-Grabara;2780000;;;17.06.2025
-Grahl;160000;;;17.06.2025
-Gregoritsch;2550000;;;17.06.2025
-Grifo;12130000;;;17.06.2025
-Grillitsch;900000;;;17.06.2025
-Grimaldo;8510000;;;17.06.2025
-Groß;5190000;;;17.06.2025
-Grüll;2220000;;;17.06.2025
-Gui Ramos;160000;;;17.06.2025
-Guirassy;18260000;;;17.06.2025
-Gulácsi;2800000;;;17.06.2025
-Günter;2190000;;;17.06.2025
-H. Behrens;180000;;;17.06.2025
-Haberer;1130000;;;17.06.2025
-Hack;5460000;;;17.06.2025
-Haidara;2220000;;;17.06.2025
-Haller;1210000;;;17.06.2025
-Hämmerle;170000;;;17.06.2025
-Hanche-Olsen;1470000;;;17.06.2025
-Hansen-Aarøen;160000;;;17.06.2025
-Harchaoui;170000;;;17.06.2025
-Hefti;320000;;;17.06.2025
-Heintz;1520000;;;17.06.2025
-Heitmann;180000;;;17.06.2025
-Hendriks;1130000;;;17.06.2025
-Hennrich;170000;;;17.06.2025
-Henrichs;2920000;;;17.06.2025
-Hermann;160000;;;17.06.2025
-Heuer Fernandes;2480000;;;17.06.2025
-Hincapié;5490000;;;17.06.2025
-Hložek;6720000;;;17.06.2025
-Höfler;480000;;;17.06.2025
-Højlund;1400000;;;17.06.2025
-Höler;3650000;;;17.06.2025
-Hollerbach;6820000;;;17.06.2025
-Hong;430000;;;17.06.2025
-Honorat;9950000;;;17.06.2025
-Honsak;2100000;;;17.06.2025
-Hradecky;1250000;;;17.06.2025
-Hranáč;230000;;;17.06.2025
-Hübers;3170000;;;17.06.2025
-Huseinbašić;2330000;;;17.06.2025
-Huth;160000;;;17.06.2025
-Ibrahimović;340000;;;17.06.2025
-Ilić;5710000;;;17.06.2025
-Irié;3270000;;;17.06.2025
-Irvine;3780000;;;17.06.2025
-Itakura;4010000;;;17.06.2025
-Itō;3340000;;;17.06.2025
-J. Hofmann;4700000;;;17.06.2025
-Jaeckel;170000;;;17.06.2025
-Jäger;260000;;;17.06.2025
-Jäkel;190000;;;17.06.2025
-Jakić;2400000;;;17.06.2025
-Janeš;170000;;;17.06.2025
-Jaquez;1100000;;;17.06.2025
-Jatta;1910000;;;17.06.2025
-Jeltsch;3460000;;;17.06.2025
-Jenz;2260000;;;17.06.2025
-Jeong;2080000;;;17.06.2025
-João Palhinha;2290000;;;17.06.2025
-Jóhannesson;4000000;;;17.06.2025
-Jones;1250000;;;17.06.2025
-Juranović;1430000;;;17.06.2025
-K. Müller;1680000;;;17.06.2025
-K. Schlotterbeck;2920000;;;17.06.2025
-Kabadayi;370000;;;17.06.2025
-Kabak;1370000;;;17.06.2025
-Kabar;340000;;;17.06.2025
-Kainz;3680000;;;17.06.2025
-Kamiński;1540000;;;17.06.2025
-Kampl;2050000;;;17.06.2025
-Kane;21360000;;;17.06.2025
-Karazor;6570000;;;17.06.2025
-Karl;320000;;;17.06.2025
-Kastanaras;180000;;;17.06.2025
-Katterbach;550000;;;17.06.2025
-Kauã Santos;1020000;;;17.06.2025
-Kaufmann;290000;;;17.06.2025
-Keitel;470000;;;17.06.2025
-Keller;250000;;;17.06.2025
-Kemlein;720000;;;17.06.2025
-Kerber;1130000;;;17.06.2025
-Khedira;2570000;;;17.06.2025
-Kiala;170000;;;17.06.2025
-Kilian;240000;;;17.06.2025
-Kim;4870000;;;17.06.2025
-Kimmich;19330000;;;17.06.2025
-Klanac;160000;;;17.06.2025
-Klaus;160000;;;17.06.2025
-Kleindienst;10620000;;;17.06.2025
-Klostermann;2700000;;;17.06.2025
-Knauff;5320000;;;17.06.2025
-Köbbing;160000;;;17.06.2025
-Kobel;2720000;;;17.06.2025
-Koch;6700000;;;17.06.2025
-Köhler;160000;;;17.06.2025
-Kohr;3580000;;;17.06.2025
-Kolke;160000;;;17.06.2025
-Kölle;160000;;;17.06.2025
-Kömür;2480000;;;17.06.2025
-König;170000;;;17.06.2025
-Königsdörffer;4400000;;;17.06.2025
-Koudossou;500000;;;17.06.2025
-Koulierakis;2720000;;;17.06.2025
-Kovář;280000;;;17.06.2025
-Kownacki;990000;;;17.06.2025
-Král;320000;;;17.06.2025
-Kramarić;9200000;;;17.06.2025
-Krattenmacher;1650000;;;17.06.2025
-Krauß;2730000;;;17.06.2025
-Kristensen;6890000;;;17.06.2025
-Kübler;3100000;;;17.06.2025
-Kücüksahin;160000;;;17.06.2025
-Kusi-Asare;880000;;;17.06.2025
-Kyereh;450000;;;17.06.2025
-L. Grill;160000;;;17.06.2025
-L. Philipp;290000;;;17.06.2025
-La. Günther;160000;;;17.06.2025
-Labrović;160000;;;17.06.2025
-Lade;160000;;;17.06.2025
-Laimer;4020000;;;17.06.2025
-Larsson;6480000;;;17.06.2025
-Lee;7690000;;;17.06.2025
-Leitsch;460000;;;17.06.2025
-Lemperle;4630000;;;17.06.2025
-Leweling;6390000;;;17.06.2025
-Lienhart;3460000;;;17.06.2025
-Lisewski;160000;;;17.06.2025
-Lisztes;170000;;;17.06.2025
-Ljubičić;630000;;;17.06.2025
-Lomb;160000;;;17.06.2025
-Łubik;160000;;;17.06.2025
-Lührs;200000;;;17.06.2025
-Lukeba;3140000;;;17.06.2025
-Lynen;2270000;;;17.06.2025
-M. Eggestein;3920000;;;17.06.2025
-M. El Mala;420000;;;17.06.2025
-M. Philipp;310000;;;17.06.2025
-M. Wolf;2550000;;;17.06.2025
-Ma. Müller;260000;;;17.06.2025
-Mæhle;3170000;;;17.06.2025
-Maier;810000;;;17.06.2025
-Maina;3430000;;;17.06.2025
-Mainka;5000000;;;17.06.2025
-Majer;4750000;;;17.06.2025
-Makengo;1270000;;;17.06.2025
-Malanga;230000;;;17.06.2025
-Malatini;770000;;;17.06.2025
-Maloney;420000;;;17.06.2025
-Mané;390000;;;17.06.2025
-Manzambi;3530000;;;17.06.2025
-Martel;4370000;;;17.06.2025
-Masanka Bungi;180000;;;17.06.2025
-Matanović;2960000;;;17.06.2025
-Matsima;4630000;;;17.06.2025
-Maurides;200000;;;17.06.2025
-Maza;8640000;;;17.06.2025
-Meffert;1890000;;;17.06.2025
-Metcalfe;610000;;;17.06.2025
-Mets;600000;;;17.06.2025
-Meyer;210000;;;17.06.2025
-Michaelis;170000;;;17.06.2025
-Micheler;230000;;;17.06.2025
-Mikelbrencis;1020000;;;17.06.2025
-Millot;5520000;;;17.06.2025
-Milošević;220000;;;17.06.2025
-Mittelstädt;9140000;;;17.06.2025
-Moerstedt;1200000;;;17.06.2025
-Mokwa;170000;;;17.06.2025
-Moukoko;1690000;;;17.06.2025
-Mounié;600000;;;17.06.2025
-Muheim;3740000;;;17.06.2025
-Musiala;17730000;;;17.06.2025
-Muslija;430000;;;17.06.2025
-Mwene;2610000;;;17.06.2025
-N. Banks;490000;;;17.06.2025
-N. Collins;2650000;;;17.06.2025
-N. Schlotterbeck;7320000;;;17.06.2025
-Nacho Ferri;190000;;;17.06.2025
-Netz;1220000;;;17.06.2025
-Neuer;1920000;;;17.06.2025
-Neuhaus;3310000;;;17.06.2025
-Ngankam;290000;;;17.06.2025
-Ngoumou;1130000;;;17.06.2025
-Nicolas;2970000;;;17.06.2025
-Niehues;160000;;;17.06.2025
-Njinmah;3060000;;;17.06.2025
-Nkounkou;450000;;;17.06.2025
-Noll;160000;;;17.06.2025
-Norbye;200000;;;17.06.2025
-Nordin;380000;;;17.06.2025
-Nsoki;420000;;;17.06.2025
-Nübel;2900000;;;17.06.2025
-Nusa;7240000;;;17.06.2025
-Obert;190000;;;17.06.2025
-Odogu;1100000;;;17.06.2025
-Ogbemudia;170000;;;17.06.2025
-Ogbus;370000;;;17.06.2025
-Olise;21710000;;;17.06.2025
-Oliveira;170000;;;17.06.2025
-Olschowsky;170000;;;17.06.2025
-Omlin;870000;;;17.06.2025
-Onuoha;160000;;;17.06.2025
-Openda;11450000;;;17.06.2025
-Opitz;230000;;;17.06.2025
-Osterhage;2140000;;;17.06.2025
-Ouédraogo;1940000;;;17.06.2025
-Özcan;1570000;;;17.06.2025
-Öztunali;170000;;;17.06.2025
-P. Aaronson;2180000;;;17.06.2025
-P. Nebel;11480000;;;17.06.2025
-P. Pfeiffer;480000;;;17.06.2025
-P. Schulz;210000;;;17.06.2025
-Paçarada;2260000;;;17.06.2025
-Palacios;5380000;;;17.06.2025
-Paredes;1330000;;;17.06.2025
-Pauli;990000;;;17.06.2025
-Pavlešić;160000;;;17.06.2025
-Pavlović;8550000;;;17.06.2025
-Pedersen;250000;;;17.06.2025
-Pejčinović;560000;;;17.06.2025
-Perea;170000;;;17.06.2025
-Pereira Cardoso;350000;;;17.06.2025
-Peretz;200000;;;17.06.2025
-Perrin;580000;;;17.06.2025
-Pervan;160000;;;17.06.2025
-Pesch;180000;;;17.06.2025
-Petersson;160000;;;17.06.2025
-Pherai;1000000;;;17.06.2025
-Pieper;2230000;;;17.06.2025
-Pieringer;4450000;;;17.06.2025
-Pléa;6810000;;;17.06.2025
-Poller;190000;;;17.06.2025
-Poręba;380000;;;17.06.2025
-Potočnik;410000;;;17.06.2025
-Poulsen;1160000;;;17.06.2025
-Prass;1070000;;;17.06.2025
-Preu;340000;;;17.06.2025
-Prömel;1360000;;;17.06.2025
-Pyrka;1030000;;;17.06.2025
-Querfeld;3690000;;;17.06.2025
-Raab;230000;;;17.06.2025
-Raimund;210000;;;17.06.2025
-Ramaj;710000;;;17.06.2025
-Ranos;460000;;;17.06.2025
-Raphaël Guerreiro;4930000;;;17.06.2025
-Rapsch;160000;;;17.06.2025
-Raum;6390000;;;17.06.2025
-Reis;2340000;;;17.06.2025
-Reitz;5920000;;;17.06.2025
-Remberg;2910000;;;17.06.2025
-Rexhbecaj;1660000;;;17.06.2025
-Reyna;1180000;;;17.06.2025
-Richter;800000;;;17.06.2025
-Rieß;260000;;;17.06.2025
-Ritzka;610000;;;17.06.2025
-Robatsch;800000;;;17.06.2025
-Rogério;370000;;;17.06.2025
-Röhl;1650000;;;17.06.2025
-Rondić;360000;;;17.06.2025
-Rönnow;2400000;;;17.06.2025
-Rosenfelder;2450000;;;17.06.2025
-Røssing-Lelesiit;220000;;;17.06.2025
-Rothe;2230000;;;17.06.2025
-Rothweiler;160000;;;17.06.2025
-Ryerson;4650000;;;17.06.2025
-S. Banks;260000;;;17.06.2025
-S. Coulibaly;660000;;;17.06.2025
-S. El Mala;1370000;;;17.06.2025
-Saad;2130000;;;17.06.2025
-Sabitzer;3550000;;;17.06.2025
-Sahiti;1180000;;;17.06.2025
-Sakar;160000;;;17.06.2025
-Saliakas;2970000;;;17.06.2025
-Salifou;170000;;;17.06.2025
-Sander;2000000;;;17.06.2025
-Sands;680000;;;17.06.2025
-Sanne;160000;;;17.06.2025
-Sano;4650000;;;17.06.2025
-Santos Daiber;160000;;;17.06.2025
-Sarco;220000;;;17.06.2025
-Scally;1420000;;;17.06.2025
-Schäfer;1500000;;;17.06.2025
-Scherhant;3430000;;;17.06.2025
-Schick;13510000;;;17.06.2025
-Schimmer;230000;;;17.06.2025
-Schlager;3510000;;;17.06.2025
-Schmid;7630000;;;17.06.2025
-Schmied;480000;;;17.06.2025
-Schmitt;160000;;;17.06.2025
-Schmitz;170000;;;17.06.2025
-Schonlau;1490000;;;17.06.2025
-Schopp;920000;;;17.06.2025
-Schöppner;2950000;;;17.06.2025
-Schwäbe;2360000;;;17.06.2025
-Scienza;3470000;;;17.06.2025
-Seibt;160000;;;17.06.2025
-Seiwald;2560000;;;17.06.2025
-Šeško;10260000;;;17.06.2025
-Sieb;1430000;;;17.06.2025
-Siersleben;940000;;;17.06.2025
-Silas;1870000;;;17.06.2025
-Sildillia;1440000;;;17.06.2025
-Siljević;160000;;;17.06.2025
-Sinani;3090000;;;17.06.2025
-Skarke;1120000;;;17.06.2025
-Skhiri;4760000;;;17.06.2025
-Skov;1570000;;;17.06.2025
-Skov Olsen;1970000;;;17.06.2025
-Smith;4590000;;;17.06.2025
-Smolčić;210000;;;17.06.2025
-Soumahoro;470000;;;17.06.2025
-Stach;6110000;;;17.06.2025
-Stage;7500000;;;17.06.2025
-Stanišić;5630000;;;17.06.2025
-Stark;2870000;;;17.06.2025
-Stenzel;580000;;;17.06.2025
-Stergiou;1080000;;;17.06.2025
-Stevens;180000;;;17.06.2025
-Stiller;11290000;;;17.06.2025
-Stöger;5650000;;;17.06.2025
-Suhonen;160000;;;17.06.2025
-Süle;3590000;;;17.06.2025
-Suzuki;6460000;;;17.06.2025
-Svanberg;1740000;;;17.06.2025
-Svensson;5270000;;;17.06.2025
-Swider;160000;;;17.06.2025
-T. Drexler;460000;;;17.06.2025
-T. Philipp;160000;;;17.06.2025
-Tabaković;1420000;;;17.06.2025
-Tah;9610000;;;17.06.2025
-Tape;3640000;;;17.06.2025
-Tapsoba;4230000;;;17.06.2025
-Tauer;160000;;;17.06.2025
-Tella;4380000;;;17.06.2025
-Telle;170000;;;17.06.2025
-Terrier;2680000;;;17.06.2025
-Theate;5530000;;;17.06.2025
-Thielmann;2320000;;;17.06.2025
-Tiago Tomás;3380000;;;17.06.2025
-Tietz;3780000;;;17.06.2025
-Tigges;280000;;;17.06.2025
-Tohumcu;420000;;;17.06.2025
-Topp;2290000;;;17.06.2025
-Torunarigha;4220000;;;17.06.2025
-Tousart;240000;;;17.06.2025
-Traoré;1490000;;;17.06.2025
-Trapp;2340000;;;17.06.2025
-Treu;3170000;;;17.06.2025
-Trimmel;1610000;;;17.06.2025
-Tschernuth;160000;;;17.06.2025
-Tuta;3500000;;;17.06.2025
-Ullrich;1760000;;;17.06.2025
-Ulrich;170000;;;17.06.2025
-Undav;10940000;;;17.06.2025
-Upamecano;6080000;;;17.06.2025
-Urbig;880000;;;17.06.2025
-Uzun;4110000;;;17.06.2025
-Vagnoman;1800000;;;17.06.2025
-Vandevoordt;1490000;;;17.06.2025
-Vasilj;2820000;;;17.06.2025
-Vavro;6600000;;;17.06.2025
-Veratschnig;370000;;;17.06.2025
-Vermeeren;2170000;;;17.06.2025
-Vidić;400000;;;17.06.2025
-Vogt;990000;;;17.06.2025
-Voll;260000;;;17.06.2025
-Vranckx;670000;;;17.06.2025
-W. Orbán;6020000;;;17.06.2025
-Wahi;2830000;;;17.06.2025
-Wahl;3070000;;;17.06.2025
-Waldschmidt;2390000;;;17.06.2025
-Wanner;4260000;;;17.06.2025
-Wätjen;260000;;;17.06.2025
-Weigl;4590000;;;17.06.2025
-Weiser;6530000;;;17.06.2025
-Weißhaupt;2250000;;;17.06.2025
-Werner;2610000;;;17.06.2025
-Widmer;640000;;;17.06.2025
-Wimmer;4170000;;;17.06.2025
-Wind;6460000;;;17.06.2025
-Wirtz;10560000;;;17.06.2025
-Woltemade;14010000;;;17.06.2025
-Xavi Simons;13560000;;;17.06.2025
-Xhaka;11350000;;;17.06.2025
-Yalçınkaya;170000;;;17.06.2025
-Yardımcı;410000;;;17.06.2025
-Zagadou;2050000;;;17.06.2025
-Zaragoza;690000;;;17.06.2025
-Zentner;3300000;;;17.06.2025
-Zesiger;1940000;;;17.06.2025
-Zetterer;2380000;;;17.06.2025
-Zingerle;160000;;;17.06.2025
-Zivzivadze;2370000;;;17.06.2025
-Zvonarek;700000;;;17.06.2025
+﻿Spieler;Marktwert;Besitzer;TM_Stand
+Diehl;250.000;Computer;28.05.2025
+Öztunali;180.000;Computer;28.05.2025
+G. Orban;870.000;Computer;28.05.2025
+Mikelbrencis;1.590.000;Computer;28.05.2025
+Stiller;11.190.000;Computer;28.05.2025
+Atubolu;2.930.000;Computer;28.05.2025
+Fukuda;170.000;Computer;28.05.2025
+Šeško;11.600.000;Computer;28.05.2025
+Stanišić;5.830.000;Computer;28.05.2025
+Lainer;730.000;Computer;28.05.2025
+Muslija;610.000;Computer;28.05.2025
+Gregoritsch;1.020.000;Computer;28.05.2025
+F. Müller;410.000;Computer;28.05.2025
+Hranáč;180.000;Computer;29.05.2025
+Suhonen;250.000;Computer;29.05.2025
+Ekitiké;14.620.000;Computer;30.05.2025
+Beste;2.660.000;Computer;30.05.2025
+L. Grill;190.000;Computer;30.05.2025
+Mittelstädt;9.540.000;Computer;30.05.2025
+Buta;1.180.000;Computer;30.05.2025
+Obert;400.000;Computer;30.05.2025
+Højlund;1.170.000;Computer;30.05.2025
+Goretzka;9.390.000;Computer;30.05.2025
+Berisha;1.210.000;Computer;30.05.2025
+Ngankam;560.000;Computer;31.05.2025
+Koulierakis;3.230.000;Computer;31.05.2025
+Diehl;290.000;Computer;29.05.2025
+Öztunali;190.000;Computer;29.05.2025
+G. Orban;1.110.000;Computer;29.05.2025
+Mikelbrencis;1.600.000;Computer;29.05.2025
+Stiller;11.330.000;Computer;29.05.2025
+Atubolu;2.990.000;Computer;29.05.2025
+Fukuda;190.000;Computer;29.05.2025
+Šeško;11.620.000;Computer;29.05.2025
+Stanišić;6.410.000;Computer;29.05.2025
+Lainer;750.000;Computer;29.05.2025
+Muslija;610.000;Computer;29.05.2025
+Gregoritsch;1.270.000;Computer;29.05.2025
+F. Müller;400.000;Computer;29.05.2025
+Hranáč;180.000;Computer;30.05.2025
+Suhonen;240.000;Computer;30.05.2025
+Ekitiké;13.980.000;Computer;31.05.2025
+Beste;2.780.000;Computer;31.05.2025
+L. Grill;180.000;Computer;31.05.2025
+Mittelstädt;9.310.000;Computer;31.05.2025
+Buta;1.110.000;Computer;31.05.2025
+Obert;370.000;Computer;31.05.2025
+Højlund;1.210.000;Computer;31.05.2025
+Goretzka;8.990.000;Computer;31.05.2025
+Berisha;1.420.000;Computer;31.05.2025
+Ngankam;540.000;Computer;01.06.2025
+Koulierakis;3.500.000;Computer;01.06.2025
+S. Burchert;160.000;Computer;01.06.2025
+Höfler;510.000;Alfons;01.06.2025
+Gregoritsch;1.620.000;Nico;01.06.2025
+Goretzka;8.630.000;Alfons;01.06.2025
+K. Müller;1.130.000;Christoph;01.06.2025
+Gerhardt;750.000;Alfons;01.06.2025
+Zentner;3.560.000;Nico;01.06.2025
+M. Eggestein;5.170.000;Thomas;01.06.2025
+Zetterer;2.640.000;Christoph;01.06.2025
+Elvedi;2.930.000;Computer;01.06.2025
+Huth;160.000;Computer;01.06.2025
+Mittelstädt;10.150.000;Thomas;01.06.2025
+Gulácsi;3.160.000;Alfons;01.06.2025
+Poulsen;1.560.000;Pascal;01.06.2025
+Dorsch;1.450.000;Nico;01.06.2025
+B. Jatta;1.310.000;Thomas;01.06.2025
+Wahl;3.080.000;Thomas;01.06.2025
+Geiger;1.080.000;Nico;01.06.2025
+Bruun Larsen;1.290.000;Thomas;01.06.2025
+Meyer;250.000;Computer;01.06.2025
+Dahmen;2.780.000;Thomas;01.06.2025
+Muslija;560.000;Nico;01.06.2025
+Lainer;740.000;Dominik;01.06.2025
+Schlager;2.020.000;Computer;01.06.2025
+Osterhage;2.550.000;Thomas;01.06.2025
+Ngankam;540.000;Dominik;01.06.2025
+Musiala;10.540.000;Thomas;01.06.2025
+L. Grill;190.000;Thomas;01.06.2025
+Doan;14.040.000;Computer;01.06.2025
+Martel;4.180.000;Alfons;01.06.2025
+Dinkçi;970.000;Alfons;01.06.2025
+Knauff;5.210.000;Nico;01.06.2025
+Stanišić;7.080.000;Thomas;01.06.2025
+Stiller;12.760.000;Christoph;01.06.2025
+F. Becker;430.000;Thomas;01.06.2025
+Doekhi;3.660.000;Nico;01.06.2025
+Skarke;1.160.000;Thomas;01.06.2025
+Buta;1.030.000;Thomas;01.06.2025
+Fischer;980.000;Computer;01.06.2025
+Koudossou;410.000;Computer;01.06.2025
+Diehl;330.000;Thomas;01.06.2025
+Matanović;1.010.000;Dominik;01.06.2025
+Traoré;1.340.000;Christoph;01.06.2025
+Rosenfelder;1.460.000;Alfons;01.06.2025
+Čvančara;1.360.000;Computer;01.06.2025
+Boniface;7.130.000;Alfons;01.06.2025
+At. Szalai;160.000;Computer;01.06.2025
+Stergiou;1.170.000;Dominik;01.06.2025
+Pavlović;8.910.000;Nico;01.06.2025
+Fukuda;250.000;Alfons;01.06.2025
+Wätjen;380.000;Thomas;01.06.2025
+B. Dárdai;1.730.000;Dominik;01.06.2025
+Conteh;910.000;Computer;01.06.2025
+Dźwigała;220.000;Computer;01.06.2025
+Saliakas;3.230.000;Nico;01.06.2025
+Ouédraogo;1.640.000;Nico;01.06.2025
+Querfeld;4.060.000;Alfons;01.06.2025
+Veratschnig;440.000;Christoph;01.06.2025
+Hendriks;1.200.000;Nico;01.06.2025
+Uzun;3.310.000;Christoph;01.06.2025
+Preu;430.000;Christoph;01.06.2025
+Højlund;1.460.000;Alfons;01.06.2025
+Manzambi;4.630.000;Pascal;01.06.2025
+Kristensen;7.880.000;Alfons;01.06.2025
+Tabaković;1.930.000;Alfons;01.06.2025
+Hranáč;180.000;Alfons;01.06.2025
+Sakar;160.000;Pascal;01.06.2025
+Swider;160.000;Christoph;01.06.2025
+G. Orban;1.680.000;Nico;01.06.2025
+Gleiber;200.000;Christoph;01.06.2025
+Wahi;2.470.000;Nico;01.06.2025
+Pesch;230.000;Nico;01.06.2025
+Hämmerle;190.000;Nico;01.06.2025
+Obert;400.000;Nico;01.06.2025
+Kusi-Asare;1.300.000;Computer;01.06.2025
+Poller;300.000;Nico;01.06.2025
+Raab;220.000;Nico;01.06.2025
+Muheim;3.580.000;Nico;01.06.2025
+L. Reis;3.160.000;Alfons;01.06.2025
+Suzuki;7.190.000;Computer;01.06.2025
+Dong;750.000;Pascal;01.06.2025
+S. Burchert;160.000;Thomas;02.06.2025
+Batz;230.000;Computer;02.06.2025
+Höfler;470.000;Alfons;02.06.2025
+Gregoritsch;1.660.000;Nico;02.06.2025
+Goretzka;8.330.000;Alfons;02.06.2025
+K. Müller;1.160.000;Christoph;02.06.2025
+Gerhardt;700.000;Alfons;02.06.2025
+Zentner;3.460.000;Nico;02.06.2025
+M. Eggestein;4.910.000;Thomas;02.06.2025
+Zetterer;2.410.000;Christoph;02.06.2025
+Huth;160.000;Computer;02.06.2025
+Mittelstädt;9.450.000;Thomas;02.06.2025
+Gulácsi;3.000.000;Alfons;02.06.2025
+Poulsen;1.530.000;Pascal;02.06.2025
+Dorsch;1.490.000;Nico;02.06.2025
+B. Jatta;1.470.000;Thomas;02.06.2025
+Wahl;3.190.000;Thomas;02.06.2025
+Özcan;1.270.000;Christian;02.06.2025
+Geiger;1.020.000;Nico;02.06.2025
+Friedl;3.560.000;Computer;02.06.2025
+Bruun Larsen;1.190.000;Thomas;02.06.2025
+Meyer;250.000;Thomas;02.06.2025
+Dahmen;2.640.000;Thomas;02.06.2025
+Muslija;520.000;Nico;02.06.2025
+Haidara;1.490.000;Christian;02.06.2025
+Lainer;790.000;Dominik;02.06.2025
+Osterhage;2.430.000;Thomas;02.06.2025
+Keitel;640.000;Computer;02.06.2025
+Ngankam;500.000;Dominik;02.06.2025
+Musiala;11.680.000;Thomas;02.06.2025
+L. Grill;190.000;Thomas;02.06.2025
+Doan;13.180.000;Thomas;02.06.2025
+Martel;3.800.000;Alfons;02.06.2025
+Dinkçi;1.150.000;Alfons;02.06.2025
+Knauff;5.150.000;Nico;02.06.2025
+Stanišić;6.680.000;Thomas;02.06.2025
+Stiller;12.420.000;Christoph;02.06.2025
+Adli;4.550.000;Computer;02.06.2025
+F. Becker;500.000;Thomas;02.06.2025
+Doekhi;3.840.000;Nico;02.06.2025
+Skarke;1.300.000;Thomas;02.06.2025
+Buta;940.000;Thomas;02.06.2025
+Fischer;1.070.000;Computer;02.06.2025
+P. Aaronson;1.000.000;Computer;02.06.2025
+Diehl;390.000;Thomas;02.06.2025
+Ullrich;980.000;Christian;02.06.2025
+Larsson;5.480.000;Computer;02.06.2025
+Matanović;1.230.000;Dominik;02.06.2025
+Traoré;1.310.000;Christoph;02.06.2025
+Rosenfelder;1.460.000;Alfons;02.06.2025
+Čvančara;1.300.000;Computer;02.06.2025
+Boniface;7.300.000;Alfons;02.06.2025
+Kovář;490.000;Computer;02.06.2025
+Stergiou;1.200.000;Dominik;02.06.2025
+Pavlović;8.970.000;Nico;02.06.2025
+Fukuda;260.000;Alfons;02.06.2025
+Wätjen;390.000;Thomas;02.06.2025
+B. Dárdai;1.820.000;Dominik;02.06.2025
+Conteh;930.000;Computer;02.06.2025
+Vasilj;2.730.000;Computer;02.06.2025
+Saliakas;3.230.000;Nico;02.06.2025
+Ouédraogo;1.580.000;Nico;02.06.2025
+Querfeld;4.050.000;Alfons;02.06.2025
+Veratschnig;400.000;Christoph;02.06.2025
+Hendriks;1.260.000;Nico;02.06.2025
+Uzun;3.390.000;Christoph;02.06.2025
+Preu;400.000;Christoph;02.06.2025
+Højlund;1.360.000;Alfons;02.06.2025
+Kristensen;7.500.000;Alfons;02.06.2025
+Tabaković;1.960.000;Alfons;02.06.2025
+Hranáč;200.000;Alfons;02.06.2025
+Hennrich;160.000;Christian;02.06.2025
+Swider;160.000;Christoph;02.06.2025
+G. Orban;1.730.000;Nico;02.06.2025
+Gleiber;190.000;Christoph;02.06.2025
+Schmitz;190.000;Computer;02.06.2025
+Wahi;2.420.000;Nico;02.06.2025
+Vidić;160.000;Computer;02.06.2025
+Pesch;220.000;Nico;02.06.2025
+Obert;370.000;Nico;02.06.2025
+Kusi-Asare;1.200.000;Computer;02.06.2025
+Muheim;3.410.000;Nico;02.06.2025
+L. Reis;2.990.000;Alfons;02.06.2025
+Suzuki;6.800.000;Nico;02.06.2025
+Dong;750.000;Pascal;02.06.2025
+S. Burchert;160.000;Thomas;03.06.2025
+Batz;230.000;Computer;03.06.2025
+Höfler;500.000;Alfons;03.06.2025
+Gregoritsch;1.840.000;Nico;03.06.2025
+K. Müller;1.260.000;Christoph;03.06.2025
+Zentner;3.490.000;Nico;03.06.2025
+M. Eggestein;5.050.000;Thomas;03.06.2025
+Zetterer;2.420.000;Christoph;03.06.2025
+Huth;160.000;Computer;03.06.2025
+Mittelstädt;10.420.000;Thomas;03.06.2025
+Gulácsi;3.080.000;Alfons;03.06.2025
+Dorsch;1.570.000;Nico;03.06.2025
+B. Jatta;1.720.000;Thomas;03.06.2025
+Wahl;3.260.000;Thomas;03.06.2025
+Özcan;1.510.000;Christian;03.06.2025
+Geiger;1.070.000;Nico;03.06.2025
+Friedl;3.610.000;Computer;03.06.2025
+Bruun Larsen;1.240.000;Thomas;03.06.2025
+Meyer;260.000;Thomas;03.06.2025
+Dahmen;2.620.000;Thomas;03.06.2025
+Haidara;1.660.000;Christian;03.06.2025
+Tietz;3.650.000;Computer;03.06.2025
+Lainer;820.000;Dominik;03.06.2025
+Osterhage;2.500.000;Thomas;03.06.2025
+Keitel;660.000;Computer;03.06.2025
+Ngankam;540.000;Dominik;03.06.2025
+Musiala;13.430.000;Thomas;03.06.2025
+Doan;13.520.000;Thomas;03.06.2025
+Martel;4.340.000;Alfons;03.06.2025
+Dinkçi;1.170.000;Alfons;03.06.2025
+Knauff;5.300.000;Nico;03.06.2025
+Stanišić;6.920.000;Thomas;03.06.2025
+Stiller;12.710.000;Christoph;03.06.2025
+Adli;4.660.000;Computer;03.06.2025
+F. Becker;500.000;Thomas;03.06.2025
+Doekhi;3.880.000;Nico;03.06.2025
+Skarke;1.320.000;Thomas;03.06.2025
+Koudossou;430.000;Dominik;03.06.2025
+P. Aaronson;1.240.000;Computer;03.06.2025
+Diehl;410.000;Thomas;03.06.2025
+Ullrich;1.080.000;Christian;03.06.2025
+Paçarada;2.950.000;Pascal;03.06.2025
+Larsson;5.580.000;Computer;03.06.2025
+Traoré;1.270.000;Christoph;03.06.2025
+Rosenfelder;1.630.000;Alfons;03.06.2025
+Boniface;7.880.000;Alfons;03.06.2025
+Hollerbach;6.840.000;Computer;03.06.2025
+Kovář;490.000;Computer;03.06.2025
+Stergiou;1.240.000;Dominik;03.06.2025
+Pavlović;8.850.000;Nico;03.06.2025
+Fukuda;260.000;Alfons;03.06.2025
+Fukuda;260.000;Alfons;03.06.2025
+Wätjen;400.000;Thomas;03.06.2025
+Vasilj;3.030.000;Computer;03.06.2025
+Dźwigała;220.000;Christoph;03.06.2025
+Saliakas;3.280.000;Nico;03.06.2025
+Sander;1.920.000;Dominik;03.06.2025
+Ouédraogo;1.760.000;Nico;03.06.2025
+Querfeld;4.150.000;Alfons;03.06.2025
+Veratschnig;430.000;Christoph;03.06.2025
+Hendriks;1.310.000;Nico;03.06.2025
+Uzun;3.700.000;Christoph;03.06.2025
+Preu;430.000;Christoph;03.06.2025
+Højlund;1.440.000;Alfons;03.06.2025
+Kristensen;7.730.000;Alfons;03.06.2025
+Tabaković;1.990.000;Alfons;03.06.2025
+Hranáč;200.000;Alfons;03.06.2025
+Hennrich;160.000;Christian;03.06.2025
+Swider;160.000;Christoph;03.06.2025
+G. Orban;1.820.000;Nico;03.06.2025
+Gleiber;200.000;Christoph;03.06.2025
+Schmitz;180.000;Computer;03.06.2025
+Čović;200.000;Computer;03.06.2025
+Wahi;2.630.000;Nico;03.06.2025
+Vidić;160.000;Computer;03.06.2025
+Pesch;230.000;Nico;03.06.2025
+Kusi-Asare;1.130.000;Computer;03.06.2025
+Muheim;3.340.000;Nico;03.06.2025
+L. Reis;2.850.000;Alfons;03.06.2025
+Suzuki;6.810.000;Nico;03.06.2025
+Neuer;2.500.000;Dominik;04.06.2025
+Batz;220.000;Computer;04.06.2025
+Höfler;460.000;Alfons;04.06.2025
+Bittencourt;1.220.000;Pascal;04.06.2025
+Gregoritsch;1.900.000;Nico;04.06.2025
+K. Müller;1.490.000;Christoph;04.06.2025
+Haberer;1.630.000;Computer;04.06.2025
+Zentner;3.380.000;Nico;04.06.2025
+M. Eggestein;4.890.000;Thomas;04.06.2025
+Zetterer;2.370.000;Christoph;04.06.2025
+Mittelstädt;10.650.000;Thomas;04.06.2025
+Gulácsi;3.190.000;Alfons;04.06.2025
+Poulsen;1.540.000;Pascal;04.06.2025
+Dorsch;1.590.000;Nico;04.06.2025
+Heuer Fernandes;2.170.000;Computer;04.06.2025
+B. Jatta;1.920.000;Thomas;04.06.2025
+Wahl;3.380.000;Thomas;04.06.2025
+Geiger;1.070.000;Nico;04.06.2025
+Bruun Larsen;1.280.000;Thomas;04.06.2025
+Meyer;250.000;Thomas;04.06.2025
+Dahmen;2.570.000;Thomas;04.06.2025
+Muslija;460.000;Dominik;04.06.2025
+Tietz;3.740.000;Computer;04.06.2025
+Osterhage;2.540.000;Thomas;04.06.2025
+Skhiri;4.200.000;Computer;04.06.2025
+Ngankam;500.000;Dominik;04.06.2025
+Musiala;15.290.000;Thomas;04.06.2025
+Doan;12.980.000;Thomas;04.06.2025
+Martel;4.120.000;Alfons;04.06.2025
+Dinkçi;1.280.000;Alfons;04.06.2025
+Knauff;5.430.000;Nico;04.06.2025
+Stiller;12.520.000;Christoph;04.06.2025
+Widmer;800.000;Computer;04.06.2025
+Doekhi;3.830.000;Nico;04.06.2025
+Skarke;1.410.000;Thomas;04.06.2025
+Koudossou;440.000;Dominik;04.06.2025
+Berisha;1.910.000;Pascal;04.06.2025
+Diehl;470.000;Thomas;04.06.2025
+Juranović;1.300.000;Computer;04.06.2025
+Traoré;1.250.000;Christoph;04.06.2025
+Rosenfelder;1.580.000;Alfons;04.06.2025
+Čvančara;1.260.000;Computer;04.06.2025
+Boniface;7.960.000;Alfons;04.06.2025
+Hollerbach;6.630.000;Computer;04.06.2025
+Kovář;450.000;Computer;04.06.2025
+Stergiou;1.200.000;Dominik;04.06.2025
+Pavlović;9.480.000;Nico;04.06.2025
+Fukuda;300.000;Alfons;04.06.2025
+Wätjen;370.000;Thomas;04.06.2025
+B. Dárdai;1.980.000;Dominik;04.06.2025
+Vasilj;2.920.000;Dominik;04.06.2025
+Dźwigała;210.000;Christoph;04.06.2025
+Saliakas;3.300.000;Nico;04.06.2025
+Irvine;3.250.000;Computer;04.06.2025
+Sander;1.800.000;Dominik;04.06.2025
+Ouédraogo;1.920.000;Nico;04.06.2025
+Querfeld;4.030.000;Alfons;04.06.2025
+Veratschnig;450.000;Christoph;04.06.2025
+Hendriks;1.390.000;Nico;04.06.2025
+Uzun;3.680.000;Christoph;04.06.2025
+Preu;410.000;Christoph;04.06.2025
+Højlund;1.540.000;Alfons;04.06.2025
+Kristensen;7.670.000;Alfons;04.06.2025
+Koulierakis;3.580.000;Pascal;04.06.2025
+Tabaković;1.930.000;Alfons;04.06.2025
+Hranáč;190.000;Alfons;04.06.2025
+Chaves;2.490.000;Computer;04.06.2025
+Hennrich;160.000;Dominik;04.06.2025
+Swider;160.000;Christoph;04.06.2025
+G. Orban;1.810.000;Nico;04.06.2025
+Gleiber;190.000;Christoph;04.06.2025
+Schmitz;170.000;Computer;04.06.2025
+Čović;190.000;Computer;04.06.2025
+Wahi;2.710.000;Nico;04.06.2025
+Ljubičić;590.000;Computer;04.06.2025
+Vidić;160.000;Thomas;04.06.2025
+Pesch;220.000;Nico;04.06.2025
+Muheim;3.540.000;Nico;04.06.2025
+L. Reis;2.670.000;Alfons;04.06.2025
+Suzuki;6.690.000;Nico;04.06.2025
+Dong;660.000;Pascal;04.06.2025
+Neuer;2.460.000;Dominik;05.06.2025
+Götze;2.500.000;Christoph;05.06.2025
+Höfler;470.000;Alfons;05.06.2025
+Ma. Müller;160.000;Computer;05.06.2025
+Gregoritsch;2.180.000;Nico;05.06.2025
+K. Müller;1.560.000;Christoph;05.06.2025
+Haberer;1.730.000;Computer;05.06.2025
+Zentner;3.560.000;Nico;05.06.2025
+M. Eggestein;4.830.000;Thomas;05.06.2025
+Zetterer;2.320.000;Christoph;05.06.2025
+Mittelstädt;10.610.000;Thomas;05.06.2025
+Gulácsi;3.300.000;Alfons;05.06.2025
+Dorsch;1.710.000;Nico;05.06.2025
+Heuer Fernandes;2.380.000;Computer;05.06.2025
+B. Jatta;2.140.000;Thomas;05.06.2025
+Wahl;3.750.000;Thomas;05.06.2025
+Geiger;1.040.000;Nico;05.06.2025
+Bruun Larsen;1.330.000;Thomas;05.06.2025
+Hack;5.430.000;Christoph;05.06.2025
+Meyer;250.000;Thomas;05.06.2025
+Dahmen;2.660.000;Thomas;05.06.2025
+Baumgartner;2.440.000;Computer;05.06.2025
+Muslija;480.000;Dominik;05.06.2025
+Osterhage;2.510.000;Thomas;05.06.2025
+Skhiri;4.200.000;Computer;05.06.2025
+Ngankam;470.000;Dominik;05.06.2025
+Musiala;15.450.000;Thomas;05.06.2025
+Doan;12.930.000;Thomas;05.06.2025
+Martel;4.280.000;Alfons;05.06.2025
+Dinkçi;1.530.000;Alfons;05.06.2025
+Knauff;5.510.000;Nico;05.06.2025
+Stiller;11.740.000;Christoph;05.06.2025
+Widmer;800.000;Computer;05.06.2025
+Ilaix Moriba;230.000;Computer;05.06.2025
+Doekhi;3.960.000;Nico;05.06.2025
+Skarke;1.380.000;Thomas;05.06.2025
+Koudossou;460.000;Dominik;05.06.2025
+Diehl;490.000;Thomas;05.06.2025
+Juranović;1.400.000;Computer;05.06.2025
+Traoré;1.180.000;Christoph;05.06.2025
+Rosenfelder;1.650.000;Alfons;05.06.2025
+Čvančara;1.230.000;Computer;05.06.2025
+Boniface;8.330.000;Alfons;05.06.2025
+Finkgräfe;1.740.000;Computer;05.06.2025
+Stergiou;1.250.000;Dominik;05.06.2025
+Pavlović;9.810.000;Nico;05.06.2025
+Fukuda;340.000;Alfons;05.06.2025
+Wätjen;360.000;Thomas;05.06.2025
+B. Dárdai;1.850.000;Dominik;05.06.2025
+Vasilj;3.080.000;Dominik;05.06.2025
+Dźwigała;200.000;Christoph;05.06.2025
+Saliakas;3.440.000;Nico;05.06.2025
+Irvine;3.410.000;Computer;05.06.2025
+Sander;2.060.000;Dominik;05.06.2025
+Ouédraogo;1.910.000;Nico;05.06.2025
+Querfeld;4.120.000;Alfons;05.06.2025
+Veratschnig;430.000;Christoph;05.06.2025
+Hendriks;1.450.000;Nico;05.06.2025
+Uzun;4.170.000;Christoph;05.06.2025
+Preu;390.000;Christoph;05.06.2025
+Højlund;1.590.000;Alfons;05.06.2025
+Kristensen;7.700.000;Alfons;05.06.2025
+Tabaković;1.930.000;Alfons;05.06.2025
+Hranáč;190.000;Alfons;05.06.2025
+Vermeeren;2.100.000;Christoph;05.06.2025
+Chaves;2.580.000;Computer;05.06.2025
+Hennrich;170.000;Dominik;05.06.2025
+Swider;160.000;Christoph;05.06.2025
+G. Orban;1.890.000;Nico;05.06.2025
+Čović;200.000;Computer;05.06.2025
+Wahi;2.710.000;Nico;05.06.2025
+B. Touré;3.050.000;Christoph;05.06.2025
+Ljubičić;620.000;Computer;05.06.2025
+Vidić;160.000;Thomas;05.06.2025
+Pesch;210.000;Nico;05.06.2025
+Muheim;3.650.000;Nico;05.06.2025
+Agyekum;380.000;Computer;05.06.2025
+Suzuki;6.750.000;Nico;05.06.2025
+Neuer;2.310.000;Dominik;06.06.2025
+Götze;2.870.000;Christoph;06.06.2025
+Höfler;440.000;Alfons;06.06.2025
+Ma. Müller;190.000;Computer;06.06.2025
+Gregoritsch;2.290.000;Nico;06.06.2025
+J. Hofmann;3.810.000;Computer;06.06.2025
+K. Müller;1.590.000;Christoph;06.06.2025
+Gerhardt;840.000;Christian;06.06.2025
+Friedrich;840.000;Dominik;06.06.2025
+Zentner;3.590.000;Nico;06.06.2025
+M. Eggestein;4.600.000;Thomas;06.06.2025
+Zetterer;2.340.000;Christoph;06.06.2025
+Mittelstädt;10.710.000;Thomas;06.06.2025
+Gulácsi;3.390.000;Alfons;06.06.2025
+Dorsch;1.720.000;Nico;06.06.2025
+Heuer Fernandes;2.200.000;Thomas;06.06.2025
+B. Jatta;2.230.000;Thomas;06.06.2025
+Wahl;3.790.000;Thomas;06.06.2025
+Geiger;980.000;Nico;06.06.2025
+Burke;4.630.000;Dominik;06.06.2025
+Hübers;3.030.000;Computer;06.06.2025
+Bruun Larsen;1.320.000;Thomas;06.06.2025
+Hack;5.250.000;Christoph;06.06.2025
+Meyer;230.000;Thomas;06.06.2025
+Dahmen;2.730.000;Thomas;06.06.2025
+Baumgartner;2.630.000;Computer;06.06.2025
+Muslija;450.000;Dominik;06.06.2025
+Tietz;3.880.000;Alfons;06.06.2025
+Lainer;790.000;Dominik;06.06.2025
+Osterhage;2.540.000;Thomas;06.06.2025
+Musiala;16.970.000;Thomas;06.06.2025
+Doan;13.640.000;Thomas;06.06.2025
+Martel;4.530.000;Alfons;06.06.2025
+Dinkçi;1.610.000;Alfons;06.06.2025
+Knauff;5.440.000;Nico;06.06.2025
+Ilaix Moriba;220.000;Computer;06.06.2025
+Chabot;6.060.000;Computer;06.06.2025
+Doekhi;3.940.000;Nico;06.06.2025
+Skarke;1.400.000;Thomas;06.06.2025
+Koudossou;440.000;Dominik;06.06.2025
+Král;540.000;Computer;06.06.2025
+Dina Ebimbe;510.000;Computer;06.06.2025
+Diehl;570.000;Thomas;06.06.2025
+Juranović;1.550.000;Nico;06.06.2025
+Traoré;1.360.000;Christoph;06.06.2025
+Rosenfelder;1.740.000;Alfons;06.06.2025
+Čvančara;1.180.000;Computer;06.06.2025
+Boniface;8.250.000;Alfons;06.06.2025
+Undav;12.200.000;Computer;06.06.2025
+Finkgräfe;1.680.000;Computer;06.06.2025
+Stergiou;1.340.000;Dominik;06.06.2025
+Pavlović;9.330.000;Nico;06.06.2025
+Fukuda;400.000;Alfons;06.06.2025
+Wätjen;350.000;Thomas;06.06.2025
+B. Dárdai;1.910.000;Dominik;06.06.2025
+Vasilj;2.980.000;Dominik;06.06.2025
+Saliakas;3.340.000;Nico;06.06.2025
+Sander;2.050.000;Dominik;06.06.2025
+Ouédraogo;2.010.000;Nico;06.06.2025
+Prtajin;290.000;Computer;06.06.2025
+Querfeld;3.800.000;Alfons;06.06.2025
+Hendriks;1.510.000;Nico;06.06.2025
+Uzun;4.150.000;Christoph;06.06.2025
+Højlund;1.660.000;Alfons;06.06.2025
+Kristensen;7.460.000;Alfons;06.06.2025
+Chase;870.000;Computer;06.06.2025
+Tabaković;1.780.000;Alfons;06.06.2025
+Vermeeren;2.180.000;Christoph;06.06.2025
+Hennrich;170.000;Dominik;06.06.2025
+G. Orban;1.920.000;Nico;06.06.2025
+Wahi;2.600.000;Nico;06.06.2025
+B. Touré;2.810.000;Christoph;06.06.2025
+Ljubičić;700.000;Alfons;06.06.2025
+Vidić;160.000;Thomas;06.06.2025
+Pesch;200.000;Nico;06.06.2025
+Hermann;160.000;Computer;06.06.2025
+Muheim;3.830.000;Nico;06.06.2025
+Agyekum;350.000;Computer;06.06.2025
+Suzuki;6.500.000;Nico;06.06.2025
+Neuer;2.450.000;Dominik;07.06.2025
+Groß;7.570.000;Dominik;07.06.2025
+Götze;2.970.000;Christoph;07.06.2025
+Höfler;450.000;Alfons;07.06.2025
+Ma. Müller;240.000;Dominik;07.06.2025
+Can;3.790.000;Dominik;07.06.2025
+Gregoritsch;2.610.000;Nico;07.06.2025
+J. Hofmann;3.990.000;Computer;07.06.2025
+K. Müller;1.680.000;Christoph;07.06.2025
+Gerhardt;840.000;Christian;07.06.2025
+Haberer;1.540.000;Dominik;07.06.2025
+Zentner;3.620.000;Nico;07.06.2025
+M. Eggestein;4.750.000;Thomas;07.06.2025
+Zetterer;2.340.000;Christoph;07.06.2025
+Mittelstädt;10.780.000;Thomas;07.06.2025
+Gulácsi;3.300.000;Alfons;07.06.2025
+Dorsch;1.740.000;Nico;07.06.2025
+Heuer Fernandes;2.200.000;Thomas;07.06.2025
+B. Jatta;2.540.000;Thomas;07.06.2025
+Wahl;3.830.000;Thomas;07.06.2025
+Schöppner;3.370.000;Computer;07.06.2025
+Hübers;3.170.000;Computer;07.06.2025
+Bruun Larsen;1.360.000;Thomas;07.06.2025
+Hack;5.540.000;Christoph;07.06.2025
+Meyer;240.000;Thomas;07.06.2025
+Dahmen;3.130.000;Thomas;07.06.2025
+Beste;3.490.000;Dominik;07.06.2025
+Baumgartner;2.690.000;Dominik;07.06.2025
+Tietz;4.170.000;Alfons;07.06.2025
+Lainer;810.000;Dominik;07.06.2025
+Schlager;3.130.000;Dominik;07.06.2025
+Osterhage;2.800.000;Thomas;07.06.2025
+Musiala;17.060.000;Thomas;07.06.2025
+Doan;13.800.000;Thomas;07.06.2025
+Martel;4.630.000;Alfons;07.06.2025
+Dinkçi;1.860.000;Alfons;07.06.2025
+Knauff;5.770.000;Nico;07.06.2025
+Stach;5.950.000;Dominik;07.06.2025
+La. Günther;170.000;Computer;07.06.2025
+Widmer;720.000;Alfons;07.06.2025
+Adli;4.400.000;Dominik;07.06.2025
+Ilaix Moriba;300.000;Computer;07.06.2025
+Wanner;4.370.000;Dominik;07.06.2025
+Chabot;5.810.000;Computer;07.06.2025
+Doekhi;4.030.000;Nico;07.06.2025
+Skarke;1.400.000;Thomas;07.06.2025
+Král;520.000;Computer;07.06.2025
+Dina Ebimbe;490.000;Computer;07.06.2025
+P. Aaronson;1.800.000;Dominik;07.06.2025
+Diehl;650.000;Thomas;07.06.2025
+Juranović;1.580.000;Nico;07.06.2025
+Traoré;1.360.000;Christoph;07.06.2025
+Rosenfelder;1.830.000;Alfons;07.06.2025
+Boniface;8.340.000;Alfons;07.06.2025
+Undav;12.390.000;Computer;07.06.2025
+Finkgräfe;1.930.000;Christoph;07.06.2025
+Stergiou;1.360.000;Dominik;07.06.2025
+Pavlović;9.530.000;Nico;07.06.2025
+Fukuda;430.000;Alfons;07.06.2025
+Alvero;330.000;Computer;07.06.2025
+Wätjen;340.000;Thomas;07.06.2025
+B. Dárdai;1.820.000;Dominik;07.06.2025
+Vasilj;3.090.000;Dominik;07.06.2025
+Saliakas;3.360.000;Nico;07.06.2025
+Sander;2.150.000;Dominik;07.06.2025
+Ouédraogo;2.040.000;Nico;07.06.2025
+Prtajin;300.000;Computer;07.06.2025
+Querfeld;4.050.000;Alfons;07.06.2025
+Veratschnig;410.000;Christoph;07.06.2025
+Hendriks;1.530.000;Nico;07.06.2025
+Uzun;4.410.000;Christoph;07.06.2025
+Preu;460.000;Christoph;07.06.2025
+Højlund;1.710.000;Alfons;07.06.2025
+Kristensen;7.140.000;Alfons;07.06.2025
+Chase;930.000;Computer;07.06.2025
+Tabaković;1.870.000;Alfons;07.06.2025
+Vermeeren;2.030.000;Christoph;07.06.2025
+Hennrich;170.000;Dominik;07.06.2025
+G. Orban;1.850.000;Nico;07.06.2025
+Schmitz;160.000;Computer;07.06.2025
+Wahi;2.910.000;Nico;07.06.2025
+B. Touré;2.890.000;Christoph;07.06.2025
+Ljubičić;790.000;Alfons;07.06.2025
+Vidić;160.000;Thomas;07.06.2025
+Hermann;160.000;Computer;07.06.2025
+Elfadli;4.060.000;Dominik;07.06.2025
+Muheim;3.830.000;Nico;07.06.2025
+Agyekum;340.000;Computer;07.06.2025
+Suzuki;6.110.000;Nico;07.06.2025
+Neuer;2.290.000;Dominik;08.06.2025
+Groß;7.160.000;Dominik;08.06.2025
+Götze;3.170.000;Christoph;08.06.2025
+Höfler;460.000;Alfons;08.06.2025
+Ma. Müller;220.000;Dominik;08.06.2025
+Can;3.640.000;Dominik;08.06.2025
+Gregoritsch;2.470.000;Nico;08.06.2025
+Gerhardt;810.000;Christian;08.06.2025
+Haberer;1.620.000;Dominik;08.06.2025
+Zentner;3.360.000;Nico;08.06.2025
+Amiri;12.770.000;Computer;08.06.2025
+M. Eggestein;4.610.000;Thomas;08.06.2025
+Zetterer;2.330.000;Christoph;08.06.2025
+Mittelstädt;10.230.000;Thomas;08.06.2025
+Gulácsi;3.160.000;Alfons;08.06.2025
+Dorsch;1.790.000;Nico;08.06.2025
+Heuer Fernandes;2.390.000;Thomas;08.06.2025
+B. Jatta;2.340.000;Thomas;08.06.2025
+Wahl;3.700.000;Thomas;08.06.2025
+Schöppner;3.140.000;Computer;08.06.2025
+Bruun Larsen;1.290.000;Thomas;08.06.2025
+Hack;5.520.000;Christoph;08.06.2025
+Meyer;240.000;Thomas;08.06.2025
+Dahmen;3.070.000;Thomas;08.06.2025
+Vagnoman;2.020.000;Computer;08.06.2025
+Beste;3.430.000;Dominik;08.06.2025
+Baumgartner;2.590.000;Dominik;08.06.2025
+Tietz;4.000.000;Alfons;08.06.2025
+Lainer;760.000;Dominik;08.06.2025
+Schlager;3.310.000;Dominik;08.06.2025
+Osterhage;2.570.000;Thomas;08.06.2025
+Musiala;17.010.000;Thomas;08.06.2025
+P. Nebel;11.370.000;Computer;08.06.2025
+Doan;13.420.000;Thomas;08.06.2025
+Martel;4.530.000;Alfons;08.06.2025
+Dinkçi;1.970.000;Alfons;08.06.2025
+Knauff;5.650.000;Nico;08.06.2025
+Stach;5.610.000;Dominik;08.06.2025
+La. Günther;160.000;Computer;08.06.2025
+Widmer;680.000;Alfons;08.06.2025
+Adli;4.190.000;Dominik;08.06.2025
+Wanner;4.080.000;Dominik;08.06.2025
+Doekhi;3.880.000;Nico;08.06.2025
+Skarke;1.370.000;Thomas;08.06.2025
+Perea;160.000;Computer;08.06.2025
+Král;480.000;Computer;08.06.2025
+Dina Ebimbe;530.000;Computer;08.06.2025
+P. Aaronson;1.820.000;Dominik;08.06.2025
+Diehl;610.000;Thomas;08.06.2025
+Juranović;1.460.000;Nico;08.06.2025
+Traoré;1.280.000;Christoph;08.06.2025
+Rosenfelder;1.960.000;Alfons;08.06.2025
+Boniface;8.130.000;Alfons;08.06.2025
+N. Collins;2.610.000;Computer;08.06.2025
+Kovář;410.000;Computer;08.06.2025
+Finkgräfe;1.830.000;Christoph;08.06.2025
+Stergiou;1.310.000;Dominik;08.06.2025
+Pavlović;9.100.000;Nico;08.06.2025
+Fukuda;430.000;Alfons;08.06.2025
+Alvero;320.000;Computer;08.06.2025
+Wätjen;330.000;Thomas;08.06.2025
+B. Dárdai;1.830.000;Dominik;08.06.2025
+Vasilj;3.050.000;Dominik;08.06.2025
+Saliakas;3.230.000;Nico;08.06.2025
+Sander;2.160.000;Dominik;08.06.2025
+Ouédraogo;2.140.000;Nico;08.06.2025
+Querfeld;3.820.000;Alfons;08.06.2025
+Veratschnig;410.000;Christoph;08.06.2025
+Hendriks;1.470.000;Nico;08.06.2025
+Preu;440.000;Christoph;08.06.2025
+Højlund;1.740.000;Alfons;08.06.2025
+Kristensen;6.910.000;Alfons;08.06.2025
+Chase;910.000;Dominik;08.06.2025
+Tabaković;1.730.000;Alfons;08.06.2025
+Vermeeren;2.240.000;Christoph;08.06.2025
+Pavlešić;160.000;Computer;08.06.2025
+Hennrich;160.000;Dominik;08.06.2025
+Schmitz;160.000;Computer;08.06.2025
+Wahi;2.870.000;Nico;08.06.2025
+B. Touré;2.850.000;Christoph;08.06.2025
+Ljubičić;780.000;Alfons;08.06.2025
+Vidić;160.000;Thomas;08.06.2025
+Kusi-Asare;820.000;Computer;08.06.2025
+Hermann;160.000;Computer;08.06.2025
+Elfadli;3.960.000;Dominik;08.06.2025
+Muheim;3.740.000;Nico;08.06.2025
+Götze;3.170.000;Christoph;09.06.2025
+Höfler;520.000;Alfons;09.06.2025
+Gregoritsch;2.700.000;Nico;09.06.2025
+J. Hofmann;4.550.000;Alfons;09.06.2025
+K. Müller;1.770.000;Christoph;09.06.2025
+Haberer;1.610.000;Dominik;09.06.2025
+Zentner;3.500.000;Nico;09.06.2025
+Amiri;12.810.000;Computer;09.06.2025
+M. Eggestein;4.530.000;Thomas;09.06.2025
+Zetterer;2.350.000;Christoph;09.06.2025
+Mittelstädt;10.230.000;Thomas;09.06.2025
+Gulácsi;3.290.000;Alfons;09.06.2025
+Dorsch;1.870.000;Nico;09.06.2025
+Heuer Fernandes;2.280.000;Thomas;09.06.2025
+B. Jatta;2.340.000;Thomas;09.06.2025
+Wahl;3.830.000;Thomas;09.06.2025
+Schöppner;3.370.000;Alfons;09.06.2025
+Hübers;3.230.000;Dominik;09.06.2025
+Bruun Larsen;1.410.000;Thomas;09.06.2025
+Hack;5.530.000;Christoph;09.06.2025
+Meyer;240.000;Thomas;09.06.2025
+Dahmen;3.090.000;Thomas;09.06.2025
+Vagnoman;2.170.000;Computer;09.06.2025
+Neuhaus;2.850.000;Computer;09.06.2025
+Beste;3.560.000;Dominik;09.06.2025
+Baumgartner;2.690.000;Dominik;09.06.2025
+Tietz;3.830.000;Alfons;09.06.2025
+Trimmel;1.760.000;Computer;09.06.2025
+Schlager;3.260.000;Dominik;09.06.2025
+Osterhage;2.380.000;Thomas;09.06.2025
+Musiala;18.650.000;Thomas;09.06.2025
+P. Nebel;11.390.000;Computer;09.06.2025
+Doan;12.580.000;Thomas;09.06.2025
+Martel;4.550.000;Alfons;09.06.2025
+Dinkçi;2.140.000;Alfons;09.06.2025
+Knauff;5.730.000;Nico;09.06.2025
+La. Günther;170.000;Computer;09.06.2025
+Chabot;5.790.000;Dominik;09.06.2025
+Doekhi;3.960.000;Nico;09.06.2025
+Skarke;1.320.000;Thomas;09.06.2025
+Perea;160.000;Computer;09.06.2025
+Dina Ebimbe;540.000;Alfons;09.06.2025
+P. Aaronson;1.970.000;Dominik;09.06.2025
+Diehl;600.000;Thomas;09.06.2025
+Juranović;1.600.000;Nico;09.06.2025
+Maza;8.700.000;Computer;09.06.2025
+Traoré;1.360.000;Christoph;09.06.2025
+Rosenfelder;2.210.000;Alfons;09.06.2025
+Boniface;8.350.000;Alfons;09.06.2025
+Undav;12.800.000;Alfons;09.06.2025
+N. Collins;2.610.000;Computer;09.06.2025
+Kovář;390.000;Computer;09.06.2025
+Finkgräfe;1.830.000;Christoph;09.06.2025
+Stergiou;1.420.000;Dominik;09.06.2025
+Pavlović;9.040.000;Nico;09.06.2025
+Fukuda;430.000;Alfons;09.06.2025
+Eduardo;170.000;Computer;09.06.2025
+Wätjen;310.000;Thomas;09.06.2025
+Vasilj;2.930.000;Dominik;09.06.2025
+Saliakas;3.370.000;Nico;09.06.2025
+Sander;2.190.000;Dominik;09.06.2025
+Ouédraogo;2.270.000;Nico;09.06.2025
+Prtajin;300.000;Alfons;09.06.2025
+Querfeld;3.920.000;Alfons;09.06.2025
+Veratschnig;410.000;Christoph;09.06.2025
+Hendriks;1.490.000;Nico;09.06.2025
+Uzun;4.460.000;Christoph;09.06.2025
+Preu;470.000;Christoph;09.06.2025
+Højlund;1.780.000;Alfons;09.06.2025
+Kristensen;6.970.000;Alfons;09.06.2025
+Chase;880.000;Dominik;09.06.2025
+Vermeeren;2.310.000;Christoph;09.06.2025
+Pavlešić;160.000;Computer;09.06.2025
+Hennrich;170.000;Dominik;09.06.2025
+Schmitz;160.000;Computer;09.06.2025
+Wahi;2.890.000;Nico;09.06.2025
+B. Touré;2.920.000;Christoph;09.06.2025
+Ljubičić;820.000;Alfons;09.06.2025
+Gomis;1.420.000;Computer;09.06.2025
+Kusi-Asare;830.000;Computer;09.06.2025
+Elfadli;3.740.000;Dominik;09.06.2025
+Muheim;3.780.000;Nico;09.06.2025
+Neuer;2.100.000;Dominik;10.06.2025
+Groß;6.300.000;Dominik;10.06.2025
+Götze;3.080.000;Christoph;10.06.2025
+Höfler;510.000;Alfons;10.06.2025
+Can;3.780.000;Dominik;10.06.2025
+Gregoritsch;2.660.000;Nico;10.06.2025
+J. Hofmann;4.940.000;Alfons;10.06.2025
+Süle;4.530.000;Computer;10.06.2025
+Haberer;1.550.000;Dominik;10.06.2025
+Zentner;3.250.000;Nico;10.06.2025
+M. Eggestein;4.530.000;Thomas;10.06.2025
+Zetterer;2.700.000;Christoph;10.06.2025
+Mittelstädt;9.750.000;Thomas;10.06.2025
+Gulácsi;3.180.000;Alfons;10.06.2025
+Dorsch;1.850.000;Nico;10.06.2025
+Heuer Fernandes;2.260.000;Thomas;10.06.2025
+Jatta;2.240.000;Thomas;10.06.2025
+Wahl;3.530.000;Thomas;10.06.2025
+Schöppner;3.090.000;Alfons;10.06.2025
+Hübers;3.090.000;Dominik;10.06.2025
+Bruun Larsen;1.560.000;Thomas;10.06.2025
+Hack;5.480.000;Christoph;10.06.2025
+Meyer;230.000;Thomas;10.06.2025
+Dahmen;3.160.000;Thomas;10.06.2025
+Vagnoman;2.280.000;Nico;10.06.2025
+Neuhaus;2.850.000;Computer;10.06.2025
+Beste;3.510.000;Dominik;10.06.2025
+Baumgartner;2.750.000;Dominik;10.06.2025
+Tietz;3.770.000;Alfons;10.06.2025
+Trimmel;1.730.000;Computer;10.06.2025
+Schlager;3.450.000;Dominik;10.06.2025
+Osterhage;2.300.000;Thomas;10.06.2025
+Musiala;18.040.000;Thomas;10.06.2025
+Doan;12.570.000;Thomas;10.06.2025
+Martel;4.360.000;Alfons;10.06.2025
+Dinkçi;2.330.000;Alfons;10.06.2025
+Knauff;5.800.000;Nico;10.06.2025
+Noll;160.000;Computer;10.06.2025
+Stach;5.840.000;Dominik;10.06.2025
+Millot;6.600.000;Computer;10.06.2025
+Adli;4.550.000;Dominik;10.06.2025
+Wanner;4.040.000;Dominik;10.06.2025
+Chabot;5.400.000;Dominik;10.06.2025
+Doekhi;3.600.000;Nico;10.06.2025
+Skarke;1.380.000;Thomas;10.06.2025
+Perea;160.000;Computer;10.06.2025
+Dina Ebimbe;500.000;Alfons;10.06.2025
+P. Aaronson;1.940.000;Dominik;10.06.2025
+Diehl;640.000;Thomas;10.06.2025
+Maza;10.000.000;Computer;10.06.2025
+Traoré;1.350.000;Christoph;10.06.2025
+Rosenfelder;2.310.000;Alfons;10.06.2025
+Boniface;8.040.000;Alfons;10.06.2025
+Undav;12.210.000;Alfons;10.06.2025
+N. Collins;2.470.000;Computer;10.06.2025
+Kovář;360.000;Computer;10.06.2025
+Finkgräfe;1.950.000;Christoph;10.06.2025
+Stergiou;1.360.000;Dominik;10.06.2025
+Pavlović;9.220.000;Nico;10.06.2025
+Fukuda;420.000;Alfons;10.06.2025
+Eduardo;160.000;Computer;10.06.2025
+Wätjen;310.000;Thomas;10.06.2025
+Vasilj;3.130.000;Dominik;10.06.2025
+Saliakas;3.350.000;Nico;10.06.2025
+Sander;2.060.000;Dominik;10.06.2025
+Ouédraogo;2.200.000;Nico;10.06.2025
+Prtajin;290.000;Alfons;10.06.2025
+Querfeld;3.810.000;Alfons;10.06.2025
+Veratschnig;380.000;Christoph;10.06.2025
+Hendriks;1.390.000;Nico;10.06.2025
+Uzun;4.490.000;Christoph;10.06.2025
+Preu;470.000;Christoph;10.06.2025
+Højlund;1.630.000;Alfons;10.06.2025
+Kristensen;6.940.000;Alfons;10.06.2025
+Klaus;170.000;Computer;10.06.2025
+Chase;870.000;Dominik;10.06.2025
+Vermeeren;2.320.000;Christoph;10.06.2025
+Pavlešić;160.000;Computer;10.06.2025
+Hennrich;160.000;Dominik;10.06.2025
+Schmitz;160.000;Thomas;10.06.2025
+Wahi;3.190.000;Nico;10.06.2025
+B. Touré;2.700.000;Christoph;10.06.2025
+Ljubičić;770.000;Alfons;10.06.2025
+Gomis;1.470.000;Computer;10.06.2025
+Vidić;160.000;Computer;10.06.2025
+Kusi-Asare;810.000;Computer;10.06.2025
+Elfadli;3.690.000;Dominik;10.06.2025
+Muheim;3.650.000;Nico;10.06.2025
+Neuer;2.050.000;Dominik;11.06.2025
+Groß;5.980.000;Dominik;11.06.2025
+Höfler;540.000;Alfons;11.06.2025
+Ginter;4.970.000;Computer;11.06.2025
+Gregoritsch;2.720.000;Nico;11.06.2025
+J. Hofmann;4.880.000;Alfons;11.06.2025
+Süle;4.610.000;Computer;11.06.2025
+Haberer;1.460.000;Dominik;11.06.2025
+Zentner;3.330.000;Nico;11.06.2025
+Amiri;12.830.000;Christoph;11.06.2025
+M. Eggestein;4.550.000;Thomas;11.06.2025
+Zetterer;2.540.000;Christoph;11.06.2025
+Mittelstädt;9.900.000;Thomas;11.06.2025
+Gulácsi;3.250.000;Alfons;11.06.2025
+A. Jung;1.470.000;Computer;11.06.2025
+Dorsch;1.890.000;Nico;11.06.2025
+Heuer Fernandes;2.270.000;Thomas;11.06.2025
+Jatta;2.350.000;Thomas;11.06.2025
+Wahl;3.500.000;Thomas;11.06.2025
+Schöppner;3.090.000;Alfons;11.06.2025
+Hübers;3.140.000;Dominik;11.06.2025
+Bruun Larsen;1.560.000;Thomas;11.06.2025
+Hack;5.550.000;Christoph;11.06.2025
+Meyer;240.000;Thomas;11.06.2025
+Dahmen;3.140.000;Thomas;11.06.2025
+Vagnoman;2.180.000;Nico;11.06.2025
+Beste;3.650.000;Dominik;11.06.2025
+Baumgartner;2.560.000;Dominik;11.06.2025
+Tietz;3.880.000;Alfons;11.06.2025
+Kilian;320.000;Computer;11.06.2025
+Schlager;3.610.000;Dominik;11.06.2025
+Osterhage;2.440.000;Thomas;11.06.2025
+Musiala;18.400.000;Thomas;11.06.2025
+P. Nebel;11.390.000;Dominik;11.06.2025
+Doan;12.150.000;Thomas;11.06.2025
+Martel;4.490.000;Alfons;11.06.2025
+Dinkçi;2.370.000;Alfons;11.06.2025
+Knauff;6.180.000;Nico;11.06.2025
+Noll;170.000;Computer;11.06.2025
+Stach;6.100.000;Dominik;11.06.2025
+Millot;6.600.000;Computer;11.06.2025
+Adli;4.860.000;Dominik;11.06.2025
+Wanner;4.250.000;Dominik;11.06.2025
+Schäfer;1.530.000;Computer;11.06.2025
+Chabot;5.600.000;Dominik;11.06.2025
+Doekhi;3.810.000;Nico;11.06.2025
+Skarke;1.300.000;Thomas;11.06.2025
+Nsoki;470.000;Computer;11.06.2025
+Dina Ebimbe;510.000;Alfons;11.06.2025
+P. Aaronson;2.000.000;Dominik;11.06.2025
+Diehl;610.000;Thomas;11.06.2025
+Maza;10.420.000;Nico;11.06.2025
+Traoré;1.330.000;Christoph;11.06.2025
+Milošević;300.000;Computer;11.06.2025
+Rosenfelder;2.260.000;Alfons;11.06.2025
+Boniface;8.310.000;Alfons;11.06.2025
+Undav;12.260.000;Alfons;11.06.2025
+Finkgräfe;1.940.000;Christoph;11.06.2025
+Pavlović;9.290.000;Nico;11.06.2025
+Fukuda;400.000;Alfons;11.06.2025
+Eduardo;160.000;Computer;11.06.2025
+Wätjen;290.000;Thomas;11.06.2025
+Saliakas;3.100.000;Nico;11.06.2025
+Sander;2.270.000;Dominik;11.06.2025
+Ouédraogo;2.180.000;Nico;11.06.2025
+Prtajin;280.000;Alfons;11.06.2025
+Querfeld;3.990.000;Alfons;11.06.2025
+Veratschnig;410.000;Christoph;11.06.2025
+Hendriks;1.390.000;Nico;11.06.2025
+Preu;460.000;Christoph;11.06.2025
+Højlund;1.580.000;Alfons;11.06.2025
+Ogbus;450.000;Computer;11.06.2025
+Kristensen;7.130.000;Alfons;11.06.2025
+Klaus;170.000;Computer;11.06.2025
+Chase;890.000;Dominik;11.06.2025
+Al-Dakhil;960.000;Computer;11.06.2025
+Schmitz;170.000;Thomas;11.06.2025
+Wahi;3.210.000;Nico;11.06.2025
+B. Touré;2.510.000;Christoph;11.06.2025
+Ljubičić;770.000;Alfons;11.06.2025
+Vidić;160.000;Computer;11.06.2025
+Elfadli;3.480.000;Dominik;11.06.2025
+Muheim;3.540.000;Nico;11.06.2025
+Diks;3.880.000;Computer;11.06.2025
+Neuer;1.890.000;Dominik;12.06.2025
+Groß;5.710.000;Dominik;12.06.2025
+Höfler;510.000;Alfons;12.06.2025
+Ginter;4.560.000;Computer;12.06.2025
+Gregoritsch;2.600.000;Nico;12.06.2025
+J. Hofmann;5.000.000;Alfons;12.06.2025
+Haberer;1.350.000;Dominik;12.06.2025
+Zentner;3.210.000;Nico;12.06.2025
+Amiri;12.250.000;Christoph;12.06.2025
+M. Eggestein;4.580.000;Thomas;12.06.2025
+Mittelstädt;9.720.000;Thomas;12.06.2025
+Gulácsi;3.230.000;Alfons;12.06.2025
+A. Jung;1.650.000;Computer;12.06.2025
+Dorsch;1.800.000;Nico;12.06.2025
+Heuer Fernandes;2.450.000;Thomas;12.06.2025
+Jatta;2.240.000;Thomas;12.06.2025
+Wahl;3.330.000;Thomas;12.06.2025
+Maier;860.000;Computer;12.06.2025
+Hübers;3.010.000;Dominik;12.06.2025
+Bruun Larsen;1.550.000;Thomas;12.06.2025
+Hack;5.390.000;Christoph;12.06.2025
+Meyer;220.000;Thomas;12.06.2025
+Dahmen;3.300.000;Thomas;12.06.2025
+Neuhaus;2.990.000;Thomas;12.06.2025
+Beste;3.450.000;Dominik;12.06.2025
+Baumgartner;2.560.000;Dominik;12.06.2025
+Tietz;3.660.000;Alfons;12.06.2025
+Kilian;310.000;Computer;12.06.2025
+Schlager;3.600.000;Dominik;12.06.2025
+Osterhage;2.320.000;Thomas;12.06.2025
+Musiala;19.070.000;Thomas;12.06.2025
+P. Nebel;11.290.000;Dominik;12.06.2025
+L. Philipp;370.000;Computer;12.06.2025
+Doan;12.220.000;Thomas;12.06.2025
+Martel;4.160.000;Alfons;12.06.2025
+Dinkçi;2.340.000;Alfons;12.06.2025
+Knauff;5.990.000;Nico;12.06.2025
+Noll;160.000;Dominik;12.06.2025
+Stach;6.310.000;Dominik;12.06.2025
+Adli;4.710.000;Dominik;12.06.2025
+Wanner;4.330.000;Dominik;12.06.2025
+Schäfer;1.460.000;Computer;12.06.2025
+Chabot;5.350.000;Dominik;12.06.2025
+Doekhi;3.880.000;Nico;12.06.2025
+Nsoki;450.000;Computer;12.06.2025
+Dina Ebimbe;470.000;Alfons;12.06.2025
+P. Aaronson;1.980.000;Dominik;12.06.2025
+Diehl;640.000;Thomas;12.06.2025
+Maza;10.620.000;Nico;12.06.2025
+Milošević;280.000;Computer;12.06.2025
+Rosenfelder;2.290.000;Alfons;12.06.2025
+Boniface;8.050.000;Alfons;12.06.2025
+Undav;11.960.000;Alfons;12.06.2025
+Finkgräfe;1.840.000;Christoph;12.06.2025
+Pavlović;8.470.000;Nico;12.06.2025
+Fukuda;390.000;Alfons;12.06.2025
+Wätjen;280.000;Thomas;12.06.2025
+Saliakas;3.080.000;Nico;12.06.2025
+Sander;2.180.000;Dominik;12.06.2025
+García;7.350.000;Computer;12.06.2025
+Querfeld;3.800.000;Alfons;12.06.2025
+Veratschnig;380.000;Christoph;12.06.2025
+Hendriks;1.330.000;Nico;12.06.2025
+Preu;440.000;Christoph;12.06.2025
+Højlund;1.450.000;Alfons;12.06.2025
+Ogbus;440.000;Computer;12.06.2025
+Kristensen;6.510.000;Alfons;12.06.2025
+Klaus;160.000;Computer;12.06.2025
+Chase;830.000;Dominik;12.06.2025
+Al-Dakhil;890.000;Computer;12.06.2025
+Schmitz;160.000;Thomas;12.06.2025
+Wahi;2.950.000;Nico;12.06.2025
+B. Touré;2.320.000;Christoph;12.06.2025
+Ljubičić;750.000;Alfons;12.06.2025
+Gomis;1.480.000;Thomas;12.06.2025
+Vidić;160.000;Computer;12.06.2025
+Muheim;3.660.000;Nico;12.06.2025
+Suhonen;200.000;Computer;12.06.2025
+Diks;3.640.000;Computer;12.06.2025
+Neuer;1.890.000;Dominik;13.06.2025
+Groß;5.870.000;Dominik;13.06.2025
+W. Orbán;6.270.000;Pascal;13.06.2025
+Ginter;4.790.000;Alfons;13.06.2025
+Bittencourt;1.040.000;Pascal;13.06.2025
+Gregoritsch;2.460.000;Nico;13.06.2025
+J. Hofmann;5.020.000;Alfons;13.06.2025
+Süle;4.330.000;Alfons;13.06.2025
+Haberer;1.360.000;Dominik;13.06.2025
+Zentner;3.370.000;Nico;13.06.2025
+M. Eggestein;4.560.000;Thomas;13.06.2025
+Elvedi;3.620.000;Pascal;13.06.2025
+Mittelstädt;10.130.000;Thomas;13.06.2025
+Kramarić;9.680.000;Pascal;13.06.2025
+Gulácsi;3.230.000;Alfons;13.06.2025
+A. Jung;1.730.000;Pascal;13.06.2025
+Dorsch;1.840.000;Nico;13.06.2025
+Heuer Fernandes;2.430.000;Thomas;13.06.2025
+Jatta;2.340.000;Thomas;13.06.2025
+Wahl;3.490.000;Thomas;13.06.2025
+Kainz;3.740.000;Pascal;13.06.2025
+Maier;900.000;Computer;13.06.2025
+Hübers;3.160.000;Dominik;13.06.2025
+Friedl;3.670.000;Pascal;13.06.2025
+Bruun Larsen;1.570.000;Thomas;13.06.2025
+Hack;5.700.000;Christoph;13.06.2025
+Meyer;230.000;Thomas;13.06.2025
+Dahmen;3.330.000;Thomas;13.06.2025
+Neuhaus;3.150.000;Thomas;13.06.2025
+Burkardt;15.530.000;Computer;13.06.2025
+Baumgartner;2.590.000;Dominik;13.06.2025
+Tietz;3.760.000;Alfons;13.06.2025
+Trimmel;1.850.000;Pascal;13.06.2025
+Kilian;290.000;Computer;13.06.2025
+Jäkel;220.000;Computer;13.06.2025
+Schlager;3.650.000;Dominik;13.06.2025
+Osterhage;2.320.000;Thomas;13.06.2025
+Skhiri;4.810.000;Pascal;13.06.2025
+Musiala;19.070.000;Thomas;13.06.2025
+P. Nebel;11.850.000;Dominik;13.06.2025
+L. Philipp;350.000;Computer;13.06.2025
+Doan;12.210.000;Thomas;13.06.2025
+Martel;4.430.000;Alfons;13.06.2025
+Dinkçi;2.630.000;Alfons;13.06.2025
+Knauff;6.180.000;Nico;13.06.2025
+Noll;170.000;Dominik;13.06.2025
+Stach;6.530.000;Dominik;13.06.2025
+Adli;4.770.000;Dominik;13.06.2025
+Wanner;4.360.000;Dominik;13.06.2025
+Schäfer;1.550.000;Nico;13.06.2025
+Chabot;5.340.000;Dominik;13.06.2025
+Caci;4.690.000;Pascal;13.06.2025
+Doekhi;3.900.000;Nico;13.06.2025
+Dietz;160.000;Computer;13.06.2025
+Dina Ebimbe;460.000;Alfons;13.06.2025
+P. Aaronson;1.970.000;Dominik;13.06.2025
+Diehl;640.000;Thomas;13.06.2025
+Maza;10.640.000;Nico;13.06.2025
+Larsson;6.680.000;Pascal;13.06.2025
+Matanović;2.500.000;Computer;13.06.2025
+Milošević;260.000;Computer;13.06.2025
+Rosenfelder;2.300.000;Alfons;13.06.2025
+Boniface;8.520.000;Alfons;13.06.2025
+Undav;12.090.000;Alfons;13.06.2025
+Finkgräfe;1.920.000;Christoph;13.06.2025
+Pavlović;8.730.000;Nico;13.06.2025
+Malatini;880.000;Computer;13.06.2025
+Wätjen;290.000;Thomas;13.06.2025
+Saliakas;3.200.000;Nico;13.06.2025
+Irvine;4.120.000;Pascal;13.06.2025
+García;7.340.000;Computer;13.06.2025
+Querfeld;3.610.000;Alfons;13.06.2025
+Veratschnig;390.000;Christoph;13.06.2025
+Hendriks;1.310.000;Nico;13.06.2025
+Sieb;1.660.000;Computer;13.06.2025
+Uzun;4.640.000;Christoph;13.06.2025
+Preu;420.000;Christoph;13.06.2025
+Højlund;1.410.000;Alfons;13.06.2025
+Kristensen;6.840.000;Alfons;13.06.2025
+Chase;850.000;Dominik;13.06.2025
+Koulierakis;2.750.000;Pascal;13.06.2025
+Al-Dakhil;910.000;Computer;13.06.2025
+Wahi;2.870.000;Nico;13.06.2025
+B. Touré;2.390.000;Christoph;13.06.2025
+Gomis;1.400.000;Thomas;13.06.2025
+Hämmerle;160.000;Computer;13.06.2025
+Muheim;3.650.000;Nico;13.06.2025
+Suhonen;190.000;Computer;13.06.2025
+Diks;3.520.000;Computer;13.06.2025
+Neuer;1.770.000;Dominik;14.06.2025
+Groß;5.570.000;Dominik;14.06.2025
+W. Orbán;5.690.000;Pascal;14.06.2025
+Ginter;4.610.000;Alfons;14.06.2025
+Bittencourt;950.000;Pascal;14.06.2025
+Gregoritsch;2.370.000;Nico;14.06.2025
+J. Hofmann;5.230.000;Alfons;14.06.2025
+Süle;4.190.000;Alfons;14.06.2025
+Haberer;1.250.000;Dominik;14.06.2025
+Zentner;3.310.000;Nico;14.06.2025
+M. Eggestein;4.390.000;Thomas;14.06.2025
+Elvedi;3.850.000;Pascal;14.06.2025
+Mittelstädt;9.970.000;Thomas;14.06.2025
+Kramarić;9.150.000;Pascal;14.06.2025
+Gulácsi;3.000.000;Alfons;14.06.2025
+A. Jung;1.750.000;Pascal;14.06.2025
+Klostermann;2.540.000;Computer;14.06.2025
+Dorsch;1.820.000;Nico;14.06.2025
+Heuer Fernandes;2.580.000;Thomas;14.06.2025
+Jatta;2.150.000;Thomas;14.06.2025
+Wahl;3.420.000;Thomas;14.06.2025
+Kainz;3.610.000;Pascal;14.06.2025
+Hübers;3.110.000;Dominik;14.06.2025
+Friedl;3.560.000;Pascal;14.06.2025
+Bruun Larsen;1.440.000;Thomas;14.06.2025
+Hack;5.380.000;Christoph;14.06.2025
+Meyer;230.000;Thomas;14.06.2025
+Dahmen;3.070.000;Thomas;14.06.2025
+Neuhaus;3.020.000;Thomas;14.06.2025
+Burkardt;15.550.000;Computer;14.06.2025
+Baumgartner;2.550.000;Dominik;14.06.2025
+N. Schlotterbeck;6.890.000;Computer;14.06.2025
+Tietz;3.560.000;Alfons;14.06.2025
+Trimmel;1.750.000;Pascal;14.06.2025
+Jäkel;210.000;Computer;14.06.2025
+Osterhage;2.200.000;Thomas;14.06.2025
+Skhiri;4.650.000;Pascal;14.06.2025
+Musiala;18.620.000;Thomas;14.06.2025
+P. Nebel;11.630.000;Dominik;14.06.2025
+L. Philipp;320.000;Computer;14.06.2025
+Netz;1.320.000;Computer;14.06.2025
+Doan;12.160.000;Thomas;14.06.2025
+Martel;4.060.000;Alfons;14.06.2025
+Dinkçi;2.570.000;Alfons;14.06.2025
+Knauff;5.930.000;Nico;14.06.2025
+Stach;6.290.000;Dominik;14.06.2025
+Adli;4.700.000;Dominik;14.06.2025
+Wanner;4.220.000;Dominik;14.06.2025
+Schäfer;1.520.000;Nico;14.06.2025
+Chabot;5.020.000;Dominik;14.06.2025
+Caci;4.720.000;Pascal;14.06.2025
+Doekhi;3.540.000;Nico;14.06.2025
+Dietz;160.000;Computer;14.06.2025
+P. Aaronson;1.940.000;Dominik;14.06.2025
+Diehl;710.000;Thomas;14.06.2025
+Maza;9.870.000;Nico;14.06.2025
+Larsson;6.350.000;Pascal;14.06.2025
+Matanović;2.480.000;Computer;14.06.2025
+Tschernuth;160.000;Computer;14.06.2025
+Rosenfelder;2.300.000;Alfons;14.06.2025
+Boniface;8.240.000;Alfons;14.06.2025
+Undav;11.820.000;Alfons;14.06.2025
+Finkgräfe;1.890.000;Christoph;14.06.2025
+Stergiou;1.110.000;Christian;14.06.2025
+Pavlović;7.920.000;Nico;14.06.2025
+Malatini;870.000;Computer;14.06.2025
+Wätjen;270.000;Thomas;14.06.2025
+Petersson;160.000;Computer;14.06.2025
+Saliakas;3.210.000;Nico;14.06.2025
+Irvine;4.070.000;Pascal;14.06.2025
+Querfeld;3.580.000;Alfons;14.06.2025
+Veratschnig;370.000;Christoph;14.06.2025
+Hendriks;1.210.000;Nico;14.06.2025
+Sieb;1.530.000;Computer;14.06.2025
+Uzun;4.310.000;Christoph;14.06.2025
+Preu;390.000;Christoph;14.06.2025
+Højlund;1.290.000;Alfons;14.06.2025
+Kristensen;6.470.000;Alfons;14.06.2025
+Chase;790.000;Dominik;14.06.2025
+Koulierakis;2.990.000;Pascal;14.06.2025
+Wahi;2.870.000;Nico;14.06.2025
+Gomis;1.350.000;Thomas;14.06.2025
+Hämmerle;160.000;Computer;14.06.2025
+M. El Mala;420.000;Computer;14.06.2025
+Muheim;3.450.000;Nico;14.06.2025
+Suhonen;180.000;Computer;14.06.2025
+Neuer;1.980.000;Dominik;15.06.2025
+Groß;5.600.000;Dominik;15.06.2025
+Götze;3.780.000;Christoph;15.06.2025
+W. Orbán;5.610.000;Pascal;15.06.2025
+Heintz;1.670.000;Computer;15.06.2025
+Ginter;4.670.000;Alfons;15.06.2025
+Bittencourt;980.000;Pascal;15.06.2025
+Gregoritsch;2.460.000;Nico;15.06.2025
+J. Hofmann;5.300.000;Alfons;15.06.2025
+Süle;3.930.000;Alfons;15.06.2025
+Haberer;1.290.000;Dominik;15.06.2025
+Zentner;3.360.000;Nico;15.06.2025
+Amiri;13.520.000;Christoph;15.06.2025
+M. Eggestein;4.470.000;Thomas;15.06.2025
+Elvedi;3.880.000;Pascal;15.06.2025
+Mittelstädt;10.010.000;Thomas;15.06.2025
+Kramarić;9.300.000;Pascal;15.06.2025
+Gulácsi;3.070.000;Alfons;15.06.2025
+A. Jung;1.770.000;Pascal;15.06.2025
+Klostermann;2.580.000;Computer;15.06.2025
+Dorsch;1.840.000;Nico;15.06.2025
+Heuer Fernandes;2.510.000;Thomas;15.06.2025
+Jatta;2.000.000;Thomas;15.06.2025
+Wahl;3.390.000;Thomas;15.06.2025
+Kainz;3.510.000;Pascal;15.06.2025
+Maier;850.000;Alfons;15.06.2025
+Hübers;3.030.000;Dominik;15.06.2025
+Friedl;3.490.000;Pascal;15.06.2025
+Bruun Larsen;1.540.000;Thomas;15.06.2025
+Hack;5.460.000;Christoph;15.06.2025
+Ritzka;630.000;Computer;15.06.2025
+Meyer;220.000;Thomas;15.06.2025
+Dahmen;2.900.000;Thomas;15.06.2025
+Neuhaus;3.190.000;Thomas;15.06.2025
+Burkardt;15.550.000;Thomas;15.06.2025
+Baumgartner;2.650.000;Dominik;15.06.2025
+N. Schlotterbeck;7.190.000;Computer;15.06.2025
+Tietz;3.840.000;Alfons;15.06.2025
+Trimmel;1.650.000;Pascal;15.06.2025
+Jäkel;200.000;Computer;15.06.2025
+Skhiri;4.790.000;Pascal;15.06.2025
+Musiala;18.860.000;Thomas;15.06.2025
+P. Nebel;11.600.000;Dominik;15.06.2025
+Netz;1.330.000;Computer;15.06.2025
+Doan;12.120.000;Thomas;15.06.2025
+Martel;4.130.000;Alfons;15.06.2025
+Dinkçi;2.540.000;Alfons;15.06.2025
+Knauff;5.810.000;Nico;15.06.2025
+Stach;6.520.000;Dominik;15.06.2025
+Adli;4.890.000;Dominik;15.06.2025
+Wanner;4.330.000;Dominik;15.06.2025
+Schäfer;1.600.000;Nico;15.06.2025
+Chabot;5.280.000;Dominik;15.06.2025
+Caci;4.760.000;Pascal;15.06.2025
+Doekhi;3.700.000;Nico;15.06.2025
+Dietz;170.000;Computer;15.06.2025
+Nsoki;450.000;Dominik;15.06.2025
+Dina Ebimbe;430.000;Alfons;15.06.2025
+P. Aaronson;2.110.000;Dominik;15.06.2025
+Diehl;790.000;Thomas;15.06.2025
+Maza;9.990.000;Nico;15.06.2025
+Larsson;6.510.000;Pascal;15.06.2025
+Matanović;2.610.000;Alfons;15.06.2025
+Tschernuth;160.000;Computer;15.06.2025
+Kaufmann;320.000;Computer;15.06.2025
+Rosenfelder;2.350.000;Alfons;15.06.2025
+Kim;5.090.000;Computer;15.06.2025
+Boniface;8.280.000;Alfons;15.06.2025
+Undav;11.240.000;Alfons;15.06.2025
+Finkgräfe;2.020.000;Christoph;15.06.2025
+Stergiou;1.160.000;Christian;15.06.2025
+Pavlović;8.180.000;Nico;15.06.2025
+Malatini;830.000;Dominik;15.06.2025
+Wätjen;280.000;Thomas;15.06.2025
+Petersson;160.000;Computer;15.06.2025
+Saliakas;3.270.000;Nico;15.06.2025
+Irvine;3.890.000;Pascal;15.06.2025
+García;7.260.000;Christoph;15.06.2025
+Querfeld;3.570.000;Alfons;15.06.2025
+Veratschnig;360.000;Christoph;15.06.2025
+Hendriks;1.150.000;Nico;15.06.2025
+Sieb;1.500.000;Dominik;15.06.2025
+Uzun;4.420.000;Christoph;15.06.2025
+Preu;370.000;Christoph;15.06.2025
+Kristensen;6.890.000;Alfons;15.06.2025
+Chase;760.000;Dominik;15.06.2025
+Koulierakis;3.010.000;Pascal;15.06.2025
+Al-Dakhil;900.000;Dominik;15.06.2025
+Heitmann;190.000;Computer;15.06.2025
+Wahi;2.890.000;Nico;15.06.2025
+Gomis;1.280.000;Thomas;15.06.2025
+Hämmerle;160.000;Computer;15.06.2025
+Telle;160.000;Computer;15.06.2025
+M. El Mala;410.000;Computer;15.06.2025
+Muheim;3.380.000;Nico;15.06.2025
+Ogbus;390.000;Dominik;15.06.2025
+Gregoritsch;2.580.000;Nico;16.06.2025
+Muheim;3.660.000;Nico;16.06.2025
+Hendriks;1.080.000;Nico;16.06.2025
+Pavlović;7.940.000;Nico;16.06.2025
+Dorsch;1.760.000;Nico;16.06.2025
+Zentner;3.240.000;Nico;16.06.2025
+Ilaix Moriba;290.000;Andreas;16.06.2025
+M. El Mala;400.000;Andreas;16.06.2025
+Dietz;160.000;Thomas;16.06.2025
+Saliakas;3.150.000;Nico;16.06.2025
+Doekhi;3.380.000;Nico;16.06.2025
+Knauff;5.680.000;Nico;16.06.2025
+Suzuki;6.470.000;Computer;16.06.2025
+Ceesay;290.000;Computer;16.06.2025
+Ouédraogo;1.760.000;Computer;16.06.2025
+Mets;600.000;Computer;16.06.2025
+Černý;1.070.000;Computer;16.06.2025
+Vranckx;690.000;Computer;16.06.2025
+Stöger;5.510.000;Computer;16.06.2025
+Süle;3.830.000;Alfons;16.06.2025
+Boniface;7.660.000;Alfons;16.06.2025
+Undav;10.830.000;Alfons;16.06.2025
+Doan;11.270.000;Thomas;16.06.2025
+Mittelstädt;9.120.000;Thomas;16.06.2025
+M. Eggestein;4.220.000;Thomas;16.06.2025
+Heuer Fernandes;2.450.000;Thomas;16.06.2025
+Wahl;3.250.000;Thomas;16.06.2025
+Meyer;220.000;Thomas;16.06.2025
+Neuhaus;3.230.000;Thomas;16.06.2025
+Veratschnig;350.000;Christoph;16.06.2025
+Preu;350.000;Christoph;16.06.2025
+Al-Dakhil;840.000;Dominik;16.06.2025
+Chase;750.000;Dominik;16.06.2025
+Ogbus;370.000;Dominik;16.06.2025
+Sieb;1.450.000;Dominik;16.06.2025
+Malatini;800.000;Dominik;16.06.2025
+P. Aaronson;2.090.000;Dominik;16.06.2025
+Nsoki;430.000;Dominik;16.06.2025
+Chabot;4.830.000;Dominik;16.06.2025
+Wanner;4.160.000;Dominik;16.06.2025
+Adli;4.630.000;Dominik;16.06.2025
+Stach;6.140.000;Dominik;16.06.2025
+P. Nebel;11.240.000;Dominik;16.06.2025
+Baumgartner;2.440.000;Dominik;16.06.2025
+Hübers;3.200.000;Dominik;16.06.2025
+Haberer;1.210.000;Dominik;16.06.2025
+Groß;5.130.000;Dominik;16.06.2025
+Neuer;1.810.000;Dominik;16.06.2025
+Finkgräfe;2.160.000;Christoph;16.06.2025
+Uzun;4.310.000;Christoph;16.06.2025
+Hack;5.220.000;Christoph;16.06.2025
+Ginter;4.430.000;Alfons;16.06.2025
+Tietz;3.800.000;Alfons;16.06.2025
+Dinkçi;2.470.000;Alfons;16.06.2025
+Matanović;2.850.000;Alfons;16.06.2025
+J. Hofmann;5.000.000;Alfons;16.06.2025
+Burkardt;15.220.000;Thomas;16.06.2025
+Kim;4.960.000;Computer;16.06.2025
+Kaufmann;300.000;Computer;16.06.2025
+Heintz;1.610.000;Computer;16.06.2025
+Telle;160.000;Computer;16.06.2025
+Heitmann;180.000;Computer;16.06.2025
+Ritzka;610.000;Computer;16.06.2025
+Wätjen;270.000;Thomas;16.06.2025
+Diehl;820.000;Thomas;16.06.2025
+Musiala;17.780.000;Thomas;16.06.2025
+Bruun Larsen;1.450.000;Thomas;16.06.2025
+Jatta;1.830.000;Thomas;16.06.2025
+Gulácsi;2.830.000;Alfons;16.06.2025
+Rosenfelder;2.160.000;Alfons;16.06.2025
+Martel;4.370.000;Alfons;16.06.2025
+Kristensen;6.770.000;Alfons;16.06.2025
+Querfeld;3.580.000;Alfons;16.06.2025
+Götze;3.480.000;Christoph;16.06.2025
+Amiri;12.800.000;Christoph;16.06.2025
+Maier;830.000;Alfons;16.06.2025
+Dina Ebimbe;400.000;Alfons;16.06.2025
+García;6.650.000;Christoph;16.06.2025
+Wahi;2.760.000;Nico;16.06.2025
+Schäfer;1.580.000;Nico;16.06.2025
+Petersson;160.000;Computer;16.06.2025
+Tschernuth;160.000;Computer;16.06.2025
+Netz;1.290.000;Dominik;16.06.2025
+N. Schlotterbeck;7.370.000;Dominik;16.06.2025
+Klostermann;2.570.000;Dominik;16.06.2025
+Neuhaus;3.310.000;Thomas;17.06.2025
+Mittelstädt;9.140.000;Thomas;17.06.2025
+Burkardt;14.370.000;Thomas;17.06.2025
+Diehl;840.000;Thomas;17.06.2025
+M. Eggestein;3.920.000;Thomas;17.06.2025
+Wahl;3.070.000;Thomas;17.06.2025
+Doan;11.540.000;Thomas;17.06.2025
+Meyer;210.000;Thomas;17.06.2025
+Al-Dakhil;830.000;Dominik;17.06.2025
+Chase;710.000;Dominik;17.06.2025
+Ogbus;370.000;Dominik;17.06.2025
+Sieb;1.430.000;Dominik;17.06.2025
+Malatini;770.000;Dominik;17.06.2025
+P. Aaronson;2.180.000;Dominik;17.06.2025
+Nsoki;420.000;Dominik;17.06.2025
+Chabot;4.830.000;Dominik;17.06.2025
+Wanner;4.260.000;Dominik;17.06.2025
+Adli;4.570.000;Dominik;17.06.2025
+Stach;6.110.000;Dominik;17.06.2025
+Netz;1.220.000;Dominik;17.06.2025
+P. Nebel;11.480.000;Dominik;17.06.2025
+N. Schlotterbeck;7.320.000;Dominik;17.06.2025
+Baumgartner;2.460.000;Dominik;17.06.2025
+Ritzka;610.000;Dominik;17.06.2025
+Hübers;3.170.000;Dominik;17.06.2025
+Klostermann;2.700.000;Dominik;17.06.2025
+Haberer;1.130.000;Dominik;17.06.2025
+Groß;5.190.000;Dominik;17.06.2025
+Hack;5.460.000;Christoph;17.06.2025
+Finkgräfe;2.160.000;Christoph;17.06.2025
+Kim;4.870.000;Pascal;17.06.2025
+Tschernuth;160.000;Christoph;17.06.2025
+Telle;170.000;Thomas;17.06.2025
+Petersson;160.000;Thomas;17.06.2025
+Schäfer;1.500.000;Nico;17.06.2025
+Wahi;2.830.000;Nico;17.06.2025
+Jeltsch;3.460.000;Computer;17.06.2025
+Moerstedt;1.200.000;Computer;17.06.2025
+Breithaupt;190.000;Computer;17.06.2025
+Maza;8.640.000;Computer;17.06.2025
+Bernardo;4.710.000;Computer;17.06.2025
+Boniface;7.780.000;Alfons;17.06.2025
+Martel;4.370.000;Alfons;17.06.2025
+Maier;810.000;Alfons;17.06.2025
+Rosenfelder;2.450.000;Alfons;17.06.2025
+Querfeld;3.690.000;Alfons;17.06.2025
+Kristensen;6.890.000;Alfons;17.06.2025
+Gulácsi;2.800.000;Alfons;17.06.2025
+Heuer Fernandes;2.480.000;Thomas;17.06.2025
+Musiala;17.730.000;Thomas;17.06.2025
+Wätjen;260.000;Thomas;17.06.2025
+Bruun Larsen;1.460.000;Thomas;17.06.2025
+Gregoritsch;2.550.000;Nico;17.06.2025
+Muheim;3.740.000;Nico;17.06.2025
+Hendriks;1.130.000;Nico;17.06.2025
+Pavlović;8.550.000;Nico;17.06.2025
+Dorsch;1.650.000;Nico;17.06.2025
+Zentner;3.300.000;Nico;17.06.2025
+M. El Mala;420.000;Andreas;17.06.2025
+Dietz;170.000;Thomas;17.06.2025
+Saliakas;2.970.000;Nico;17.06.2025
+Doekhi;3.460.000;Nico;17.06.2025
+Knauff;5.320.000;Nico;17.06.2025
+Suzuki;6.460.000;Computer;17.06.2025
+Ceesay;290.000;Computer;17.06.2025
+Ouédraogo;1.940.000;Computer;17.06.2025
+Mets;600.000;Computer;17.06.2025
+Černý;1.050.000;Computer;17.06.2025
+Vranckx;670.000;Computer;17.06.2025
+Stöger;5.650.000;Computer;17.06.2025
+Süle;3.590.000;Alfons;17.06.2025
+Undav;10.940.000;Alfons;17.06.2025
+Uzun;4.110.000;Christoph;17.06.2025
+Ginter;4.290.000;Alfons;17.06.2025
+Tietz;3.780.000;Alfons;17.06.2025
+Dinkçi;2.500.000;Alfons;17.06.2025
+Matanović;2.960.000;Alfons;17.06.2025
+J. Hofmann;4.700.000;Alfons;17.06.2025
+Kaufmann;290.000;Computer;17.06.2025
+Heintz;1.520.000;Computer;17.06.2025
+Heitmann;180.000;Computer;17.06.2025
