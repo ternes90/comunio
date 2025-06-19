@@ -44,7 +44,10 @@ ui <- navbarPage(
                     
                     # Plot
                     plotOutput("mw_evolution", height = 600)
-           )
+           ),
+           tabPanel("Hist. MW-Verlauf (alle Spieler)",
+                    plotOutput("mw_plot")
+                    )
   ),
   
   ## ---- Kader-Entwicklung ----
@@ -661,6 +664,69 @@ server <- function(input, output, session) {
   })
  
   # ---- MARKTWERTENTWICKLUNG ----
+  ## ---- Hist. Marktwert-Entwicklung aller Spieler (je Klasse) ----
+  data <- reactive({
+    df <- read.csv("marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
+    df$Datum <- as.Date(df$Datum)
+    
+    # Konvertiere MW zu numeric (ohne Komma, falls nötig)
+    df$Marktwert <- as.numeric(gsub("\\.", "", df$Marktwert))
+    
+    # Mittelwert pro Spieler
+    mw_spieler <- df %>%
+      group_by(Spieler) %>%
+      summarise(MW_mittel = mean(Marktwert, na.rm = TRUE))
+    
+    # Klassifikation in MW-Klassen
+    df <- df %>%
+      left_join(mw_spieler, by = "Spieler") %>%
+      mutate(
+        Klasse = case_when(
+          MW_mittel < 500000 ~ "Klasse 1: <0.5 Mio",
+          MW_mittel < 1000000 ~ "Klasse 2: 0.5–1 Mio",
+          MW_mittel < 2500000 ~ "Klasse 3: 1–2.5 Mio",
+          MW_mittel < 5000000 ~ "Klasse 4: 2.5–5 Mio",
+          MW_mittel < 10000000 ~ "Klasse 5: 5–10 Mio",
+          TRUE ~ "Klasse 6: >10 Mio"
+        )
+      )
+    
+    df
+  })
+  
+  output$mw_plot <- renderPlot({
+    df <- data()
+    
+    df_plot <- df %>%
+      group_by(Datum, Klasse) %>%
+      summarise(MW_Ø = mean(Marktwert, na.rm = TRUE), .groups = "drop")
+    
+    # Startwert je Klasse bestimmen
+    startwerte <- df_plot %>%
+      group_by(Klasse) %>%
+      filter(Datum == min(Datum)) %>%
+      summarise(Start_MW = first(MW_Ø), .groups = "drop")
+    
+    # Mit Startwerten verbinden und normieren
+    df_plot_norm <- df_plot %>%
+      left_join(startwerte, by = "Klasse") %>%
+      mutate(MW_normiert = MW_Ø / Start_MW) %>% 
+      filter(Datum <= as.Date("2024-08-15"))
+    
+    ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
+      geom_line(size = 1.2) +
+      labs(
+        title = "Hist. normierter Marktwertverlauf pro Klasse (Start = 1)",
+        y = "Normierter MW",
+        x = "Datum",
+        color = "MW-Klasse"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      ylim(.7,1.1) +
+      theme_minimal(base_size = 14)
+  })
+  
+  
   ## ---- Besitzhistorie bauen ----
   besitzhistorie <- reactive({
     transfers <- data_all()$transfers
