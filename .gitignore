@@ -6,6 +6,7 @@ push_updates.bat
 venv/
 archiv/
 marktwertverlauf/
+scrape_all_hist_MW/
 # RStudio-Dateien
 .Rproj.user
 .Rhistory
