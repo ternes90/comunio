@@ -5,6 +5,7 @@
 push_updates.bat
 venv/
 archiv/
+marktwertverlauf/
 # RStudio-Dateien
 .Rproj.user
 .Rhistory
