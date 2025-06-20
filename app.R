@@ -26,6 +26,29 @@ Shiny.addCustomMessageHandler('copyText', function(message) {
 ui <- navbarPage(
   "Comunio Analyse",
   
+  ## ---- Dashboard ----
+  tabPanel("Dashboard",
+           fluidPage(
+             fluidRow(
+               column(6, plotOutput("mw_zeitachse_preview", height = 350)),
+               column(6, DTOutput("kreditrahmen_uebersicht_preview"))
+             ),
+             fluidRow(
+               column(6, uiOutput("mein_team_tabelle_preview")),
+               column(6, DTOutput("transfermarkt_preview"))
+             ),
+             fluidRow(
+               column(6, DTOutput("flip_einnahmen_uebersicht_preview"))
+             ),
+             fluidRow(
+               column(2, plotOutput("top3_meine_spieler_mw_preview", height = 150)),
+               column(2, plotOutput("top3_alle_spieler_mw_preview", height = 150)),
+               column(4, DTOutput("manager_tabelle_mw_preview"))
+             )
+             
+           )
+  ),
+  
   ## ---- Marktwert-Entwicklung ----
   tabPanel("Marktwert-Entwicklung",
            tabPanel("MW-Verlauf (alle)", 
@@ -132,17 +155,16 @@ server <- function(input, output, session) {
   ## ---- sommerpause_df ----
   sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
     mutate(
-      # Erst Datum als Date parsen
-      Datum = as.Date(x),
-      # Dann Jahr auf 2025 setzen
-      Datum = as.Date(format(Datum, "2025-%m-%d")),
+      Datum_raw = as.Date(x),  # x in "2024-06-06" etc.
+      Datum = as.Date(format(Datum_raw, "2025-%m-%d"))
     ) %>%
-    filter(Datum >= as.Date("2025-06-02")) %>%
+    filter(Datum >= as.Date("2025-06-06")) %>%
     arrange(Datum) %>%
     mutate(
-      MW_startwert = y[Datum == as.Date("2025-06-02")][1],
+      MW_startwert = y[Datum == as.Date("2025-06-06")][1],
       MW_rel_normiert = y / MW_startwert
     )
+  
   
   ## ---- sommerpause_21_df ----
   sommerpause_21_df <- readr::read_csv("MW_Sommerpause_2021.csv") %>%
@@ -152,10 +174,10 @@ server <- function(input, output, session) {
       # Dann Jahr auf 2025 setzen
       Datum = as.Date(format(Datum, "2025-%m-%d")),
     ) %>%
-    filter(Datum >= as.Date("2025-06-03")) %>%
+    filter(Datum >= as.Date("2025-06-06")) %>%
     arrange(Datum) %>%
     mutate(
-      MW_startwert = y[Datum == as.Date("2025-06-03")][1],
+      MW_startwert = y[Datum == as.Date("2025-06-06")][1],
       MW_rel_normiert = y / MW_startwert
     )
   
@@ -663,70 +685,363 @@ server <- function(input, output, session) {
     }
   })
  
-  # ---- MARKTWERTENTWICKLUNG ----
-  ## ---- Hist. Marktwert-Entwicklung aller Spieler (je Klasse) ----
-  data <- reactive({
-    df <- read.csv("marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
-    df$Datum <- as.Date(df$Datum)
+  # ---- DASHBOARD ----
+  ## ---- Zeitachse ----
+  output$mw_zeitachse_preview <- renderPlot({
+    df <- mw_evolution_data()
     
-    # Konvertiere MW zu numeric (ohne Komma, falls nötig)
-    df$Marktwert <- as.numeric(gsub("\\.", "", df$Marktwert))
+    # Ø MW pro Tag
+    plotdata <- df %>%
+      group_by(TM_Stand) %>%
+      summarise(MW_mean = mean(MW_rel, na.rm = TRUE), .groups = "drop")
     
-    # Mittelwert pro Spieler
-    mw_spieler <- df %>%
+    # Kombinieren
+    lines_df <- bind_rows(
+      plotdata %>% transmute(Datum = TM_Stand, Wert = MW_mean, Typ = "Durchschnitt TM-Spieler"),
+      gesamt_mw_df %>% transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
+    )
+    
+    ggplot() +
+      geom_line(data = lines_df, aes(x = Datum, y = Wert, color = Typ), linewidth = 1.2) +
+      geom_line(data = sommerpause_df, aes(x = Datum, y = MW_rel_normiert), color = "red", linetype = "dashed", linewidth = 1) +
+      geom_line(data = sommerpause_21_df, aes(x = Datum, y = MW_rel_normiert), color = "orange", linetype = "dashed", linewidth = 1) +
+      coord_cartesian(ylim = c(0.75, 1.4)) +
+      scale_color_manual(values = c(
+        "Durchschnitt TM-Spieler" = "#005c99",
+        "Gesamtmarktwert" = "darkgrey"
+      )) +
+      labs(
+        title = NULL, x = NULL, y = "relativer MW", color = NULL
+      ) +
+      theme_minimal(base_size = 12) +
+      theme(legend.position = "bottom")
+  })
+  
+  ## ---- Mein Team ----
+  output$mein_team_tabelle_preview <- renderUI({
+    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+    df0 <- teams_df %>% filter(Manager == "Dominik")
+    df0$Position <- factor(df0$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
+    df0 <- df0 %>% arrange(Position, Spieler)
+    
+    mw_aktuell <- gesamt_mw_roh %>%
       group_by(Spieler) %>%
-      summarise(MW_mittel = mean(Marktwert, na.rm = TRUE))
+      filter(Datum == max(Datum, na.rm=TRUE)) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
     
-    # Klassifikation in MW-Klassen
-    df <- df %>%
-      left_join(mw_spieler, by = "Spieler") %>%
+    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+    
+    kaufpreise <- transfers %>%
+      filter(Hoechstbietender == "Dominik") %>%
+      group_by(Spieler) %>%
+      arrange(desc(Datum)) %>%
+      slice(1) %>%
+      select(Spieler, Kaufpreis = Hoechstgebot)
+    
+    df_pre <- df0 %>%
+      left_join(mw_aktuell, by="Spieler") %>%
+      left_join(kaufpreise, by="Spieler") %>%
       mutate(
-        Klasse = case_when(
-          MW_mittel < 500000 ~ "Klasse 1: <0.5 Mio",
-          MW_mittel < 1000000 ~ "Klasse 2: 0.5–1 Mio",
-          MW_mittel < 2500000 ~ "Klasse 3: 1–2.5 Mio",
-          MW_mittel < 5000000 ~ "Klasse 4: 2.5–5 Mio",
-          MW_mittel < 10000000 ~ "Klasse 5: 5–10 Mio",
-          TRUE ~ "Klasse 6: >10 Mio"
+        Diff_Kauf = ifelse(is.na(Kaufpreis), NA, Marktwert_aktuell - Kaufpreis),
+        Diff_Kauf_fmt = ifelse(
+          is.na(Kaufpreis), "",
+          case_when(
+            Diff_Kauf > 0 ~ sprintf("<span style='color:#388e3c;'>+%s € seit Kauf</span>", format(Diff_Kauf, big.mark = ".", decimal.mark = ",")),
+            Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>–%s € seit Kauf</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
+            TRUE ~ "<span style='color:grey;'>±0 € seit Kauf</span>"
+          )
         )
+      ) %>%
+      left_join(
+        gesamt_mw_roh %>%
+          group_by(Spieler) %>%
+          arrange(desc(Datum)) %>%
+          slice(1:2) %>%
+          mutate(Diff = Marktwert - lead(Marktwert)) %>%
+          slice(1) %>%
+          ungroup() %>%
+          mutate(
+            Marktwert_fmt = ifelse(is.na(Marktwert), "-", paste0(format(Marktwert, big.mark = ".", decimal.mark = ","), " €")),
+            Diff_fmt = case_when(
+              is.na(Diff) ~ "",
+              Diff > 0 ~ sprintf("<span style='color:#81c784;'>▲ %s €</span>", format(Diff, big.mark = ".", decimal.mark = ",")),
+              Diff < 0 ~ sprintf("<span style='color:#e57373;'>▼ %s €</span>", format(abs(Diff), big.mark = ".", decimal.mark = ",")),
+              TRUE ~ "<span style='color:grey;'>–</span>"
+            )
+          ) %>%
+          select(Spieler, Marktwert_fmt, Diff_fmt),
+        by = "Spieler"
       )
     
-    df
+    grouped_sections <- lapply(split(df_pre, df_pre$Position), function(gruppe) {
+      pos_name <- unique(gruppe$Position)
+      zeilen <- split(seq_len(nrow(gruppe)), ceiling(seq_along(gruppe$Spieler) / 2))
+      rows <- lapply(zeilen, function(idxs) {
+        sp1 <- gruppe$Spieler[idxs[1]]
+        mw1 <- gruppe$Marktwert_fmt[idxs[1]]
+        diff1 <- gruppe$Diff_fmt[idxs[1]]
+        diffk1 <- gruppe$Diff_Kauf_fmt[idxs[1]]
+        if (length(idxs) > 1) {
+          sp2 <- gruppe$Spieler[idxs[2]]
+          mw2 <- gruppe$Marktwert_fmt[idxs[2]]
+          diff2 <- gruppe$Diff_fmt[idxs[2]]
+          diffk2 <- gruppe$Diff_Kauf_fmt[idxs[2]]
+        } else {
+          sp2 <- ""
+          mw2 <- ""
+          diff2 <- ""
+          diffk2 <- ""
+        }
+        sprintf(
+          "<tr>
+        <td style='padding:4px; width:35%%;'>%s</td>
+        <td style='padding:4px; width:15%%; text-align:right;'>
+          <div>%s</div>
+          <div style='font-size: 0.9em;'>%s</div>
+          <div style='font-size: 0.9em;'>%s</div>
+        </td>
+        <td style='padding:4px; width:35%%;'>%s</td>
+        <td style='padding:4px; width:15%%; text-align:right;'>
+          <div>%s</div>
+          <div style='font-size: 0.9em;'>%s</div>
+          <div style='font-size: 0.9em;'>%s</div>
+        </td>
+      </tr>",
+          sp1, mw1, diff1, diffk1,
+          sp2, mw2, diff2, diffk2
+        )
+      })
+      paste0(
+        sprintf("<tr><th colspan='4' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos_name),
+        paste(rows, collapse = "\n")
+      )
+    })
+    
+    table_html <- paste0(
+      "<table style='width:100%; border-collapse:collapse;'>",
+      "<thead><tr>
+    <th style='text-align:left;'>Spieler</th>
+    <th style='text-align:right;'>MW</th>
+    <th style='text-align:left;'>Spieler</th>
+    <th style='text-align:right;'>MW</th>
+    </tr></thead><tbody>",
+      paste(grouped_sections, collapse = "\n"),
+      "</tbody></table>"
+    )
+    
+    
+    # Summen-Zeile für alle Spieler mit Kaufpreis
+    summe <- df_pre %>%
+      filter(!is.na(Kaufpreis)) %>%
+      summarise(
+        Gesamt = sum(Marktwert_aktuell - Kaufpreis, na.rm = TRUE)
+      ) %>% pull(Gesamt)
+    
+    # Formatieren je nach Vorzeichen
+    summe_fmt <- if (is.na(summe)) {
+      ""
+    } else if (summe > 0) {
+      sprintf("<span style='color:#388e3c; font-weight:bold;'>Gesamtgewinn: +%s €</span>", format(summe, big.mark = ".", decimal.mark = ","))
+    } else if (summe < 0) {
+      sprintf("<span style='color:#e53935; font-weight:bold;'>Gesamtverlust: –%s €</span>", format(abs(summe), big.mark = ".", decimal.mark = ","))
+    } else {
+      "<span style='color:grey; font-weight:bold;'>±0 €</span>"
+    }
+    
+    
+    tagList(
+      tags$h4("Mein Team (inkl. MW, Tagesveränderung & Differenz zum Kaufpreis)", style = "margin-top: 0; margin-bottom: 5px;"),
+      HTML(table_html),
+      tags$div(HTML(summe_fmt), style = "margin-top:12px; font-size:1.1em;")
+    )
+    
   })
   
-  output$mw_plot <- renderPlot({
-    df <- data()
+  ## ---- Gesammt Tabelle Flip-Übersicht aller Manager  ----
+  output$flip_einnahmen_uebersicht_preview <- DT::renderDT({
+    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     
-    df_plot <- df %>%
-      group_by(Datum, Klasse) %>%
-      summarise(MW_Ø = mean(Marktwert, na.rm = TRUE), .groups = "drop")
+    mw_aktuell <- gesamt_mw_roh %>%
+      group_by(Spieler) %>%
+      filter(Datum == max(Datum, na.rm=TRUE)) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
     
-    # Startwert je Klasse bestimmen
-    startwerte <- df_plot %>%
-      group_by(Klasse) %>%
-      filter(Datum == min(Datum)) %>%
-      summarise(Start_MW = first(MW_Ø), .groups = "drop")
+    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
     
-    # Mit Startwerten verbinden und normieren
-    df_plot_norm <- df_plot %>%
-      left_join(startwerte, by = "Klasse") %>%
-      mutate(MW_normiert = MW_Ø / Start_MW) %>% 
-      filter(Datum <= as.Date("2024-08-15"))
+    kaufpreise <- transfers %>%
+      group_by(Spieler, Hoechstbietender) %>%
+      arrange(desc(Datum)) %>%
+      slice(1) %>%
+      select(Spieler, Manager = Hoechstbietender, Kaufpreis = Hoechstgebot)
     
-    ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
-      geom_line(size = 1.2) +
-      labs(
-        title = "Hist. normierter Marktwertverlauf pro Klasse (Start = 1)",
-        y = "Normierter MW",
-        x = "Datum",
-        color = "MW-Klasse"
-      ) +
-      scale_color_brewer(palette = "Paired") +
-      ylim(.7,1.1) +
-      theme_minimal(base_size = 14)
+    df_all <- teams_df %>%
+      left_join(mw_aktuell, by = "Spieler") %>%
+      left_join(kaufpreise, by = c("Spieler", "Manager")) %>%
+      filter(!is.na(Kaufpreis)) %>%
+      mutate(Diff = Marktwert_aktuell - Kaufpreis)
+    
+    # Gesamt je Manager berechnen und sortieren
+    gesamt_flip <- df_all %>%
+      group_by(Manager) %>%
+      summarise(
+        sum_diff = sum(Diff, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      arrange(desc(sum_diff)) %>%
+      mutate(
+        `Aktuelle hypothetische Gesamt-Flip-Einnahmen` = ifelse(
+          sum_diff > 0,
+          paste0("+", format(sum_diff, big.mark = ".", decimal.mark = ","), " €"),
+          paste0("-", format(abs(sum_diff), big.mark = ".", decimal.mark = ","), " €")
+        )
+      ) %>%
+      select(Manager, `Aktuelle hypothetische Gesamt-Flip-Einnahmen`)
+    
+    DT::datatable(
+      gesamt_flip,
+      rownames = FALSE,
+      options = list(
+        dom = "t",
+        ordering = FALSE,
+        columnDefs = list(
+          list(className = 'dt-left', targets = 0),
+          list(className = 'dt-right', targets = 1)
+        )
+      ),
+      escape = FALSE
+    )
+  })
+  
+  ## ---- Kontostände ----
+  output$kreditrahmen_uebersicht_preview <- DT::renderDT({
+    startkapital_fix <- c(
+      "Alfons" = 14230000,
+      "Nico" = 15530000,
+      "Andreas" = 15790000,
+      "Pascal" = 15800000,
+      "Thomas" = 16830000,
+      "Christoph" = 17640000,
+      "Christian" = 18140000,
+      "Dominik" = 18040000
+    )
+    alle_manager <- names(startkapital_fix)
+    
+    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE)
+    kader_df <- standings_df()
+    
+    ausgaben <- transfers %>%
+      group_by(Hoechstbietender) %>%
+      summarise(Ausgaben = sum(Hoechstgebot, na.rm = TRUE)) %>%
+      rename(Manager = Hoechstbietender)
+    einnahmen <- transfers %>%
+      group_by(Besitzer) %>%
+      summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
+      rename(Manager = Besitzer)
+    
+    kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE) %>%
+      left_join(kader_df, by = "Manager") %>%
+      mutate(
+        Teamwert = ifelse(is.na(Teamwert), 0, Teamwert),
+        Startkapital = startkapital_fix[Manager],
+        Kreditrahmen = round(Teamwert / 4),
+        Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
+        Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
+        Kontostand = Startkapital + Einnahmen - Ausgaben,
+        Verfuegbares_Kapital = Kontostand + Kreditrahmen
+      ) %>%
+      select(Manager, Kontostand, Kreditrahmen, Verfuegbares_Kapital) %>%
+      arrange(desc(Verfuegbares_Kapital))
+    
+    DT::datatable(
+      kapital_df,
+      colnames = c("Manager", "Kontostand (€)", "Kreditrahmen (€)", "Verfügbares Kapital (€)"),
+      rownames = FALSE,
+      options = list(
+        pageLength = 8,
+        dom = "t",
+        ordering = FALSE,
+        columnDefs = list(
+          list(className = 'dt-left', targets = 0),
+          list(className = 'dt-right', targets = 1:3)
+        )
+      )
+    ) %>%
+      DT::formatCurrency(c("Kontostand", "Kreditrahmen", "Verfuegbares_Kapital"), "€", mark = ".", dec.mark = ",", digits = 0) %>%
+      DT::formatStyle(
+        "Kontostand",
+        color = DT::styleInterval(0, c("red", "black")),
+        fontWeight = DT::styleInterval(0, c("bold", NA))
+      )
+  })
+  
+  ## ---- Transfermarkt preview ----
+  output$transfermarkt_preview <- DT::renderDT({
+    tm_df <- read.csv2("TRANSFERMARKT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+    tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
+    tm_df$TM_Stand <- as.Date(tm_df$TM_Stand, format = "%d.%m.%Y")
+    tm_df$Marktwert <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
+    jetzt <- Sys.time()
+    heute <- as.Date(jetzt)
+    tm_heute <- tm_df %>% filter(TM_Stand == heute & Besitzer == "Computer")
+    tm_heute$Spieler <- trimws(enc2utf8(tm_heute$Spieler))
+    get_streak <- function(spieler) {
+      tage <- sort(unique(tm_df$TM_Stand[tm_df$Spieler == spieler & tm_df$Besitzer == "Computer"]), decreasing = TRUE)
+      streak <- 0L
+      d <- heute
+      while (d %in% tage) {
+        streak <- streak + 1L
+        d <- d - 1
+      }
+      streak
+    }
+    streaks <- vapply(tm_heute$Spieler, get_streak, integer(1))
+    ablauf <- as.POSIXct(rep(NA, length(streaks)), origin="1970-01-01", tz=Sys.timezone())
+    ablauf[streaks == 1]    <- as.POSIXct(paste0(heute + 2, " 03:00:00"), tz=Sys.timezone())
+    ablauf[streaks == 2]    <- as.POSIXct(paste0(heute + 1, " 03:00:00"), tz=Sys.timezone())
+    ablauf[streaks >= 3]    <- as.POSIXct(paste0(heute + 0, " 03:00:00"), tz=Sys.timezone())
+    rest_sec <- as.numeric(difftime(ablauf, jetzt, units = "secs"))
+    rest_sec[is.na(rest_sec) | rest_sec < 0] <- Inf
+    restzeit_fmt <- function(dt, streak) {
+      if (is.na(streak) || streak < 1) return("–")
+      sec <- as.numeric(difftime(dt, jetzt, units = "secs"))
+      if (is.na(sec) || sec < 0) return("–")
+      d <- floor(sec / 86400)
+      h <- floor((sec %% 86400) / 3600)
+      m <- floor((sec %% 3600) / 60)
+      if (d > 0) {
+        sprintf("%dd %dh", d, h)
+      } else if (h > 0) {
+        sprintf("%dh %dm", h, m)
+      } else {
+        sprintf("%dm", m)
+      }
+    }
+    tm_heute$Restzeit <- mapply(restzeit_fmt, ablauf, streaks, USE.NAMES = FALSE)
+    tm_heute$Restzeit_sec <- rest_sec
+    tm_heute$Marktwert <- paste0(format(tm_heute$Marktwert, big.mark = ".", decimal.mark = ","), " €")
+    tm_heute <- tm_heute %>%
+      arrange(Restzeit_sec) %>%
+      select(Spieler, Marktwert, Besitzer, Restzeit)
+    DT::datatable(
+      tm_heute,
+      colnames = c("Spieler", "Marktwert", "Besitzer", "Verbleibende Zeit"),
+      rownames = FALSE,
+      options = list(
+        dom = "t",
+        ordering = FALSE,
+        pageLength = 20,
+        columnDefs = list(
+          list(className = 'dt-left', targets = 0),
+          list(className = 'dt-right', targets = 1:3)
+        )
+      )
+    )
   })
   
   
+  # ---- MARKTWERTENTWICKLUNG ----
   ## ---- Besitzhistorie bauen ----
   besitzhistorie <- reactive({
     transfers <- data_all()$transfers
@@ -895,6 +1210,74 @@ server <- function(input, output, session) {
         linetype = "dashed")
     
     p
+  })
+  
+  ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
+  data <- reactive({
+    df <- read.csv("marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
+    
+    # Datum korrekt parsen (YYYY-MM-DD → %Y-%m-%d)
+    df$Datum <- as.Date(df$Datum, format = "%Y-%m-%d")
+    
+    # Nur Daten ab 01.06.2024
+    df <- df %>% filter(Datum >= as.Date("2024-06-01"))
+    
+    # Marktwert bereinigen (Punkte entfernen – bei dir aber unnötig)
+    df$Marktwert <- as.numeric(df$Marktwert)
+    
+    # Mittelwert je Spieler
+    mw_spieler <- df %>%
+      group_by(Spieler) %>%
+      summarise(MW_mittel = mean(Marktwert, na.rm = TRUE), .groups = "drop")
+    
+    # Klassifikation
+    df <- df %>%
+      left_join(mw_spieler, by = "Spieler") %>%
+      mutate(
+        Klasse = case_when(
+          MW_mittel < 500000 ~ "Klasse 1: <0.5 Mio",
+          MW_mittel < 1000000 ~ "Klasse 2: 0.5–1 Mio",
+          MW_mittel < 2500000 ~ "Klasse 3: 1–2.5 Mio",
+          MW_mittel < 5000000 ~ "Klasse 4: 2.5–5 Mio",
+          MW_mittel < 10000000 ~ "Klasse 5: 5–10 Mio",
+          TRUE ~ "Klasse 6: >10 Mio"
+        )
+      )
+    
+    df
+  })
+  
+  
+  output$mw_plot <- renderPlot({
+    df <- data()
+    
+    # Ø MW je Klasse & Datum
+    df_plot <- df %>%
+      group_by(Datum, Klasse) %>%
+      summarise(MW_Ø = mean(Marktwert, na.rm = TRUE), .groups = "drop")
+    
+    # Normierung auf 01.06.2024
+    startwerte <- df_plot %>%
+      group_by(Klasse) %>%
+      filter(Datum == min(Datum)) %>%
+      summarise(Start_MW = first(MW_Ø), .groups = "drop")
+    
+    df_plot_norm <- df_plot %>%
+      left_join(startwerte, by = "Klasse") %>%
+      mutate(MW_normiert = MW_Ø / Start_MW) %>%
+      filter(Datum <= as.Date("2024-08-15"))
+    
+    ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
+      geom_line(size = 1.2) +
+      labs(
+        title = "Historischer norm. Marktwertverlauf pro Klasse ab 01.06.2024 (Start = 1)",
+        y = "Normierter MW",
+        x = "Datum",
+        color = "MW-Klasse"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      coord_cartesian(ylim = c(0.7, 1.1)) +
+      theme_minimal(base_size = 14)
   })
   
   # ---- KADER-ENTWICKLUNG ----
