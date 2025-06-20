@@ -33,3 +33,4 @@ __pycache__/
 *.bak
 scrape_comunio_transfermarkt.py
 comunio_kader.csv
+Update_App_and_SHUTDOWN.bat
