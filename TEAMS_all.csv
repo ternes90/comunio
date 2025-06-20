@@ -13,7 +13,6 @@ Thomas;Wahl;Abwehr
 Thomas;Telle;Abwehr
 Thomas;Meyer;Tor
 Thomas;Heuer Fernandes;Tor
-Thomas;Petersson;Tor
 Alfons;Boniface;Sturm
 Alfons;Dinkçi;Sturm
 Alfons;Matanović;Sturm
@@ -32,6 +31,7 @@ Christoph;B. Touré;Sturm
 Christoph;Hack;Sturm
 Christoph;Černý;Sturm
 Christoph;Götze;Mittelfeld
+Christoph;Paredes;Mittelfeld
 Christoph;Vermeeren;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;Ouédraogo;Mittelfeld
@@ -39,6 +39,7 @@ Christoph;Chaves;Abwehr
 Christoph;Henrichs;Abwehr
 Christoph;Weiser;Abwehr
 Christoph;Gouweleeuw;Abwehr
+Christoph;Upamecano;Abwehr
 Christoph;Finkgräfe;Abwehr
 Christoph;F. Müller;Tor
 Christoph;Atubolu;Tor
@@ -83,14 +84,17 @@ Dominik;Adli;Sturm
 Dominik;Ceesay;Sturm
 Dominik;Sieb;Sturm
 Dominik;Moerstedt;Sturm
+Dominik;Schimmer;Sturm
 Dominik;Baumgartner;Mittelfeld
 Dominik;Wanner;Mittelfeld
 Dominik;Haberer;Mittelfeld
 Dominik;Breithaupt;Mittelfeld
+Dominik;Höfler;Mittelfeld
 Dominik;P. Nebel;Mittelfeld
 Dominik;Stach;Mittelfeld
 Dominik;Groß;Mittelfeld
 Dominik;P. Aaronson;Mittelfeld
+Dominik;Kücüksahin;Mittelfeld
 Dominik;N. Schlotterbeck;Abwehr
 Dominik;Ritzka;Abwehr
 Dominik;Netz;Abwehr
@@ -104,6 +108,7 @@ Dominik;Chabot;Abwehr
 Dominik;Klostermann;Abwehr
 Dominik;Hübers;Abwehr
 Dominik;Neuer;Tor
+Dominik;Kauã Santos;Tor
 Nico;Gregoritsch;Sturm
 Nico;Wahi;Sturm
 Nico;Pavlović;Mittelfeld
@@ -120,7 +125,6 @@ Christian;Ekitiké;Sturm
 Christian;Khedira;Mittelfeld
 Christian;Chaïbi;Mittelfeld
 Christian;Schöppner;Mittelfeld
-Christian;Reis;Mittelfeld
 Christian;Tapsoba;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
 Christian;Elfadli;Abwehr
