@@ -978,55 +978,41 @@ server <- function(input, output, session) {
   
   ## ---- Transfermarkt preview ----
   output$transfermarkt_preview <- DT::renderDT({
-    tm_df <- read.csv2("TRANSFERMARKT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+    tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
-    tm_df$TM_Stand <- as.Date(tm_df$TM_Stand, format = "%d.%m.%Y")
-    tm_df$Marktwert <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
-    jetzt <- Sys.time()
-    heute <- as.Date(jetzt)
-    tm_heute <- tm_df %>% filter(TM_Stand == heute & Besitzer == "Computer")
-    tm_heute$Spieler <- trimws(enc2utf8(tm_heute$Spieler))
-    get_streak <- function(spieler) {
-      tage <- sort(unique(tm_df$TM_Stand[tm_df$Spieler == spieler & tm_df$Besitzer == "Computer"]), decreasing = TRUE)
-      streak <- 0L
-      d <- heute
-      while (d %in% tage) {
-        streak <- streak + 1L
-        d <- d - 1
-      }
-      streak
-    }
-    streaks <- vapply(tm_heute$Spieler, get_streak, integer(1))
-    ablauf <- as.POSIXct(rep(NA, length(streaks)), origin="1970-01-01", tz=Sys.timezone())
-    ablauf[streaks == 1]    <- as.POSIXct(paste0(heute + 2, " 03:00:00"), tz=Sys.timezone())
-    ablauf[streaks == 2]    <- as.POSIXct(paste0(heute + 1, " 03:00:00"), tz=Sys.timezone())
-    ablauf[streaks >= 3]    <- as.POSIXct(paste0(heute + 0, " 03:00:00"), tz=Sys.timezone())
-    rest_sec <- as.numeric(difftime(ablauf, jetzt, units = "secs"))
-    rest_sec[is.na(rest_sec) | rest_sec < 0] <- Inf
-    restzeit_fmt <- function(dt, streak) {
-      if (is.na(streak) || streak < 1) return("–")
-      sec <- as.numeric(difftime(dt, jetzt, units = "secs"))
-      if (is.na(sec) || sec < 0) return("–")
-      d <- floor(sec / 86400)
-      h <- floor((sec %% 86400) / 3600)
-      m <- floor((sec %% 3600) / 60)
-      if (d > 0) {
-        sprintf("%dd %dh", d, h)
-      } else if (h > 0) {
-        sprintf("%dh %dm", h, m)
-      } else {
-        sprintf("%dm", m)
-      }
-    }
-    tm_heute$Restzeit <- mapply(restzeit_fmt, ablauf, streaks, USE.NAMES = FALSE)
-    tm_heute$Restzeit_sec <- rest_sec
-    tm_heute$Marktwert <- paste0(format(tm_heute$Marktwert, big.mark = ".", decimal.mark = ","), " €")
-    tm_heute <- tm_heute %>%
-      arrange(Restzeit_sec) %>%
-      select(Spieler, Marktwert, Besitzer, Restzeit)
+    tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
+    tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
+    tm_df$Restzeit <- trimws(tm_df$Restzeit)
+    
+    # Restkategorie zuweisen
+    tm_df$Restkategorie <- case_when(
+      grepl("^2d", tm_df$Restzeit) ~ "übermorgen",
+      grepl("^1d", tm_df$Restzeit) ~ "morgen",
+      grepl("^[0-9]+h", tm_df$Restzeit) ~ "heute",
+      TRUE ~ "unbekannt"
+    )
+    
+    # Sortierreihenfolge festlegen (faktor)
+    tm_df$Restkategorie <- factor(tm_df$Restkategorie,
+                                  levels = c("heute", "morgen", "übermorgen", "unbekannt"),
+                                  ordered = TRUE)
+    
+    # Marktwert und Mindestgebot für die Anzeige formatieren
+    tm_df$Marktwert <- paste0(format(tm_df$Marktwert_num, big.mark = ".", decimal.mark = ","), " €")
+    tm_df$Mindestgebot <- paste0(format(tm_df$Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €")
+    
+    # Sortieren: erst Restkategorie, dann nach Marktwert absteigend
+    tm_df <- tm_df %>%
+      arrange(Restkategorie, desc(Marktwert_num))
+    
+    tm_df <- tm_df %>%
+      select(Spieler, Marktwert, Mindestgebot, Besitzer, Restkategorie) %>%
+      rename("Verbleibende Zeit" = Restkategorie)
+    
+    # Datatable mit Formatierungsregel für "heute" rot
     DT::datatable(
-      tm_heute,
-      colnames = c("Spieler", "Marktwert", "Besitzer", "Verbleibende Zeit"),
+      tm_df,
+      colnames = c("Spieler", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit"),
       rownames = FALSE,
       options = list(
         dom = "t",
@@ -1034,10 +1020,16 @@ server <- function(input, output, session) {
         pageLength = 20,
         columnDefs = list(
           list(className = 'dt-left', targets = 0),
-          list(className = 'dt-right', targets = 1:3)
+          list(className = 'dt-right', targets = 1:4)
         )
       )
-    )
+    ) %>%
+      DT::formatStyle(
+        'Verbleibende Zeit',
+        target = 'cell',
+        color = DT::styleEqual("heute", "red"),
+        fontWeight = DT::styleEqual("heute", "bold")
+      )
   })
   
   
