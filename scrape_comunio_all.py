@@ -235,14 +235,31 @@ def scrape_transfermarkt():
             restzeit = row.find_element(By.CLASS_NAME, "csspt-countdown__text").text.strip()
         except:
             restzeit = ""
+        
+        # --- Verein ermitteln ---
+        verein = ""
+        try:
+            # Suche nach dem Container für das Vereinslogo
+            verein_logo = row.find_element(By.CLASS_NAME, "csspt-clublogo")
+            # Im Logo-Container nach dem Inline-Block-Tag suchen
+            inlineblocks = verein_logo.find_elements(By.TAG_NAME, "inline-block")
+            for ib in inlineblocks:
+                klasse = ib.get_attribute("class")
+                if klasse and "clublogos-m-" in klasse:
+                    verein = ib.get_attribute("title").strip()
+                    break
+        except:
+            verein = ""
 
-        # Nur diese Felder für TRANSFERMARKT.csv:
+        # TRANSFERMARKT.csv bleibt wie gehabt
         result.append([name, marktwert, besitzer, tm_datum])
-        # Für Computer-Spieler: Mindestgebot und Restzeit in Extra-CSV
-        if besitzer == "Computer":
-            comp_rows.append([name, marktwert, mindestgebot, besitzer, tm_datum, restzeit])
 
-    # TRANSFERMARKT.csv erweitern/anhängen
+        # COMP_TM_RESTZEIT.csv: Nur für Computer-Spieler, inkl. Verein
+        if besitzer == "Computer":
+            comp_rows.append([name, marktwert, mindestgebot, besitzer, tm_datum, restzeit, verein])
+
+    # TRANSFERMARKT.csv erweitern/anhängen (unverändert)
+    CSV_PATH = "TRANSFERMARKT.csv"
     df_new = pd.DataFrame(result, columns=["Spieler", "Marktwert", "Besitzer", "TM_Stand"])
     if os.path.exists(CSV_PATH):
         df_existing = pd.read_csv(CSV_PATH, sep=";", encoding="utf-8-sig", dtype={"Marktwert": str})
@@ -259,11 +276,11 @@ def scrape_transfermarkt():
     df_final.to_csv(CSV_PATH, index=False, sep=";", encoding="utf-8-sig")
     print(f"✅ Transfermarkt gespeichert mit insgesamt {len(df_final)} Einträgen.")
 
-    # === Computer-Spieler auf dem Transfermarkt inkl. Restzeit & Mindestgebot speichern ===
-    df_comp = pd.DataFrame(comp_rows, columns=["Spieler", "Marktwert", "Mindestgebot", "Besitzer", "TM_Stand", "Restzeit"])
+    # === Computer-Spieler auf dem Transfermarkt inkl. Verein speichern ===
+    df_comp = pd.DataFrame(comp_rows, columns=["Spieler", "Marktwert", "Mindestgebot", "Besitzer", "TM_Stand", "Restzeit", "Verein"])
     comp_path = "COMP_TM_RESTZEIT.csv"
     df_comp.to_csv(comp_path, index=False, sep=";", encoding="utf-8-sig")
-    print(f"💾 Computer-Spieler (mit Restzeit & Mindestgebot) in {comp_path} gespeichert: {len(df_comp)} Einträge.")
+    print(f"💾 Computer-Spieler (mit Restzeit, Mindestgebot & Verein) in {comp_path} gespeichert: {len(df_comp)} Einträge.")
 
 
 
