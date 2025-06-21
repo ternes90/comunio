@@ -25,6 +25,7 @@ Shiny.addCustomMessageHandler('copyText', function(message) {
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse",
+  id = "main_navbar",
   
   ## ---- Dashboard ----
   tabPanel("Dashboard",
@@ -72,6 +73,18 @@ ui <- navbarPage(
                     plotOutput("mw_plot")
                     )
   ),
+  
+  ## ---- Transfermarkt ----
+  tabPanel("Transfermarkt",
+           tabPanel("Transfermarkt Details",
+                    h3("Transfermarkt – alle Details"),
+                    p("Hier findest du alle verfügbaren Informationen zum aktuellen Transfermarkt."),
+                    DTOutput("transfermarkt_detail")
+           )
+           
+           
+  ),
+
   
   ## ---- Kader-Entwicklung ----
   tabPanel("Kader-Entwicklung",
@@ -150,7 +163,43 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
+  # Link vom Dashboard zum TM tab
+  selected_row <- reactiveVal(NULL)
+  
+  observeEvent(input$transfermarkt_preview_rows_selected, {
+    # Prüfe, ob eine Zeile ausgewählt wurde
+    if (!is.null(input$transfermarkt_preview_rows_selected)) {
+      updateNavbarPage(session, "main_navbar", "Transfermarkt")
+      # Optional: Du kannst die Zeilennummer oder Daten mit übergeben
+      # selected_row <- input$transfermarkt_preview_rows_selected
+      # selected_data <- tm_df[selected_row, ]
+      # -> im Detailtab anzeigen!
+    }
+  })
+  
   # ---- DATEN / df / list ----
+  
+  # Mapping von Vereinsnamen zu Dateinamen
+  logo_map <- c(
+    "1. FC Köln" = "1 FC Köln.png",
+    "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
+    "Borussia Dortmund" = "Borussia Dortmund.png",
+    "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
+    "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
+    "FC Augsburg" = "FC Augsburg.png",
+    "FC Bayern München" = "FC Bayern München.png",
+    "Hamburger SV" = "Hamburger SV.png",
+    "1.FC Heidenheim" = "Heidenheim.png",
+    "RB Leipzig" = "Leipzig.png",
+    "1. FSV Mainz 05" = "Mainz 05.png",
+    "Sport-Club Freiburg" = "SC Freiburg.png",
+    "FC St. Pauli" = "St Pauli.png",
+    "SV Werder Bremen" = "SV Werder Bremen.png",
+    "TSG Hoffenheim" = "TSG Hoffenheim.png",
+    "1.FC Union Berlin" = "Union Berlin.png",
+    "VfB Stuttgart" = "VfB Stuttgart.png",
+    "VfL Wolfsburg" = "VfL Wolfsburg.png"
+  )
   
   ## ---- sommerpause_df ----
   sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
@@ -422,6 +471,16 @@ server <- function(input, output, session) {
       group_by(MW_Klasse) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
+    # Anzahl Gebote über dem Mittelwert je MW-Klasse
+    plotdata_ueber <- plotdata %>%
+      left_join(means_klasse, by = "MW_Klasse") %>%
+      group_by(MW_Klasse) %>%
+      summarise(
+        pct_ueber = round(100 * sum(Diff_Prozent > Mean, na.rm = TRUE) / n(), 1),
+        n_total = n(),
+        .groups = "drop"
+      )
+    
     
     ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
       geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
@@ -481,6 +540,16 @@ server <- function(input, output, session) {
         color = "#d62728",
         fontface = "bold",
         size = 3.5,
+        inherit.aes = FALSE
+      ) +
+      # Hinzufügen von n über MW 
+      geom_text(
+        data = plotdata_ueber,
+        aes(x = -Inf, y = Inf, label = paste0(pct_ueber, "% (n=", n_total, ")")),
+        hjust = -0.1, vjust = 1.2,
+        color = "#333",
+        fontface = "bold",
+        size = 4,
         inherit.aes = FALSE
       ) +
       
@@ -978,12 +1047,14 @@ server <- function(input, output, session) {
   
   ## ---- Transfermarkt preview ----
   output$transfermarkt_preview <- DT::renderDT({
+    
     # Transfermarkt-Daten
     tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
     tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
     tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
     tm_df$Restzeit <- trimws(tm_df$Restzeit)
+    tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
     
     # ALL_PLAYERS einlesen und Datum konvertieren
     ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
@@ -1022,9 +1093,8 @@ server <- function(input, output, session) {
       }
     }, tm_trend$MW1, tm_trend$MW2, tm_trend$MW3)
     
-    
     # Rest wie gehabt…
-    tm_trend$Restkategorie <- case_when(
+    tm_trend$Restkategorie <- dplyr::case_when(
       grepl("^2d", tm_trend$Restzeit) ~ "übermorgen",
       grepl("^1d", tm_trend$Restzeit) ~ "morgen",
       grepl("^[0-9]+h", tm_trend$Restzeit) ~ "heute",
@@ -1039,21 +1109,38 @@ server <- function(input, output, session) {
     
     tm_trend <- tm_trend %>%
       arrange(Restkategorie, desc(Marktwert_num)) %>%
-      select(Spieler, Marktwert, Mindestgebot, Besitzer, Restkategorie, Trend, MinGeb_Unter_MW) %>%
-      rename("Verbleibende Zeit" = Restkategorie, "Trend MW (3 Tage)" = Trend)
+      select(
+        Spieler, Verein, Marktwert, Mindestgebot, Besitzer,
+        Restkategorie, Trend, MinGeb_Unter_MW
+      ) %>%
+      rename(
+        "Verbleibende Zeit" = Restkategorie,
+        "Trend MW (3 Tage)" = Trend
+      )
+    
+    # Setze den richtigen Pfad (www/logos), falls im Shiny www-Ordner!
+    logo_dir <- "logos" # oder ggf. "www/logos", je nach Shiny-Ordnerstruktur
+    
+    # Logo erzeugen
+    tm_trend$Logo <- paste0(
+      '<img src="', logo_dir, '/', logo_map[tm_trend$Verein], 
+      '" height="28" title="', tm_trend$Verein, '"/>'
+    )
+    tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
     
     DT::datatable(
-      tm_trend[, 1:6],
-      colnames = c("Spieler", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
+      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
       rownames = FALSE,
       escape = FALSE,
+      selection = "single",
       options = list(
         dom = "t",
         ordering = FALSE,
         pageLength = 20,
         columnDefs = list(
-          list(className = 'dt-left', targets = 0),
-          list(className = 'dt-right', targets = 1:5)
+          list(className = 'dt-left', targets = 0:1),
+          list(className = 'dt-right', targets = 2:6)
         )
       )
     ) %>%
@@ -1311,6 +1398,175 @@ server <- function(input, output, session) {
       coord_cartesian(ylim = c(0.7, 1.1)) +
       theme_minimal(base_size = 14)
   })
+  
+  # ---- TRANSFERMARKT ----
+  
+  ## ---- Tabelle ----
+  
+  output$transfermarkt_detail <- DT::renderDT({
+    
+    # Transfermarkt-Daten
+    tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+    tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
+    tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
+    tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
+    tm_df$Restzeit <- trimws(tm_df$Restzeit)
+    tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
+    
+    # ALL_PLAYERS einlesen und Datum konvertieren
+    ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+    ap_df$Spieler <- trimws(enc2utf8(ap_df$Spieler))
+    ap_df$Datum <- as.Date(ap_df$Datum, format = "%d.%m.%Y")
+    ap_df$Marktwert <- as.numeric(ap_df$Marktwert)
+    
+    # Die letzten 3 Tage ermitteln
+    last_dates <- sort(unique(ap_df$Datum), decreasing = TRUE)[1:3]
+    names(last_dates) <- c("MW3", "MW2", "MW1") # MW1 = ältester Tag, MW3 = aktuell
+    
+    # Marktwerte für die letzten 3 Tage je Spieler
+    mw1 <- ap_df %>% filter(Datum == last_dates["MW1"]) %>% select(Spieler, MW1 = Marktwert)
+    mw2 <- ap_df %>% filter(Datum == last_dates["MW2"]) %>% select(Spieler, MW2 = Marktwert)
+    mw3 <- ap_df %>% filter(Datum == last_dates["MW3"]) %>% select(Spieler, MW3 = Marktwert)
+    
+    # Merge alle MWs auf Transfermarkt
+    tm_trend <- tm_df %>%
+      left_join(mw1, by = "Spieler") %>%
+      left_join(mw2, by = "Spieler") %>%
+      left_join(mw3, by = "Spieler")
+    
+    # Trendlogik
+    tm_trend$Trend <- mapply(function(mw1, mw2, mw3) {
+      if (any(is.na(c(mw1, mw2, mw3)))) return("–")
+      if (mw1 < mw2 && mw2 < mw3) {
+        return("<span style='color:green;font-weight:bold;'>▲▲</span>")
+      } else if (mw1 > mw2 && mw2 > mw3) {
+        return("<span style='color:red;font-weight:bold;'>▼▼</span>")
+      } else if (mw1 < mw3) {
+        return("<span style='color:green;font-weight:bold;'>▲</span>")
+      } else if (mw1 > mw3) {
+        return("<span style='color:red;font-weight:bold;'>▼</span>")
+      } else {
+        return("–")
+      }
+    }, tm_trend$MW1, tm_trend$MW2, tm_trend$MW3)
+    
+    # Rest wie gehabt…
+    tm_trend$Restkategorie <- dplyr::case_when(
+      grepl("^2d", tm_trend$Restzeit) ~ "übermorgen",
+      grepl("^1d", tm_trend$Restzeit) ~ "morgen",
+      grepl("^[0-9]+h", tm_trend$Restzeit) ~ "heute",
+      TRUE ~ "unbekannt"
+    )
+    tm_trend$Restkategorie <- factor(tm_trend$Restkategorie,
+                                     levels = c("heute", "morgen", "übermorgen", "unbekannt"),
+                                     ordered = TRUE)
+    tm_trend$Marktwert <- paste0(format(tm_trend$Marktwert_num, big.mark = ".", decimal.mark = ","), " €")
+    tm_trend$Mindestgebot <- paste0(format(tm_trend$Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €")
+    tm_trend$MinGeb_Unter_MW <- tm_trend$Mindestgebot_num < tm_trend$Marktwert_num
+    
+    tm_trend <- tm_trend %>%
+      arrange(Restkategorie, desc(Marktwert_num)) %>%
+      select(
+        Spieler, Verein, Marktwert, Mindestgebot, Besitzer,
+        Restkategorie, Trend, MinGeb_Unter_MW, Marktwert_num
+      ) %>%
+      rename(
+        "Verbleibende Zeit" = Restkategorie,
+        "Trend MW (3 Tage)" = Trend
+      )
+    
+    # MW-Klasse bestimmen
+    get_mw_klasse <- function(mw) {
+      if (mw < 5e5) {
+        "<0.5 Mio"
+      } else if (mw < 1e6) {
+        "0.5–1 Mio"
+      } else if (mw < 2.5e6) {
+        "1–2.5 Mio"
+      } else if (mw < 5e6) {
+        "2.5–5 Mio"
+      } else if (mw < 1e7) {
+        "5–10 Mio"
+      } else {
+        ">10 Mio"
+      }
+    }
+    tm_trend$MW_Klasse <- vapply(tm_trend$Marktwert_num, get_mw_klasse, character(1))
+    
+    # Mittelwert-Prozente aus dem Profil
+    gp_df <- gebotsprofil_mwclass() %>%
+      filter(!is.na(Diff_Prozent)) %>%
+      mutate(
+        MW_Klasse = factor(MW_Klasse, levels = c(
+          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
+        ))
+      )
+    means_klasse <- gp_df %>%
+      group_by(MW_Klasse) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    tm_trend <- tm_trend %>%
+      left_join(means_klasse, by = "MW_Klasse")
+    
+    # Ideales Gebot berechnen – erst jetzt existiert 'Mean'
+    tm_trend$IdealesGebot_num <- round(tm_trend$Marktwert_num * (1 + tm_trend$Mean / 100))
+    # Prozentwert berechnen
+    tm_trend$IdealesGebotProzent <- round(100 * (tm_trend$IdealesGebot_num / tm_trend$Marktwert_num - 1), 1)
+    
+    # Zusammenbauen als HTML (mit kleinem Prozentwert drunter)
+    tm_trend$IdealesGebot <- paste0(
+      format(tm_trend$IdealesGebot_num, big.mark = ".", decimal.mark = ","), " €",
+      '<br><span style="font-size: 85%; color: #666;">(',
+      ifelse(is.na(tm_trend$IdealesGebotProzent), "–", 
+             ifelse(tm_trend$IdealesGebotProzent > 0, "+", "")),
+      ifelse(is.na(tm_trend$IdealesGebotProzent), "", tm_trend$IdealesGebotProzent),
+      "%)</span>"
+    )
+    
+    # Fallback: Wenn kein Mean gefunden wurde, einfach MW nehmen
+    tm_trend$IdealesGebot_num[is.na(tm_trend$IdealesGebot_num)] <- tm_trend$Marktwert_num[is.na(tm_trend$IdealesGebot_num)]
+    tm_trend$IdealesGebot[is.na(tm_trend$IdealesGebot)] <- tm_trend$Marktwert[is.na(tm_trend$IdealesGebot)]
+    
+    # Setze den richtigen Pfad (www/logos), falls im Shiny www-Ordner!
+    logo_dir <- "logos" # oder ggf. "www/logos", je nach Shiny-Ordnerstruktur
+    
+    # EINMAL Logo erzeugen reicht!
+    tm_trend$Logo <- paste0(
+      '<img src="', logo_dir, '/', logo_map[tm_trend$Verein],
+      '" height="28" title="', tm_trend$Verein, '"/>'
+    )
+    tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
+    
+    DT::datatable(
+      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "IdealesGebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
+      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Ideales Gebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      rownames = FALSE,
+      escape = FALSE,
+      options = list(
+        dom = "t",
+        ordering = FALSE,
+        pageLength = 20,
+        columnDefs = list(
+          list(className = 'dt-left', targets = 0:1),
+          list(className = 'dt-right', targets = 2:7)
+        )
+      )
+    ) %>%
+      DT::formatStyle(
+        'Verbleibende Zeit',
+        target = 'cell',
+        color = DT::styleEqual("heute", "red"),
+        fontWeight = DT::styleEqual("heute", "bold")
+      ) %>%
+      DT::formatStyle(
+        'Mindestgebot',
+        target = 'cell',
+        color = DT::styleEqual(
+          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "green"
+        )
+      )
+  })
+  
   
   # ---- KADER-ENTWICKLUNG ----
   
