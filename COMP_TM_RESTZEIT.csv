@@ -1,16 +1,16 @@
-﻿Spieler;Marktwert;Mindestgebot;Besitzer;TM_Stand;Restzeit
-Bebou;2.410.000;2.410.000;Computer;21.06.2025;1d, 17h
-Lisewski;160.000;160.000;Computer;21.06.2025;1d, 17h
-Agyekum;310.000;320.000;Computer;21.06.2025;17h
-Jäger;220.000;230.000;Computer;21.06.2025;17h
-Sands;580.000;600.000;Computer;21.06.2025;17h
-Olise;20.620.000;19.080.000;Computer;21.06.2025;17h
-P. Pfeiffer;400.000;420.000;Computer;21.06.2025;17h
-Weißhaupt;2.080.000;1.990.000;Computer;21.06.2025;17h
-Moukoko;1.500.000;1.480.000;Computer;21.06.2025;17h
-Höler;3.260.000;3.110.000;Computer;21.06.2025;17h
-Can;3.260.000;3.280.000;Computer;21.06.2025;17h
-Theate;5.600.000;5.130.000;Computer;21.06.2025;17h
-Baum;1.720.000;1.930.000;Computer;21.06.2025;17h
-Gittens;5.350.000;5.760.000;Computer;21.06.2025;17h
-Muslija;370.000;400.000;Computer;21.06.2025;17h
+﻿Spieler;Marktwert;Mindestgebot;Besitzer;TM_Stand;Restzeit;Verein
+Bebou;2.410.000;2.410.000;Computer;21.06.2025;1d, 5h;
+Lisewski;160.000;160.000;Computer;21.06.2025;1d, 5h;Borussia Dortmund
+Agyekum;310.000;320.000;Computer;21.06.2025;5h;
+Jäger;220.000;230.000;Computer;21.06.2025;5h;
+Sands;580.000;600.000;Computer;21.06.2025;5h;
+Olise;20.620.000;19.080.000;Computer;21.06.2025;5h;
+P. Pfeiffer;400.000;420.000;Computer;21.06.2025;5h;
+Weißhaupt;2.080.000;1.990.000;Computer;21.06.2025;5h;
+Moukoko;1.500.000;1.480.000;Computer;21.06.2025;5h;Borussia Dortmund
+Höler;3.260.000;3.110.000;Computer;21.06.2025;5h;
+Can;3.260.000;3.280.000;Computer;21.06.2025;5h;Borussia Dortmund
+Theate;5.600.000;5.130.000;Computer;21.06.2025;5h;
+Baum;1.720.000;1.930.000;Computer;21.06.2025;5h;
+Gittens;5.350.000;5.760.000;Computer;21.06.2025;5h;Borussia Dortmund
+Muslija;370.000;400.000;Computer;21.06.2025;5h;
