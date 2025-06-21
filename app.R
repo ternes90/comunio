@@ -978,49 +978,82 @@ server <- function(input, output, session) {
   
   ## ---- Transfermarkt preview ----
   output$transfermarkt_preview <- DT::renderDT({
+    # Transfermarkt-Daten
     tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
     tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
     tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
     tm_df$Restzeit <- trimws(tm_df$Restzeit)
     
-    # Restkategorie zuweisen
-    tm_df$Restkategorie <- case_when(
-      grepl("^2d", tm_df$Restzeit) ~ "übermorgen",
-      grepl("^1d", tm_df$Restzeit) ~ "morgen",
-      grepl("^[0-9]+h", tm_df$Restzeit) ~ "heute",
+    # ALL_PLAYERS einlesen und Datum konvertieren
+    ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+    ap_df$Spieler <- trimws(enc2utf8(ap_df$Spieler))
+    ap_df$Datum <- as.Date(ap_df$Datum, format = "%d.%m.%Y")
+    ap_df$Marktwert <- as.numeric(ap_df$Marktwert)
+    
+    # Die letzten 3 Tage ermitteln
+    last_dates <- sort(unique(ap_df$Datum), decreasing = TRUE)[1:3]
+    names(last_dates) <- c("MW3", "MW2", "MW1") # MW1 = ältester Tag, MW3 = aktuell
+    
+    # Marktwerte für die letzten 3 Tage je Spieler
+    mw1 <- ap_df %>% filter(Datum == last_dates["MW1"]) %>% select(Spieler, MW1 = Marktwert)
+    mw2 <- ap_df %>% filter(Datum == last_dates["MW2"]) %>% select(Spieler, MW2 = Marktwert)
+    mw3 <- ap_df %>% filter(Datum == last_dates["MW3"]) %>% select(Spieler, MW3 = Marktwert)
+    
+    # Merge alle MWs auf Transfermarkt
+    tm_trend <- tm_df %>%
+      left_join(mw1, by = "Spieler") %>%
+      left_join(mw2, by = "Spieler") %>%
+      left_join(mw3, by = "Spieler")
+    
+    # Trendlogik
+    tm_trend$Trend <- mapply(function(mw1, mw2, mw3) {
+      if (any(is.na(c(mw1, mw2, mw3)))) return("–")
+      if (mw1 < mw2 && mw2 < mw3) {
+        return("<span style='color:green;font-weight:bold;'>▲▲</span>")
+      } else if (mw1 > mw2 && mw2 > mw3) {
+        return("<span style='color:red;font-weight:bold;'>▼▼</span>")
+      } else if (mw1 < mw3) {
+        return("<span style='color:green;font-weight:bold;'>▲</span>")
+      } else if (mw1 > mw3) {
+        return("<span style='color:red;font-weight:bold;'>▼</span>")
+      } else {
+        return("–")
+      }
+    }, tm_trend$MW1, tm_trend$MW2, tm_trend$MW3)
+    
+    
+    # Rest wie gehabt…
+    tm_trend$Restkategorie <- case_when(
+      grepl("^2d", tm_trend$Restzeit) ~ "übermorgen",
+      grepl("^1d", tm_trend$Restzeit) ~ "morgen",
+      grepl("^[0-9]+h", tm_trend$Restzeit) ~ "heute",
       TRUE ~ "unbekannt"
     )
+    tm_trend$Restkategorie <- factor(tm_trend$Restkategorie,
+                                     levels = c("heute", "morgen", "übermorgen", "unbekannt"),
+                                     ordered = TRUE)
+    tm_trend$Marktwert <- paste0(format(tm_trend$Marktwert_num, big.mark = ".", decimal.mark = ","), " €")
+    tm_trend$Mindestgebot <- paste0(format(tm_trend$Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €")
+    tm_trend$MinGeb_Unter_MW <- tm_trend$Mindestgebot_num < tm_trend$Marktwert_num
     
-    # Sortierreihenfolge festlegen (faktor)
-    tm_df$Restkategorie <- factor(tm_df$Restkategorie,
-                                  levels = c("heute", "morgen", "übermorgen", "unbekannt"),
-                                  ordered = TRUE)
+    tm_trend <- tm_trend %>%
+      arrange(Restkategorie, desc(Marktwert_num)) %>%
+      select(Spieler, Marktwert, Mindestgebot, Besitzer, Restkategorie, Trend, MinGeb_Unter_MW) %>%
+      rename("Verbleibende Zeit" = Restkategorie, "Trend MW (3 Tage)" = Trend)
     
-    # Marktwert und Mindestgebot für die Anzeige formatieren
-    tm_df$Marktwert <- paste0(format(tm_df$Marktwert_num, big.mark = ".", decimal.mark = ","), " €")
-    tm_df$Mindestgebot <- paste0(format(tm_df$Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €")
-    
-    # Sortieren: erst Restkategorie, dann nach Marktwert absteigend
-    tm_df <- tm_df %>%
-      arrange(Restkategorie, desc(Marktwert_num))
-    
-    tm_df <- tm_df %>%
-      select(Spieler, Marktwert, Mindestgebot, Besitzer, Restkategorie) %>%
-      rename("Verbleibende Zeit" = Restkategorie)
-    
-    # Datatable mit Formatierungsregel für "heute" rot
     DT::datatable(
-      tm_df,
-      colnames = c("Spieler", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit"),
+      tm_trend[, 1:6],
+      colnames = c("Spieler", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
       rownames = FALSE,
+      escape = FALSE,
       options = list(
         dom = "t",
         ordering = FALSE,
         pageLength = 20,
         columnDefs = list(
           list(className = 'dt-left', targets = 0),
-          list(className = 'dt-right', targets = 1:4)
+          list(className = 'dt-right', targets = 1:5)
         )
       )
     ) %>%
@@ -1029,6 +1062,13 @@ server <- function(input, output, session) {
         target = 'cell',
         color = DT::styleEqual("heute", "red"),
         fontWeight = DT::styleEqual("heute", "bold")
+      ) %>%
+      DT::formatStyle(
+        'Mindestgebot',
+        target = 'cell',
+        color = DT::styleEqual(
+          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "green"
+        )
       )
   })
   
