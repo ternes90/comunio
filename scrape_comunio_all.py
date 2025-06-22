@@ -387,9 +387,18 @@ def scrape_all_players():
             mw = player.find_element(By.CLASS_NAME, "market-value").text.strip().replace(".", "").replace("€", "")
         except:
             mw = ""
-        result.append([name, mw, TODAY])
+            
+        # --- Verein ermitteln ---
+            verein = ""
+        try:
+            verein_element = player.find_element(By.CLASS_NAME, "club-logo")
+            verein = verein_element.get_attribute("title").strip()
+        except:
+            verein = ""
+ 
+        result.append([name, verein, mw, TODAY])
 
-    df_new = pd.DataFrame(result, columns=["Spieler", "Marktwert", "Datum"])
+    df_new = pd.DataFrame(result, columns=["Spieler", "Verein", "Marktwert", "Datum"])
     if os.path.exists(CSV_PATH_2):
         df_existing = pd.read_csv(CSV_PATH_2, sep=";", encoding="utf-8-sig")
         df_combined = pd.concat([df_existing, df_new], ignore_index=True)
