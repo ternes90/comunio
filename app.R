@@ -179,6 +179,7 @@ server <- function(input, output, session) {
   
   # ---- DATEN / df / list ----
   
+  ## ---- Transfermarkt daten ----
   # Mapping von Vereinsnamen zu Dateinamen
   logo_map <- c(
     "1. FC Köln" = "1 FC Köln.png",
@@ -200,6 +201,19 @@ server <- function(input, output, session) {
     "VfB Stuttgart" = "VfB Stuttgart.png",
     "VfL Wolfsburg" = "VfL Wolfsburg.png"
   )
+  
+  #PPS
+  ca_df <- read_delim("com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
+  ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
+  
+  ca_df <- ca_df %>%
+    select(
+      SPIELER,
+      Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
+      Preis_Leistung = `PREIS-LEISTUNG`,
+      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
+    )
+  
   
   ## ---- sommerpause_df ----
   sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
@@ -1124,7 +1138,7 @@ server <- function(input, output, session) {
     # Logo erzeugen
     tm_trend$Logo <- paste0(
       '<img src="', logo_dir, '/', logo_map[tm_trend$Verein], 
-      '" height="28" title="', tm_trend$Verein, '"/>'
+      '" width="28" title="', tm_trend$Verein, '"/>'
     )
     tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
     
@@ -1533,13 +1547,25 @@ server <- function(input, output, session) {
     # EINMAL Logo erzeugen reicht!
     tm_trend$Logo <- paste0(
       '<img src="', logo_dir, '/', logo_map[tm_trend$Verein],
-      '" height="28" title="', tm_trend$Verein, '"/>'
+      '" width="28" title="', tm_trend$Verein, '"/>'
     )
     tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
     
+    #PPS mergen
+    tm_trend <- tm_trend %>%
+      left_join(ca_df, by = c("Spieler" = "SPIELER"))
+    
+    tm_trend <- tm_trend %>%
+      rename(
+        "Punkte pro Spiel" = Punkte_pro_Spiel,
+        "Preis-Leistung" = Preis_Leistung,
+        "Historische Punkteausbeute" = Historische_Punkteausbeute
+      )
+    
+    
     DT::datatable(
-      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "IdealesGebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
-      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Ideales Gebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "IdealesGebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
+      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Ideales Gebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
       rownames = FALSE,
       escape = FALSE,
       options = list(
