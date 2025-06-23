@@ -6,23 +6,6 @@ library(readxl)
 library(DT)
 library(shinyjs)
 
-# ---- Custom JS für Copy-Button ----
-jsCode <- "
-Shiny.addCustomMessageHandler('copyText', function(message) {
-  var tempText = document.getElementById('tempClipboard');
-  if (!tempText) {
-    tempText = document.createElement('textarea');
-    tempText.id = 'tempClipboard';
-    tempText.style.position = 'fixed';
-    tempText.style.opacity = 0;
-    document.body.appendChild(tempText);
-  }
-  tempText.value = message;
-  tempText.select();
-  document.execCommand('copy');
-});
-"
-
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse",
@@ -33,22 +16,36 @@ ui <- navbarPage(
   tabPanel("Dashboard",
            fluidPage(
              fluidRow(
-               column(6, plotOutput("mw_zeitachse_preview", height = 350)),
+               column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
                column(6, DTOutput("kreditrahmen_uebersicht_preview"))
              ),
              fluidRow(
                column(6, DTOutput("mein_team_tabelle_preview")),
-               column(6, DTOutput("transfermarkt_preview"))
+               fluidRow(
+                 column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
+                 column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
+                 column(6,
+                        tags$div(
+                          style = "height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px;",
+                          DTOutput("flip_einnahmen_uebersicht_preview")
+                        )
+                 )
+               ),
              ),
-             fluidRow(
-               column(6, DTOutput("flip_einnahmen_uebersicht_preview"))
-             ),
-             fluidRow(
-               column(2, plotOutput("top3_meine_spieler_mw_preview", height = 150)),
-               column(2, plotOutput("top3_alle_spieler_mw_preview", height = 150)),
-               column(4, DTOutput("manager_tabelle_mw_preview"))
-             )
              
+             fluidRow(
+               column(12,
+                      div(
+                        style = "display: flex; flex-direction: column; align-items: center;",
+                        tags$div("Aktueller Transfermarkt", 
+                                 style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
+                        div(
+                          style = "width: 80%;",  # oder fixe Breite wie 600px
+                          DTOutput("transfermarkt_preview")
+                        )
+                      )
+               )
+             )
            )
   ),
   
@@ -90,7 +87,6 @@ ui <- navbarPage(
              id = "kader_tabs",
              tabPanel("Mein Kader", uiOutput("mein_kader")),
              tabPanel("Alle Kader", uiOutput("kader_uebersicht_ui")),
-             tabPanel("Hypothetischer Kader-Flip", DTOutput("flip_kader"), width = 100),
              tabPanel("Kaderwert-Plot", plotOutput("kaderwert_plot", height = 600))
            )
   ),
@@ -99,6 +95,7 @@ ui <- navbarPage(
   ## ---- Bieterprofile ----
   tabPanel("Bieterprofile",
            tabsetPanel(
+             id = "bieterprofile_tabs",
              tabPanel("MW-Klassen", plotOutput("mwclassplot", height = 700)),
              tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
@@ -115,18 +112,23 @@ ui <- navbarPage(
              ),
              tabPanel("Zusammenfassung",
                       tags$div(
-                        style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px;",
-                        tags$input(
-                          id = "show_table",
-                          type = "checkbox",
-                          style = "width: 20px; height: 20px; margin: 0 10px 0 0; vertical-align: middle; margin-top: 20px;"
-                        ),
+                        style = "display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px; margin-top: 20px;",
+                        
+                        # Checkbox 1
                         tags$label(
-                          "Zeige zusammengefasste MW-Klassen-Statistik",
-                          `for` = "show_table",
-                          style = "font-weight: 500; font-size: 16px; white-space: nowrap; vertical-align: middle; margin: 0;margin-top: 20px;"
+                          style = "display: flex; align-items: center; font-size: 14px; gap: 8px;",
+                          tags$input(id = "show_table", type = "checkbox", style = "width: 18px; height: 18px;"),
+                          "Gebote je Marktwert-Klasse anzeigen"
+                        ),
+                        
+                        # Checkbox 2
+                        tags$label(
+                          style = "display: flex; align-items: center; font-size: 14px; gap: 8px;",
+                          tags$input(id = "show_entries", type = "checkbox", style = "width: 18px; height: 18px;"),
+                          "Transfers anzeigen"
                         )
                       ),
+                      
                       DTOutput("mwclass_summary")
              )
              
@@ -138,21 +140,45 @@ ui <- navbarPage(
   ## ---- Flip-Analyse ----
   tabPanel("Flip-Analyse",
            tabsetPanel(
-             tabPanel("Gesamtsumme", plotOutput("flip_summarybar", height = 600)),
-             tabPanel("Kategorien (gestapelt)", plotOutput("flip_effizienz", height = 600)),
-             tabPanel("Kumuliert", plotOutput("flip_cumulative", height = 600)),
-             tabPanel("Kumuliert nach Flip-Art", plotOutput("flip_cumcat", height = 600)),
-             tabPanel("Historie je Spieler", 
-                      sidebarLayout(
-                        sidebarPanel(
-                          selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
+             id = "flip_tabs",
+             
+             # TAB 1: Gesamtsumme + Kumuliert
+             tabPanel("Übersicht gesamt",
+                      fluidPage(
+                        fluidRow(
+                          column(12, plotOutput("flip_summarybar", height = 500))
                         ),
-                        mainPanel(
-                          DTOutput("flip_player_table")
+                        fluidRow(
+                          column(12, plotOutput("flip_cumulative", height = 500))
+                        )
+                      )
+             ),
+             
+             # TAB 2: Kategorien gestapelt + Kumuliert nach Flip-Art
+             tabPanel("Flip-Arten",
+                      fluidPage(
+                        fluidRow(
+                          column(7, plotOutput("flip_effizienz", height = 500)),
+                          column(5, plotOutput("flip_cumcat", height = 500))
+                        )
+                      )
+             ),
+             
+             # TAB 3: Kader-Flip + Historie
+             tabPanel("Kader & Historie",
+                      fluidPage(
+                        fluidRow(
+                          column(12, DTOutput("flip_kader"))
+                        ),
+                        br(),
+                        fluidRow(
+                          column(4,
+                                 selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
+                          ),
+                          column(8, DTOutput("flip_player_table"))
                         )
                       )
              )
-             
            )
   ),
   
@@ -175,26 +201,28 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
-  # Link vom Dashboard zum TM tab
-  selected_row <- reactiveVal(NULL)
+  # Link vom Dashboard zum MW Trend tab
+  observeEvent(input$mw_zeitachse_click, {
+    updateNavbarPage(session, "main_navbar", selected = "Marktwert-Entwicklung")
+  })
   
-  observeEvent(input$transfermarkt_preview_rows_selected, {
-    # Prüfe, ob eine Zeile ausgewählt wurde
-    if (!is.null(input$transfermarkt_preview_rows_selected)) {
-      updateNavbarPage(session, "main_navbar", "Transfermarkt")
-    }
+  # Kapitalübersicht
+  observeEvent(input$kreditrahmen_uebersicht_preview_rows_selected, {
+    # egal was ausgewählt wird, Tabwechsel:
+    updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
+  })
+  
+  # Link vom Dashboard zum Flip tab
+  observeEvent(input$flip_click, {
+    updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
+  })
+  
+  # Link vom Dashboard zum Gebote tab
+  observeEvent(input$gebote_click, {
+    updateNavbarPage(session, "main_navbar", selected = "Bieterprofile")
   })
   
   # Link vom Dashboard zum Kader tab
-  # Alle
-  observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
-    updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
-    # Verzögerung einbauen, damit Tabset geladen ist:
-    shinyjs::delay(200, {
-      updateTabsetPanel(session, "kader_tabs", "Hypothetischer Kader-Flip")
-    })
-  })
-  
   # Meiner
   observeEvent(input$mein_team_tabelle_preview_rows_selected, {
     # egal was ausgewählt wird, Tabwechsel:
@@ -204,12 +232,22 @@ server <- function(input, output, session) {
     })
   })
   
-  # Kapitalübersicht
-  observeEvent(input$kapital_table_cell_clicked, {
-    updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
+  # Link vom Dashboard zum Hypothetischen Team-Flip tab
+  observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
+    updateNavbarPage(session, "main_navbar", "Flip-Analyse")
+    # Verzögerung einbauen, damit Tabset geladen ist:
+    shinyjs::delay(200, {
+      updateTabsetPanel(session, "flip_tabs", "Kader & Historie")
+    })
   })
-  
-  
+
+  # Link vom Dashboard zum TM tab
+  observeEvent(input$transfermarkt_preview_rows_selected, {
+    # Prüfe, ob eine Zeile ausgewählt wurde
+    if (!is.null(input$transfermarkt_preview_rows_selected)) {
+      updateNavbarPage(session, "main_navbar", "Transfermarkt")
+    }
+  })
   
   # ---- DATEN / df / list ----
   
@@ -398,376 +436,7 @@ server <- function(input, output, session) {
       slice(1)
     if (nrow(tm) == 1) tm$Marktwert else NA
   }
-  
-  # ---- BIETERPROFILE ----
-  ## ---- MW-Klassen Boxplot+Beeswarm ----
-  output$mwclassplot <- renderPlot({
-    req(nrow(gebotsprofil_mwclass()) > 0)
-    
-    plotdata <- gebotsprofil_mwclass() %>%
-      filter(!is.na(Diff_Prozent)) %>%
-      mutate(
-        MW_Klasse = factor(MW_Klasse, levels = c(
-          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
-        ))
-      )
-    
-    # Für robustes beeswarm: Gruppengröße pro Facet
-    plotdata_beeswarm <- plotdata %>%
-      group_by(Bieter, MW_Klasse) %>%
-      mutate(n_pts = n()) %>%
-      ungroup()
-    
-    # Mittelwerte
-    means <- plotdata %>%
-      group_by(Bieter, MW_Klasse) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    # Mittelwert je MW-Klasse über alle Bieter
-    means_klasse <- plotdata %>%
-      group_by(MW_Klasse) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    # Anzahl Gebote über dem Mittelwert je MW-Klasse
-    plotdata_ueber <- plotdata %>%
-      left_join(means_klasse, by = "MW_Klasse") %>%
-      group_by(MW_Klasse) %>%
-      summarise(
-        pct_ueber = round(100 * sum(Diff_Prozent > Mean, na.rm = TRUE) / n(), 1),
-        n_total = n(),
-        .groups = "drop"
-      )
-    
-    
-    ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
-      geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
-      
-      # Beeswarm nur für Gruppen mit mehr als 1 Punkt
-      geom_beeswarm(
-        data = subset(plotdata_beeswarm, n_pts > 1),
-        cex = 2, size = 2.5, alpha = 0.8, priority = "random"
-      ) +
-      
-      # Einzelne Punkte (1 Wert pro Gruppe)
-      geom_point(
-        data = subset(plotdata_beeswarm, n_pts == 1),
-        size = 2.5, alpha = 0.8, shape = 21
-      ) +
-      
-      # Mittelwert-Linie
-      geom_segment(
-        data = means,
-        aes(x = as.numeric(factor(Bieter)) - 0.4, 
-            xend = as.numeric(factor(Bieter)) + 0.4, 
-            y = Mean, 
-            yend = Mean),
-        color = "grey30",
-        linetype = "dashed",
-        linewidth = 0.8,
-        inherit.aes = FALSE
-      ) +
-      
-      # Mittelwert-Wert als Text
-      geom_text(
-        data = means,
-        aes(x = as.numeric(factor(Bieter)), y = Mean, 
-            label = round(Mean, 1)),
-        color = "black",
-        fontface = "bold",
-        size = 3.5,
-        vjust = -0.7,
-        inherit.aes = FALSE
-      ) +
-      
-      # -- Mittelwert-Linie je MW-Klasse --
-      geom_hline(
-        data = means_klasse,
-        aes(yintercept = Mean),
-        color = "#d62728",
-        linewidth = 1.2,
-        linetype = "solid",
-        inherit.aes = FALSE
-      ) +
-      # Mittelwert-Wert je MW-Klasse als Text
-      geom_text(
-        data = means_klasse,
-        aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
-        hjust = 1.1,
-        vjust = -0.7,
-        color = "#d62728",
-        fontface = "bold",
-        size = 3.5,
-        inherit.aes = FALSE
-      ) +
-      # Hinzufügen von n über MW 
-      geom_text(
-        data = plotdata_ueber,
-        aes(x = -Inf, y = Inf, label = paste0(pct_ueber, "% (n=", n_total, ")")),
-        hjust = -0.1, vjust = 1.2,
-        color = "#333",
-        fontface = "bold",
-        size = 4,
-        inherit.aes = FALSE
-      ) +
-      
-      facet_grid(. ~ MW_Klasse, scales = "free_y") +
-      
-      labs(
-        title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
-        x = "Bieter",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      scale_color_brewer(palette = "Paired") +
-      scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 13) +
-      theme(
-        legend.position = "none",
-        strip.text = element_text(face = "bold", size = 16),
-        axis.text.x = element_text(angle = 30, hjust = 1)
-      )
-  })
-  
-  ## ---- Einzeln (Bieter, Typ) ----
-  output$beeswarm <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent))
-    # Mittelwert über beide Typen je Bieter
-    mean_total <- plotdata %>%
-      group_by(Bieter) %>%
-      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
-    # Mittelwerte je Typ
-    means <- plotdata %>%
-      group_by(Bieter, Typ) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
-      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      # Gesamter Mittelwert als gestrichelte Linie und Text
-      geom_hline(
-        data = mean_total,
-        aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9,
-        inherit.aes = FALSE
-      ) +
-      geom_text(
-        data = mean_total,
-        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "black", # Dunkelrot
-        fontface = "bold",
-        size = 5,
-        vjust = -0.25,
-        inherit.aes = FALSE
-      ) +
-      # Mittelwert je Typ als Text (wie gehabt)
-      geom_text(
-        data = means,
-        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
-        nudge_x = 0.4,
-        fontface = "bold",
-        size = 5,
-        inherit.aes = FALSE
-      ) +
-      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
-      labs(
-        title = "Gebotsabweichungen je Konkurrent",
-        x = "",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      theme_minimal(base_size = 13) +
-      theme(
-        legend.position = "bottom",
-        strip.text = element_text(face = "bold", size = 16)
-      )
-  })
-  
-  ## ---- Gebotsverhalten über die Zeit ----
-  
-  output$trendplot <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent)) %>%
-      mutate(Datum = as.Date(Datum)) # falls nicht schon Date
-    
-    ggplot(plotdata, aes(x = Datum, y = Diff_Prozent)) +
-      geom_point(alpha = 0.7, size = 2, color = "#1f77b4") +
-      geom_smooth(se = FALSE, method = "loess", span = 0.6, color = "#d62728", linewidth = 1.3) +
-      facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
-      labs(
-        title = "Entwicklung des Gebotsverhaltens über die Zeit",
-        x = "Datum",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      theme_minimal(base_size = 13) +
-      theme(
-        strip.text = element_text(face = "bold", size = 16)
-      )
-  })
-  
-  ## ---- Gebote pro Tag ----
-  
-  output$gebote_pro_tag <- renderPlot({
-    df <- gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
-    
-    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, fill = Bieter)) +
-      geom_col(position = "stack", alpha = 0.7) +
-      labs(
-        title = "Anzahl aller Gebote pro Tag (gestapelt nach Bieter)",
-        x = "Datum",
-        y = "Gebote pro Tag",
-        fill = "Bieter"
-      ) +
-      scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  ## ---- Linienplot: Gebote je Konkurrent über Zeit ----
-  output$gebote_pro_tag_linie <- renderPlot({
-    df <- gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
-    
-    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, color = Bieter)) +
-      geom_line(size = 1.2) +
-      geom_point(size = 2, alpha = 0.8) +
-      scale_color_brewer(palette = "Paired") +
-      labs(
-        title = "Gebote pro Tag je Konkurrent (Linienplot)",
-        x = "Datum",
-        y = "Gebote pro Tag",
-        color = "Bieter"
-      ) +
-      theme_minimal(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  ## ---- Durchschnittliche Gebotszahl pro Tag je Konkurrent ----
-  
-  gebote_tag_bieter <- reactive({
-    gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
-  })
-  
-  
-  output$gebote_pro_tag_bieter <- renderPlot({
-    df <- gebote_tag_bieter()
-    ggplot(df, aes(x = Bieter, y = Anzahl_Gebote, color = Bieter, fill = Bieter)) +
-      geom_boxplot(width = 0.5, alpha = 0.2, outlier.shape = NA) +
-      ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      labs(
-        title = "Gebotsanzahl pro Tag je Konkurrent (Boxplot + Beeswarm)",
-        x = "Bieter",
-        y = "Gebote pro Tag"
-      ) +
-      scale_color_brewer(palette = "Paired") +
-      scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 14) +
-      theme(legend.position = "none", axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  ## ---- Aktive Tage pro Spieler ----
-  
-  output$aktive_tage_plot <- renderPlot({
-    aktive_tage <- gebotsprofil_clean() %>%
-      group_by(Bieter) %>%
-      summarise(Aktive_Tage = n_distinct(Datum)) %>%
-      arrange(desc(Aktive_Tage))
-    
-    ggplot(aktive_tage, aes(x = reorder(Bieter, -Aktive_Tage), y = Aktive_Tage, fill = Bieter)) +
-      geom_col(show.legend = FALSE) +
-      labs(
-        title = "Anzahl aktiver Tage pro Spieler (mind. 1 Gebot/Tag)",
-        x = "Bieter",
-        y = "Aktive Tage"
-      ) +
-      scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 14)
-  })
-  
-  
-  
-  ## ---- Gebots-Peaks ----
-  
-  output$peak_days_heatmap <- renderPlot({
-    # Alle möglichen Kombinationen Bieter x Datum erzeugen (auch 0 Gebote!)
-    all_dates <- seq.Date(
-      min(gebotsprofil_clean()$Datum, na.rm = TRUE),
-      max(gebotsprofil_clean()$Datum, na.rm = TRUE),
-      by = "day"
-    )
-    alle_bieter <- unique(gebotsprofil_clean()$Bieter)
-    full_grid <- expand.grid(Datum = all_dates, Bieter = alle_bieter, stringsAsFactors = FALSE)
-    
-    # Tatsächliche Gebotszahlen einfügen
-    gebote_tage <- gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
-    full_heat <- full_grid %>%
-      left_join(gebote_tage, by = c("Datum", "Bieter")) %>%
-      mutate(Anzahl_Gebote = replace_na(Anzahl_Gebote, 0))
-    
-    # Markierung Wochenende und Saisonstart (z.B. 22.08.2025)
-    full_heat <- full_heat %>%
-      mutate(
-        Wochentag = weekdays(Datum, abbreviate = TRUE),
-        Wochenende = Wochentag %in% c("Sa", "So"),
-        Saisonstart = Datum == as.Date("2025-08-22")
-      )
-    
-    ggplot(full_heat, aes(x = Datum, y = Bieter, fill = Anzahl_Gebote)) +
-      geom_tile(color = "grey90") +
-      # Saisonstart als Outline
-      geom_tile(data = filter(full_heat, Saisonstart), color = "black", size = 1.2, fill = NA) +
-      # Wochenenden als Punkt-Overlay (optional, für bessere Sichtbarkeit)
-      geom_point(
-        data = filter(full_heat, Wochenende), aes(x = Datum, y = Bieter),
-        shape = 21, fill = "transparent", color = "black", size = 2, stroke = 1, inherit.aes = FALSE
-      ) +
-      scale_fill_gradient(
-        low = "white",
-        high = "#e41a1c",   # kräftiges Rot für viele Gebote
-        breaks = scales::pretty_breaks(n = 4)
-      ) +
-      labs(
-        title = "Gebots-Aktivität aller Spieler über die Zeit (Heatmap)",
-        x = "Datum",
-        y = "Bieter",
-        fill = "Gebote"
-      ) +
-      theme_minimal(base_size = 14) +
-      theme(
-        axis.text.x = element_text(angle = 60, hjust = 1),
-        panel.grid = element_blank()
-      )
-  })
-  
-  ## ---- Zusammenfassung als Tabelle ohne MW Klassen ----
-  output$mwclass_summary <- renderDT({
-    if (!is.null(input$show_table) && input$show_table) {
-      datatable(mwclass_summary())
-    } else {
-      dat <- gebotsprofil_clean() %>%
-        group_by(Bieter) %>%
-        summarise(
-          Anzahl_gesamt = n(),
-          Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
-          Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
-          O_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
-          Min = min(Diff_Prozent, na.rm = TRUE),
-          Max = max(Diff_Prozent, na.rm = TRUE),
-          Eintraege = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
-        )
-      datatable(dat)
-    }
-  })
- 
+
   # ---- DASHBOARD ----
   ## ---- Zeitachse ----
   output$mw_zeitachse_preview <- renderPlot({
@@ -794,10 +463,11 @@ server <- function(input, output, session) {
         "Gesamtmarktwert" = "darkgrey"
       )) +
       labs(
-        title = NULL, x = NULL, y = "relativer MW", color = NULL
+        title = "Marktwerte", x = NULL, y = "relativer MW", color = NULL
       ) +
       theme_minimal(base_size = 12) +
-      theme(legend.position = "bottom")
+      theme(legend.position = "bottom",
+            plot.title = element_text(size = 16, color = "black", face = "bold"))
   })
   
   ## ---- Mein Team ----
@@ -866,7 +536,7 @@ server <- function(input, output, session) {
   
   
   
-  ## ---- Gesamt Tabelle Flip-Übersicht aller Manager  ----
+  ## ---- Hypothetischer Team Flip-Übersicht aller Manager  ----
   output$flip_einnahmen_uebersicht_preview <- DT::renderDT({
     teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     
@@ -899,13 +569,13 @@ server <- function(input, output, session) {
       ) %>%
       arrange(desc(sum_diff)) %>%
       mutate(
-        `Aktuelle hypothetische Gesamt-Flip-Einnahmen` = ifelse(
+        `Hypothetisches Team-Flip-Potenzial` = ifelse(
           sum_diff > 0,
           paste0("+", format(sum_diff, big.mark = ".", decimal.mark = ","), " €"),
           paste0("-", format(abs(sum_diff), big.mark = ".", decimal.mark = ","), " €")
         )
       ) %>%
-      select(Manager, `Aktuelle hypothetische Gesamt-Flip-Einnahmen`)
+      select(Manager, `Hypothetisches Team-Flip-Potenzial`)
     
     DT::datatable(
       gesamt_flip,
@@ -983,6 +653,90 @@ server <- function(input, output, session) {
         "Kontostand",
         color = DT::styleInterval(0, c("red", "black")),
         fontWeight = DT::styleInterval(0, c("bold", NA))
+      )
+  })
+  
+  ## ---- Flip preview ----
+  output$flip_preview <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    df <- flip_data() %>%
+      group_by(Besitzer) %>%
+      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
+    
+    lim_min <- min(df$Gesamtgewinn, na.rm = TRUE) - 1e6
+    lim_max <- max(df$Gesamtgewinn, na.rm = TRUE) + 1e6
+    
+    ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
+      geom_col(show.legend = FALSE) +
+      geom_text(aes(label = format(Gesamtgewinn, big.mark = ".", scientific = FALSE),
+                    hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1))) +
+      coord_flip(ylim = c(lim_min, lim_max)) +
+      scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
+      theme_minimal() +
+      theme(axis.text.y = element_text(size = 15, color = "black"),
+            axis.text.x = element_text(size = 12, color = "black"),
+            plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black")) +
+      labs(title = "Flip Gewinne/Verluste", x = "", y = "")
+    
+  })
+  
+  ## ---- Gebote preview ----
+  output$gebote_preview <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent))
+    # Mittelwert über beide Typen je Bieter
+    mean_total <- plotdata %>%
+      group_by(Bieter) %>%
+      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+    # Mittelwerte je Typ
+    means <- plotdata %>%
+      group_by(Bieter, Typ) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      # Gesamter Mittelwert als gestrichelte Linie und Text
+      geom_hline(
+        data = mean_total,
+        aes(yintercept = Mean_total),
+        linetype = "dashed", color = "grey60", linewidth = 0.9,
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = mean_total,
+        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "grey30", # Dunkelrot
+        fontface = "bold",
+        size = 5,
+        nudge_x = 1,
+        inherit.aes = FALSE
+      ) +
+      # Mittelwert je Typ als Text (wie gehabt)
+      # geom_text(
+      #   data = means,
+      #   aes(x = Typ, y = Mean, label = round(Mean, 1)),
+      #   nudge_x = 0.3,
+      #   color = "black",
+      #   size = 4,
+      #   inherit.aes = FALSE
+      # ) +
+      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      labs(
+        title = "Bieterprofile",
+        x = "",
+        y = "Abweichung vom Vortags-MW (%)"
+      ) +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "bottom",
+        plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black"),
+        strip.text = element_text(face = "bold", size = 12),
+        axis.text.x = element_blank()
       )
   })
   
@@ -1334,6 +1088,18 @@ server <- function(input, output, session) {
         y = "Normierter MW",
         x = "Datum",
         color = "MW-Klasse"
+      )  + 
+      geom_vline(xintercept = as.numeric(Sys.Date() - 365), color = "darkred", linetype = "dashed", linewidth = 1) +
+      annotate(
+        "text",
+        x = Sys.Date() - 365,
+        y = 0.7,  # ggf. anpassen
+        label = "Heute vor 1 Jahr",
+        color = "darkred",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
       ) +
       scale_color_brewer(palette = "Paired") +
       coord_cartesian(ylim = c(0.7, 1.1)) +
@@ -1966,6 +1732,679 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  ## ---- Kaderwert-Entwicklung ----
+  manuelle_standings <- tibble::tibble(
+    Manager = rep(c(
+      "Thomas", "Alfons", "Christoph", "Pascal",
+      "Andreas", "Dominik", "Nico", "Christian"
+    ), each = 2),
+    Datum = rep(as.Date(c("2025-05-27", "2025-06-01")), times = 8),
+    Teamwert = c(
+      28170000, 49340000,  # Thomas
+      30770000, 47310000,  # Alfons
+      27380000, 52050000,  # Christoph
+      29200000, 42330000,  # Pascal
+      29210000, 36280000,  # Andreas
+      26960000, 40120000,  # Dominik
+      29470000, 41190000,  # Nico
+      26860000, 38500000   # Christian
+    )
+  )
+  
+  
+  standings_history_df <- reactive({
+    req(file.exists("STANDINGS.csv"))
+    
+    # CSV laden
+    original_df <- readr::read_csv2("STANDINGS.csv", col_types = cols(
+      Manager = col_character(),
+      Teamwert = col_double(),
+      Datum = col_character()
+    )) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+    
+    # Kombinieren mit manuellen Einträgen
+    bind_rows(original_df, manuelle_standings)
+  })
+  
+  output$kaderwert_plot <- renderPlot({
+    df <- standings_history_df() 
+    
+    ggplot(df, aes(x = Datum, y = Teamwert, color = Manager)) +
+      geom_line(linewidth = 1.2) +
+      geom_point(size = 2, alpha = 0.7) +
+      scale_color_brewer(palette = "Paired") +
+      labs(
+        title = "Kaderwert-Entwicklung",
+        subtitle = "Teamwert pro Manager über die Zeit",
+        x = "Datum",
+        y = "Teamwert (€)",
+        color = "Manager"
+      ) +
+      theme_minimal(base_size = 14)
+  })
+  
+  # ---- BIETERPROFILE ----
+  ## ---- MW-Klassen Boxplot+Beeswarm ----
+  output$mwclassplot <- renderPlot({
+    req(nrow(gebotsprofil_mwclass()) > 0)
+    
+    plotdata <- gebotsprofil_mwclass() %>%
+      filter(!is.na(Diff_Prozent)) %>%
+      mutate(
+        MW_Klasse = factor(MW_Klasse, levels = c(
+          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
+        ))
+      )
+    
+    # Für robustes beeswarm: Gruppengröße pro Facet
+    plotdata_beeswarm <- plotdata %>%
+      group_by(Bieter, MW_Klasse) %>%
+      mutate(n_pts = n()) %>%
+      ungroup()
+    
+    # Mittelwerte
+    means <- plotdata %>%
+      group_by(Bieter, MW_Klasse) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    # Mittelwert je MW-Klasse über alle Bieter
+    means_klasse <- plotdata %>%
+      group_by(MW_Klasse) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    # Anzahl Gebote über dem Mittelwert je MW-Klasse
+    plotdata_ueber <- plotdata %>%
+      left_join(means_klasse, by = "MW_Klasse") %>%
+      group_by(MW_Klasse) %>%
+      summarise(
+        pct_ueber = round(100 * sum(Diff_Prozent > Mean, na.rm = TRUE) / n(), 1),
+        n_total = n(),
+        .groups = "drop"
+      )
+    
+    
+    ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
+      geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
+      
+      # Beeswarm nur für Gruppen mit mehr als 1 Punkt
+      geom_beeswarm(
+        data = subset(plotdata_beeswarm, n_pts > 1),
+        cex = 2, size = 2.5, alpha = 0.8, priority = "random"
+      ) +
+      
+      # Einzelne Punkte (1 Wert pro Gruppe)
+      geom_point(
+        data = subset(plotdata_beeswarm, n_pts == 1),
+        size = 2.5, alpha = 0.8, shape = 21
+      ) +
+      
+      # Mittelwert-Linie
+      geom_segment(
+        data = means,
+        aes(x = as.numeric(factor(Bieter)) - 0.4, 
+            xend = as.numeric(factor(Bieter)) + 0.4, 
+            y = Mean, 
+            yend = Mean),
+        color = "grey30",
+        linetype = "dashed",
+        linewidth = 0.8,
+        inherit.aes = FALSE
+      ) +
+      
+      # Mittelwert-Wert als Text
+      geom_text(
+        data = means,
+        aes(x = as.numeric(factor(Bieter)), y = Mean, 
+            label = round(Mean, 1)),
+        color = "black",
+        fontface = "bold",
+        size = 3.5,
+        vjust = -0.7,
+        inherit.aes = FALSE
+      ) +
+      
+      # -- Mittelwert-Linie je MW-Klasse --
+      geom_hline(
+        data = means_klasse,
+        aes(yintercept = Mean),
+        color = "#d62728",
+        linewidth = 1.2,
+        linetype = "solid",
+        inherit.aes = FALSE
+      ) +
+      # Mittelwert-Wert je MW-Klasse als Text
+      geom_text(
+        data = means_klasse,
+        aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
+        hjust = 1.1,
+        vjust = -0.7,
+        color = "#d62728",
+        fontface = "bold",
+        size = 3.5,
+        inherit.aes = FALSE
+      ) +
+      # Hinzufügen von n über MW 
+      geom_text(
+        data = plotdata_ueber,
+        aes(x = -Inf, y = Inf, label = paste0(pct_ueber, "% (n=", n_total, ")")),
+        hjust = -0.1, vjust = 1.2,
+        color = "#333",
+        fontface = "bold",
+        size = 4,
+        inherit.aes = FALSE
+      ) +
+      
+      facet_grid(. ~ MW_Klasse, scales = "free_y") +
+      
+      labs(
+        title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
+        x = "Bieter",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "none",
+        strip.text = element_text(face = "bold", size = 16),
+        axis.text.x = element_text(angle = 30, hjust = 1)
+      )
+  })
+  
+  ## ---- Einzeln (Bieter, Typ) ----
+  output$beeswarm <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent))
+    # Mittelwert über beide Typen je Bieter
+    mean_total <- plotdata %>%
+      group_by(Bieter) %>%
+      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+    # Mittelwerte je Typ
+    means <- plotdata %>%
+      group_by(Bieter, Typ) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      # Gesamter Mittelwert als gestrichelte Linie und Text
+      geom_hline(
+        data = mean_total,
+        aes(yintercept = Mean_total),
+        linetype = "dashed", color = "grey60", linewidth = 0.9,
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = mean_total,
+        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "black", # Dunkelrot
+        fontface = "bold",
+        size = 5,
+        vjust = -0.25,
+        inherit.aes = FALSE
+      ) +
+      # Mittelwert je Typ als Text (wie gehabt)
+      geom_text(
+        data = means,
+        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
+        nudge_x = 0.4,
+        fontface = "bold",
+        size = 5,
+        inherit.aes = FALSE
+      ) +
+      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      labs(
+        title = "Gebotsabweichungen je Konkurrent",
+        x = "",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "bottom",
+        strip.text = element_text(face = "bold", size = 16)
+      )
+  })
+  
+  ## ---- Gebotsverhalten über die Zeit ----
+  
+  output$trendplot <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent)) %>%
+      mutate(Datum = as.Date(Datum)) # falls nicht schon Date
+    
+    ggplot(plotdata, aes(x = Datum, y = Diff_Prozent)) +
+      geom_point(alpha = 0.7, size = 2, color = "#1f77b4") +
+      geom_smooth(se = FALSE, method = "loess", span = 0.6, color = "#d62728", linewidth = 1.3) +
+      facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
+      labs(
+        title = "Entwicklung des Gebotsverhaltens über die Zeit",
+        x = "Datum",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      theme_minimal(base_size = 13) +
+      theme(
+        strip.text = element_text(face = "bold", size = 16)
+      )
+  })
+  
+  ## ---- Gebote pro Tag ----
+  
+  output$gebote_pro_tag <- renderPlot({
+    df <- gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+    
+    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, fill = Bieter)) +
+      geom_col(position = "stack", alpha = 0.7) +
+      labs(
+        title = "Anzahl aller Gebote pro Tag (gestapelt nach Bieter)",
+        x = "Datum",
+        y = "Gebote pro Tag",
+        fill = "Bieter"
+      ) +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  ## ---- Linienplot: Gebote je Konkurrent über Zeit ----
+  output$gebote_pro_tag_linie <- renderPlot({
+    df <- gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+    
+    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, color = Bieter)) +
+      geom_line(size = 1.2) +
+      geom_point(size = 2, alpha = 0.8) +
+      scale_color_brewer(palette = "Paired") +
+      labs(
+        title = "Gebote pro Tag je Konkurrent (Linienplot)",
+        x = "Datum",
+        y = "Gebote pro Tag",
+        color = "Bieter"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  ## ---- Durchschnittliche Gebotszahl pro Tag je Konkurrent ----
+  
+  gebote_tag_bieter <- reactive({
+    gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+  })
+  
+  
+  output$gebote_pro_tag_bieter <- renderPlot({
+    df <- gebote_tag_bieter()
+    ggplot(df, aes(x = Bieter, y = Anzahl_Gebote, color = Bieter, fill = Bieter)) +
+      geom_boxplot(width = 0.5, alpha = 0.2, outlier.shape = NA) +
+      ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      labs(
+        title = "Gebotsanzahl pro Tag je Konkurrent (Boxplot + Beeswarm)",
+        x = "Bieter",
+        y = "Gebote pro Tag"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 14) +
+      theme(legend.position = "none", axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  ## ---- Aktive Tage pro Spieler ----
+  
+  output$aktive_tage_plot <- renderPlot({
+    aktive_tage <- gebotsprofil_clean() %>%
+      group_by(Bieter) %>%
+      summarise(Aktive_Tage = n_distinct(Datum)) %>%
+      arrange(desc(Aktive_Tage))
+    
+    ggplot(aktive_tage, aes(x = reorder(Bieter, -Aktive_Tage), y = Aktive_Tage, fill = Bieter)) +
+      geom_col(show.legend = FALSE) +
+      labs(
+        title = "Anzahl aktiver Tage pro Spieler (mind. 1 Gebot/Tag)",
+        x = "Bieter",
+        y = "Aktive Tage"
+      ) +
+      scale_fill_brewer(palette = "Paired") +
+      theme_minimal(base_size = 14)
+  })
+  
+  
+  
+  ## ---- Gebots-Peaks ----
+  
+  output$peak_days_heatmap <- renderPlot({
+    # Alle möglichen Kombinationen Bieter x Datum erzeugen (auch 0 Gebote!)
+    all_dates <- seq.Date(
+      min(gebotsprofil_clean()$Datum, na.rm = TRUE),
+      max(gebotsprofil_clean()$Datum, na.rm = TRUE),
+      by = "day"
+    )
+    alle_bieter <- unique(gebotsprofil_clean()$Bieter)
+    full_grid <- expand.grid(Datum = all_dates, Bieter = alle_bieter, stringsAsFactors = FALSE)
+    
+    # Tatsächliche Gebotszahlen einfügen
+    gebote_tage <- gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl_Gebote = n(), .groups = "drop")
+    full_heat <- full_grid %>%
+      left_join(gebote_tage, by = c("Datum", "Bieter")) %>%
+      mutate(Anzahl_Gebote = replace_na(Anzahl_Gebote, 0))
+    
+    # Markierung Wochenende und Saisonstart (z.B. 22.08.2025)
+    full_heat <- full_heat %>%
+      mutate(
+        Wochentag = weekdays(Datum, abbreviate = TRUE),
+        Wochenende = Wochentag %in% c("Sa", "So"),
+        Saisonstart = Datum == as.Date("2025-08-22")
+      )
+    
+    ggplot(full_heat, aes(x = Datum, y = Bieter, fill = Anzahl_Gebote)) +
+      geom_tile(color = "grey90") +
+      # Saisonstart als Outline
+      geom_tile(data = filter(full_heat, Saisonstart), color = "black", size = 1.2, fill = NA) +
+      # Wochenenden als Punkt-Overlay (optional, für bessere Sichtbarkeit)
+      geom_point(
+        data = filter(full_heat, Wochenende), aes(x = Datum, y = Bieter),
+        shape = 21, fill = "transparent", color = "black", size = 2, stroke = 1, inherit.aes = FALSE
+      ) +
+      scale_fill_gradient(
+        low = "white",
+        high = "#e41a1c",   # kräftiges Rot für viele Gebote
+        breaks = scales::pretty_breaks(n = 4)
+      ) +
+      labs(
+        title = "Gebots-Aktivität aller Spieler über die Zeit (Heatmap)",
+        x = "Datum",
+        y = "Bieter",
+        fill = "Gebote"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      )
+  })
+  
+  ## ---- Zusammenfassung als Tabelle ohne MW Klassen ----
+  output$mwclass_summary <- renderDT({
+    
+    # Priorität: show_entries aktiviert → gebotsprofil_clean()-Tabelle anzeigen
+    if (!is.null(input$show_entries) && input$show_entries) {
+      
+      dat <- gebotsprofil_clean() %>%
+        group_by(Bieter) %>%
+        summarise(
+          Anzahl_gesamt = n(),
+          Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+          Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+          Durchschnittsgebot = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+          Min = min(Diff_Prozent, na.rm = TRUE),
+          Max = max(Diff_Prozent, na.rm = TRUE),
+          Transfers = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
+        )
+      
+      datatable(dat, options = list(pageLength = 100))
+      
+    } else if (!is.null(input$show_table) && input$show_table) {
+      
+      datatable(mwclass_summary(), options = list(pageLength = 100))
+      
+    } else {
+      
+      dat <- gebotsprofil_clean() %>%
+        group_by(Bieter) %>%
+        summarise(
+          Anzahl_gesamt = n(),
+          Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+          Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+          Durchschnittsgebot = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+          Min = min(Diff_Prozent, na.rm = TRUE),
+          Max = max(Diff_Prozent, na.rm = TRUE)
+        )
+      
+      datatable(dat, options = list(pageLength = 100))
+    }
+  })
+  
+  
+  
+  # ---- FLIP-ANALYSE ----
+  
+  # -- Flip-Gewinn vorbereiten (angenommen Einkaufspreise und Verkäufe in transfers)
+  flip_data <- reactive({
+    req(data_all())
+    transfers <- data_all()$transfers
+    
+    # Käufe (nur echte Käufe durch Manager)
+    einkaeufe <- transfers %>%
+      filter(Hoechstbietender != "Computer") %>%
+      select(Spieler, Einkaufsdatum = Datum, Einkaufspreis = Hoechstgebot, Besitzer = Hoechstbietender) %>%
+      arrange(Besitzer, Spieler, Einkaufsdatum)
+    
+    # Verkäufe
+    verkaeufe <- transfers %>%
+      filter(Besitzer != Hoechstbietender) %>%
+      select(Spieler, Verkaufsdatum = Datum, Verkaufspreis = Hoechstgebot, Besitzer)
+    
+    # Flip-Paare bauen
+    flips <- list()
+    
+    for (i in 1:nrow(verkaeufe)) {
+      verkauf <- verkaeufe[i, ]
+      
+      # Suche den frühesten unbenutzten Kauf
+      kauf_kandidat <- einkaeufe %>%
+        filter(Spieler == verkauf$Spieler,
+               Besitzer == verkauf$Besitzer,
+               Einkaufsdatum < verkauf$Verkaufsdatum) %>%
+        arrange(Einkaufsdatum) %>%
+        slice(1)
+      
+      if (nrow(kauf_kandidat) == 1) {
+        # Flip speichern
+        flips[[length(flips) + 1]] <- data.frame(
+          Spieler = verkauf$Spieler,
+          Besitzer = verkauf$Besitzer,
+          Einkaufsdatum = kauf_kandidat$Einkaufsdatum,
+          Einkaufspreis = kauf_kandidat$Einkaufspreis,
+          Verkaufsdatum = verkauf$Verkaufsdatum,
+          Verkaufspreis = verkauf$Verkaufspreis,
+          Gewinn = verkauf$Verkaufspreis - kauf_kandidat$Einkaufspreis
+        )
+        
+        # Den Kauf aus der Liste entfernen (= "verbraucht")
+        einkaeufe <- einkaeufe %>%
+          filter(!(Spieler == kauf_kandidat$Spieler &
+                     Besitzer == kauf_kandidat$Besitzer &
+                     Einkaufsdatum == kauf_kandidat$Einkaufsdatum))
+      }
+    }
+    
+    if (length(flips) > 0) {
+      bind_rows(flips)
+    } else {
+      data.frame()  # leeres DF wenn keine Flips
+    }
+  })
+  
+  
+  ## ---- Flip-Gesamtsumme ----
+  ## -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
+  output$flip_summarybar <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    flip_data() %>%
+      group_by(Besitzer) %>%
+      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE)) %>%
+      ggplot(aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
+      geom_col(show.legend = FALSE) +
+      geom_text(aes(label = round(Gesamtgewinn, 0), 
+                    hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)), 
+                position = position_dodge(width = 1)) +
+      scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
+      coord_flip() +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_text(size = 16, face = "bold", color = "black"),
+        axis.text.x = element_text(size = 16),
+        plot.title = element_text(size = 16, face = "bold")
+      ) +
+      labs(
+        title = "Flip-Gewinn/Verlust je Comunio-Spieler (gesamt)",
+        x = "",
+        y = "Gewinn/Verlust (€)"
+      ) 
+  })
+  
+  
+  ## ---- Flip-Verlauf kummuliert über Zeit ----
+  output$flip_cumulative <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    flip_data() %>%
+      arrange(Besitzer, Verkaufsdatum) %>%
+      group_by(Besitzer) %>%
+      mutate(Kumuliert = cumsum(Gewinn)) %>%
+      ungroup() %>%
+      ggplot(aes(x = Verkaufsdatum, y = Kumuliert, color = Besitzer)) +
+      geom_line(linewidth = 1.2) +
+      geom_point(size = 2, alpha = 0.7) +
+      scale_color_brewer(palette = "Paired") +
+      labs(
+        title = "Kumulierte Flip-Gewinne über die Zeit je Spieler",
+        x = "Datum",
+        y = "Kumulierte Gewinne (€)",
+        color = "Spieler"
+      ) +
+      theme_minimal(base_size = 14)
+  })
+  
+  ## ---- Flip-Effizienz (mit Kategorien) ----
+  output$flip_effizienz <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    
+    flip_data() %>%
+      mutate(
+        Flip_Kategorie = case_when(
+          abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
+          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
+          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
+          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
+          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
+        ),
+        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+        Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+      ) %>%
+      mutate(
+        Flip_Label = factor(Flip_Label, levels = c(
+          "Gewinn - Micro-Flip <25k",
+          "Gewinn - Mini-Flip 25–99k",
+          "Gewinn - Klein-Flip 100–249k",
+          "Gewinn - Mittel-Flip 250–499k",
+          "Gewinn - Mega-Flip ≥500k",
+          "Verlust - Micro-Flip <25k",
+          "Verlust - Mini-Flip 25–99k",
+          "Verlust - Klein-Flip 100–249k",
+          "Verlust - Mittel-Flip 250–499k",
+          "Verlust - Mega-Flip ≥500k"
+        ))
+      ) %>%
+      count(Besitzer, Flip_Label) %>%
+      ggplot(aes(x = Besitzer, y = n, fill = Flip_Label)) +
+      geom_col(position = "stack") +
+      scale_fill_manual(
+        values = c(
+          "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
+          "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
+          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
+          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
+          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
+          "Verlust - Micro-Flip <25k"      = "#ffcdd2",
+          "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
+          "Verlust - Klein-Flip 100–249k"  = "#e57373",
+          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
+          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
+        )
+      ) +
+      labs(
+        title = "Anzahl kumuliert",
+        x = "",
+        y = "Anzahl Flips",
+        fill = "Flip-Art"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  })
+  
+  
+  
+  ## ---- FLIP-Kumuliert je Flip-Art ----
+  output$flip_cumcat <- renderPlot({
+    req(nrow(flip_data()) > 0)
+    flip_data() %>%
+      mutate(
+        Flip_Kategorie = case_when(
+          abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
+          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
+          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
+          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
+          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
+        ),
+        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+        Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
+      ) %>%
+      mutate(
+        Flip_Label = factor(Flip_Label, levels = c(
+          "Gewinn - Micro-Flip <25k",
+          "Gewinn - Mini-Flip 25–99k",
+          "Gewinn - Klein-Flip 100–249k",
+          "Gewinn - Mittel-Flip 250–499k",
+          "Gewinn - Mega-Flip ≥500k",
+          "Verlust - Micro-Flip <25k",
+          "Verlust - Mini-Flip 25–99k",
+          "Verlust - Klein-Flip 100–249k",
+          "Verlust - Mittel-Flip 250–499k",
+          "Verlust - Mega-Flip ≥500k"
+        ))
+      ) %>%
+      group_by(Besitzer, Flip_Label) %>%
+      summarise(Summe = sum(Gewinn), .groups = "drop") %>%
+      ggplot(aes(x = Besitzer, y = Summe, fill = Flip_Label)) +
+      geom_col(position = "stack") +
+      labs(
+        title = "Gewinne/Verluste kumuliert",
+        x = "",
+        y = "Summe Gewinn/Verlust (€)",
+        fill = "Flip-Art"
+      ) +
+      scale_fill_manual(
+        values = c(
+          "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
+          "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
+          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
+          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
+          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
+          "Verlust - Micro-Flip <25k"      = "#ffcdd2",
+          "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
+          "Verlust - Klein-Flip 100–249k"  = "#e57373",
+          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
+          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
+        )
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1),
+            legend.position = "none")
+  })
+  
   ## ---- Hypothetischer Kader-Fip ----
   output$flip_kader <- DT::renderDT({
     teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
@@ -2092,282 +2531,6 @@ server <- function(input, output, session) {
     )
   })
   
-  
-  ## ---- Kaderwert-Entwicklung ----
-  manuelle_standings <- tibble::tibble(
-    Manager = rep(c(
-      "Thomas", "Alfons", "Christoph", "Pascal",
-      "Andreas", "Dominik", "Nico", "Christian"
-    ), each = 2),
-    Datum = rep(as.Date(c("2025-05-27", "2025-06-01")), times = 8),
-    Teamwert = c(
-      28170000, 49340000,  # Thomas
-      30770000, 47310000,  # Alfons
-      27380000, 52050000,  # Christoph
-      29200000, 42330000,  # Pascal
-      29210000, 36280000,  # Andreas
-      26960000, 40120000,  # Dominik
-      29470000, 41190000,  # Nico
-      26860000, 38500000   # Christian
-    )
-  )
-  
-  
-  standings_history_df <- reactive({
-    req(file.exists("STANDINGS.csv"))
-    
-    # CSV laden
-    original_df <- readr::read_csv2("STANDINGS.csv", col_types = cols(
-      Manager = col_character(),
-      Teamwert = col_double(),
-      Datum = col_character()
-    )) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
-    
-    # Kombinieren mit manuellen Einträgen
-    bind_rows(original_df, manuelle_standings)
-  })
-  
-  output$kaderwert_plot <- renderPlot({
-    df <- standings_history_df() 
-    
-    ggplot(df, aes(x = Datum, y = Teamwert, color = Manager)) +
-      geom_line(linewidth = 1.2) +
-      geom_point(size = 2, alpha = 0.7) +
-      scale_color_brewer(palette = "Paired") +
-      labs(
-        title = "Kaderwert-Entwicklung",
-        subtitle = "Teamwert pro Manager über die Zeit",
-        x = "Datum",
-        y = "Teamwert (€)",
-        color = "Manager"
-      ) +
-      theme_minimal(base_size = 14)
-  })
-  
-  # ---- FLIP-ANALYSE ----
-  
-  # -- Flip-Gewinn vorbereiten (angenommen Einkaufspreise und Verkäufe in transfers)
-  flip_data <- reactive({
-    req(data_all())
-    transfers <- data_all()$transfers
-    
-    # Käufe (nur echte Käufe durch Manager)
-    einkaeufe <- transfers %>%
-      filter(Hoechstbietender != "Computer") %>%
-      select(Spieler, Einkaufsdatum = Datum, Einkaufspreis = Hoechstgebot, Besitzer = Hoechstbietender) %>%
-      arrange(Besitzer, Spieler, Einkaufsdatum)
-    
-    # Verkäufe
-    verkaeufe <- transfers %>%
-      filter(Besitzer != Hoechstbietender) %>%
-      select(Spieler, Verkaufsdatum = Datum, Verkaufspreis = Hoechstgebot, Besitzer)
-    
-    # Flip-Paare bauen
-    flips <- list()
-    
-    for (i in 1:nrow(verkaeufe)) {
-      verkauf <- verkaeufe[i, ]
-      
-      # Suche den frühesten unbenutzten Kauf
-      kauf_kandidat <- einkaeufe %>%
-        filter(Spieler == verkauf$Spieler,
-               Besitzer == verkauf$Besitzer,
-               Einkaufsdatum < verkauf$Verkaufsdatum) %>%
-        arrange(Einkaufsdatum) %>%
-        slice(1)
-      
-      if (nrow(kauf_kandidat) == 1) {
-        # Flip speichern
-        flips[[length(flips) + 1]] <- data.frame(
-          Spieler = verkauf$Spieler,
-          Besitzer = verkauf$Besitzer,
-          Einkaufsdatum = kauf_kandidat$Einkaufsdatum,
-          Einkaufspreis = kauf_kandidat$Einkaufspreis,
-          Verkaufsdatum = verkauf$Verkaufsdatum,
-          Verkaufspreis = verkauf$Verkaufspreis,
-          Gewinn = verkauf$Verkaufspreis - kauf_kandidat$Einkaufspreis
-        )
-        
-        # Den Kauf aus der Liste entfernen (= "verbraucht")
-        einkaeufe <- einkaeufe %>%
-          filter(!(Spieler == kauf_kandidat$Spieler &
-                     Besitzer == kauf_kandidat$Besitzer &
-                     Einkaufsdatum == kauf_kandidat$Einkaufsdatum))
-      }
-    }
-    
-    if (length(flips) > 0) {
-      bind_rows(flips)
-    } else {
-      data.frame()  # leeres DF wenn keine Flips
-    }
-  })
-  
-  
-  ## ---- Flip-Gesamtsumme ----
-  ## -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
-  output$flip_summarybar <- renderPlot({
-    req(nrow(flip_data()) > 0)
-    
-    flip_data() %>%
-      group_by(Besitzer) %>%
-      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE)) %>%
-      ggplot(aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
-      geom_col(show.legend = FALSE) +
-      geom_text(aes(label = round(Gesamtgewinn, 0), 
-                    hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)), 
-                position = position_dodge(width = 1)) +
-      scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
-      coord_flip() +
-      labs(
-        title = "Flip-Gewinn/Verlust je Comunio-Spieler (gesamt)",
-        x = "Spieler",
-        y = "Gewinn/Verlust (€)"
-      ) +
-      theme_minimal(base_size = 14)
-  })
-  
-  
-  ## ---- Flip-Verlauf kummuliert über Zeit ----
-  output$flip_cumulative <- renderPlot({
-    req(nrow(flip_data()) > 0)
-    
-    flip_data() %>%
-      arrange(Besitzer, Verkaufsdatum) %>%
-      group_by(Besitzer) %>%
-      mutate(Kumuliert = cumsum(Gewinn)) %>%
-      ungroup() %>%
-      ggplot(aes(x = Verkaufsdatum, y = Kumuliert, color = Besitzer)) +
-      geom_line(linewidth = 1.2) +
-      geom_point(size = 2, alpha = 0.7) +
-      scale_color_brewer(palette = "Paired") +
-      labs(
-        title = "Kumulierte Flip-Gewinne über die Zeit je Spieler",
-        x = "Datum",
-        y = "Kumulierte Gewinne (€)",
-        color = "Spieler"
-      ) +
-      theme_minimal(base_size = 14)
-  })
-  
-  ## ---- Flip-Effizienz (mit Kategorien) ----
-  output$flip_effizienz <- renderPlot({
-    req(nrow(flip_data()) > 0)
-    
-    flip_data() %>%
-      mutate(
-        Flip_Kategorie = case_when(
-          abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
-          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
-          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
-          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
-          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
-        ),
-        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
-        Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
-      ) %>%
-      mutate(
-        Flip_Label = factor(Flip_Label, levels = c(
-          "Gewinn - Micro-Flip <25k",
-          "Gewinn - Mini-Flip 25–99k",
-          "Gewinn - Klein-Flip 100–249k",
-          "Gewinn - Mittel-Flip 250–499k",
-          "Gewinn - Mega-Flip ≥500k",
-          "Verlust - Micro-Flip <25k",
-          "Verlust - Mini-Flip 25–99k",
-          "Verlust - Klein-Flip 100–249k",
-          "Verlust - Mittel-Flip 250–499k",
-          "Verlust - Mega-Flip ≥500k"
-        ))
-      ) %>%
-      count(Besitzer, Flip_Label) %>%
-      ggplot(aes(x = Besitzer, y = n, fill = Flip_Label)) +
-      geom_col(position = "stack") +
-      scale_fill_manual(
-        values = c(
-          "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
-          "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
-          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
-          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
-          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
-          "Verlust - Micro-Flip <25k"      = "#ffcdd2",
-          "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
-          "Verlust - Klein-Flip 100–249k"  = "#e57373",
-          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
-          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
-        )
-      ) +
-      labs(
-        title = "Flip-Ergebnis nach Kategorien je Spieler",
-        x = "Spieler",
-        y = "Anzahl Flips",
-        fill = "Ergebnis - Kategorie"
-      ) +
-      theme_minimal(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  
-  
-  ## ---- FLIP-Kumuliert je Flip-Art ----
-  output$flip_cumcat <- renderPlot({
-    req(nrow(flip_data()) > 0)
-    flip_data() %>%
-      mutate(
-        Flip_Kategorie = case_when(
-          abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
-          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
-          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
-          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
-          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
-        ),
-        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
-        Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
-      ) %>%
-      mutate(
-        Flip_Label = factor(Flip_Label, levels = c(
-          "Gewinn - Micro-Flip <25k",
-          "Gewinn - Mini-Flip 25–99k",
-          "Gewinn - Klein-Flip 100–249k",
-          "Gewinn - Mittel-Flip 250–499k",
-          "Gewinn - Mega-Flip ≥500k",
-          "Verlust - Micro-Flip <25k",
-          "Verlust - Mini-Flip 25–99k",
-          "Verlust - Klein-Flip 100–249k",
-          "Verlust - Mittel-Flip 250–499k",
-          "Verlust - Mega-Flip ≥500k"
-        ))
-      ) %>%
-      group_by(Besitzer, Flip_Label) %>%
-      summarise(Summe = sum(Gewinn), .groups = "drop") %>%
-      ggplot(aes(x = Besitzer, y = Summe, fill = Flip_Label)) +
-      geom_col(position = "stack") +
-      labs(
-        title = "Kumulierte Flip-Gewinne/Verluste je Spieler und Flip-Art",
-        x = "Spieler",
-        y = "Summe Gewinn/Verlust (€)",
-        fill = "Flip-Art"
-      ) +
-      scale_fill_manual(
-        values = c(
-          "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
-          "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
-          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
-          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
-          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
-          "Verlust - Micro-Flip <25k"      = "#ffcdd2",
-          "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
-          "Verlust - Klein-Flip 100–249k"  = "#e57373",
-          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
-          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
-        )
-      ) +
-      theme_minimal(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  
   ## ---- Flip-Historie je Spieler ----
   output$flip_player_table <- renderDT({
     req(input$flip_player_select)
@@ -2381,6 +2544,8 @@ server <- function(input, output, session) {
         colnames = c("Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Gewinn/Verlust (€)")
       )
   })
+  
+  # ---- KAPITALÜBERSICHT ----
   
   ## ---- Kontostände je Spieler ----
   
