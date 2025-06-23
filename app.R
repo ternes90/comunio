@@ -4,6 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
+library(shinyjs)
 
 # ---- Custom JS für Copy-Button ----
 jsCode <- "
@@ -26,6 +27,7 @@ Shiny.addCustomMessageHandler('copyText', function(message) {
 ui <- navbarPage(
   "Comunio Analyse",
   id = "main_navbar",
+  shinyjs::useShinyjs(),
   
   ## ---- Dashboard ----
   tabPanel("Dashboard",
@@ -35,7 +37,7 @@ ui <- navbarPage(
                column(6, DTOutput("kreditrahmen_uebersicht_preview"))
              ),
              fluidRow(
-               column(6, uiOutput("mein_team_tabelle_preview")),
+               column(6, DTOutput("mein_team_tabelle_preview")),
                column(6, DTOutput("transfermarkt_preview"))
              ),
              fluidRow(
@@ -77,20 +79,18 @@ ui <- navbarPage(
   ## ---- Transfermarkt ----
   tabPanel("Transfermarkt",
            tabPanel("Transfermarkt Details",
-                    h3("Transfermarkt – alle Details"),
-                    p("Hier findest du alle verfügbaren Informationen zum aktuellen Transfermarkt."),
                     DTOutput("transfermarkt_detail")
            )
-           
-           
   ),
 
   
   ## ---- Kader-Entwicklung ----
   tabPanel("Kader-Entwicklung",
            tabsetPanel(
+             id = "kader_tabs",
              tabPanel("Mein Kader", uiOutput("mein_kader")),
              tabPanel("Alle Kader", uiOutput("kader_uebersicht_ui")),
+             tabPanel("Hypothetischer Kader-Flip", DTOutput("flip_kader"), width = 100),
              tabPanel("Kaderwert-Plot", plotOutput("kaderwert_plot", height = 600))
            )
   ),
@@ -99,8 +99,8 @@ ui <- navbarPage(
   ## ---- Bieterprofile ----
   tabPanel("Bieterprofile",
            tabsetPanel(
-             tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
              tabPanel("MW-Klassen", plotOutput("mwclassplot", height = 700)),
+             tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
              tabPanel("Gebots-Frequenz",
                       plotOutput("gebote_pro_tag", height = 350),
@@ -151,13 +151,24 @@ ui <- navbarPage(
                           DTOutput("flip_player_table")
                         )
                       )
-             ),
-             tabPanel("Kapitalübersicht",
-                      DTOutput("kapital_uebersicht_table"),
              )
              
            )
-  )
+  ),
+  
+  ## ---- Kapitalübersicht ----
+  tabPanel("Kapitalübersicht",
+           fluidPage(
+             DTOutput("kapital_uebersicht_table")
+           )
+  ),
+  # UI-Seite oder tags$head einfügen
+  tags$script(HTML("
+  $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
+    Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
+  });
+"))
+  
 )
 
 
@@ -171,50 +182,38 @@ server <- function(input, output, session) {
     # Prüfe, ob eine Zeile ausgewählt wurde
     if (!is.null(input$transfermarkt_preview_rows_selected)) {
       updateNavbarPage(session, "main_navbar", "Transfermarkt")
-      # Optional: Du kannst die Zeilennummer oder Daten mit übergeben
-      # selected_row <- input$transfermarkt_preview_rows_selected
-      # selected_data <- tm_df[selected_row, ]
-      # -> im Detailtab anzeigen!
     }
   })
+  
+  # Link vom Dashboard zum Kader tab
+  # Alle
+  observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
+    updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
+    # Verzögerung einbauen, damit Tabset geladen ist:
+    shinyjs::delay(200, {
+      updateTabsetPanel(session, "kader_tabs", "Hypothetischer Kader-Flip")
+    })
+  })
+  
+  # Meiner
+  observeEvent(input$mein_team_tabelle_preview_rows_selected, {
+    # egal was ausgewählt wird, Tabwechsel:
+    updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
+    shinyjs::delay(200, {
+      updateTabsetPanel(session, "kader_tabs", "Mein Kader")
+    })
+  })
+  
+  # Kapitalübersicht
+  observeEvent(input$kapital_table_cell_clicked, {
+    updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
+  })
+  
+  
   
   # ---- DATEN / df / list ----
   
   ## ---- Transfermarkt daten ----
-  # Mapping von Vereinsnamen zu Dateinamen
-  logo_map <- c(
-    "1. FC Köln" = "1 FC Köln.png",
-    "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
-    "Borussia Dortmund" = "Borussia Dortmund.png",
-    "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
-    "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
-    "FC Augsburg" = "FC Augsburg.png",
-    "FC Bayern München" = "FC Bayern München.png",
-    "Hamburger SV" = "Hamburger SV.png",
-    "1.FC Heidenheim" = "Heidenheim.png",
-    "RB Leipzig" = "Leipzig.png",
-    "1. FSV Mainz 05" = "Mainz 05.png",
-    "Sport-Club Freiburg" = "SC Freiburg.png",
-    "FC St. Pauli" = "St Pauli.png",
-    "SV Werder Bremen" = "SV Werder Bremen.png",
-    "TSG Hoffenheim" = "TSG Hoffenheim.png",
-    "1.FC Union Berlin" = "Union Berlin.png",
-    "VfB Stuttgart" = "VfB Stuttgart.png",
-    "VfL Wolfsburg" = "VfL Wolfsburg.png"
-  )
-  
-  #PPS
-  ca_df <- read_delim("com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
-  ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
-  
-  ca_df <- ca_df %>%
-    select(
-      SPIELER,
-      Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
-      Preis_Leistung = `PREIS-LEISTUNG`,
-      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
-    )
-  
   
   ## ---- sommerpause_df ----
   sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
@@ -401,63 +400,6 @@ server <- function(input, output, session) {
   }
   
   # ---- BIETERPROFILE ----
-  ## ---- Einzeln (Bieter, Typ) ----
-  output$beeswarm <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent))
-    # Mittelwert über beide Typen je Bieter
-    mean_total <- plotdata %>%
-      group_by(Bieter) %>%
-      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
-    # Mittelwerte je Typ
-    means <- plotdata %>%
-      group_by(Bieter, Typ) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
-      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      # Gesamter Mittelwert als gestrichelte Linie und Text
-      geom_hline(
-        data = mean_total,
-        aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9,
-        inherit.aes = FALSE
-      ) +
-      geom_text(
-        data = mean_total,
-        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "black", # Dunkelrot
-        fontface = "bold",
-        size = 5,
-        vjust = -0.25,
-        inherit.aes = FALSE
-      ) +
-      # Mittelwert je Typ als Text (wie gehabt)
-      geom_text(
-        data = means,
-        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
-        nudge_x = 0.4,
-        fontface = "bold",
-        size = 5,
-        inherit.aes = FALSE
-      ) +
-      facet_wrap(~ Bieter, ncol = 4) +
-      labs(
-        title = "Gebotsabweichungen je Konkurrent",
-        x = "",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      theme_minimal(base_size = 13) +
-      theme(
-        legend.position = "bottom",
-        strip.text = element_text(face = "bold", size = 16)
-      )
-  })
-  
   ## ---- MW-Klassen Boxplot+Beeswarm ----
   output$mwclassplot <- renderPlot({
     req(nrow(gebotsprofil_mwclass()) > 0)
@@ -582,6 +524,63 @@ server <- function(input, output, session) {
         legend.position = "none",
         strip.text = element_text(face = "bold", size = 16),
         axis.text.x = element_text(angle = 30, hjust = 1)
+      )
+  })
+  
+  ## ---- Einzeln (Bieter, Typ) ----
+  output$beeswarm <- renderPlot({
+    req(nrow(gebotsprofil_clean()) > 0)
+    plotdata <- gebotsprofil_clean() %>%
+      filter(!is.na(Diff_Prozent))
+    # Mittelwert über beide Typen je Bieter
+    mean_total <- plotdata %>%
+      group_by(Bieter) %>%
+      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+    # Mittelwerte je Typ
+    means <- plotdata %>%
+      group_by(Bieter, Typ) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      # Gesamter Mittelwert als gestrichelte Linie und Text
+      geom_hline(
+        data = mean_total,
+        aes(yintercept = Mean_total),
+        linetype = "dashed", color = "grey60", linewidth = 0.9,
+        inherit.aes = FALSE
+      ) +
+      geom_text(
+        data = mean_total,
+        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "black", # Dunkelrot
+        fontface = "bold",
+        size = 5,
+        vjust = -0.25,
+        inherit.aes = FALSE
+      ) +
+      # Mittelwert je Typ als Text (wie gehabt)
+      geom_text(
+        data = means,
+        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
+        nudge_x = 0.4,
+        fontface = "bold",
+        size = 5,
+        inherit.aes = FALSE
+      ) +
+      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      labs(
+        title = "Gebotsabweichungen je Konkurrent",
+        x = "",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "bottom",
+        strip.text = element_text(face = "bold", size = 16)
       )
   })
   
@@ -802,7 +801,7 @@ server <- function(input, output, session) {
   })
   
   ## ---- Mein Team ----
-  output$mein_team_tabelle_preview <- renderUI({
+  output$mein_team_tabelle_preview <- DT::renderDT({
     teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     df0 <- teams_df %>% filter(Manager == "Dominik")
     df0$Position <- factor(df0$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
@@ -813,30 +812,8 @@ server <- function(input, output, session) {
       filter(Datum == max(Datum, na.rm=TRUE)) %>%
       summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
     
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
-    
-    kaufpreise <- transfers %>%
-      filter(Hoechstbietender == "Dominik") %>%
-      group_by(Spieler) %>%
-      arrange(desc(Datum)) %>%
-      slice(1) %>%
-      select(Spieler, Kaufpreis = Hoechstgebot)
-    
     df_pre <- df0 %>%
-      left_join(mw_aktuell, by="Spieler") %>%
-      left_join(kaufpreise, by="Spieler") %>%
-      mutate(
-        Diff_Kauf = ifelse(is.na(Kaufpreis), NA, Marktwert_aktuell - Kaufpreis),
-        Diff_Kauf_fmt = ifelse(
-          is.na(Kaufpreis), "",
-          case_when(
-            Diff_Kauf > 0 ~ sprintf("<span style='color:#388e3c;'>+%s € seit Kauf</span>", format(Diff_Kauf, big.mark = ".", decimal.mark = ",")),
-            Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>–%s € seit Kauf</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
-            TRUE ~ "<span style='color:grey;'>±0 € seit Kauf</span>"
-          )
-        )
-      ) %>%
+      left_join(mw_aktuell, by = "Spieler") %>%
       left_join(
         gesamt_mw_roh %>%
           group_by(Spieler) %>%
@@ -846,83 +823,50 @@ server <- function(input, output, session) {
           slice(1) %>%
           ungroup() %>%
           mutate(
-            Marktwert_fmt = ifelse(is.na(Marktwert), "-", paste0(format(Marktwert, big.mark = ".", decimal.mark = ","), " €")),
             Diff_fmt = case_when(
               is.na(Diff) ~ "",
-              Diff > 0 ~ sprintf("<span style='color:#81c784;'>▲ %s €</span>", format(Diff, big.mark = ".", decimal.mark = ",")),
-              Diff < 0 ~ sprintf("<span style='color:#e57373;'>▼ %s €</span>", format(abs(Diff), big.mark = ".", decimal.mark = ",")),
-              TRUE ~ "<span style='color:grey;'>–</span>"
+              Diff > 0 ~ sprintf("▲ %s €", format(Diff, big.mark = ".", decimal.mark = ",")),
+              Diff < 0 ~ sprintf("▼ %s €", format(abs(Diff), big.mark = ".", decimal.mark = ",")),
+              TRUE ~ "–"
             )
           ) %>%
-          select(Spieler, Marktwert_fmt, Diff_fmt),
+          select(Spieler, Diff_fmt, Diff),
         by = "Spieler"
+      ) %>%
+      mutate(
+        Marktwert = ifelse(is.na(Marktwert_aktuell), "-", paste0(format(Marktwert_aktuell, big.mark = ".", decimal.mark = ","), " €"))
+      ) %>%
+      select(Position, Spieler, Marktwert, Diff_fmt, Diff)
+    
+    dat <- df_pre %>% arrange(Position, Spieler)
+    
+    DT::datatable(
+      dat %>% select(Position, Spieler, Marktwert, Diff_fmt),
+      rownames = FALSE,
+      escape = FALSE,
+      selection = "single",  
+      options = list(
+        pageLength = 25,
+        dom = "t",
+        ordering = FALSE
+      ),
+      colnames = c("Position", "Spieler", "Marktwert", "Tagesveränderung")
+    ) %>%
+      DT::formatStyle(
+        "Diff_fmt",
+        target = "cell",
+        color = DT::styleEqual(
+          c(grep("▲", dat$Diff_fmt, value = TRUE), grep("▼", dat$Diff_fmt, value = TRUE)),
+          c("#388e3c", "#e53935")[1 + grepl("▼", c(grep("▲", dat$Diff_fmt, value = TRUE), grep("▼", dat$Diff_fmt, value = TRUE)))]
+        ),
+        fontWeight = "bold"
       )
-    
-    grouped_sections <- lapply(split(df_pre, df_pre$Position), function(gruppe) {
-      pos_name <- unique(gruppe$Position)
-      zeilen <- split(seq_len(nrow(gruppe)), ceiling(seq_along(gruppe$Spieler) / 2))
-      rows <- lapply(zeilen, function(idxs) {
-        sp1 <- gruppe$Spieler[idxs[1]]
-        mw1 <- gruppe$Marktwert_fmt[idxs[1]]
-        diff1 <- gruppe$Diff_fmt[idxs[1]]
-        diffk1 <- gruppe$Diff_Kauf_fmt[idxs[1]]
-        if (length(idxs) > 1) {
-          sp2 <- gruppe$Spieler[idxs[2]]
-          mw2 <- gruppe$Marktwert_fmt[idxs[2]]
-          diff2 <- gruppe$Diff_fmt[idxs[2]]
-          diffk2 <- gruppe$Diff_Kauf_fmt[idxs[2]]
-        } else {
-          sp2 <- ""
-          mw2 <- ""
-          diff2 <- ""
-          diffk2 <- ""
-        }
-        sprintf(
-          "<tr>
-        <td style='padding:4px; width:35%%;'>%s</td>
-        <td style='padding:4px; width:15%%; text-align:right;'>
-          <div>%s</div>
-          <div style='font-size: 0.9em;'>%s</div>
-          <div style='font-size: 0.9em;'>%s</div>
-        </td>
-        <td style='padding:4px; width:35%%;'>%s</td>
-        <td style='padding:4px; width:15%%; text-align:right;'>
-          <div>%s</div>
-          <div style='font-size: 0.9em;'>%s</div>
-          <div style='font-size: 0.9em;'>%s</div>
-        </td>
-      </tr>",
-          sp1, mw1, diff1, diffk1,
-          sp2, mw2, diff2, diffk2
-        )
-      })
-      paste0(
-        sprintf("<tr><th colspan='4' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos_name),
-        paste(rows, collapse = "\n")
-      )
-    })
-    
-    table_html <- paste0(
-      "<table style='width:100%; border-collapse:collapse;'>",
-      "<thead><tr>
-    <th style='text-align:left;'>Spieler</th>
-    <th style='text-align:right;'>MW</th>
-    <th style='text-align:left;'>Spieler</th>
-    <th style='text-align:right;'>MW</th>
-    </tr></thead><tbody>",
-      paste(grouped_sections, collapse = "\n"),
-      "</tbody></table>"
-    )
-    
-    
-    tagList(
-      tags$h4("Mein Team (inkl. MW, Tagesveränderung & Differenz zum Kaufpreis)", style = "margin-top: 0; margin-bottom: 5px;"),
-      HTML(table_html)
-    )
-    
   })
   
-  ## ---- Gesammt Tabelle Flip-Übersicht aller Manager  ----
+  
+  
+  
+  ## ---- Gesamt Tabelle Flip-Übersicht aller Manager  ----
   output$flip_einnahmen_uebersicht_preview <- DT::renderDT({
     teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     
@@ -974,7 +918,8 @@ server <- function(input, output, session) {
           list(className = 'dt-right', targets = 1)
         )
       ),
-      escape = FALSE
+      escape = FALSE,
+      selection = "single"
     )
   })
   
@@ -1022,6 +967,7 @@ server <- function(input, output, session) {
       kapital_df,
       colnames = c("Manager", "Kontostand (€)", "Kreditrahmen (€)", "Verfügbares Kapital (€)"),
       rownames = FALSE,
+      selection = "single", 
       options = list(
         pageLength = 8,
         dom = "t",
@@ -1543,10 +1489,133 @@ server <- function(input, output, session) {
         "Historische Punkteausbeute" = Historische_Punkteausbeute
       )
     
+    #95% gebot
+    # 1. Transfers laden
+    transfers <- read.csv2("TRANSFERS_all.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>%
+      mutate(
+        Datum = as.Date(Datum, format = "%d.%m.%Y"),
+        Hoechstgebot = as.numeric(Hoechstgebot)
+      ) %>%
+      filter(!is.na(Hoechstgebot))
+    
+    # 2. Transfermarkt laden
+    transfermarkt <- read.csv2("TRANSFERMARKT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>%
+      mutate(
+        TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"),
+        Marktwert_num = as.numeric(gsub("\\.", "", Marktwert)) # sicherheitshalber
+      )
+    
+    # 3. Vortags-Marktwert ermitteln
+    # Angenommen, du willst das Vortagsdatum als das max(Datum)-1 nehmen:
+    max_datum <- max(transfers$Datum, na.rm = TRUE)
+    vortag <- max_datum - 1
+    
+    vortags_mw <- transfermarkt %>%
+      filter(TM_Stand == vortag) %>%
+      select(Spieler, Marktwert_num)
+    
+    # 5. Transfers mit Vortagsmarktwert joinen
+    transfers_mw <- transfers %>%
+      left_join(vortags_mw, by = "Spieler") %>%
+      filter(!is.na(Marktwert_num)) %>% # nur Spieler mit Vortags-MW
+      mutate(MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1)))
+    
+    # 6. 95%-Perzentil Höchstgebot je MW_Klasse berechnen
+    maxgebote_klasse <- transfers_mw %>%
+      group_by(MW_Klasse) %>%
+      summarise(Maximalgebot_95 = quantile(Hoechstgebot, probs = 0.95, na.rm = TRUE))
+    
+    # 7. Nun füge das in tm_trend ein:
+    tm_trend <- tm_trend %>%
+      left_join(maxgebote_klasse, by = "MW_Klasse") %>%
+      mutate(
+        Maximalgebot = ifelse(
+          is.na(Maximalgebot_95),
+          NA,
+          paste0(format(round(Maximalgebot_95), big.mark = ".", decimal.mark = ","), " €")
+        )
+      )
+    
+    # Maximalgebot runden
+    tm_trend$Maximalgebot_num_rounded <- round(tm_trend$Maximalgebot_95)
+    
+    # Prozentwert berechnen (bezogen auf Marktwert)
+    tm_trend$MaximalgebotProzent <- round(100 * (tm_trend$Maximalgebot_num_rounded / tm_trend$Marktwert_num - 1), 1)
+    
+    # HTML mit kleinem Prozentwert drunter bauen
+    tm_trend$Maximalgebot <- paste0(
+      format(tm_trend$Maximalgebot_num_rounded, big.mark = ".", decimal.mark = ","), " €",
+      '<br><span style="font-size: 85%; color: #666;">(',
+      ifelse(is.na(tm_trend$MaximalgebotProzent), "–",
+             ifelse(tm_trend$MaximalgebotProzent > 0, "+", "")),
+      ifelse(is.na(tm_trend$MaximalgebotProzent), "", tm_trend$MaximalgebotProzent),
+      "%)</span>"
+    )
+    
+    # 1. Beispiel: Bieterprofil-Daten vorbereiten (nur Durchschnitt pro MW_Klasse)
+    # Angenommen, bprofile_df enthält deine Tabelle mit Spalten MW_Klasse und Durchschnitt_Abweichung
+    # Hier als Beispiel:
+    bprofile_df <- tribble(
+      ~MW_Klasse, ~Durchschnitt_Abweichung,
+      "<0.5 Mio", 0.18,
+      "0.5–1 Mio", 1.18,
+      "1–2.5 Mio", 1.18,
+      "2.5–5 Mio", 1.18,
+      "5–10 Mio", 1.18,
+      ">10 Mio", 0.18
+    )
+    
+    # 2. Funktion zur MW-Klassenbestimmung (wie bei dir)
+    get_mw_klasse <- function(mw) {
+      if (mw < 5e5) {
+        "<0.5 Mio"
+      } else if (mw < 1e6) {
+        "0.5–1 Mio"
+      } else if (mw < 2.5e6) {
+        "1–2.5 Mio"
+      } else if (mw < 5e6) {
+        "2.5–5 Mio"
+      } else if (mw < 1e7) {
+        "5–10 Mio"
+      } else {
+        ">10 Mio"
+      }
+    }
+    
+    # 3. Beispiel: tm_trend mit Marktwert
+    # tm_trend <- ... (deine bestehende Tabelle mit Marktwert_num)
+    
+    # 4. MW-Klasse ergänzen
+    tm_trend <- tm_trend %>%
+      mutate(
+        MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1))
+      )
+    
+    # 5. Durchschnittliche Abweichung pro Klasse mergen
+    tm_trend <- tm_trend %>%
+      left_join(bprofile_df, by = "MW_Klasse")
+    
+    # 6. Mindestgebot berechnen (Marktwert * (1 + Durchschnitt_Abweichung / 100))
+    tm_trend <- tm_trend %>%
+      mutate(
+        Mindestgebot_empfohlen_num = round(Marktwert_num * (1 + Durchschnitt_Abweichung / 100)),
+        Minimalgebot = paste0(format(Mindestgebot_empfohlen_num, big.mark = ".", decimal.mark = ","), " €")
+      )
+    
+    # 7. Fallback: Wenn Durchschnitt_Abweichung fehlt, Mindestgebot = Marktwert
+    tm_trend <- tm_trend %>%
+      mutate(
+        Minimalgebot = ifelse(
+          is.na(Minimalgebot),
+          paste0(format(Marktwert_num, big.mark = ".", decimal.mark = ","), " €"),
+          Minimalgebot
+        )
+      )
+    
     
     DT::datatable(
-      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "IdealesGebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
-      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Ideales Gebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "Minimalgebot", "IdealesGebot", "Maximalgebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
+      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Minimalgebot", "Ideales Gebot", "Maximalgebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
       rownames = FALSE,
       escape = FALSE,
       options = list(
@@ -1564,20 +1633,47 @@ server <- function(input, output, session) {
         target = 'cell',
         color = DT::styleEqual("heute", "red"),
         fontWeight = DT::styleEqual("heute", "bold")
-      ) %>%
-      DT::formatStyle(
-        'Mindestgebot',
-        target = 'cell',
-        color = DT::styleEqual(
-          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "green"
-        )
       )
   })
   
   
   # ---- KADER-ENTWICKLUNG ----
-  
   ## ---- Mein Kader ----
+  
+  # Mapping von Vereinsnamen zu Dateinamen
+  logo_map <- c(
+    "1. FC Köln" = "1 FC Köln.png",
+    "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
+    "Borussia Dortmund" = "Borussia Dortmund.png",
+    "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
+    "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
+    "FC Augsburg" = "FC Augsburg.png",
+    "FC Bayern München" = "FC Bayern München.png",
+    "Hamburger SV" = "Hamburger SV.png",
+    "1.FC Heidenheim" = "Heidenheim.png",
+    "RB Leipzig" = "Leipzig.png",
+    "1. FSV Mainz 05" = "Mainz 05.png",
+    "Sport-Club Freiburg" = "SC Freiburg.png",
+    "FC St. Pauli" = "St Pauli.png",
+    "SV Werder Bremen" = "SV Werder Bremen.png",
+    "TSG Hoffenheim" = "TSG Hoffenheim.png",
+    "1.FC Union Berlin" = "Union Berlin.png",
+    "VfB Stuttgart" = "VfB Stuttgart.png",
+    "VfL Wolfsburg" = "VfL Wolfsburg.png"
+  )
+  
+  #PPS
+  ca_df <- read_delim("com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
+  ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
+  
+  ca_df <- ca_df %>%
+    select(
+      SPIELER,
+      Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
+      Preis_Leistung = `PREIS-LEISTUNG`,
+      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
+    )
+  
   output$mein_kader <- renderUI({
     teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     df0 <- teams_df %>% filter(Manager == "Dominik")
@@ -1630,7 +1726,7 @@ server <- function(input, output, session) {
               TRUE ~ "<span style='color:grey;'>–</span>"
             )
           ) %>%
-          select(Spieler, Marktwert_fmt, Diff_fmt),
+          select(Spieler, Verein, Marktwert_fmt, Diff_fmt),
         by = "Spieler"
       )
     
@@ -1649,11 +1745,12 @@ server <- function(input, output, session) {
     logo_dir <- "logos" # oder ggf. "www/logos", je nach Shiny-Ordnerstruktur
     
     # Logo erzeugen
-    df_pre$Logo <- paste0(
-      '<img src="', logo_dir, '/', logo_map[df_pre$Verein], 
-      '" width="28" title="', df_pre$Verein, '"/>'
+    df_pre$Logo <- ifelse(
+      is.na(logo_map[df_pre$Verein]) | logo_map[df_pre$Verein] == "",
+      "",
+      paste0('<img src="', logo_dir, '/', logo_map[df_pre$Verein], '" width="28" title="', df_pre$Verein, '"/>')
     )
-    df_pre$Logo[is.na(logo_map[df_pre$Verein])] <- ""
+    
     
     grouped_sections <- lapply(split(df_pre, df_pre$Position), function(gruppe) {
       pos_name <- unique(gruppe$Position)
@@ -1703,7 +1800,7 @@ server <- function(input, output, session) {
   <th style='text-align:center;'>Verein</th>
   <th style='text-align:center;'>Ø Punkte</th>
   <th style='text-align:center;'>Preis-Leistung</th>
-  <th style='text-align:center;'>Historie</th>
+  <th style='text-align:right;'>Historie</th>
   <th style='text-align:right;'>MW</th>
   <th style='text-align:right;'>Vortag-MW-Diff</th>
   <th style='text-align:right;'>Kauf-Diff</th>
@@ -1734,7 +1831,6 @@ server <- function(input, output, session) {
     
     
     tagList(
-      tags$h4("Mein Team (inkl. MW, Tagesveränderung & Differenz zum Kaufpreis)", style = "margin-top: 0; margin-bottom: 5px;"),
       HTML(table_html),
       tags$div(HTML(summe_fmt), style = "margin-top:12px; font-size:1.1em;")
     )
@@ -1745,30 +1841,103 @@ server <- function(input, output, session) {
   
   output$kader_uebersicht_ui <- renderUI({
     teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
-    
     manager_list <- sort(setdiff(unique(teams_df$Manager), "Dominik"))
     
+    # === MW/Transferdaten vorbereiten ===
+    mw_aktuell <- gesamt_mw_roh %>%
+      group_by(Spieler) %>%
+      filter(Datum == max(Datum, na.rm = TRUE)) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
+    
+    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+    
+    kaufpreise <- transfers %>%
+      group_by(Spieler, Hoechstbietender) %>%
+      arrange(desc(Datum)) %>%
+      slice(1) %>%
+      select(Spieler, Hoechstbietender, Kaufpreis = Hoechstgebot)
+    
+    # Vortag-MW-Diff (wie bei Mein Kader)
+    mw_diff <- gesamt_mw_roh %>%
+      group_by(Spieler) %>%
+      arrange(desc(Datum)) %>%
+      slice(1:2) %>%
+      mutate(Diff = Marktwert - lead(Marktwert)) %>%
+      slice(1) %>%
+      ungroup() %>%
+      mutate(
+        Marktwert_fmt = ifelse(is.na(Marktwert), "-", paste0(format(Marktwert, big.mark = ".", decimal.mark = ","), " €")),
+        Diff_fmt = case_when(
+          is.na(Diff) ~ "",
+          Diff > 0 ~ sprintf("<span style='color:#81c784;'>▲ %s €</span>", format(Diff, big.mark = ".", decimal.mark = ",")),
+          Diff < 0 ~ sprintf("<span style='color:#e57373;'>▼ %s €</span>", format(abs(Diff), big.mark = ".", decimal.mark = ",")),
+          TRUE ~ "<span style='color:grey;'>–</span>"
+        )
+      ) %>%
+      select(Spieler, Marktwert_fmt, Diff_fmt)
+    
+    # Funktion zur Erstellung der Kader-Tabelle pro Manager
     create_kader_table <- function(manager_name) {
       df <- teams_df %>% filter(Manager == manager_name)
       df$Position <- factor(df$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
       df <- df %>% arrange(Position, Spieler)
       
+      # Join MW, Diff und Kaufpreis-Diff
+      df_pre <- df %>%
+        left_join(mw_aktuell, by = "Spieler") %>%
+        left_join(mw_diff, by = "Spieler") %>%
+        left_join(kaufpreise %>% filter(Hoechstbietender == manager_name), by = "Spieler") %>%
+        mutate(
+          Diff_Kauf = ifelse(is.na(Kaufpreis), NA, Marktwert_aktuell - Kaufpreis),
+          Diff_Kauf_fmt = ifelse(
+            is.na(Kaufpreis), "",
+            case_when(
+              Diff_Kauf > 0 ~ sprintf("<span style='color:#388e3c;'>+%s €</span>", format(Diff_Kauf, big.mark = ".", decimal.mark = ",")),
+              Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>–%s €</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
+              TRUE ~ "<span style='color:grey;'>±0 €</span>"
+            )
+          )
+        )
+      
       rows <- c()
       current_pos <- NULL
-      for(i in seq_len(nrow(df))) {
-        pos <- as.character(df$Position[i])
-        spieler <- df$Spieler[i]
+      for(i in seq_len(nrow(df_pre))) {
+        pos <- as.character(df_pre$Position[i])
+        spieler <- df_pre$Spieler[i]
+        mw <- df_pre$Marktwert_fmt[i]
+        diff <- df_pre$Diff_fmt[i]
+        diffk <- df_pre$Diff_Kauf_fmt[i]
         if(is.null(current_pos) || pos != current_pos) {
-          rows <- c(rows, sprintf("<tr><th colspan='1' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos))
+          rows <- c(rows, sprintf("<tr><th colspan='4' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos))
           current_pos <- pos
         }
-        rows <- c(rows, sprintf("<tr><td style='padding-left:15px;'>%s</td></tr>", spieler))
+        rows <- c(
+          rows,
+          sprintf(
+            "<tr>
+            <td style='padding-left:15px;'>%s</td>
+            <td style='text-align:right;'>%s</td>
+            <td style='text-align:right;'>%s</td>
+            <td style='text-align:right;'>%s</td>
+          </tr>",
+            spieler, mw, diff, diffk
+          )
+        )
       }
       
       table_html <- paste0(
         "<table style='border-collapse: collapse; width: 100%; margin-bottom: 20px;'>",
+        "<thead>
+        <tr>
+          <th style='text-align:left;'>Spieler</th>
+          <th style='text-align:right;'>MW</th>
+          <th style='text-align:right;'>Vortag-MW-Diff</th>
+          <th style='text-align:right;'>Kauf-Diff</th>
+        </tr>
+      </thead><tbody>",
         paste(rows, collapse = "\n"),
-        "</table>"
+        "</tbody></table>"
       )
       
       tagList(
@@ -1779,10 +1948,8 @@ server <- function(input, output, session) {
     
     # Tabellen für alle Manager erstellen
     tables_ui <- lapply(manager_list, create_kader_table)
-    
     # Gruppen von jeweils 4 Tabellen in flex-containern (Reihen)
     rows_ui <- split(tables_ui, ceiling(seq_along(tables_ui) / 4))
-    
     # Jede Gruppe als flex-row mit 4 Spalten nebeneinander
     tagList(
       lapply(rows_ui, function(row_tables) {
@@ -1798,6 +1965,133 @@ server <- function(input, output, session) {
       })
     )
   })
+  
+  ## ---- Hypothetischer Kader-Fip ----
+  output$flip_kader <- DT::renderDT({
+    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+    
+    # Aktuelles Datum ermitteln (letzter Tag in gesamt_mw_roh)
+    aktuelles_datum <- max(gesamt_mw_roh$Datum, na.rm = TRUE)
+    vortag <- sort(unique(gesamt_mw_roh$Datum))
+    vortag <- vortag[which(vortag == aktuelles_datum) - 1]
+    
+    mw_aktuell <- gesamt_mw_roh %>%
+      filter(Datum == aktuelles_datum) %>%
+      group_by(Spieler) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
+    
+    mw_vortag <- gesamt_mw_roh %>%
+      filter(Datum == vortag) %>%
+      group_by(Spieler) %>%
+      summarise(Marktwert_vortag = first(Marktwert), .groups = "drop")
+    
+    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+    
+    kaufpreise <- transfers %>%
+      group_by(Spieler, Hoechstbietender) %>%
+      arrange(desc(Datum)) %>%
+      slice(1) %>%
+      select(Spieler, Manager = Hoechstbietender, Kaufpreis = Hoechstgebot)
+    
+    # Heute
+    df_all_heute <- teams_df %>%
+      left_join(mw_aktuell, by = "Spieler") %>%
+      left_join(kaufpreise, by = c("Spieler", "Manager")) %>%
+      mutate(Diff = Marktwert_aktuell - Kaufpreis)
+    
+    # Vortag
+    df_all_vortag <- teams_df %>%
+      left_join(mw_vortag, by = "Spieler") %>%
+      left_join(kaufpreise, by = c("Spieler", "Manager")) %>%
+      mutate(Diff = Marktwert_vortag - Kaufpreis)
+    
+    # Flip-Einnahmen heute und gestern, und Ø Flip pro Teamspieler
+    flip_today <- df_all_heute %>%
+      group_by(Manager) %>%
+      summarise(
+        sum_diff = sum(Diff, na.rm = TRUE),
+        team_size = n(),
+        .groups = "drop"
+      )
+    
+    flip_yesterday <- df_all_vortag %>%
+      group_by(Manager) %>%
+      summarise(
+        sum_diff_yesterday = sum(Diff, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    # Merge
+    gesamt_flip <- flip_today %>%
+      left_join(flip_yesterday, by = "Manager") %>%
+      mutate(
+        `Aktuelle hypothetische Gesamt-Flip-Einnahmen` = ifelse(
+          sum_diff > 0,
+          paste0("+", format(sum_diff, big.mark = ".", decimal.mark = ","), " €"),
+          paste0("-", format(abs(sum_diff), big.mark = ".", decimal.mark = ","), " €")
+        ),
+        avg_flip = ifelse(team_size > 0, sum_diff / team_size, NA_real_),
+        `Ø Flip-Einnahme pro Spieler` = dplyr::case_when(
+          is.na(avg_flip)            ~ "",
+          avg_flip > 0              ~ paste0("+", format(round(avg_flip), big.mark = ".", decimal.mark = ","), " €"),
+          avg_flip < 0              ~ paste0("-", format(abs(round(avg_flip)), big.mark = ".", decimal.mark = ","), " €"),
+          TRUE                      ~ "±0 €"
+        ),
+        vortag_diff = sum_diff - sum_diff_yesterday,
+        `Vortag-Diff` = dplyr::case_when(
+          is.na(vortag_diff)        ~ "",
+          vortag_diff > 0           ~ sprintf("<span style='color:#388e3c;'>+%s €</span>", format(vortag_diff, big.mark = ".", decimal.mark = ",")),
+          vortag_diff < 0           ~ sprintf("<span style='color:#e53935;'>–%s €</span>", format(abs(vortag_diff), big.mark = ".", decimal.mark = ",")),
+          TRUE                      ~ "<span style='color:grey;'>±0 €</span>"
+        )
+      ) %>%
+      arrange(desc(sum_diff)) %>%        # <<<< SORTIERUNG VOR SELECT!
+      select(Manager,
+             `Aktuelle hypothetische Gesamt-Flip-Einnahmen`,
+             `Vortag-Diff`,
+             `Ø Flip-Einnahme pro Spieler`, vortag_diff)
+    
+    # Teamwert am Vortag aus STANDINGS.csv einlesen
+    standings <- read.csv2("STANDINGS.csv", sep = ";", stringsAsFactors = FALSE)
+    standings$Datum <- as.Date(standings$Datum, format = "%d.%m.%Y")
+    teamwert_vortag <- standings %>%
+      filter(Datum == vortag) %>%
+      select(Manager, Teamwert_vortag = Teamwert)
+    
+    gesamt_flip <- gesamt_flip %>%
+      left_join(teamwert_vortag, by = "Manager") %>%
+      mutate(
+        vortag_diff_rel = vortag_diff / as.numeric(Teamwert_vortag) * 100,
+        `Vortag-Diff (% Teamwert)` = dplyr::case_when(
+          is.na(vortag_diff_rel)        ~ "",
+          vortag_diff_rel > 0           ~ sprintf("<span style='color:#388e3c;'>+%.2f %%</span>", vortag_diff_rel),
+          vortag_diff_rel < 0           ~ sprintf("<span style='color:#e53935;'>–%.2f %%</span>", abs(vortag_diff_rel)),
+          TRUE                          ~ "<span style='color:grey;'>±0 %%</span>"
+        )
+      ) %>%
+      select(Manager,
+             `Aktuelle hypothetische Gesamt-Flip-Einnahmen`,
+             `Vortag-Diff`,
+             `Vortag-Diff (% Teamwert)`,
+             `Ø Flip-Einnahme pro Spieler`)
+    
+    
+    DT::datatable(
+      gesamt_flip,
+      rownames = FALSE,
+      options = list(
+        dom = "t",
+        ordering = FALSE,
+        columnDefs = list(
+          list(className = 'dt-left', targets = 0),
+          list(className = 'dt-right', targets = c(1,2,3,4))
+        )
+      ),
+      escape = FALSE, selection = "single"
+    )
+  })
+  
   
   ## ---- Kaderwert-Entwicklung ----
   manuelle_standings <- tibble::tibble(
