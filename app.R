@@ -4,7 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-#library(shinyjs)
+library(shinyjs)
 library()
 
 # ---- UI ----
@@ -201,6 +201,8 @@ ui <- navbarPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
+  
+  print(list.files()) 
   
   # Link vom Dashboard zum MW Trend tab
   observeEvent(input$mw_zeitachse_click, {
