@@ -273,9 +273,15 @@ server <- function(input, output, session) {
       MW_rel_normiert = y / MW_startwert
     )
   
-  ## ---- teams_df ----
+  ## ---- teams_df / transfers / transfermarkt ----
   
   teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+  
+  transfers <- read.csv2("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
+      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+  
+  transfermarkt <- read_csv2("TRANSFERMARKT.csv") %>%
+    mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
   
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
@@ -291,7 +297,7 @@ server <- function(input, output, session) {
   
   ## ---- data_all ----
   data_all <- reactive({
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
+    transfers <- transfers %>%
       mutate(
         Datum = as.Date(Datum, format = "%d.%m.%Y"),
         Hoechstgebot = as.numeric(Hoechstgebot),
@@ -299,8 +305,6 @@ server <- function(input, output, session) {
         Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot) #Umwandeln von Fehlgebot von Alfons
       )
     
-    transfermarkt <- readr::read_csv2("TRANSFERMARKT.csv") %>%
-      mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
     
     list(transfers = transfers, transfermarkt = transfermarkt)
   })
@@ -539,9 +543,6 @@ server <- function(input, output, session) {
       filter(Datum == max(Datum, na.rm=TRUE)) %>%
       summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
     
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
-    
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
       arrange(desc(Datum)) %>%
@@ -601,7 +602,6 @@ server <- function(input, output, session) {
     )
     alle_manager <- names(startkapital_fix)
     
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE)
     kader_df <- standings_df()
     
     ausgaben <- transfers %>%
@@ -1249,55 +1249,47 @@ server <- function(input, output, session) {
         "Historische Punkteausbeute" = Historische_Punkteausbeute
       )
     
-    #95% gebot
+    #90% gebot
     # 1. Transfers laden
-    transfers <- read.csv2("TRANSFERS_all.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>%
+    transfers <- transfers %>% 
       mutate(
-        Datum = as.Date(Datum, format = "%d.%m.%Y"),
         Hoechstgebot = as.numeric(Hoechstgebot)
       ) %>%
       filter(!is.na(Hoechstgebot))
     
-    # 2. Transfermarkt laden
-    transfermarkt <- read.csv2("TRANSFERMARKT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>%
-      mutate(
-        TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"),
-        Marktwert_num = as.numeric(gsub("\\.", "", Marktwert)) # sicherheitshalber
-      )
-    
-    # 3. Vortags-Marktwert ermitteln
+    # 2. Vortags-Marktwert ermitteln
     # Angenommen, du willst das Vortagsdatum als das max(Datum)-1 nehmen:
     max_datum <- max(transfers$Datum, na.rm = TRUE)
     vortag <- max_datum - 1
     
     vortags_mw <- transfermarkt %>%
       filter(TM_Stand == vortag) %>%
-      select(Spieler, Marktwert_num)
+      select(Spieler, Marktwert_num = Marktwert)
     
-    # 5. Transfers mit Vortagsmarktwert joinen
+    # 3. Transfers mit Vortagsmarktwert joinen
     transfers_mw <- transfers %>%
       left_join(vortags_mw, by = "Spieler") %>%
       filter(!is.na(Marktwert_num)) %>% # nur Spieler mit Vortags-MW
       mutate(MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1)))
     
-    # 6. 95%-Perzentil Höchstgebot je MW_Klasse berechnen
+    # 4. 90%-Perzentil Höchstgebot je MW_Klasse berechnen
     maxgebote_klasse <- transfers_mw %>%
       group_by(MW_Klasse) %>%
-      summarise(Maximalgebot_95 = quantile(Hoechstgebot, probs = 0.95, na.rm = TRUE))
+      summarise(Maximalgebot_90 = quantile(Hoechstgebot, probs = 0.90, na.rm = TRUE))
     
-    # 7. Nun füge das in tm_trend ein:
+    # 5. Nun füge das in tm_trend ein:
     tm_trend <- tm_trend %>%
       left_join(maxgebote_klasse, by = "MW_Klasse") %>%
       mutate(
         Maximalgebot = ifelse(
-          is.na(Maximalgebot_95),
+          is.na(Maximalgebot_90),
           NA,
-          paste0(format(round(Maximalgebot_95), big.mark = ".", decimal.mark = ","), " €")
+          paste0(format(round(Maximalgebot_90), big.mark = ".", decimal.mark = ","), " €")
         )
       )
     
     # Maximalgebot runden
-    tm_trend$Maximalgebot_num_rounded <- round(tm_trend$Maximalgebot_95)
+    tm_trend$Maximalgebot_num_rounded <- round(tm_trend$Maximalgebot_90)
     
     # Prozentwert berechnen (bezogen auf Marktwert)
     tm_trend$MaximalgebotProzent <- round(100 * (tm_trend$Maximalgebot_num_rounded / tm_trend$Marktwert_num - 1), 1)
@@ -1444,9 +1436,6 @@ server <- function(input, output, session) {
       group_by(Spieler) %>%
       filter(Datum == max(Datum, na.rm=TRUE)) %>%
       summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
-    
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
     
     kaufpreise <- transfers %>%
       filter(Hoechstbietender == "Dominik") %>%
@@ -1608,9 +1597,6 @@ server <- function(input, output, session) {
       group_by(Spieler) %>%
       filter(Datum == max(Datum, na.rm = TRUE)) %>%
       summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
-    
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
     
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
@@ -2416,9 +2402,6 @@ server <- function(input, output, session) {
       filter(Datum == vortag) %>%
       group_by(Spieler) %>%
       summarise(Marktwert_vortag = first(Marktwert), .groups = "drop")
-    
-    transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
     
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
