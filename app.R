@@ -2135,47 +2135,47 @@ server <- function(input, output, session) {
   })
   
   ## ---- Zusammenfassung als Tabelle ohne MW Klassen ----
-  # output$mwclass_summary <- renderDT({
-  #   
-  #   # Priorität: show_entries aktiviert → gebotsprofil_clean()-Tabelle anzeigen
-  #   if (!is.null(input$show_entries) && input$show_entries) {
-  #     
-  #     dat <- gebotsprofil_clean() %>%
-  #       group_by(Bieter) %>%
-  #       summarise(
-  #         Anzahl_gesamt = n(),
-  #         Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
-  #         Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
-  #         Durchschnittsgebot = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
-  #         Min = min(Diff_Prozent, na.rm = TRUE),
-  #         Max = max(Diff_Prozent, na.rm = TRUE),
-  #         Transfers = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
-  #       )
-  #     
-  #     datatable(dat, options = list(pageLength = 100))
-  #     
-  #   } else if (!is.null(input$show_table) && input$show_table) {
-  #     
-  #     datatable(mwclass_summary(), options = list(pageLength = 100))
-  #     
-  #   } else {
-  #     
-  #     dat <- gebotsprofil_clean() %>%
-  #       group_by(Bieter) %>%
-  #       summarise(
-  #         Anzahl_gesamt = n(),
-  #         Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
-  #         Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
-  #         Durchschnittsgebot = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
-  #         Min = min(Diff_Prozent, na.rm = TRUE),
-  #         Max = max(Diff_Prozent, na.rm = TRUE)
-  #       )
-  #     
-  #     datatable(dat, options = list(pageLength = 100))
-  #   }
-  # })
-  # 
-  
+  output$mwclass_summary <- renderDT({
+
+    # Priorität: show_entries aktiviert → gebotsprofil_clean()-Tabelle anzeigen
+    if (!is.null(input$show_entries) && input$show_entries) {
+
+      dat <- gebotsprofil_clean() %>%
+        group_by(Bieter) %>%
+        summarise(
+          Anzahl_gesamt = n(),
+          Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+          Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+          Durchschnittsgebot = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+          Min = min(Diff_Prozent, na.rm = TRUE),
+          Max = max(Diff_Prozent, na.rm = TRUE),
+          Transfers = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
+        )
+
+      datatable(dat, options = list(pageLength = 100))
+
+    } else if (!is.null(input$show_table) && input$show_table) {
+
+      datatable(mwclass_summary(), options = list(pageLength = 100))
+
+    } else {
+
+      dat <- gebotsprofil_clean() %>%
+        group_by(Bieter) %>%
+        summarise(
+          Anzahl_gesamt = n(),
+          Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+          Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+          Durchschnittsgebot = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+          Min = min(Diff_Prozent, na.rm = TRUE),
+          Max = max(Diff_Prozent, na.rm = TRUE)
+        )
+
+      datatable(dat, options = list(pageLength = 100))
+    }
+  })
+
+
   
   # ---- FLIP-ANALYSE ----
   
