@@ -22,12 +22,7 @@ ui <- navbarPage(
                fluidRow(
                  column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
                  column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
-                 column(6,
-                        tags$div(
-                          style = "height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px;",
-                          DTOutput("flip_einnahmen_uebersicht_preview")
-                        )
-                 )
+                 column(6, DTOutput("flip_einnahmen_uebersicht_preview"))
                ),
              ),
              
@@ -78,7 +73,6 @@ ui <- navbarPage(
            )
   ),
 
-  
   ## ---- Kader-Entwicklung ----
   tabPanel("Kader-Entwicklung",
            tabsetPanel(
@@ -88,7 +82,6 @@ ui <- navbarPage(
              tabPanel("Kaderwert-Plot", plotOutput("kaderwert_plot", height = 600))
            )
   ),
-  
   
   ## ---- Bieterprofile ----
   tabPanel("Bieterprofile",
@@ -126,12 +119,8 @@ ui <- navbarPage(
                           "Transfers anzeigen"
                         )
                       ),
-                      
                       DTOutput("mwclass_summary")
              )
-             
-             
-             
            )
   ),
   
@@ -192,9 +181,7 @@ ui <- navbarPage(
     Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
   });
 "))
-  
 )
-
 
 # ---- SERVER ----
 server <- function(input, output, session) {
@@ -239,10 +226,7 @@ server <- function(input, output, session) {
     }
   })
   
-
   # ---- DATEN / df / list ----
-  
-  ## ---- Transfermarkt daten ----
   
   ## ---- sommerpause_df ----
   sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
@@ -256,7 +240,6 @@ server <- function(input, output, session) {
       MW_startwert = y[Datum == as.Date("2025-06-06")][1],
       MW_rel_normiert = y / MW_startwert
     )
-  
   
   ## ---- sommerpause_21_df ----
   sommerpause_21_df <- readr::read_csv("MW_Sommerpause_2021.csv") %>%
@@ -273,7 +256,7 @@ server <- function(input, output, session) {
       MW_rel_normiert = y / MW_startwert
     )
   
-  ## ---- teams_df / transfers / transfermarkt ----
+  ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
   
   teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
   
@@ -283,7 +266,18 @@ server <- function(input, output, session) {
   transfermarkt <- read_csv2("TRANSFERMARKT.csv") %>%
     mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
   
-  ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+  ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>% 
+    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
+           Marktwert = as.numeric(Marktwert))
+  
+  tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")#
+  
+  st_df <- readr::read_csv2("STANDINGS.csv") %>%
+    mutate(
+      Manager = as.character(Manager),
+      Teamwert = as.numeric(Teamwert),
+      Datum = as.Date(Datum, format = "%d.%m.%Y")
+    )
   
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
@@ -307,18 +301,11 @@ server <- function(input, output, session) {
         Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot) #Umwandeln von Fehlgebot von Alfons
       )
     
-    
     list(transfers = transfers, transfermarkt = transfermarkt)
   })
   
   standings_df <- reactive({
-    req(file.exists("STANDINGS.csv"))
-    readr::read_csv2("STANDINGS.csv", col_types = cols(
-      Manager = col_character(),
-      Teamwert = col_double(),
-      Datum = col_character()
-    )) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) %>%
+    st_df %>% 
       group_by(Manager) %>%
       slice_max(Datum, with_ties = FALSE) %>%
       ungroup()
@@ -363,22 +350,6 @@ server <- function(input, output, session) {
     gebotsprofil %>%
       filter(Bieter != "Computer" & !is.na(MW_vortag))
   })
-  
-  ## ---- flip_kategorien_data ----
-  # flip_kategorien_data <- reactive({
-  #   req(flip_data())
-  #   flip_data() %>%
-  #     mutate(
-  #       Flip_Kategorie = case_when(
-  #         abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
-  #         abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
-  #         abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
-  #         TRUE ~ "Sonst"
-  #       ),
-  #       Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
-  #       Kategorie_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
-  #     )
-  # })
   
   ## ---- flip_player_select ----
   observe({
@@ -754,17 +725,11 @@ server <- function(input, output, session) {
   output$transfermarkt_preview <- DT::renderDT({
     
     # Transfermarkt-Daten
-    tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
     tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
     tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
     tm_df$Restzeit <- trimws(tm_df$Restzeit)
     tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
-    
-    # ALL_PLAYERS einlesen und Datum konvertieren
-    ap_df$Spieler <- trimws(enc2utf8(ap_df$Spieler))
-    ap_df$Datum <- as.Date(ap_df$Datum, format = "%d.%m.%Y")
-    ap_df$Marktwert <- as.numeric(ap_df$Marktwert)
     
     # Die letzten 3 Tage ermitteln
     last_dates <- sort(unique(ap_df$Datum), decreasing = TRUE)[1:3]
@@ -929,16 +894,8 @@ server <- function(input, output, session) {
     )
   )
   
-  
   # CSV + manuelle Werte kombinieren
-  gesamt_mw_roh <- readr::read_delim(
-    file = "ALL_PLAYERS.csv",
-    delim = ";",
-    locale = locale(encoding = "UTF-8"),
-    show_col_types = FALSE,
-    trim_ws = TRUE
-  ) %>%
-    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) %>%
+  gesamt_mw_roh <- ap_df %>% 
     bind_rows(manuelle_werte)
   
   # Summieren + Normieren
@@ -951,7 +908,6 @@ server <- function(input, output, session) {
     mutate(
       MW_rel_normiert = MW_gesamt / 1487390000  # Referenzwert vom 01.06.2025
     )
-  
   
   ## ---- Ausgabe-Plot ----
   output$mw_evolution <- renderPlot({
@@ -1122,17 +1078,11 @@ server <- function(input, output, session) {
   output$transfermarkt_detail <- DT::renderDT({
     
     # Transfermarkt-Daten
-    tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
     tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
     tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
     tm_df$Restzeit <- trimws(tm_df$Restzeit)
     tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
-    
-    # ALL_PLAYERS einlesen und Datum konvertieren
-    ap_df$Spieler <- trimws(enc2utf8(ap_df$Spieler))
-    ap_df$Datum <- as.Date(ap_df$Datum, format = "%d.%m.%Y")
-    ap_df$Marktwert <- as.numeric(ap_df$Marktwert)
     
     # Die letzten 3 Tage ermitteln
     last_dates <- sort(unique(ap_df$Datum), decreasing = TRUE)[1:3]
@@ -1715,18 +1665,8 @@ server <- function(input, output, session) {
   
   
   standings_history_df <- reactive({
-    req(file.exists("STANDINGS.csv"))
-    
-    # CSV laden
-    original_df <- readr::read_csv2("STANDINGS.csv", col_types = cols(
-      Manager = col_character(),
-      Teamwert = col_double(),
-      Datum = col_character()
-    )) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
-    
     # Kombinieren mit manuellen Einträgen
-    bind_rows(original_df, manuelle_standings)
+    bind_rows(st_df, manuelle_standings)
   })
   
   output$kaderwert_plot <- renderPlot({
@@ -2448,10 +2388,8 @@ server <- function(input, output, session) {
              `Vortag-Diff`,
              `Ø Flip-Einnahme pro Spieler`, vortag_diff)
     
-    # Teamwert am Vortag aus STANDINGS.csv einlesen
-    standings <- read.csv2("STANDINGS.csv", sep = ";", stringsAsFactors = FALSE)
-    standings$Datum <- as.Date(standings$Datum, format = "%d.%m.%Y")
-    teamwert_vortag <- standings %>%
+    # Teamwert am Vortag einlesen
+    teamwert_vortag <- st_df %>%
       filter(Datum == vortag) %>%
       select(Manager, Teamwert_vortag = Teamwert)
     
@@ -2648,9 +2586,6 @@ server <- function(input, output, session) {
   
   
 }
-
-
-
 
 
 # SHINY APP STARTEN
