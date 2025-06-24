@@ -33,5 +33,6 @@ __pycache__/
 .DS_Store
 *.bak
 scrape_comunio_transfermarkt.py
-comunio_kader.csv
+scrape_comunio_all.py
+scrape_comanalytics_players_pps.py
 Update_App_and_SHUTDOWN.bat
