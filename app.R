@@ -435,6 +435,23 @@ server <- function(input, output, session) {
       slice(1)
     if (nrow(tm) == 1) tm$Marktwert else NA
   }
+  
+  # MW-Klasse bestimmen
+  get_mw_klasse <- function(mw) {
+    if (mw < 5e5) {
+      "<0.5 Mio"
+    } else if (mw < 1e6) {
+      "0.5–1 Mio"
+    } else if (mw < 2.5e6) {
+      "1–2.5 Mio"
+    } else if (mw < 5e6) {
+      "2.5–5 Mio"
+    } else if (mw < 1e7) {
+      "5–10 Mio"
+    } else {
+      ">10 Mio"
+    }
+  }
 
   # ---- DASHBOARD ----
   ## ---- Zeitachse ----
@@ -531,9 +548,6 @@ server <- function(input, output, session) {
         fontWeight = "bold"
       )
   })
-  
-  
-  
   
   ## ---- Hypothetischer Team Flip-Übersicht aller Manager  ----
   output$flip_einnahmen_uebersicht_preview <- DT::renderDT({
@@ -1176,22 +1190,6 @@ server <- function(input, output, session) {
         "Trend MW (3 Tage)" = Trend
       )
     
-    # MW-Klasse bestimmen
-    get_mw_klasse <- function(mw) {
-      if (mw < 5e5) {
-        "<0.5 Mio"
-      } else if (mw < 1e6) {
-        "0.5–1 Mio"
-      } else if (mw < 2.5e6) {
-        "1–2.5 Mio"
-      } else if (mw < 5e6) {
-        "2.5–5 Mio"
-      } else if (mw < 1e7) {
-        "5–10 Mio"
-      } else {
-        ">10 Mio"
-      }
-    }
     tm_trend$MW_Klasse <- vapply(tm_trend$Marktwert_num, get_mw_klasse, character(1))
     
     # Mittelwert-Prozente aus dem Profil
@@ -1316,23 +1314,6 @@ server <- function(input, output, session) {
       "5–10 Mio", 1.18,
       ">10 Mio", 0.18
     )
-    
-    # 2. Funktion zur MW-Klassenbestimmung (wie bei dir)
-    get_mw_klasse <- function(mw) {
-      if (mw < 5e5) {
-        "<0.5 Mio"
-      } else if (mw < 1e6) {
-        "0.5–1 Mio"
-      } else if (mw < 2.5e6) {
-        "1–2.5 Mio"
-      } else if (mw < 5e6) {
-        "2.5–5 Mio"
-      } else if (mw < 1e7) {
-        "5–10 Mio"
-      } else {
-        ">10 Mio"
-      }
-    }
     
     # 3. Beispiel: tm_trend mit Marktwert
     # tm_trend <- ... (deine bestehende Tabelle mit Marktwert_num)
