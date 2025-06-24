@@ -16,10 +16,10 @@ ui <- navbarPage(
   ## ---- Dashboard ----
   tabPanel("Dashboard",
            fluidPage(
-             # fluidRow(
-             #   column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
-             #   column(6, DTOutput("kreditrahmen_uebersicht_preview"))
-             # ),
+             fluidRow(
+               column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
+               column(6, DTOutput("kreditrahmen_uebersicht_preview"))
+             ),
              fluidRow(
                column(6, DTOutput("mein_team_tabelle_preview")),
                fluidRow(
