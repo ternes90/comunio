@@ -224,20 +224,20 @@ server <- function(input, output, session) {
 
   # Link vom Dashboard zum Kader tab (Mein Kader)
   observeEvent(input$mein_team_tabelle_preview_rows_selected, {
-    updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
-    updateTabsetPanel(session, "kader_tabs", "Mein Kader")
+    updateNavbarPage(session, "main_navbar", selected = "Kader-Entwicklung")
+    updateTabsetPanel(session, "kader_tabs", selected = "Mein Kader")
   })
   
   # Link vom Dashboard zum Hypothetischen Team-Flip tab (Kader & Historie)
   observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
-    updateNavbarPage(session, "main_navbar", "Flip-Analyse")
-    updateTabsetPanel(session, "flip_tabs", "Kader & Historie")
+    updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
+    updateTabsetPanel(session, "flip_tabs", selected = "Kader & Historie")
   })
   
   # Link vom Dashboard zum TM tab
   observeEvent(input$transfermarkt_preview_rows_selected, {
     if (!is.null(input$transfermarkt_preview_rows_selected)) {
-      updateNavbarPage(session, "main_navbar", "Transfermarkt")
+      updateNavbarPage(session, "main_navbar", selected = "Transfermarkt")
     }
   })
   
