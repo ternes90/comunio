@@ -16,37 +16,37 @@ ui <- navbarPage(
   ## ---- Dashboard ----
   tabPanel("Dashboard",
            fluidPage(
-             fluidRow(
-               column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
-               column(6, DTOutput("kreditrahmen_uebersicht_preview"))
-             ),
              # fluidRow(
-             #   column(6, DTOutput("mein_team_tabelle_preview")),
-             #   fluidRow(
-             #     column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
-             #     column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
-             #     column(6,
-             #            tags$div(
-             #              style = "height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px;",
-             #              DTOutput("flip_einnahmen_uebersicht_preview")
-             #            )
-             #     )
-             #   ),
+             #   column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
+             #   column(6, DTOutput("kreditrahmen_uebersicht_preview"))
              # ),
-             # 
-             # fluidRow(
-             #   column(12,
-             #          div(
-             #            style = "display: flex; flex-direction: column; align-items: center;",
-             #            tags$div("Aktueller Transfermarkt", 
-             #                     style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
-             #            div(
-             #              style = "width: 80%;",  # oder fixe Breite wie 600px
-             #              DTOutput("transfermarkt_preview")
-             #            )
-             #          )
-             #   )
-             # )
+             fluidRow(
+               column(6, DTOutput("mein_team_tabelle_preview")),
+               fluidRow(
+                 column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
+                 column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
+                 column(6,
+                        tags$div(
+                          style = "height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px;",
+                          DTOutput("flip_einnahmen_uebersicht_preview")
+                        )
+                 )
+               ),
+             ),
+             
+             fluidRow(
+               column(12,
+                      div(
+                        style = "display: flex; flex-direction: column; align-items: center;",
+                        tags$div("Aktueller Transfermarkt", 
+                                 style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
+                        div(
+                          style = "width: 80%;",  # oder fixe Breite wie 600px
+                          DTOutput("transfermarkt_preview")
+                        )
+                      )
+               )
+             )
            )
   ),
   
