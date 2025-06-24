@@ -139,49 +139,49 @@ ui <- navbarPage(
   ),
   
   ## ---- Flip-Analyse ----
-  tabPanel("Flip-Analyse",
-           tabsetPanel(
-             id = "flip_tabs",
-             
-             # TAB 1: Gesamtsumme + Kumuliert
-             tabPanel("Übersicht gesamt",
-                      fluidPage(
-                        fluidRow(
-                          column(12, plotOutput("flip_summarybar", height = 500))
-                        ),
-                        fluidRow(
-                          column(12, plotOutput("flip_cumulative", height = 500))
-                        )
-                      )
-             ),
-             
-             # TAB 2: Kategorien gestapelt + Kumuliert nach Flip-Art
-             tabPanel("Flip-Arten",
-                      fluidPage(
-                        fluidRow(
-                          column(7, plotOutput("flip_effizienz", height = 500)),
-                          column(5, plotOutput("flip_cumcat", height = 500))
-                        )
-                      )
-             ),
-             
-             # TAB 3: Kader-Flip + Historie
-             tabPanel("Kader & Historie",
-                      fluidPage(
-                        fluidRow(
-                          column(12, DTOutput("flip_kader"))
-                        ),
-                        br(),
-                        fluidRow(
-                          column(4,
-                                 selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
-                          ),
-                          column(8, DTOutput("flip_player_table"))
-                        )
-                      )
-             )
-           )
-  ),
+  # tabPanel("Flip-Analyse",
+  #          tabsetPanel(
+  #            id = "flip_tabs",
+  #            
+  #            # TAB 1: Gesamtsumme + Kumuliert
+  #            tabPanel("Übersicht gesamt",
+  #                     fluidPage(
+  #                       fluidRow(
+  #                         column(12, plotOutput("flip_summarybar", height = 500))
+  #                       ),
+  #                       fluidRow(
+  #                         column(12, plotOutput("flip_cumulative", height = 500))
+  #                       )
+  #                     )
+  #            ),
+  #            
+  #            # TAB 2: Kategorien gestapelt + Kumuliert nach Flip-Art
+  #            tabPanel("Flip-Arten",
+  #                     fluidPage(
+  #                       fluidRow(
+  #                         column(7, plotOutput("flip_effizienz", height = 500)),
+  #                         column(5, plotOutput("flip_cumcat", height = 500))
+  #                       )
+  #                     )
+  #            ),
+  #            
+  #            # TAB 3: Kader-Flip + Historie
+  #            tabPanel("Kader & Historie",
+  #                     fluidPage(
+  #                       fluidRow(
+  #                         column(12, DTOutput("flip_kader"))
+  #                       ),
+  #                       br(),
+  #                       fluidRow(
+  #                         column(4,
+  #                                selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
+  #                         ),
+  #                         column(8, DTOutput("flip_player_table"))
+  #                       )
+  #                     )
+  #            )
+  #          )
+  # ),
   
   ## ---- Kapitalübersicht ----
   tabPanel("Kapitalübersicht",
@@ -202,53 +202,53 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
-  # Link vom Dashboard zum MW Trend tab
-  observeEvent(input$mw_zeitachse_click, {
-    updateNavbarPage(session, "main_navbar", selected = "Marktwert-Entwicklung")
-  })
-  
-  # Kapitalübersicht
-  observeEvent(input$kreditrahmen_uebersicht_preview_rows_selected, {
-    # egal was ausgewählt wird, Tabwechsel:
-    updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
-  })
-  
-  # Link vom Dashboard zum Flip tab
-  observeEvent(input$flip_click, {
-    updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
-  })
-  
-  # Link vom Dashboard zum Gebote tab
-  observeEvent(input$gebote_click, {
-    updateNavbarPage(session, "main_navbar", selected = "Bieterprofile")
-  })
-  
-  # Link vom Dashboard zum Kader tab
-  # Meiner
-  observeEvent(input$mein_team_tabelle_preview_rows_selected, {
-    # egal was ausgewählt wird, Tabwechsel:
-    updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
-    shinyjs::delay(200, {
-      updateTabsetPanel(session, "kader_tabs", "Mein Kader")
-    })
-  })
-  
-  # Link vom Dashboard zum Hypothetischen Team-Flip tab
-  observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
-    updateNavbarPage(session, "main_navbar", "Flip-Analyse")
-    # Verzögerung einbauen, damit Tabset geladen ist:
-    shinyjs::delay(200, {
-      updateTabsetPanel(session, "flip_tabs", "Kader & Historie")
-    })
-  })
-
-  # Link vom Dashboard zum TM tab
-  observeEvent(input$transfermarkt_preview_rows_selected, {
-    # Prüfe, ob eine Zeile ausgewählt wurde
-    if (!is.null(input$transfermarkt_preview_rows_selected)) {
-      updateNavbarPage(session, "main_navbar", "Transfermarkt")
-    }
-  })
+  # # Link vom Dashboard zum MW Trend tab
+  # observeEvent(input$mw_zeitachse_click, {
+  #   updateNavbarPage(session, "main_navbar", selected = "Marktwert-Entwicklung")
+  # })
+  # 
+  # # Kapitalübersicht
+  # observeEvent(input$kreditrahmen_uebersicht_preview_rows_selected, {
+  #   # egal was ausgewählt wird, Tabwechsel:
+  #   updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
+  # })
+  # 
+  # # Link vom Dashboard zum Flip tab
+  # observeEvent(input$flip_click, {
+  #   updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
+  # })
+  # 
+  # # Link vom Dashboard zum Gebote tab
+  # observeEvent(input$gebote_click, {
+  #   updateNavbarPage(session, "main_navbar", selected = "Bieterprofile")
+  # })
+  # 
+  # # Link vom Dashboard zum Kader tab
+  # # Meiner
+  # observeEvent(input$mein_team_tabelle_preview_rows_selected, {
+  #   # egal was ausgewählt wird, Tabwechsel:
+  #   updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
+  #   shinyjs::delay(200, {
+  #     updateTabsetPanel(session, "kader_tabs", "Mein Kader")
+  #   })
+  # })
+  # 
+  # # Link vom Dashboard zum Hypothetischen Team-Flip tab
+  # observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
+  #   updateNavbarPage(session, "main_navbar", "Flip-Analyse")
+  #   # Verzögerung einbauen, damit Tabset geladen ist:
+  #   shinyjs::delay(200, {
+  #     updateTabsetPanel(session, "flip_tabs", "Kader & Historie")
+  #   })
+  # })
+  # 
+  # # Link vom Dashboard zum TM tab
+  # observeEvent(input$transfermarkt_preview_rows_selected, {
+  #   # Prüfe, ob eine Zeile ausgewählt wurde
+  #   if (!is.null(input$transfermarkt_preview_rows_selected)) {
+  #     updateNavbarPage(session, "main_navbar", "Transfermarkt")
+  #   }
+  # })
   
   # ---- DATEN / df / list ----
   
@@ -2164,63 +2164,63 @@ server <- function(input, output, session) {
   # ---- FLIP-ANALYSE ----
   
   # # -- Flip-Gewinn vorbereiten (angenommen Einkaufspreise und Verkäufe in transfers)
-  # flip_data <- reactive({
-  #   req(data_all())
-  #   transfers <- data_all()$transfers
-  #   
-  #   # Käufe (nur echte Käufe durch Manager)
-  #   einkaeufe <- transfers %>%
-  #     filter(Hoechstbietender != "Computer") %>%
-  #     select(Spieler, Einkaufsdatum = Datum, Einkaufspreis = Hoechstgebot, Besitzer = Hoechstbietender) %>%
-  #     arrange(Besitzer, Spieler, Einkaufsdatum)
-  #   
-  #   # Verkäufe
-  #   verkaeufe <- transfers %>%
-  #     filter(Besitzer != Hoechstbietender) %>%
-  #     select(Spieler, Verkaufsdatum = Datum, Verkaufspreis = Hoechstgebot, Besitzer)
-  #   
-  #   # Flip-Paare bauen
-  #   flips <- list()
-  #   
-  #   for (i in 1:nrow(verkaeufe)) {
-  #     verkauf <- verkaeufe[i, ]
-  #     
-  #     # Suche den frühesten unbenutzten Kauf
-  #     kauf_kandidat <- einkaeufe %>%
-  #       filter(Spieler == verkauf$Spieler,
-  #              Besitzer == verkauf$Besitzer,
-  #              Einkaufsdatum < verkauf$Verkaufsdatum) %>%
-  #       arrange(Einkaufsdatum) %>%
-  #       slice(1)
-  #     
-  #     if (nrow(kauf_kandidat) == 1) {
-  #       # Flip speichern
-  #       flips[[length(flips) + 1]] <- data.frame(
-  #         Spieler = verkauf$Spieler,
-  #         Besitzer = verkauf$Besitzer,
-  #         Einkaufsdatum = kauf_kandidat$Einkaufsdatum,
-  #         Einkaufspreis = kauf_kandidat$Einkaufspreis,
-  #         Verkaufsdatum = verkauf$Verkaufsdatum,
-  #         Verkaufspreis = verkauf$Verkaufspreis,
-  #         Gewinn = verkauf$Verkaufspreis - kauf_kandidat$Einkaufspreis
-  #       )
-  #       
-  #       # Den Kauf aus der Liste entfernen (= "verbraucht")
-  #       einkaeufe <- einkaeufe %>%
-  #         filter(!(Spieler == kauf_kandidat$Spieler &
-  #                    Besitzer == kauf_kandidat$Besitzer &
-  #                    Einkaufsdatum == kauf_kandidat$Einkaufsdatum))
-  #     }
-  #   }
-  #   
-  #   if (length(flips) > 0) {
-  #     bind_rows(flips)
-  #   } else {
-  #     data.frame()  # leeres DF wenn keine Flips
-  #   }
-  # })
-  # 
-  # 
+  flip_data <- reactive({
+    req(data_all())
+    transfers <- data_all()$transfers
+
+    # Käufe (nur echte Käufe durch Manager)
+    einkaeufe <- transfers %>%
+      filter(Hoechstbietender != "Computer") %>%
+      select(Spieler, Einkaufsdatum = Datum, Einkaufspreis = Hoechstgebot, Besitzer = Hoechstbietender) %>%
+      arrange(Besitzer, Spieler, Einkaufsdatum)
+
+    # Verkäufe
+    verkaeufe <- transfers %>%
+      filter(Besitzer != Hoechstbietender) %>%
+      select(Spieler, Verkaufsdatum = Datum, Verkaufspreis = Hoechstgebot, Besitzer)
+
+    # Flip-Paare bauen
+    flips <- list()
+
+    for (i in 1:nrow(verkaeufe)) {
+      verkauf <- verkaeufe[i, ]
+
+      # Suche den frühesten unbenutzten Kauf
+      kauf_kandidat <- einkaeufe %>%
+        filter(Spieler == verkauf$Spieler,
+               Besitzer == verkauf$Besitzer,
+               Einkaufsdatum < verkauf$Verkaufsdatum) %>%
+        arrange(Einkaufsdatum) %>%
+        slice(1)
+
+      if (nrow(kauf_kandidat) == 1) {
+        # Flip speichern
+        flips[[length(flips) + 1]] <- data.frame(
+          Spieler = verkauf$Spieler,
+          Besitzer = verkauf$Besitzer,
+          Einkaufsdatum = kauf_kandidat$Einkaufsdatum,
+          Einkaufspreis = kauf_kandidat$Einkaufspreis,
+          Verkaufsdatum = verkauf$Verkaufsdatum,
+          Verkaufspreis = verkauf$Verkaufspreis,
+          Gewinn = verkauf$Verkaufspreis - kauf_kandidat$Einkaufspreis
+        )
+
+        # Den Kauf aus der Liste entfernen (= "verbraucht")
+        einkaeufe <- einkaeufe %>%
+          filter(!(Spieler == kauf_kandidat$Spieler &
+                     Besitzer == kauf_kandidat$Besitzer &
+                     Einkaufsdatum == kauf_kandidat$Einkaufsdatum))
+      }
+    }
+
+    if (length(flips) > 0) {
+      bind_rows(flips)
+    } else {
+      data.frame()  # leeres DF wenn keine Flips
+    }
+  })
+
+
   # ## ---- Flip-Gesamtsumme ----
   # ## -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
   # output$flip_summarybar <- renderPlot({
