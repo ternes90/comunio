@@ -4,13 +4,11 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-#library(shinyjs)
 
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse",
   id = "main_navbar",
-  #shinyjs::useShinyjs(),
   
   ## ---- Dashboard ----
   tabPanel("Dashboard",
