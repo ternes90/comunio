@@ -273,6 +273,10 @@ server <- function(input, output, session) {
       MW_rel_normiert = y / MW_startwert
     )
   
+  ## ---- teams_df ----
+  
+  teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+  
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
     "Alfon" = "Alfons",
@@ -463,7 +467,7 @@ server <- function(input, output, session) {
   
   ## ---- Mein Team ----
   output$mein_team_tabelle_preview <- DT::renderDT({
-    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+    
     df0 <- teams_df %>% filter(Manager == "Dominik")
     df0$Position <- factor(df0$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
     df0 <- df0 %>% arrange(Position, Spieler)
@@ -529,7 +533,6 @@ server <- function(input, output, session) {
   
   ## ---- Hypothetischer Team Flip-Übersicht aller Manager  ----
   output$flip_einnahmen_uebersicht_preview <- DT::renderDT({
-    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     
     mw_aktuell <- gesamt_mw_roh %>%
       group_by(Spieler) %>%
@@ -1432,7 +1435,7 @@ server <- function(input, output, session) {
     )
   
   output$mein_kader <- renderUI({
-    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+    
     df0 <- teams_df %>% filter(Manager == "Dominik")
     df0$Position <- factor(df0$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
     df0 <- df0 %>% arrange(Position, Spieler)
@@ -1597,7 +1600,7 @@ server <- function(input, output, session) {
   ## ---- Alle Kader ----
   
   output$kader_uebersicht_ui <- renderUI({
-    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+    
     manager_list <- sort(setdiff(unique(teams_df$Manager), "Dominik"))
     
     # === MW/Transferdaten vorbereiten ===
@@ -2398,7 +2401,6 @@ server <- function(input, output, session) {
   
   ## ---- Hypothetischer Kader-Fip ----
   output$flip_kader <- DT::renderDT({
-    teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
     
     # Aktuelles Datum ermitteln (letzter Tag in gesamt_mw_roh)
     aktuelles_datum <- max(gesamt_mw_roh$Datum, na.rm = TRUE)
