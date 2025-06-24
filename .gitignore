@@ -31,3 +31,4 @@ __pycache__/
 # Sonstiges
 .DS_Store
 *.bak
+last_updated.txt
