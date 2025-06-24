@@ -20,33 +20,33 @@ ui <- navbarPage(
                column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
                column(6, DTOutput("kreditrahmen_uebersicht_preview"))
              ),
-             fluidRow(
-               column(6, DTOutput("mein_team_tabelle_preview")),
-               fluidRow(
-                 column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
-                 column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
-                 column(6,
-                        tags$div(
-                          style = "height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px;",
-                          DTOutput("flip_einnahmen_uebersicht_preview")
-                        )
-                 )
-               ),
-             ),
-             
-             fluidRow(
-               column(12,
-                      div(
-                        style = "display: flex; flex-direction: column; align-items: center;",
-                        tags$div("Aktueller Transfermarkt", 
-                                 style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
-                        div(
-                          style = "width: 80%;",  # oder fixe Breite wie 600px
-                          DTOutput("transfermarkt_preview")
-                        )
-                      )
-               )
-             )
+             # fluidRow(
+             #   column(6, DTOutput("mein_team_tabelle_preview")),
+             #   fluidRow(
+             #     column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
+             #     column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
+             #     column(6,
+             #            tags$div(
+             #              style = "height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px;",
+             #              DTOutput("flip_einnahmen_uebersicht_preview")
+             #            )
+             #     )
+             #   ),
+             # ),
+             # 
+             # fluidRow(
+             #   column(12,
+             #          div(
+             #            style = "display: flex; flex-direction: column; align-items: center;",
+             #            tags$div("Aktueller Transfermarkt", 
+             #                     style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
+             #            div(
+             #              style = "width: 80%;",  # oder fixe Breite wie 600px
+             #              DTOutput("transfermarkt_preview")
+             #            )
+             #          )
+             #   )
+             # )
            )
   ),
   
@@ -269,7 +269,6 @@ server <- function(input, output, session) {
       MW_rel_normiert = y / MW_startwert
     )
   
-  
   ## ---- sommerpause_21_df ----
   sommerpause_21_df <- readr::read_csv("MW_Sommerpause_2021.csv") %>%
     mutate(
@@ -365,22 +364,6 @@ server <- function(input, output, session) {
     gebotsprofil %>%
       filter(Bieter != "Computer" & !is.na(MW_vortag))
   })
-  
-  ## ---- flip_kategorien_data ----
-  # flip_kategorien_data <- reactive({
-  #   req(flip_data())
-  #   flip_data() %>%
-  #     mutate(
-  #       Flip_Kategorie = case_when(
-  #         abs(Gewinn) < 0.5e5 ~ "Mini-Flip <50k",
-  #         abs(Gewinn) < 2.5e5 ~ "Mittel-Flip <250k",
-  #         abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k",
-  #         TRUE ~ "Sonst"
-  #       ),
-  #       Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
-  #       Kategorie_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
-  #     )
-  # })
   
   ## ---- flip_player_select ----
   observe({
