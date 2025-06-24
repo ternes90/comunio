@@ -201,54 +201,54 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
-  # # Link vom Dashboard zum MW Trend tab
-  # observeEvent(input$mw_zeitachse_click, {
-  #   updateNavbarPage(session, "main_navbar", selected = "Marktwert-Entwicklung")
-  # })
-  # 
-  # # Kapitalübersicht
-  # observeEvent(input$kreditrahmen_uebersicht_preview_rows_selected, {
-  #   # egal was ausgewählt wird, Tabwechsel:
-  #   updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
-  # })
-  # 
-  # # Link vom Dashboard zum Flip tab
-  # observeEvent(input$flip_click, {
-  #   updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
-  # })
-  # 
-  # # Link vom Dashboard zum Gebote tab
-  # observeEvent(input$gebote_click, {
-  #   updateNavbarPage(session, "main_navbar", selected = "Bieterprofile")
-  # })
-  # 
-  # # Link vom Dashboard zum Kader tab
-  # # Meiner
-  # observeEvent(input$mein_team_tabelle_preview_rows_selected, {
-  #   # egal was ausgewählt wird, Tabwechsel:
-  #   updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
-  #   shinyjs::delay(200, {
-  #     updateTabsetPanel(session, "kader_tabs", "Mein Kader")
-  #   })
-  # })
-  # 
-  # # Link vom Dashboard zum Hypothetischen Team-Flip tab
-  # observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
-  #   updateNavbarPage(session, "main_navbar", "Flip-Analyse")
-  #   # Verzögerung einbauen, damit Tabset geladen ist:
-  #   shinyjs::delay(200, {
-  #     updateTabsetPanel(session, "flip_tabs", "Kader & Historie")
-  #   })
-  # })
-  # 
-  # # Link vom Dashboard zum TM tab
-  # observeEvent(input$transfermarkt_preview_rows_selected, {
-  #   # Prüfe, ob eine Zeile ausgewählt wurde
-  #   if (!is.null(input$transfermarkt_preview_rows_selected)) {
-  #     updateNavbarPage(session, "main_navbar", "Transfermarkt")
-  #   }
-  # })
-  
+  # Link vom Dashboard zum MW Trend tab
+  observeEvent(input$mw_zeitachse_click, {
+    updateNavbarPage(session, "main_navbar", selected = "Marktwert-Entwicklung")
+  })
+
+  # Kapitalübersicht
+  observeEvent(input$kreditrahmen_uebersicht_preview_rows_selected, {
+    # egal was ausgewählt wird, Tabwechsel:
+    updateNavbarPage(session, "main_navbar", "Kapitalübersicht")
+  })
+
+  # Link vom Dashboard zum Flip tab
+  observeEvent(input$flip_click, {
+    updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
+  })
+
+  # Link vom Dashboard zum Gebote tab
+  observeEvent(input$gebote_click, {
+    updateNavbarPage(session, "main_navbar", selected = "Bieterprofile")
+  })
+
+  # Link vom Dashboard zum Kader tab
+  # Meiner
+  observeEvent(input$mein_team_tabelle_preview_rows_selected, {
+    # egal was ausgewählt wird, Tabwechsel:
+    updateNavbarPage(session, "main_navbar", "Kader-Entwicklung")
+    shinyjs::delay(200, {
+      updateTabsetPanel(session, "kader_tabs", "Mein Kader")
+    })
+  })
+
+  # Link vom Dashboard zum Hypothetischen Team-Flip tab
+  observeEvent(input$flip_einnahmen_uebersicht_preview_rows_selected, {
+    updateNavbarPage(session, "main_navbar", "Flip-Analyse")
+    # Verzögerung einbauen, damit Tabset geladen ist:
+    shinyjs::delay(200, {
+      updateTabsetPanel(session, "flip_tabs", "Kader & Historie")
+    })
+  })
+
+  # Link vom Dashboard zum TM tab
+  observeEvent(input$transfermarkt_preview_rows_selected, {
+    # Prüfe, ob eine Zeile ausgewählt wurde
+    if (!is.null(input$transfermarkt_preview_rows_selected)) {
+      updateNavbarPage(session, "main_navbar", "Transfermarkt")
+    }
+  })
+
   # ---- DATEN / df / list ----
   
   ## ---- Transfermarkt daten ----
