@@ -18,6 +18,7 @@ push_updates.bat
 # Virtuelle Umgebung
 venv/
 # Python-typisch
+*.py
 __pycache__/
 *.py[cod]
 *.pyo
