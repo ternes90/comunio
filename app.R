@@ -283,6 +283,8 @@ server <- function(input, output, session) {
   transfermarkt <- read_csv2("TRANSFERMARKT.csv") %>%
     mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
   
+  ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+  
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
     "Alfon" = "Alfons",
@@ -760,7 +762,6 @@ server <- function(input, output, session) {
     tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
     
     # ALL_PLAYERS einlesen und Datum konvertieren
-    ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     ap_df$Spieler <- trimws(enc2utf8(ap_df$Spieler))
     ap_df$Datum <- as.Date(ap_df$Datum, format = "%d.%m.%Y")
     ap_df$Marktwert <- as.numeric(ap_df$Marktwert)
@@ -1129,7 +1130,6 @@ server <- function(input, output, session) {
     tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
     
     # ALL_PLAYERS einlesen und Datum konvertieren
-    ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
     ap_df$Spieler <- trimws(enc2utf8(ap_df$Spieler))
     ap_df$Datum <- as.Date(ap_df$Datum, format = "%d.%m.%Y")
     ap_df$Marktwert <- as.numeric(ap_df$Marktwert)
