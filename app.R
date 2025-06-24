@@ -4,7 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-#library(shinyjs)
+library(shinyjs)
 
 # ---- UI ----
 ui <- navbarPage(
