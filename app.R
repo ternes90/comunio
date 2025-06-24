@@ -5,9 +5,18 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 
+last_update <- tryCatch(readLines("last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
+
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse",
+  
+  #Pushaktualisierung
+  tags$div(
+    style = "text-align: right; font-size: 12px; color: grey; margin: 5px;",
+    paste("Letztes Update:", last_update)
+  ),
+  
   id = "main_navbar",
   
   ## ---- Dashboard ----
@@ -181,6 +190,7 @@ ui <- navbarPage(
     Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
   });
 "))
+  
 )
 
 # ---- SERVER ----
