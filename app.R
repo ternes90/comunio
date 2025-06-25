@@ -282,12 +282,15 @@ server <- function(input, output, session) {
   
   tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")#
   
-  st_df <- readr::read_csv2("STANDINGS.csv") %>%
-    mutate(
-      Manager = as.character(Manager),
-      Teamwert = as.numeric(Teamwert),
-      Datum = as.Date(Datum, format = "%d.%m.%Y")
-    )
+  st_df <- readr::read_csv2("STANDINGS.csv", 
+                            col_types = cols(
+                              Manager = col_character(),
+                              Teamwert = col_double(),
+                              Datum = col_character()
+                            )
+  ) %>%
+    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+  
   
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
@@ -1160,6 +1163,11 @@ server <- function(input, output, session) {
           "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
         ))
       )
+    
+    # Filter unusual high bids
+    gp_df <- gp_df %>% 
+      filter(Diff_Prozent<=50)
+    
     means_klasse <- gp_df %>%
       group_by(MW_Klasse) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
@@ -1709,6 +1717,10 @@ server <- function(input, output, session) {
         ))
       )
     
+    # Filter unusual high bids
+    plotdata <- plotdata %>% 
+      filter(Diff_Prozent<=50)
+    
     # Für robustes beeswarm: Gruppengröße pro Facet
     plotdata_beeswarm <- plotdata %>%
       group_by(Bieter, MW_Klasse) %>%
@@ -1734,7 +1746,6 @@ server <- function(input, output, session) {
         n_total = n(),
         .groups = "drop"
       )
-    
     
     ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
       geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
