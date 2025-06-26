@@ -515,24 +515,25 @@ server <- function(input, output, session) {
     DT::datatable(
       dat %>% select(Position, Spieler, Marktwert, Diff_fmt),
       rownames = FALSE,
-      escape = FALSE,
-      selection = "single",  
       options = list(
-        pageLength = 25,
-        dom = "t",
-        ordering = FALSE
+        pageLength = 28,
+        dom = 't',
+        ordering = FALSE,
+        paging = FALSE,
+        scrollY = '1100px'
       ),
       colnames = c("Position", "Spieler", "Marktwert", "Tagesveränderung")
     ) %>%
       DT::formatStyle(
         "Diff_fmt",
-        target = "cell",
-        color = DT::styleEqual(
-          c(grep("▲", dat$Diff_fmt, value = TRUE), grep("▼", dat$Diff_fmt, value = TRUE)),
-          c("#388e3c", "#e53935")[1 + grepl("▼", c(grep("▲", dat$Diff_fmt, value = TRUE), grep("▼", dat$Diff_fmt, value = TRUE)))]
-        ),
+        color = DT::styleEqual(unique(dat$Diff_fmt), sapply(unique(dat$Diff_fmt), function(x) {
+          if (grepl("▲", x)) "#388e3c"
+          else if (grepl("▼", x)) "#e53935"
+          else "black"
+        })),
         fontWeight = "bold"
       )
+    
   })
   
   ## ---- Hypothetischer Team Flip-Übersicht aller Manager  ----
