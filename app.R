@@ -1185,7 +1185,10 @@ server <- function(input, output, session) {
     
     # Filter unusual high bids
     gp_df <- gp_df %>% 
-      filter(Diff_Prozent<=50)
+      filter(Diff_Prozent<=25)
+    
+    # print(gp_df)
+    # print(colnames(gp_df))
     
     means_klasse <- gp_df %>%
       group_by(MW_Klasse) %>%
@@ -1240,11 +1243,12 @@ server <- function(input, output, session) {
       filter(TM_Stand == vortag) %>%
       select(Spieler, Marktwert_num = Marktwert)
     
-    # 3. Transfers mit Vortagsmarktwert joinen
+    # 3. Transfers mit Vortagsmarktwert joinen, aber unrealisitsch hohe gebote >150% rausfiltern
     transfers_mw <- transfers %>%
       left_join(vortags_mw, by = "Spieler") %>%
-      filter(!is.na(Marktwert_num)) %>% # nur Spieler mit Vortags-MW
-      mutate(MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1)))
+      filter(!is.na(Marktwert_num)) %>%  # nur Spieler mit Vortags-MW
+      mutate(MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1))) %>%  
+      filter(Hoechstgebot <= 1.33 * Marktwert_num)  # hier gebote rausfiltern, die höher als 50% vom MW sind
     
     # 4. 90%-Perzentil Höchstgebot je MW_Klasse berechnen
     maxgebote_klasse <- transfers_mw %>%
@@ -1352,6 +1356,16 @@ server <- function(input, output, session) {
         target = 'cell',
         color = DT::styleEqual("heute", "red"),
         fontWeight = DT::styleEqual("heute", "bold")
+      ) %>%
+      DT::formatStyle(
+        'Mindestgebot',
+        target = 'cell',
+        color = DT::styleEqual(
+          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "green"
+        ),
+        fontWeight = DT::styleEqual(
+          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "bold"
+        )
       )
   })
   
