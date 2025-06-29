@@ -1185,10 +1185,8 @@ server <- function(input, output, session) {
     
     # Filter unusual high bids
     gp_df <- gp_df %>% 
-      filter(Diff_Prozent<=25)
-    
-    # print(gp_df)
-    # print(colnames(gp_df))
+      filter(Typ == "Hoechstgebot") %>% 
+      filter(Diff_Prozent > 0, Diff_Prozent <= 25)
     
     means_klasse <- gp_df %>%
       group_by(MW_Klasse) %>%
@@ -1248,31 +1246,27 @@ server <- function(input, output, session) {
       left_join(vortags_mw, by = "Spieler") %>%
       filter(!is.na(Marktwert_num)) %>%  # nur Spieler mit Vortags-MW
       mutate(MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1))) %>%  
-      filter(Hoechstgebot <= 1.33 * Marktwert_num)  # hier gebote rausfiltern, die höher als 50% vom MW sind
+      mutate(Diff_per_cent =  Hoechstgebot / Marktwert_num) %>% 
+      filter(Diff_per_cent>1, Diff_per_cent<1.33)
     
-    # 4. 90%-Perzentil Höchstgebot je MW_Klasse berechnen
-    maxgebote_klasse <- transfers_mw %>%
+    # 4. 90%-Perzentil Faktor je MW_Klasse berechnen
+    maxgebote_klasse <- transfers_mw  %>% 
       group_by(MW_Klasse) %>%
-      summarise(Maximalgebot_90 = quantile(Hoechstgebot, probs = 0.90, na.rm = TRUE))
+      summarise(Maximalgebot_90_Faktor = quantile(Diff_per_cent, probs = 0.90, na.rm = TRUE))
     
-    # 5. Nun füge das in tm_trend ein:
+    # 5. In tm_trend joinen
     tm_trend <- tm_trend %>%
       left_join(maxgebote_klasse, by = "MW_Klasse") %>%
       mutate(
-        Maximalgebot = ifelse(
-          is.na(Maximalgebot_90),
+        Maximalgebot_num_rounded = ifelse(
+          is.na(Maximalgebot_90_Faktor),
           NA,
-          paste0(format(round(Maximalgebot_90), big.mark = ".", decimal.mark = ","), " €")
-        )
+          round(Marktwert_num * Maximalgebot_90_Faktor)
+        ),
+        MaximalgebotProzent = round(100 * (Maximalgebot_num_rounded / Marktwert_num - 1), 1)
       )
     
-    # Maximalgebot runden
-    tm_trend$Maximalgebot_num_rounded <- round(tm_trend$Maximalgebot_90)
-    
-    # Prozentwert berechnen (bezogen auf Marktwert)
-    tm_trend$MaximalgebotProzent <- round(100 * (tm_trend$Maximalgebot_num_rounded / tm_trend$Marktwert_num - 1), 1)
-    
-    # HTML mit kleinem Prozentwert drunter bauen
+    # 6. HTML bauen
     tm_trend$Maximalgebot <- paste0(
       format(tm_trend$Maximalgebot_num_rounded, big.mark = ".", decimal.mark = ","), " €",
       '<br><span style="font-size: 85%; color: #666;">(',
@@ -1318,12 +1312,27 @@ server <- function(input, output, session) {
     # 7. Fallback: Wenn Durchschnitt_Abweichung fehlt, Mindestgebot = Marktwert
     tm_trend <- tm_trend %>%
       mutate(
-        Minimalgebot = ifelse(
-          is.na(Minimalgebot),
-          paste0(format(Marktwert_num, big.mark = ".", decimal.mark = ","), " €"),
-          Minimalgebot
-        )
+        Minimalgebot_num = as.numeric(gsub("\\.", "", gsub(" €", "", Minimalgebot))),
+        Mindestgebot_num = as.numeric(gsub("\\.", "", gsub(" €", "", Mindestgebot)))
+      ) %>%
+      mutate(
+        Minimalgebot_num = ifelse(Minimalgebot_num < Mindestgebot_num, Mindestgebot_num, Minimalgebot_num),
+        Minimalgebot = paste0(format(Minimalgebot_num, big.mark = ".", decimal.mark = ","), " €")
       )
+    
+    # 8. HTML bauen
+    tm_trend$MinimalgebotProzent <- round(100 * (tm_trend$Minimalgebot_num / tm_trend$Marktwert_num - 1), 1)
+    
+    tm_trend$Minimalgebot <- paste0(
+      format(tm_trend$Minimalgebot_num, big.mark = ".", decimal.mark = ","), " €",
+      '<br><span style="font-size: 85%; color: #666;">(',
+      ifelse(is.na(tm_trend$MinimalgebotProzent), "–",
+             ifelse(tm_trend$MinimalgebotProzent > 0, "+", "")),
+      ifelse(is.na(tm_trend$MinimalgebotProzent), "", tm_trend$MinimalgebotProzent),
+      "%)</span>"
+    )
+    
+    
     
     #Hist. Punkte, Kaufempfehlung etc. mergen
     tm_trend <- tm_trend %>%
@@ -1338,7 +1347,7 @@ server <- function(input, output, session) {
     
     DT::datatable(
       tm_trend[, c("Spieler", "Logo", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "IdealesGebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
-      colnames = c("Spieler", "Verein", "PPS", "Preis-Leistung", "Hist.", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "Ideales Gebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      colnames = c("Spieler", "Verein", "PPS", "Preis-Leistung", "Hist.", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "Zuschlagsgebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
       rownames = FALSE,
       escape = FALSE,
       options = list(
