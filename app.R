@@ -291,6 +291,24 @@ server <- function(input, output, session) {
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
+  ca_df <- read_delim("com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
+  ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
+  
+  #Kaufempfehung etc.
+  ca2_df <- read_delim("com_analytics_transfer_market_computer.csv", delim = ";", locale = locale(encoding = "UTF-8")) %>%
+    mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>% filter(Datum == max(Datum, na.rm = TRUE))
+  ca2_df$SPIELER <- trimws(enc2utf8(as.character(ca2_df$SPIELER)))
+  
+  ca2_df <- ca2_df %>%
+    select(
+      SPIELER,
+      `Punkte pro Spiel` = `PUNKTE / SPIEL`,
+      `Preis-Leistung` = `PREIS-LEISSTUNG`,
+      Zielwert = `ZIELWERT`,
+      Empfehlung = `KAUFEMPFEHLUNG`,
+      Gebote = `GEBOTSVORHERSAGE`
+    )
+  
   
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
@@ -1205,17 +1223,6 @@ server <- function(input, output, session) {
     )
     tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
     
-    #PPS mergen
-    tm_trend <- tm_trend %>%
-      left_join(ca_df, by = c("Spieler" = "SPIELER"))
-    
-    tm_trend <- tm_trend %>%
-      rename(
-        "Punkte pro Spiel" = Punkte_pro_Spiel,
-        "Preis-Leistung" = Preis_Leistung,
-        "Historische Punkteausbeute" = Historische_Punkteausbeute
-      )
-    
     #90% gebot
     # 1. Transfers laden
     transfers <- transfers %>% 
@@ -1314,10 +1321,20 @@ server <- function(input, output, session) {
         )
       )
     
+    #Hist. Punkte, Kaufempfehlung etc. mergen
+    tm_trend <- tm_trend %>%
+      left_join(ca_df %>%
+                  select(
+                    "Spieler" = "SPIELER",
+                    "Historische Punkteausbeute" = `Historische_Punkteausbeute`
+                  ), by = c("Spieler"))
+    
+    tm_trend <- tm_trend %>%
+     left_join(ca2_df, by = c("Spieler" = "SPIELER"))
     
     DT::datatable(
-      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "Minimalgebot", "IdealesGebot", "Maximalgebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
-      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Minimalgebot", "Ideales Gebot", "Maximalgebot", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      tm_trend[, c("Spieler", "Logo", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "IdealesGebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
+      colnames = c("Spieler", "Verein", "PPS", "Preis-Leistung", "Hist.", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "Ideales Gebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
       rownames = FALSE,
       escape = FALSE,
       options = list(
@@ -1364,10 +1381,7 @@ server <- function(input, output, session) {
     "VfL Wolfsburg" = "VfL Wolfsburg.png"
   )
   
-  #PPS
-  ca_df <- read_delim("com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
-  ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
-  
+  #PPS usw. mergen
   ca_df <- ca_df %>%
     select(
       SPIELER,
