@@ -1,16 +1,16 @@
 ﻿Spieler;Marktwert;Mindestgebot;Besitzer;TM_Stand;Restzeit;Verein
-Spari;360.000;360.000;Computer;30.06.2025;1d, 20h;FC St. Pauli
-Krattenmacher;1.110.000;1.110.000;Computer;30.06.2025;1d, 20h;FC Bayern München
-Stein;170.000;170.000;Computer;30.06.2025;1d, 20h;1.FC Union Berlin
-da Costa;1.120.000;1.120.000;Computer;30.06.2025;1d, 20h;1. FSV Mainz 05
-Faghir;190.000;190.000;Computer;30.06.2025;1d, 20h;VfB Stuttgart
-Scally;1.310.000;1.310.000;Computer;30.06.2025;1d, 20h;Borussia Mönchengladbach
-Sahiti;750.000;770.000;Computer;30.06.2025;20h;Hamburger SV
-Elmas;740.000;710.000;Computer;30.06.2025;20h;RB Leipzig
-Henrichs;2.430.000;2.320.000;Computer;30.06.2025;20h;RB Leipzig
-Majer;4.520.000;4.360.000;Computer;30.06.2025;20h;VfL Wolfsburg
-Stanišić;3.930.000;4.140.000;Computer;30.06.2025;20h;FC Bayern München
-Breunig;380.000;390.000;Computer;30.06.2025;20h;1.FC Heidenheim
-Diogo Leite;3.780.000;3.770.000;Computer;30.06.2025;20h;1.FC Union Berlin
-Widmer;470.000;490.000;Computer;30.06.2025;20h;1. FSV Mainz 05
-Kownacki;620.000;670.000;Computer;30.06.2025;20h;SV Werder Bremen
+Jatta;1.410.000;1.410.000;Computer;01.07.2025;1d, 20h;Hamburger SV
+Vidić;280.000;280.000;Computer;01.07.2025;1d, 20h;Borussia Mönchengladbach
+Treu;2.690.000;2.690.000;Computer;01.07.2025;1d, 20h;Sport-Club Freiburg
+Cozza;170.000;170.000;Computer;01.07.2025;1d, 20h;VfL Wolfsburg
+Hložek;5.470.000;5.470.000;Computer;01.07.2025;1d, 20h;TSG Hoffenheim
+Schick;13.520.000;13.520.000;Computer;01.07.2025;1d, 20h;Bayer 04 Leverkusen
+Spari;370.000;360.000;Computer;01.07.2025;20h;FC St. Pauli
+Krattenmacher;1.110.000;1.110.000;Computer;01.07.2025;20h;FC Bayern München
+Stein;170.000;170.000;Computer;01.07.2025;20h;1.FC Union Berlin
+da Costa;1.120.000;1.120.000;Computer;01.07.2025;20h;1. FSV Mainz 05
+Faghir;200.000;190.000;Computer;01.07.2025;20h;VfB Stuttgart
+Scally;1.310.000;1.310.000;Computer;01.07.2025;20h;Borussia Mönchengladbach
+Henrichs;2.540.000;2.320.000;Computer;01.07.2025;20h;RB Leipzig
+Majer;4.500.000;4.360.000;Computer;01.07.2025;20h;VfL Wolfsburg
+Stanišić;4.230.000;4.140.000;Computer;01.07.2025;20h;FC Bayern München
