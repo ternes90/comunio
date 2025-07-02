@@ -609,65 +609,78 @@ server <- function(input, output, session) {
   
   ## ---- Kontostände ----
   output$kreditrahmen_uebersicht_preview <- DT::renderDT({
-    startkapital_fix <- c(
-      "Alfons" = 14230000,
-      "Nico" = 15530000,
-      "Andreas" = 15790000,
-      "Pascal" = 15800000,
-      "Thomas" = 16830000,
-      "Christoph" = 17640000,
-      "Christian" = 18140000,
-      "Dominik" = 18040000
-    )
-    alle_manager <- names(startkapital_fix)
-    
-    kader_df <- standings_df()
-    
-    ausgaben <- transfers %>%
-      group_by(Hoechstbietender) %>%
-      summarise(Ausgaben = sum(Hoechstgebot, na.rm = TRUE)) %>%
-      rename(Manager = Hoechstbietender)
-    einnahmen <- transfers %>%
-      group_by(Besitzer) %>%
-      summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
-      rename(Manager = Besitzer)
-    
-    kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE) %>%
-      left_join(kader_df, by = "Manager") %>%
-      mutate(
-        Teamwert = ifelse(is.na(Teamwert), 0, Teamwert),
-        Startkapital = startkapital_fix[Manager],
-        Kreditrahmen = round(Teamwert / 4),
-        Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
-        Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
-        Kontostand = Startkapital + Einnahmen - Ausgaben,
-        Verfuegbares_Kapital = Kontostand + Kreditrahmen
+      dat <- data_all()
+      transfers <- dat$transfers
+      transactions <- readr::read_delim(
+        "TRANSACTIONS.csv",
+        delim = ";",
+        locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ""),
+        show_col_types = FALSE
       ) %>%
-      select(Manager, Kontostand, Kreditrahmen, Verfuegbares_Kapital) %>%
-      arrange(desc(Verfuegbares_Kapital))
-    
-    DT::datatable(
-      kapital_df,
-      colnames = c("Manager", "Kontostand (€)", "Kreditrahmen (€)", "Verfügbares Kapital (€)"),
-      rownames = FALSE,
-      selection = "single", 
-      options = list(
-        pageLength = 8,
-        dom = "t",
-        ordering = FALSE,
-        columnDefs = list(
-          list(className = 'dt-left', targets = 0),
-          list(className = 'dt-right', targets = 1:3)
+        mutate(
+          Spieler = as.character(Spieler),
+          Manager = word(Spieler, 1)  # nimmt das erste Wort → also den Vornamen
+        ) %>%
+        filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000)) %>%  #Rausfiltern von Fehlgebot von Alfons
+        group_by(Manager) %>%
+        summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
+      
+      alle_manager <- names(startkapital_fix)
+      
+      # Summen aus Transfers
+      ausgaben <- transfers %>%
+        group_by(Hoechstbietender) %>%
+        summarise(Ausgaben = sum(Hoechstgebot, na.rm = TRUE)) %>%
+        rename(Manager = Hoechstbietender)
+      
+      einnahmen <- transfers %>%
+        group_by(Besitzer) %>%
+        summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
+        rename(Manager = Besitzer)
+      
+      # Standings-Daten laden
+      kader_df <- standings_df()
+      
+      # Falls nötig: Vornamen extrahieren oder sonstiges Mapping, hier nehmen wir Manager-Namen direkt
+      # Optional: teamnamen bereinigen oder anpassen, wenn deine Startkapitalnamen anders sind
+      
+      kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE)
+      
+      kapital_df <- kapital_df %>%
+        left_join(kader_df, by = "Manager") %>%
+        mutate(
+          Teamwert = ifelse(is.na(Teamwert), 0, Teamwert),
+          Startkapital = startkapital_fix[Manager],
+          Kreditrahmen = round(Teamwert / 4),
+          Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
+          Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
+          Transaction_Summe = ifelse(is.na(transactions$Transaction_Summe[match(Manager, transactions$Manager)]), 0, transactions$Transaction_Summe[match(Manager, transactions$Manager)]),
+          Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe,
+          Verfügbares_Kapital = Aktuelles_Kapital + Kreditrahmen
+        ) %>%
+        select(Manager, Teamwert, Aktuelles_Kapital, Verfügbares_Kapital)
+      
+      datatable(
+        kapital_df,
+        colnames = c(
+          "Manager",
+          "Teamwert (€)",
+          "Kontostand (€)",
+          "Verfügbares Kapital (€)"
+        ),
+        options = list(
+          pageLength = 10,
+          autoWidth = TRUE,
+          order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc')),
+          dom = 't'          # <-- Nur die Tabelle anzeigen, keine Suchbox, keine Pagination Controls
         )
-      )
-    ) %>%
-      DT::formatCurrency(c("Kontostand", "Kreditrahmen", "Verfuegbares_Kapital"), "€", mark = ".", dec.mark = ",", digits = 0) %>%
-      DT::formatStyle(
-        "Kontostand",
-        color = DT::styleInterval(0, c("red", "black")),
-        fontWeight = DT::styleInterval(0, c("bold", NA))
-      )
-  })
+      ) %>%
+        formatStyle(
+          'Aktuelles_Kapital',
+          backgroundColor = styleInterval(0, c('salmon', NA)),
+          fontWeight = styleInterval(0, c('bold', NA))
+        )
+    })
   
   ## ---- Flip preview ----
   output$flip_preview <- renderPlot({
