@@ -1,5 +1,4 @@
 ﻿Manager;Spieler;Position
-Thomas;Bruun Larsen;Sturm
 Thomas;Burkardt;Sturm
 Thomas;Diehl;Sturm
 Thomas;Glatzel;Sturm
@@ -9,9 +8,10 @@ Thomas;Palacios;Mittelfeld
 Thomas;Musiala;Mittelfeld
 Thomas;Doan;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
+Thomas;Krattenmacher;Mittelfeld
+Thomas;Treu;Abwehr
 Thomas;Agu;Abwehr
 Thomas;Wahl;Abwehr
-Thomas;Oliveira;Abwehr
 Thomas;Meyer;Tor
 Thomas;Urbig;Tor
 Thomas;Heuer Fernandes;Tor
@@ -37,6 +37,7 @@ Christoph;Ilić;Sturm
 Christoph;Uzun;Sturm
 Christoph;B. Touré;Sturm
 Christoph;Hack;Sturm
+Christoph;Muslija;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;Ouédraogo;Mittelfeld
 Christoph;Weiser;Abwehr
@@ -117,6 +118,7 @@ Dominik;Neuer;Tor
 Dominik;Kauã Santos;Tor
 Nico;Gregoritsch;Sturm
 Nico;Olise;Sturm
+Nico;Hložek;Sturm
 Nico;Wahi;Sturm
 Nico;Höler;Sturm
 Nico;Pavlović;Mittelfeld
@@ -136,6 +138,7 @@ Christian;Kömür;Mittelfeld
 Christian;Schöppner;Mittelfeld
 Christian;Tapsoba;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
+Christian;Cozza;Abwehr
 Christian;P. Pfeiffer;Abwehr
 Christian;Elfadli;Abwehr
 Christian;Agyekum;Abwehr
