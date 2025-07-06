@@ -22,6 +22,23 @@ ui <- navbarPage(
   ## ---- Dashboard ----
   tabPanel("Dashboard",
            fluidPage(
+             
+             # NEW ROW: Aktuelle Transfers - Zusammenfassung
+             fluidRow(
+               column(12,
+                      div(
+                        style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
+                        tags$div("Aktuelle Transfers - Zusammenfassung", 
+                                 style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+                        div(
+                          style = "width: 100%; margin-bottom:20px;",  # keep width consistent with above
+                          DTOutput("transfer_summary_today")
+                        )
+                      )
+               )
+             ),
+             
+             
              fluidRow(
                column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
                column(6, DTOutput("kreditrahmen_uebersicht_preview"))
@@ -32,7 +49,7 @@ ui <- navbarPage(
                  column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
                  column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
                  column(6, DTOutput("flip_einnahmen_uebersicht_preview"))
-               ),
+               )
              ),
              
              fluidRow(
@@ -42,14 +59,17 @@ ui <- navbarPage(
                         tags$div("Aktueller Transfermarkt", 
                                  style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
                         div(
-                          style = "width: 80%;",  # oder fixe Breite wie 600px
+                          style = "width: 100%;",  # or fixed width like 600px
                           DTOutput("transfermarkt_preview")
                         )
                       )
                )
-             )
+             ),
+             
+             
            )
   ),
+  
   
   ## ---- Marktwert-Entwicklung ----
   tabPanel("Marktwert-Entwicklung",
@@ -458,6 +478,126 @@ server <- function(input, output, session) {
   }
 
   # ---- DASHBOARD ----
+  
+  ## ---- Transferaktivitäten ----
+  
+  # Reactive for today’s transfer summary table
+  output$transfer_summary_today <- DT::renderDT({
+    
+    # Select latest date in transfers (today)
+    latest_date <- max(transfers$Datum, na.rm = TRUE)
+    
+    # Filter transfers for latest day only
+    todays_transfers <- transfers %>%
+      filter(Datum == latest_date)
+    
+    # Get market values for current day and previous day per player
+    mw_today <- ap_df %>% filter(Datum == latest_date) %>% select(Spieler, Marktwert_today = Marktwert)
+    mw_prev <- ap_df %>% filter(Datum == (latest_date - 1)) %>% select(Spieler, Marktwert_prev = Marktwert)
+    
+    # Merge market values to transfers
+    df <- todays_transfers %>%
+      left_join(mw_today, by = "Spieler") %>%
+      left_join(mw_prev, by = "Spieler")
+    
+    # Calculate differences and percentages for highest bid vs previous MW
+    # For second bid: only percent diff vs previous day MW
+    df <- df %>%
+      mutate(
+        # Highest bid differences and percentages
+        Diff_Hoechst_prev_abs = Hoechstgebot - Marktwert_prev,
+        Diff_Hoechst_prev_pct = ifelse(!is.na(Marktwert_prev) & Marktwert_prev > 0,
+                                       100 * Diff_Hoechst_prev_abs / Marktwert_prev, NA),
+        
+        # Flip-Potenzial = Marktwert heute - Höchstgebot (absolut)
+        Flip_Potenzial = Marktwert_today - Hoechstgebot,
+        
+        # Second bid: only percent diff vs previous day MW
+        Diff_Zweit_prev_pct = ifelse(!is.na(Zweitgebot) & !is.na(Marktwert_prev) & Marktwert_prev > 0,
+                                     100 * (Zweitgebot - Marktwert_prev) / Marktwert_prev, NA)
+      )
+    
+    # Market value trend during the day: compare today MW vs previous day MW
+    df <- df %>%
+      mutate(
+        MW_Trend = case_when(
+          is.na(Marktwert_prev) | is.na(Marktwert_today) ~ "–",
+          Marktwert_today > Marktwert_prev ~ '<span style="color:green; font-weight:bold;">▲</span>',
+          Marktwert_today < Marktwert_prev ~ '<span style="color:red; font-weight:bold;">▼</span>',
+          TRUE ~ "–"
+        )
+      )
+    
+    # Format values for display
+    df_display <- df %>%
+      mutate(
+        Marktwert_prev_fmt = ifelse(is.na(Marktwert_prev), "-", paste0(format(Marktwert_prev, big.mark = ".", decimal.mark = ","), " €")),
+        Marktwert_today_fmt = ifelse(is.na(Marktwert_today), "-", paste0(format(Marktwert_today, big.mark = ".", decimal.mark = ","), " €")),
+        
+        Hoechstgebot_fmt = paste0(format(Hoechstgebot, big.mark = ".", decimal.mark = ","), " €"),
+        Zweitgebot_fmt = ifelse(is.na(Zweitgebot), "-", paste0(format(Zweitgebot, big.mark = ".", decimal.mark = ","), " €")),
+        
+        Diff_Hoechst_prev_abs_fmt = ifelse(is.na(Diff_Hoechst_prev_abs), "-", paste0(ifelse(Diff_Hoechst_prev_abs >= 0, "+", "-"), format(abs(Diff_Hoechst_prev_abs), big.mark = ".", decimal.mark = ","), " €")),
+        Diff_Hoechst_prev_pct_fmt = ifelse(is.na(Diff_Hoechst_prev_pct), "-", paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"), round(abs(Diff_Hoechst_prev_pct),1), " %")),
+        
+        Flip_Potenzial_fmt = ifelse(is.na(Flip_Potenzial), "-", paste0(ifelse(Flip_Potenzial >= 0, "+", "-"), format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €")),
+        
+        Diff_Zweit_prev_pct_fmt = ifelse(is.na(Diff_Zweit_prev_pct), "-", paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"), round(abs(Diff_Zweit_prev_pct),1), " %"))
+      ) %>%
+      select(
+        Datum,
+        Spieler,
+        Marktwert_prev_fmt,
+        Marktwert_today_fmt,
+        MW_Trend,
+        Hoechstbietender,
+        Hoechstgebot_fmt,
+        Diff_Hoechst_prev_abs_fmt,
+        Diff_Hoechst_prev_pct_fmt,
+        Flip_Potenzial_fmt,
+        Zweitbietender,
+        Zweitgebot_fmt,
+        Diff_Zweit_prev_pct_fmt
+      ) %>%
+      rename(
+        "Datum" = Datum,
+        "Spieler" = Spieler,
+        "MW Vortag" = Marktwert_prev_fmt,
+        "MW Heute" = Marktwert_today_fmt,
+        "Trend" = MW_Trend,
+        "Käufer" = Hoechstbietender,
+        "Preis" = Hoechstgebot_fmt,
+        "Δ Preis (€)" = Diff_Hoechst_prev_abs_fmt,
+        "Δ Preis (%)" = Diff_Hoechst_prev_pct_fmt,
+        "Flip (€)" = Flip_Potenzial_fmt,
+        "Zweitbieter" = Zweitbietender,
+        "Zweitgebot" = Zweitgebot_fmt,
+        "Δ Zweitgebot (%)" = Diff_Zweit_prev_pct_fmt
+      )
+    
+    DT::datatable(
+      df_display,
+      escape = FALSE,
+      rownames = FALSE,
+      options = list(
+        dom = 'Bfrtip',
+        pageLength = 10,
+        scrollX = TRUE,
+        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+      )
+    ) %>%
+      DT::formatStyle(
+        'Flip (€)',
+        color = styleInterval(0, c('red', 'darkgreen')),
+        fontWeight = 'bold'
+      ) %>%
+      DT::formatStyle(
+        columns = "Trend",
+        target = 'cell'
+      )
+  })
+  
+  
   ## ---- Zeitachse ----
   output$mw_zeitachse_preview <- renderPlot({
     df <- mw_evolution_data()
@@ -609,78 +749,107 @@ server <- function(input, output, session) {
   
   ## ---- Kontostände ----
   output$kreditrahmen_uebersicht_preview <- DT::renderDT({
-      dat <- data_all()
-      transfers <- dat$transfers
-      transactions <- readr::read_delim(
-        "TRANSACTIONS.csv",
-        delim = ";",
-        locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ""),
-        show_col_types = FALSE
+    
+    dat <- data_all()
+    transfers <- dat$transfers
+    transactions <- readr::read_delim(
+      "TRANSACTIONS.csv",
+      delim = ";",
+      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ""),
+      show_col_types = FALSE
+    ) %>%
+      mutate(
+        Spieler = as.character(Spieler),
+        Manager = word(Spieler, 1)  # Vornamen extrahieren
       ) %>%
-        mutate(
-          Spieler = as.character(Spieler),
-          Manager = word(Spieler, 1)  # nimmt das erste Wort → also den Vornamen
-        ) %>%
-        filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000)) %>%  #Rausfiltern von Fehlgebot von Alfons
-        group_by(Manager) %>%
-        summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
-      
-      alle_manager <- names(startkapital_fix)
-      
-      # Summen aus Transfers
-      ausgaben <- transfers %>%
-        group_by(Hoechstbietender) %>%
-        summarise(Ausgaben = sum(Hoechstgebot, na.rm = TRUE)) %>%
-        rename(Manager = Hoechstbietender)
-      
-      einnahmen <- transfers %>%
-        group_by(Besitzer) %>%
-        summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
-        rename(Manager = Besitzer)
-      
-      # Standings-Daten laden
-      kader_df <- standings_df()
-      
-      # Falls nötig: Vornamen extrahieren oder sonstiges Mapping, hier nehmen wir Manager-Namen direkt
-      # Optional: teamnamen bereinigen oder anpassen, wenn deine Startkapitalnamen anders sind
-      
-      kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE)
-      
-      kapital_df <- kapital_df %>%
-        left_join(kader_df, by = "Manager") %>%
-        mutate(
-          Teamwert = ifelse(is.na(Teamwert), 0, Teamwert),
-          Startkapital = startkapital_fix[Manager],
-          Kreditrahmen = round(Teamwert / 4),
-          Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
-          Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
-          Transaction_Summe = ifelse(is.na(transactions$Transaction_Summe[match(Manager, transactions$Manager)]), 0, transactions$Transaction_Summe[match(Manager, transactions$Manager)]),
-          Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe,
-          Verfügbares_Kapital = Aktuelles_Kapital + Kreditrahmen
-        ) %>%
-        select(Manager, Teamwert, Aktuelles_Kapital, Verfügbares_Kapital)
-      
-      datatable(
-        kapital_df,
-        colnames = c(
-          "Manager",
-          "Teamwert (€)",
-          "Kontostand (€)",
-          "Verfügbares Kapital (€)"
-        ),
-        options = list(
-          pageLength = 10,
-          autoWidth = TRUE,
-          order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc')),
-          dom = 't'          # <-- Nur die Tabelle anzeigen, keine Suchbox, keine Pagination Controls
+      filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000)) %>%
+      group_by(Manager) %>%
+      summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
+    
+    alle_manager <- names(startkapital_fix)
+    
+    ausgaben <- transfers %>%
+      group_by(Hoechstbietender) %>%
+      summarise(Ausgaben = sum(Hoechstgebot, na.rm = TRUE)) %>%
+      rename(Manager = Hoechstbietender)
+    
+    einnahmen <- transfers %>%
+      group_by(Besitzer) %>%
+      summarise(Einnahmen = sum(Hoechstgebot, na.rm = TRUE)) %>%
+      rename(Manager = Besitzer)
+    
+    max_datum <- max(st_df$Datum, na.rm = TRUE)
+    prev_datum <- max(st_df$Datum[st_df$Datum < max_datum], na.rm = TRUE)
+    
+    mw_today <- st_df %>% filter(Datum == max_datum) %>% select(Manager, Teamwert_today = Teamwert)
+    mw_prev <- st_df %>% filter(Datum == prev_datum) %>% select(Manager, Teamwert_prev = Teamwert)
+    
+    mw_diff_df <- mw_today %>%
+      left_join(mw_prev, by = "Manager") %>%
+      mutate(
+        Teamwert_Entwicklung = Teamwert_today - Teamwert_prev,
+        Teamwert_Entwicklung_fmt = case_when(
+          is.na(Teamwert_Entwicklung) ~ "-",
+          Teamwert_Entwicklung > 0 ~ paste0('<span style="color:green; font-weight:bold;">▲ ', format(Teamwert_Entwicklung, big.mark = ".", decimal.mark = ","), " €</span>"),
+          Teamwert_Entwicklung < 0 ~ paste0('<span style="color:red; font-weight:bold;">▼ ', format(abs(Teamwert_Entwicklung), big.mark = ".", decimal.mark = ","), " €</span>"),
+          TRUE ~ as.character(format(Teamwert_Entwicklung, big.mark = ".", decimal.mark = ","))
         )
       ) %>%
-        formatStyle(
-          'Aktuelles_Kapital',
-          backgroundColor = styleInterval(0, c('salmon', NA)),
-          fontWeight = styleInterval(0, c('bold', NA))
-        )
-    })
+      select(Manager, Teamwert_Entwicklung_fmt)
+    
+    kapital_df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE)
+    
+    kapital_df <- kapital_df %>%
+      left_join(mw_today, by = "Manager") %>%
+      mutate(
+        Teamwert_today = ifelse(is.na(Teamwert_today), 0, Teamwert_today),
+        Startkapital = startkapital_fix[Manager],
+        Kreditrahmen = round(Teamwert_today / 4),
+        Ausgaben = ifelse(is.na(ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]), 0, ausgaben$Ausgaben[match(Manager, ausgaben$Manager)]),
+        Einnahmen = ifelse(is.na(einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]), 0, einnahmen$Einnahmen[match(Manager, einnahmen$Manager)]),
+        Transaction_Summe = ifelse(is.na(transactions$Transaction_Summe[match(Manager, transactions$Manager)]), 0, transactions$Transaction_Summe[match(Manager, transactions$Manager)]),
+        Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe,
+        Verfuegbares_Kapital = Aktuelles_Kapital + Kreditrahmen
+      ) %>%
+      left_join(mw_diff_df, by = "Manager") %>%
+      rename(
+        Teamwert = Teamwert_today,
+        Kontostand = Aktuelles_Kapital,
+        `Verfügbares Kapital` = Verfuegbares_Kapital
+      ) %>%
+      select(Manager, Teamwert, Teamwert_Entwicklung_fmt, Kontostand, `Verfügbares Kapital`)
+    
+    DT::datatable(
+      kapital_df,
+      colnames = c(
+        "Manager",
+        "Teamwert (€)",
+        "Teamwert-Entwicklung",
+        "Kontostand (€)",
+        "Verfügbares Kapital (€)"
+      ),
+      escape = FALSE,
+      options = list(
+        pageLength = 10,
+        autoWidth = TRUE,
+        order = list(list(5, 'desc')),  # Sortierung nach Verfügbares Kapital (5. Spalte)
+        dom = 't'
+      )
+    ) %>%
+      formatCurrency(
+        columns = c("Teamwert", "Kontostand", "Verfügbares Kapital"),
+        currency = "",
+        interval = 3,
+        mark = ".",
+        digits = 0
+      ) %>%
+      formatStyle(
+        'Kontostand',
+        backgroundColor = styleInterval(0, c('salmon', NA)),
+        fontWeight = styleInterval(0, c('bold', NA))
+      )
+  })
+  
   
   ## ---- Flip preview ----
   output$flip_preview <- renderPlot({
