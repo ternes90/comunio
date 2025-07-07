@@ -28,11 +28,17 @@ ui <- navbarPage(
                column(12,
                       div(
                         style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
-                        tags$div("Aktuelle Transfers - Zusammenfassung", 
+                        tags$div("Aktuelle Transfers", 
                                  style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
                         div(
-                          style = "width: 100%; margin-bottom:20px;",  # keep width consistent with above
+                          style = "margin-bottom:20px;",  # keep width consistent with above
                           DTOutput("transfer_summary_today")
+                        ),
+                        div(
+                          style = "margin-bottom:20px; display: flex; flex-direction: column; align-items: center;",  # keep width consistent with above
+                          tags$div("Aktuelle Flips", 
+                                   style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+                          DTOutput("flip_summary_today")
                         )
                       )
                )
@@ -73,26 +79,39 @@ ui <- navbarPage(
   
   ## ---- Marktwert-Entwicklung ----
   tabPanel("Marktwert-Entwicklung",
-           tabPanel("MW-Verlauf (alle)", 
-                    
-                    # Zentrale Legende oben
-                    div(
-                      style = "text-align: center; margin-bottom: 10px;",
-                      HTML("
-      <b>Legende:</b><br>
-      <span style='color:#005c99; font-weight:bold;'>▍</span> Ø MW TM-Spieler &nbsp;&nbsp;
-      <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
-      <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
-      <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
-    ")
-                    ),
-                    
-                    # Plot
-                    plotOutput("mw_evolution", height = 600)
-           ),
-           tabPanel("Hist. MW-Verlauf (alle Spieler)",
-                    plotOutput("mw_plot")
-                    )
+           tabsetPanel(
+             tabPanel("MW-Verlauf", 
+                      div(
+                        style = "text-align: center; margin-bottom: 10px;",
+                        HTML("
+          <b>Legende:</b><br>
+          <span style='color:#005c99; font-weight:bold;'>▍</span> Ø MW TM-Spieler &nbsp;&nbsp;
+          <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
+          <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
+          <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
+        ")
+                      ),
+                      plotOutput("mw_evolution", height = 600)
+             ),
+             tabPanel("MW-Verlauf 24/25 (MW-Klassen)",
+                      plotOutput("mw_plot")
+             ),
+             tabPanel("Hist. Saisonverläufe - Chronologie",
+                      plotOutput("historical_seasons_plot_all", height = 600)
+             ),
+             tabPanel("Hist. Saisonverläufe - Select",
+                      sidebarLayout(
+                        sidebarPanel(
+                          checkboxGroupInput("selected_seasons", "Saisons auswählen zum Vergleich:",
+                                             choices = NULL,
+                                             selected = NULL)
+                        ),
+                        mainPanel(
+                          plotOutput("historical_seasons_plot_selected", height = 600)
+                        )
+                      )
+             )
+           )
   ),
   
   ## ---- Transfermarkt ----
@@ -481,44 +500,28 @@ server <- function(input, output, session) {
   
   ## ---- Transferaktivitäten ----
   
-  # Reactive for today’s transfer summary table
   output$transfer_summary_today <- DT::renderDT({
     
-    # Select latest date in transfers (today)
     latest_date <- max(transfers$Datum, na.rm = TRUE)
     
-    # Filter transfers for latest day only
+    # Filter für heutige Transfers, aber ohne Käufe durch Computer
     todays_transfers <- transfers %>%
-      filter(Datum == latest_date)
+      filter(Datum == latest_date, Hoechstbietender != "Computer")
     
-    # Get market values for current day and previous day per player
     mw_today <- ap_df %>% filter(Datum == latest_date) %>% select(Spieler, Marktwert_today = Marktwert)
     mw_prev <- ap_df %>% filter(Datum == (latest_date - 1)) %>% select(Spieler, Marktwert_prev = Marktwert)
     
-    # Merge market values to transfers
     df <- todays_transfers %>%
       left_join(mw_today, by = "Spieler") %>%
-      left_join(mw_prev, by = "Spieler")
-    
-    # Calculate differences and percentages for highest bid vs previous MW
-    # For second bid: only percent diff vs previous day MW
-    df <- df %>%
+      left_join(mw_prev, by = "Spieler") %>%
       mutate(
-        # Highest bid differences and percentages
         Diff_Hoechst_prev_abs = Hoechstgebot - Marktwert_prev,
         Diff_Hoechst_prev_pct = ifelse(!is.na(Marktwert_prev) & Marktwert_prev > 0,
                                        100 * Diff_Hoechst_prev_abs / Marktwert_prev, NA),
-        
-        # Flip-Potenzial = Marktwert heute - Höchstgebot (absolut)
         Flip_Potenzial = Marktwert_today - Hoechstgebot,
-        
-        # Second bid: only percent diff vs previous day MW
         Diff_Zweit_prev_pct = ifelse(!is.na(Zweitgebot) & !is.na(Marktwert_prev) & Marktwert_prev > 0,
                                      100 * (Zweitgebot - Marktwert_prev) / Marktwert_prev, NA)
-      )
-    
-    # Market value trend during the day: compare today MW vs previous day MW
-    df <- df %>%
+      ) %>%
       mutate(
         MW_Trend = case_when(
           is.na(Marktwert_prev) | is.na(Marktwert_today) ~ "–",
@@ -526,33 +529,25 @@ server <- function(input, output, session) {
           Marktwert_today < Marktwert_prev ~ '<span style="color:red; font-weight:bold;">▼</span>',
           TRUE ~ "–"
         )
-      )
-    
-    # Format values for display
-    df_display <- df %>%
+      ) %>%
       mutate(
         Marktwert_prev_fmt = ifelse(is.na(Marktwert_prev), "-", paste0(format(Marktwert_prev, big.mark = ".", decimal.mark = ","), " €")),
         Marktwert_today_fmt = ifelse(is.na(Marktwert_today), "-", paste0(format(Marktwert_today, big.mark = ".", decimal.mark = ","), " €")),
-        
         Hoechstgebot_fmt = paste0(format(Hoechstgebot, big.mark = ".", decimal.mark = ","), " €"),
         Zweitgebot_fmt = ifelse(is.na(Zweitgebot), "-", paste0(format(Zweitgebot, big.mark = ".", decimal.mark = ","), " €")),
-        
         Diff_Hoechst_prev_abs_fmt = ifelse(is.na(Diff_Hoechst_prev_abs), "-", paste0(ifelse(Diff_Hoechst_prev_abs >= 0, "+", "-"), format(abs(Diff_Hoechst_prev_abs), big.mark = ".", decimal.mark = ","), " €")),
         Diff_Hoechst_prev_pct_fmt = ifelse(is.na(Diff_Hoechst_prev_pct), "-", paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"), round(abs(Diff_Hoechst_prev_pct),1), " %")),
-        
         Flip_Potenzial_fmt = ifelse(is.na(Flip_Potenzial), "-", paste0(ifelse(Flip_Potenzial >= 0, "+", "-"), format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €")),
-        
         Diff_Zweit_prev_pct_fmt = ifelse(is.na(Diff_Zweit_prev_pct), "-", paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"), round(abs(Diff_Zweit_prev_pct),1), " %"))
       ) %>%
       select(
         Datum,
         Spieler,
+        Hoechstbietender,
         Marktwert_prev_fmt,
         Marktwert_today_fmt,
         MW_Trend,
-        Hoechstbietender,
         Hoechstgebot_fmt,
-        Diff_Hoechst_prev_abs_fmt,
         Diff_Hoechst_prev_pct_fmt,
         Flip_Potenzial_fmt,
         Zweitbietender,
@@ -562,12 +557,11 @@ server <- function(input, output, session) {
       rename(
         "Datum" = Datum,
         "Spieler" = Spieler,
+        "Käufer" = Hoechstbietender,
         "MW Vortag" = Marktwert_prev_fmt,
         "MW Heute" = Marktwert_today_fmt,
         "Trend" = MW_Trend,
-        "Käufer" = Hoechstbietender,
         "Preis" = Hoechstgebot_fmt,
-        "Δ Preis (€)" = Diff_Hoechst_prev_abs_fmt,
         "Δ Preis (%)" = Diff_Hoechst_prev_pct_fmt,
         "Flip (€)" = Flip_Potenzial_fmt,
         "Zweitbieter" = Zweitbietender,
@@ -576,14 +570,12 @@ server <- function(input, output, session) {
       )
     
     DT::datatable(
-      df_display,
+      df,
       escape = FALSE,
       rownames = FALSE,
       options = list(
-        dom = 'Bfrtip',
-        pageLength = 10,
-        scrollX = TRUE,
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print')
+        dom = 't',
+        pageLength = 10
       )
     ) %>%
       DT::formatStyle(
@@ -597,6 +589,29 @@ server <- function(input, output, session) {
       )
   })
   
+  
+  ## ---- Flipaktivitäten ----
+  
+  output$flip_summary_today <- DT::renderDT({
+    latest_date <- Sys.Date()  # oder max(flip_data()$Verkaufsdatum), je nachdem wie Datum gespeichert ist
+    
+    flip_data() %>%
+      filter(Verkaufsdatum == latest_date) %>%
+      select(Verkaufsdatum, Spieler, Besitzer, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Gewinn) %>%
+      arrange(desc(Verkaufsdatum)) %>%
+      datatable(
+        options = list(dom = 't', pageLength = 10),
+        colnames = c(
+          "Verkaufsdatum",
+          "Spieler",
+          "Verkäufer",
+          "Kaufdatum",
+          "Einkaufspreis",
+          "Verkaufspreis",
+          "Gewinn/Verlust (€)"
+        )
+      )
+  })
   
   ## ---- Zeitachse ----
   output$mw_zeitachse_preview <- renderPlot({
@@ -624,6 +639,19 @@ server <- function(input, output, session) {
       )) +
       labs(
         title = "Marktwerte", x = NULL, y = "relativer MW", color = NULL
+      ) +
+      geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
+                 color = "darkred", size = 1.5) +
+      annotate(
+        "text",
+        x = as.Date("2025-08-22"),
+        y = 1.02,  # ggf. anpassen je nach Plot-Skalierung
+        label = "Saisonstart",
+        color = "darkred",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
       ) +
       theme_minimal(base_size = 12) +
       theme(legend.position = "bottom",
@@ -1175,7 +1203,7 @@ server <- function(input, output, session) {
         fontface = "bold",
         size = 4
       ) +
-      coord_cartesian(ylim = c(0.75, 1.4)) +
+      coord_cartesian(ylim = c(0.5, 1.6)) +
       labs(
         title = "Marktwertentwicklung (relativ zum Startwert)",
         subtitle = "Schattierung = ±1 SD (TM Spieler)",
@@ -1281,9 +1309,253 @@ server <- function(input, output, session) {
         size = 4
       ) +
       scale_color_brewer(palette = "Paired") +
-      coord_cartesian(ylim = c(0.7, 1.1)) +
+      coord_cartesian(ylim = c(0.6, 1.2)) +
       theme_minimal(base_size = 14)
   })
+  
+  ## ---- Historische Martkwertverläufe ----
+  
+  data_path <- "./global_MW"
+  
+  seasons <- c("2004-05", "2005-06", "2006-07", "2007-08", "2008-09",
+               "2009-10", "2010-11", "2011-12", "2012-13", "2013-14",
+               "2014-15", "2015-16", "2016-17", "2017-18", "2018-19",
+               "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25")
+  
+  load_season_data <- function(season) {
+    file_name <- paste0(data_path, "/historic_market_values_", season, ".csv")
+    if (!file.exists(file_name)) return(NULL)
+    read_csv(file_name, show_col_types = FALSE) %>%
+      mutate(Saison = season)
+  }
+  
+  # Alle Saison-Daten laden
+  all_season_data <- reactive({
+    dfs <- lapply(seasons, load_season_data)
+    dfs <- dfs[!sapply(dfs, is.null)]
+    bind_rows(dfs)
+  })
+  
+  # Checkbox choices mit allen Saisons setzen (für Vergleichsauswahl)
+  observe({
+    # Saisons ohne die ersten 3 und den 5. letzten
+    selected <- seasons[-c(1:3, length(seasons) - 4)]  # length(seasons)-4 ist der 5. letzte Index
+    
+    updateCheckboxGroupInput(session, "selected_seasons",
+                             choices = seasons,
+                             selected = selected)
+  })
+  
+  
+  # Historische Saisonverläufe - Alle anzeigen
+  output$historical_seasons_plot_all <- renderPlot({
+    df <- all_season_data()
+    req(nrow(df) > 0)
+    
+    ggplot(df, aes(x = as.Date(Datum), y = Marktwert, color = Saison)) +
+      geom_line() +
+      labs(
+        title = "Historische Marktwertverläufe aller Saisons",
+        x = "Datum",
+        y = "Marktwert"
+      ) +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+  })
+  
+  # Historische Saisonverläufe - Vergleichsauswahl (normalisierte Zeitachse)
+  normalized_data <- reactive({
+    req(input$selected_seasons)
+    df <- all_season_data()
+    df <- df %>% filter(Saison %in% input$selected_seasons)
+    
+    df <- df %>%
+      mutate(Datum = as.Date(Datum)) %>%
+      group_by(Saison) %>%
+      mutate(
+        saison_start = as.Date(paste0(substr(Saison, 1, 4), "-07-01")),
+        days_since_start = as.integer(Datum - saison_start)
+      ) %>%
+      ungroup() %>%
+      filter(days_since_start >= 0)
+    
+    df
+  })
+  
+  ## ---- historical_seasons_plot_selected ----
+  
+  output$historical_seasons_plot_selected <- renderPlot({
+    df <- normalized_data()
+    req(nrow(df) > 0)
+    req(input$selected_seasons)
+    
+    today <- Sys.Date()
+    current_year <- format(today, "%Y")
+    saison_start_this_year <- as.Date(paste0(current_year, "-07-01"))
+    days_since_start_today <- as.numeric(today - saison_start_this_year)
+    
+    # Filter auf ausgewählte Saisons
+    df_filtered <- df %>% filter(Saison %in% input$selected_seasons)
+    
+    # Mittelwert und SD pro Tag über alle ausgewählten Saisons
+    summary_df <- df_filtered %>%
+      group_by(days_since_start) %>%
+      summarise(
+        mean_MW = mean(Marktwert, na.rm = TRUE),
+        sd_MW = sd(Marktwert, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    # Gesamtmarktwert-Daten vorbereiten (Summe, nicht normiert)
+    gesamt_mw_normiert <- gesamt_mw_roh %>%
+      group_by(Datum) %>%
+      summarise(
+        MW_rel_normiert = sum(Marktwert, na.rm = TRUE),
+        .groups = "drop"
+      ) %>% 
+      mutate(
+        days_since_start = as.numeric(Datum - saison_start_this_year)
+      ) %>%
+      filter(days_since_start >= 0)  # Nur ab Saisonstart
+    
+    # Gleitendes Fenster für Prognose: 3 Tage davor bis 3 Tage danach (Saison-Daten)
+    window_start <- days_since_start_today - 3
+    window_end <- days_since_start_today + 3
+    
+    window_data <- df_filtered %>%
+      filter(days_since_start >= window_start & days_since_start <= window_end)
+    
+    diffs <- window_data %>%
+      group_by(Saison) %>%
+      arrange(days_since_start) %>%
+      mutate(
+        diff = Marktwert - lag(Marktwert),
+        lag_mw = lag(Marktwert)
+      ) %>%
+      summarise(
+        avg_diff = mean(diff, na.rm = TRUE),
+        avg_mw = mean(lag_mw, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      mutate(avg_pct_diff = 100 * avg_diff / avg_mw)
+    
+    avg_pct_diff_all <- mean(diffs$avg_pct_diff, na.rm = TRUE)
+    
+    # Prognose für Saison-Daten
+    prog_text <- if (is.na(avg_pct_diff_all)) {
+      "Prognose: Nicht genügend Daten (Saison-Daten)"
+    } else if (avg_pct_diff_all > 0) {
+      paste0("Prognose: MW stieg historisch im Schnitt um ", round(avg_pct_diff_all, 2), " % pro Tag")
+    } else if (avg_pct_diff_all < 0) {
+      paste0("Prognose: MW fiel historisch im Schnitt um ", abs(round(avg_pct_diff_all, 2)), " % pro Tag")
+    } else {
+      "Prognose: MW ist aktuell stabil (Saison-Daten)"
+    }
+    
+    arrow_label <- ifelse(is.na(avg_pct_diff_all), "",
+                          ifelse(avg_pct_diff_all > 0, "▲",
+                                 ifelse(avg_pct_diff_all < 0, "▼", "")))
+    
+    arrow_color <- ifelse(avg_pct_diff_all > 0, "darkgreen",
+                          ifelse(avg_pct_diff_all < 0, "red", "black"))
+    
+    # Prognose für aktuellen Gesamtmarktwert (letzte 3 Tage)
+    gesamt_window <- gesamt_mw_normiert %>%
+      filter(days_since_start >= (days_since_start_today - 3) & days_since_start < days_since_start_today) %>%
+      arrange(days_since_start) %>%
+      mutate(diff = MW_rel_normiert - lag(MW_rel_normiert),
+             lag_mw = lag(MW_rel_normiert))
+    
+    gesamt_diff_summary <- gesamt_window %>%
+      summarise(
+        avg_diff = mean(diff, na.rm = TRUE),
+        avg_mw = mean(lag_mw, na.rm = TRUE)
+      ) %>%
+      mutate(avg_pct_diff = 100 * avg_diff / avg_mw)
+    
+    gesamt_avg_pct_diff <- gesamt_diff_summary$avg_pct_diff
+    
+    gesamt_prog_text <- if (is.na(gesamt_avg_pct_diff)) {
+      "Prognose: Nicht genügend Daten (Gesamtmarktwert)"
+    } else if (gesamt_avg_pct_diff > 0) {
+      paste0("Prognose Aktueller MW: Steigend um ", round(gesamt_avg_pct_diff, 2), " % pro Tag")
+    } else if (gesamt_avg_pct_diff < 0) {
+      paste0("Prognose Aktueller MW: Fallend um ", abs(round(gesamt_avg_pct_diff, 2)), " % pro Tag")
+    } else {
+      "Prognose Gesamtmarktwert: Stabil"
+    }
+    
+    gesamt_arrow_label <- ifelse(is.na(gesamt_avg_pct_diff), "",
+                                 ifelse(gesamt_avg_pct_diff > 0, "▲",
+                                        ifelse(gesamt_avg_pct_diff < 0, "▼", "")))
+    
+    gesamt_arrow_color <- ifelse(gesamt_avg_pct_diff > 0, "darkgreen",
+                                 ifelse(gesamt_avg_pct_diff < 0, "red", "black"))
+    
+    # Grafik bauen
+    ggplot(df_filtered, aes(x = days_since_start, y = Marktwert, color = Saison)) +
+      # Band für Mittelwert ± SD
+      geom_ribbon(data = summary_df,
+                  aes(x = days_since_start, ymin = mean_MW - sd_MW, ymax = mean_MW + sd_MW),
+                  fill = "grey70", alpha = 0.3, inherit.aes = FALSE) +
+      # Mittelwert-Linie
+      geom_line(data = summary_df, aes(x = days_since_start, y = mean_MW),
+                color = "black", size = 1.5, inherit.aes = FALSE, linetype = "dashed") +
+      # Saisonlinien
+      geom_line(size = 1) +
+      # Gesamtmarktwert-Linie (Overlay in dunkelgrau)
+      geom_line(data = gesamt_mw_normiert,
+                aes(x = days_since_start, y = MW_rel_normiert),
+                color = "grey20", size = 1.5, inherit.aes = FALSE) +
+      # Heutiger Tag
+      geom_vline(xintercept = days_since_start_today,
+                 color = "darkred", linetype = "dashed", linewidth = 1) +
+      # Saisonstart
+      geom_vline(xintercept = as.numeric(as.Date(paste0(current_year, "-08-22")) - saison_start_this_year),
+                 linetype = "dotted", color = "darkred", size = 1.5) +
+      annotate(
+        "text",
+        x = as.numeric(as.Date(paste0(current_year, "-08-22")) - saison_start_this_year),
+        y = max(df_filtered$Marktwert, na.rm = TRUE) * 1.02,
+        label = "Saisonstart",
+        color = "darkred",
+        angle = 90,
+        vjust = -0.5,
+        hjust = 1.5,
+        fontface = "bold",
+        size = 4
+      ) +
+      annotate(
+        "text",
+        x = days_since_start_today,
+        y = max(df_filtered$Marktwert, na.rm = TRUE) * 0.9,
+        label = "Heute",
+        color = "darkred",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
+      ) +
+      annotate("text", x = Inf, y = Inf, label = prog_text,
+               hjust = 1.1, vjust = 2, size = 5, color = "black", fontface = "bold") +
+      annotate("text", x = Inf, y = Inf, label = arrow_label,
+               hjust = 1.05, vjust = 1.25, size = 8, color = arrow_color, fontface = "bold") +
+      
+      annotate("text", x = Inf, y = Inf, label = gesamt_prog_text,
+               hjust = 1.1, vjust = 3.5, size = 5, color = "black", fontface = "bold") +
+      annotate("text", x = Inf, y = Inf, label = gesamt_arrow_label,
+               hjust = 1.05, vjust = 2.5, size = 8, color = gesamt_arrow_color, fontface = "bold") +
+    
+      labs(
+        title = "Historische Marktwertverläufe mit Mittelwert ± SD",
+        x = "Tage seit 1. Juli",
+        y = "Marktwert"
+      ) +
+      theme_minimal() +
+      theme(legend.position = "bottom")
+  })
+  
+  
   
   # ---- TRANSFERMARKT ----
   
@@ -2814,6 +3086,14 @@ server <- function(input, output, session) {
         order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc'))
       )
     ) %>%
+      formatCurrency(
+        columns = c("Startkapital", "Teamwert", "Kreditrahmen", "Ausgaben", "Einnahmen", "Transaction_Summe", "Aktuelles_Kapital", "Verfügbares_Kapital"),
+        currency = "",
+        interval = 3,
+        mark = ".",
+        digits = 0,
+        dec.mark = ","
+      ) %>%
       formatStyle(
         'Aktuelles_Kapital',
         backgroundColor = styleInterval(0, c('salmon', NA)),
