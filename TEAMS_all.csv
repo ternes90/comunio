@@ -1,4 +1,5 @@
 ﻿Manager;Spieler;Position
+Thomas;Weiper;Sturm
 Thomas;Burkardt;Sturm
 Thomas;Diehl;Sturm
 Thomas;Glatzel;Sturm
@@ -7,17 +8,19 @@ Thomas;Doan;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Krattenmacher;Mittelfeld
 Thomas;Treu;Abwehr
+Thomas;Davies;Abwehr
 Thomas;Agu;Abwehr
 Thomas;Grimaldo;Abwehr
 Thomas;Wahl;Abwehr
+Thomas;Mikelbrencis;Abwehr
 Thomas;Meyer;Tor
 Thomas;Heuer Fernandes;Tor
-Thomas;Flekken;Tor
 Alfons;Boniface;Sturm
 Alfons;Dinkçi;Sturm
 Alfons;Matanović;Sturm
 Alfons;Undav;Sturm
 Alfons;Tietz;Sturm
+Alfons;M. Philipp;Sturm
 Alfons;Bebou;Sturm
 Alfons;J. Hofmann;Mittelfeld
 Alfons;Meffert;Mittelfeld
