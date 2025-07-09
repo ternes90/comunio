@@ -537,7 +537,16 @@ server <- function(input, output, session) {
         Zweitgebot_fmt = ifelse(is.na(Zweitgebot), "-", paste0(format(Zweitgebot, big.mark = ".", decimal.mark = ","), " €")),
         Diff_Hoechst_prev_abs_fmt = ifelse(is.na(Diff_Hoechst_prev_abs), "-", paste0(ifelse(Diff_Hoechst_prev_abs >= 0, "+", "-"), format(abs(Diff_Hoechst_prev_abs), big.mark = ".", decimal.mark = ","), " €")),
         Diff_Hoechst_prev_pct_fmt = ifelse(is.na(Diff_Hoechst_prev_pct), "-", paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"), round(abs(Diff_Hoechst_prev_pct),1), " %")),
-        Flip_Potenzial_fmt = ifelse(is.na(Flip_Potenzial), "-", paste0(ifelse(Flip_Potenzial >= 0, "+", "-"), format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €")),
+        # Flip-Potenzial mit Farbcodierung per HTML-Span
+        Flip_Potenzial_fmt = ifelse(
+          is.na(Flip_Potenzial), 
+          "-",
+          ifelse(
+            Flip_Potenzial >= 0,
+            paste0('<span style="color:darkgreen; font-weight:bold;">+', format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>"),
+            paste0('<span style="color:red; font-weight:bold;">-', format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>")
+          )
+        ),
         Diff_Zweit_prev_pct_fmt = ifelse(is.na(Diff_Zweit_prev_pct), "-", paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"), round(abs(Diff_Zweit_prev_pct),1), " %"))
       ) %>%
       select(
@@ -571,18 +580,14 @@ server <- function(input, output, session) {
     
     DT::datatable(
       df,
-      escape = FALSE,
+      escape = FALSE,  # wichtig für HTML-Tags in Flip-Potenzial
       rownames = FALSE,
       options = list(
         dom = 't',
-        pageLength = 10
+        pageLength = 10,
+        scrollX = TRUE  # Hier aktivieren
       )
     ) %>%
-      DT::formatStyle(
-        'Flip (€)',
-        color = styleInterval(0, c('red', 'darkgreen')),
-        fontWeight = 'bold'
-      ) %>%
       DT::formatStyle(
         columns = "Trend",
         target = 'cell'
