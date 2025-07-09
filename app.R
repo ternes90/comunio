@@ -135,7 +135,32 @@ ui <- navbarPage(
   tabPanel("Bieterprofile",
            tabsetPanel(
              id = "bieterprofile_tabs",
-             tabPanel("MW-Klassen", plotOutput("mwclassplot", height = 700)),
+             tabPanel(
+               "MW-Klassen",
+               
+               # Schlanker Zeitstrahl-Plot (kleine Höhe)
+               plotOutput("mw_zeitachse_preview", height = "100px", width = "100%"),
+               
+               # SliderInput in voller Breite
+               div(style = "width: 90%; margin: 0 auto 15px auto;",  # 90% Breite, zentriert, unten Abstand
+                   sliderInput(
+                     inputId = "mwclass_date_range",
+                     label = "Zeitraum auswählen:",
+                     min = as.Date("2025-01-01"),
+                     max = as.Date("2025-12-31"),
+                     value = c(as.Date("2025-06-01"), as.Date("2025-07-01")),
+                     timeFormat = "%d.%m.%Y",
+                     width = "100%"  # füllt den umgebenden div komplett aus
+                   )
+               )
+               ,
+               
+               div(style = "width: 90%; margin: 0 auto;",
+                   plotOutput("mwclassplot", height = 700, width = "100%")
+               )
+               
+             )
+             ,
              tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
              tabPanel("Gebots-Frequenz",
@@ -272,6 +297,22 @@ server <- function(input, output, session) {
   observeEvent(input$transfermarkt_preview_rows_selected, {
     if (!is.null(input$transfermarkt_preview_rows_selected)) {
       updateNavbarPage(session, "main_navbar", selected = "Transfermarkt")
+    }
+  })
+  
+  # Link vom Dashboard zum TM tab
+  observeEvent(input$transfer_summary_today_rows_selected, {
+    if (!is.null(input$transfer_summary_today_rows_selected)) {
+      updateNavbarPage(session, "main_navbar", selected = "Kader-Entwicklung")
+      updateTabsetPanel(session, "kader_tabs", selected = "Alle Kader")
+    }
+  })
+  
+  # Link vom Dashboard zum Hypothetischen Team-Flip tab (Kader & Historie)
+  observeEvent(input$flip_summary_today_rows_selected, {
+    if (!is.null(input$flip_summary_today_rows_selected)) {
+    updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
+    updateTabsetPanel(session, "flip_tabs", selected = "Kader & Historie")
     }
   })
   
@@ -419,6 +460,27 @@ server <- function(input, output, session) {
     # Filter auf echte Mitspieler (nicht Computer) und gültige MW_vortag
     gebotsprofil %>%
       filter(Bieter != "Computer" & !is.na(MW_vortag))
+  })
+  
+  ## ---- für slider ----
+  gebotsprofil_mwclass_filtered <- reactive({
+    req(input$mwclass_date_range)
+    
+    gebotsprofil_mwclass() %>%
+      filter(Datum >= input$mwclass_date_range[1], Datum <= input$mwclass_date_range[2])
+  })
+  
+  observe({
+    dat <- gebotsprofil_clean()  # oder woher du deine Daten nimmst
+    if (nrow(dat) == 0) return()
+    min_date <- min(dat$Datum)
+    max_date <- max(dat$Datum)
+    
+    updateSliderInput(session, "mwclass_date_range",
+                      min = min_date,
+                      max = max_date,
+                      value = c(min_date, max_date)
+    )
   })
   
   ## ---- flip_player_select ----
@@ -582,6 +644,7 @@ server <- function(input, output, session) {
       df,
       escape = FALSE,  # wichtig für HTML-Tags in Flip-Potenzial
       rownames = FALSE,
+      selection = "single",
       options = list(
         dom = 't',
         pageLength = 10,
@@ -605,6 +668,7 @@ server <- function(input, output, session) {
       select(Verkaufsdatum, Spieler, Besitzer, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Gewinn) %>%
       arrange(desc(Verkaufsdatum)) %>%
       datatable(
+        selection = "single",
         options = list(dom = 't', pageLength = 10),
         colnames = c(
           "Verkaufsdatum",
@@ -2202,11 +2266,29 @@ server <- function(input, output, session) {
   })
   
   # ---- BIETERPROFILE ----
+  ## ---- MW-Klassen Zeitstrahl für Boxplot+Beeswarm ----
+  output$mw_zeitachse_preview <- renderPlot({
+    # Kompletten Zeitraum nutzen, keine Filterung nach Slider
+    ggplot(gesamt_mw_df, aes(x = Datum, y = MW_rel_normiert)) +
+      geom_line(color = "darkgrey", linewidth = 1.2) +
+      coord_cartesian(ylim = c(0.75, 1.4)) +
+      labs(x = NULL, y = NULL, title = NULL) +
+      theme_minimal(base_size = 10) +
+      theme(
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor = element_blank()
+      )
+  })
+
   ## ---- MW-Klassen Boxplot+Beeswarm ----
   output$mwclassplot <- renderPlot({
-    req(nrow(gebotsprofil_mwclass()) > 0)
+    data <- gebotsprofil_mwclass_filtered()
+    req(nrow(data) > 0)
     
-    plotdata <- gebotsprofil_mwclass() %>%
+    plotdata <- data %>%
       filter(!is.na(Diff_Prozent)) %>%
       mutate(
         MW_Klasse = factor(MW_Klasse, levels = c(
