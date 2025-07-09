@@ -661,26 +661,36 @@ server <- function(input, output, session) {
   ## ---- Flipaktivitäten ----
   
   output$flip_summary_today <- DT::renderDT({
-    latest_date <- Sys.Date()  # oder max(flip_data()$Verkaufsdatum), je nachdem wie Datum gespeichert ist
+    latest_date <- Sys.Date()
     
-    flip_data() %>%
+    df <- flip_data() %>%
       filter(Verkaufsdatum == latest_date) %>%
       select(Verkaufsdatum, Spieler, Besitzer, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Gewinn) %>%
-      arrange(desc(Verkaufsdatum)) %>%
-      datatable(
-        selection = "single",
-        options = list(dom = 't', pageLength = 10),
-        colnames = c(
-          "Verkaufsdatum",
-          "Spieler",
-          "Verkäufer",
-          "Kaufdatum",
-          "Einkaufspreis",
-          "Verkaufspreis",
-          "Gewinn/Verlust (€)"
-        )
+      arrange(desc(Verkaufsdatum))
+    
+    datatable(
+      df,
+      selection = "single",
+      options = list(dom = 't', pageLength = 10),
+      colnames = c(
+        "Verkaufsdatum",
+        "Spieler",
+        "Verkäufer",
+        "Kaufdatum",
+        "Einkaufspreis",
+        "Verkaufspreis",
+        "Gewinn/Verlust (€)"
+      )
+    ) %>%
+      formatCurrency(
+        columns = c("Einkaufspreis", "Verkaufspreis", "Gewinn"),
+        currency = "",  # kein Währungssymbol
+        interval = 3,
+        mark = ".",     # Tausenderpunkt
+        digits = 0
       )
   })
+  
   
   ## ---- Zeitachse ----
   output$mw_zeitachse_preview <- renderPlot({
