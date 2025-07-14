@@ -94,7 +94,8 @@ ui <- navbarPage(
                       plotOutput("mw_evolution", height = 600)
              ),
              tabPanel("MW-Verlauf 24/25 (MW-Klassen)",
-                      plotOutput("mw_plot")
+                      plotOutput("mw_plot"),
+                      plotOutput("mw_plot_now")
              ),
              tabPanel("Hist. Saisonverläufe - Chronologie",
                       plotOutput("historical_seasons_plot_all", height = 600)
@@ -139,7 +140,7 @@ ui <- navbarPage(
                "MW-Klassen",
                
                # Schlanker Zeitstrahl-Plot (kleine Höhe)
-               plotOutput("mw_zeitachse_preview", height = "100px", width = "100%"),
+               plotOutput("mw_zeitachse_preview_schlank", height = "100px", width = "100%"),
                
                # SliderInput in voller Breite
                div(style = "width: 90%; margin: 0 auto 15px auto;",  # 90% Breite, zentriert, unten Abstand
@@ -1392,6 +1393,82 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14)
   })
   
+  ## ---- Je Klasse Marktwert-Entwicklung ab 15.06.2025 ----
+  
+  data_now <- reactive({
+    df <- read.csv("ALL_PLAYERS.csv", sep = ";", encoding = "UTF-8")
+    df$Datum <- as.Date(df$Datum, format = "%d.%m.%Y")
+    
+    start_date <- as.Date("2025-06-16")
+    end_date <- max(df$Datum, na.rm = TRUE)
+    
+    # Filtern auf Zeitraum ab 16.06.2025 bis max Datum
+    df <- df %>% filter(Datum >= start_date & Datum <= end_date)
+    
+    df$Marktwert <- as.numeric(df$Marktwert)
+    
+    # Mittelwert pro Spieler (über den gefilterten Zeitraum)
+    mw_spieler <- df %>%
+      group_by(Spieler) %>%
+      summarise(MW_mittel = mean(Marktwert, na.rm = TRUE), .groups = "drop")
+    
+    # Spieler in Klassen einteilen
+    df <- df %>%
+      left_join(mw_spieler, by = "Spieler") %>%
+      mutate(
+        Klasse = case_when(
+          MW_mittel < 500000 ~ "Klasse 1: <0.5 Mio",
+          MW_mittel < 1000000 ~ "Klasse 2: 0.5–1 Mio",
+          MW_mittel < 2500000 ~ "Klasse 3: 1–2.5 Mio",
+          MW_mittel < 5000000 ~ "Klasse 4: 2.5–5 Mio",
+          MW_mittel < 10000000 ~ "Klasse 5: 5–10 Mio",
+          TRUE ~ "Klasse 6: >10 Mio"
+        ),
+        Klasse = factor(Klasse, levels = c(
+          "Klasse 1: <0.5 Mio",
+          "Klasse 2: 0.5–1 Mio",
+          "Klasse 3: 1–2.5 Mio",
+          "Klasse 4: 2.5–5 Mio",
+          "Klasse 5: 5–10 Mio",
+          "Klasse 6: >10 Mio"
+        ))
+      )
+    
+    # Mittelwerte pro Klasse & Datum
+    df_plot <- df %>%
+      group_by(Datum, Klasse) %>%
+      summarise(MW_Ø = mean(Marktwert, na.rm = TRUE), .groups = "drop")
+    
+    # Startwerte für Normierung (Datum = 16.06.2025)
+    startwerte <- df_plot %>%
+      filter(Datum == start_date) %>%
+      select(Klasse, Start_MW = MW_Ø)
+    
+    # Normieren
+    df_plot_norm <- df_plot %>%
+      left_join(startwerte, by = "Klasse") %>%
+      mutate(MW_normiert = MW_Ø / Start_MW)
+    
+    df_plot_norm
+  })
+  
+  output$mw_plot_now <- renderPlot({
+    df_plot_norm <- data_now()
+    
+    ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
+      geom_line(size = 1.2) +
+      labs(
+        title = "Normierter Marktwertverlauf je Klasse (16.06. bis 15.08.2025)",
+        y = "Normierter MW",
+        x = "Datum",
+        color = "MW-Klasse"
+      ) +
+      scale_color_brewer(palette = "Paired") +
+      coord_cartesian(ylim = c(0.6, 1.2), xlim = as.Date(c("2025-06-16", "2025-08-15"))) +
+      theme_minimal(base_size = 14)
+  })
+  
+  
   ## ---- Historische Martkwertverläufe ----
   
   data_path <- "./global_MW"
@@ -2277,7 +2354,7 @@ server <- function(input, output, session) {
   
   # ---- BIETERPROFILE ----
   ## ---- MW-Klassen Zeitstrahl für Boxplot+Beeswarm ----
-  output$mw_zeitachse_preview <- renderPlot({
+  output$mw_zeitachse_preview_schlank <- renderPlot({
     # Kompletten Zeitraum nutzen, keine Filterung nach Slider
     ggplot(gesamt_mw_df, aes(x = Datum, y = MW_rel_normiert)) +
       geom_line(color = "darkgrey", linewidth = 1.2) +
