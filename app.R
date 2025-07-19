@@ -605,9 +605,9 @@ server <- function(input, output, session) {
       ) %>%
       select(
         Datum,
+        Marktwert_prev,
         Spieler,
         Hoechstbietender,
-        Marktwert_prev,
         Marktwert_today,
         MW_Trend,
         Hoechstgebot,
@@ -616,9 +616,9 @@ server <- function(input, output, session) {
       ) %>%
       rename(
         "Datum" = Datum,
+        "MW Vortag" = Marktwert_prev,
         "Spieler" = Spieler,
         "Käufer" = Hoechstbietender,
-        "MW Vortag" = Marktwert_prev,
         "MW Heute" = Marktwert_today,
         "Trend" = MW_Trend,
         "Preis" = Hoechstgebot,
