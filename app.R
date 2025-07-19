@@ -564,10 +564,9 @@ server <- function(input, output, session) {
   ## ---- Transferaktivitäten ----
   
   output$transfer_summary_today <- DT::renderDT({
-    
     latest_date <- max(transfers$Datum, na.rm = TRUE)
     
-    # Filter für heutige Transfers, aber ohne Käufe durch Computer
+    # Filter for today’s transfers, excluding Computer buyers
     todays_transfers <- transfers %>%
       filter(Datum == latest_date, Hoechstbietender != "Computer")
     
@@ -583,9 +582,7 @@ server <- function(input, output, session) {
                                        100 * Diff_Hoechst_prev_abs / Marktwert_prev, NA),
         Flip_Potenzial = Marktwert_today - Hoechstgebot,
         Diff_Zweit_prev_pct = ifelse(!is.na(Zweitgebot) & !is.na(Marktwert_prev) & Marktwert_prev > 0,
-                                     100 * (Zweitgebot - Marktwert_prev) / Marktwert_prev, NA)
-      ) %>%
-      mutate(
+                                     100 * (Zweitgebot - Marktwert_prev) / Marktwert_prev, NA),
         MW_Trend = case_when(
           is.na(Marktwert_prev) | is.na(Marktwert_today) ~ "–",
           Marktwert_today > Marktwert_prev ~ '<span style="color:green; font-weight:bold;">▲</span>',
@@ -594,13 +591,8 @@ server <- function(input, output, session) {
         )
       ) %>%
       mutate(
-        Marktwert_prev_fmt = ifelse(is.na(Marktwert_prev), "-", paste0(format(Marktwert_prev, big.mark = ".", decimal.mark = ","), " €")),
-        Marktwert_today_fmt = ifelse(is.na(Marktwert_today), "-", paste0(format(Marktwert_today, big.mark = ".", decimal.mark = ","), " €")),
-        Hoechstgebot_fmt = paste0(format(Hoechstgebot, big.mark = ".", decimal.mark = ","), " €"),
-        Zweitgebot_fmt = ifelse(is.na(Zweitgebot), "-", paste0(format(Zweitgebot, big.mark = ".", decimal.mark = ","), " €")),
-        Diff_Hoechst_prev_abs_fmt = ifelse(is.na(Diff_Hoechst_prev_abs), "-", paste0(ifelse(Diff_Hoechst_prev_abs >= 0, "+", "-"), format(abs(Diff_Hoechst_prev_abs), big.mark = ".", decimal.mark = ","), " €")),
         Diff_Hoechst_prev_pct_fmt = ifelse(is.na(Diff_Hoechst_prev_pct), "-", paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"), round(abs(Diff_Hoechst_prev_pct),1), " %")),
-        # Flip-Potenzial mit Farbcodierung per HTML-Span
+        Diff_Zweit_prev_pct_fmt = ifelse(is.na(Diff_Zweit_prev_pct), "-", paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"), round(abs(Diff_Zweit_prev_pct),1), " %")),
         Flip_Potenzial_fmt = ifelse(
           is.na(Flip_Potenzial), 
           "-",
@@ -609,54 +601,54 @@ server <- function(input, output, session) {
             paste0('<span style="color:darkgreen; font-weight:bold;">+', format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>"),
             paste0('<span style="color:red; font-weight:bold;">-', format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>")
           )
-        ),
-        Diff_Zweit_prev_pct_fmt = ifelse(is.na(Diff_Zweit_prev_pct), "-", paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"), round(abs(Diff_Zweit_prev_pct),1), " %"))
+        )
       ) %>%
       select(
         Datum,
         Spieler,
         Hoechstbietender,
-        Marktwert_prev_fmt,
-        Marktwert_today_fmt,
+        Marktwert_prev,
+        Marktwert_today,
         MW_Trend,
-        Hoechstgebot_fmt,
+        Hoechstgebot,
         Diff_Hoechst_prev_pct_fmt,
         Flip_Potenzial_fmt,
         Zweitbietender,
-        Zweitgebot_fmt,
+        Zweitgebot,
         Diff_Zweit_prev_pct_fmt
       ) %>%
       rename(
         "Datum" = Datum,
         "Spieler" = Spieler,
         "Käufer" = Hoechstbietender,
-        "MW Vortag" = Marktwert_prev_fmt,
-        "MW Heute" = Marktwert_today_fmt,
+        "MW Vortag" = Marktwert_prev,
+        "MW Heute" = Marktwert_today,
         "Trend" = MW_Trend,
-        "Preis" = Hoechstgebot_fmt,
+        "Preis" = Hoechstgebot,
         "Δ Preis (%)" = Diff_Hoechst_prev_pct_fmt,
         "Flip (€)" = Flip_Potenzial_fmt,
         "Zweitbieter" = Zweitbietender,
-        "Zweitgebot" = Zweitgebot_fmt,
+        "Zweitgebot" = Zweitgebot,
         "Δ Zweitgebot (%)" = Diff_Zweit_prev_pct_fmt
       )
     
-    DT::datatable(
+    datatable(
       df,
-      escape = FALSE,  # wichtig für HTML-Tags in Flip-Potenzial
+      escape = FALSE,  # allow HTML in Trend and Flip columns
       rownames = FALSE,
       selection = "single",
       options = list(
         dom = 't',
         pageLength = 10,
-        scrollX = TRUE  # Hier aktivieren
+        scrollX = TRUE
       )
     ) %>%
-      DT::formatStyle(
-        columns = "Trend",
-        target = 'cell'
+      formatCurrency(
+        columns = c("MW Vortag", "MW Heute", "Preis", "Zweitgebot"),
+        currency = "", interval = 3, mark = ".", digits = 0
       )
   })
+  
   
   
   ## ---- Flipaktivitäten ----
@@ -672,7 +664,9 @@ server <- function(input, output, session) {
     datatable(
       df,
       selection = "single",
-      options = list(dom = 't', pageLength = 10),
+      rownames = FALSE,  # <--- disable row numbers here
+      options = list(dom = 't', pageLength = 10,
+                     scrollX = TRUE),
       colnames = c(
         "Verkaufsdatum",
         "Spieler",
