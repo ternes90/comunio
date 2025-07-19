@@ -640,7 +640,8 @@ server <- function(input, output, session) {
       options = list(
         dom = 't',
         pageLength = 10,
-        scrollX = TRUE
+        scrollX = TRUE,
+        scrollY = '1100px'
       )
     ) %>%
       formatCurrency(
@@ -666,7 +667,8 @@ server <- function(input, output, session) {
       selection = "single",
       rownames = FALSE,  # <--- disable row numbers here
       options = list(dom = 't', pageLength = 10,
-                     scrollX = TRUE),
+                     scrollX = TRUE,
+                     scrollY = '1100px'),
       colnames = c(
         "Verkaufsdatum",
         "Spieler",
