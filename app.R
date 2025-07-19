@@ -25,7 +25,7 @@ ui <- navbarPage(
              
              # NEW ROW: Aktuelle Transfers - Zusammenfassung
              fluidRow(
-               column(12,
+               column(10,
                       div(
                         style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
                         tags$div("Aktuelle Transfers", 
