@@ -32,13 +32,13 @@ ui <- navbarPage(
                                  style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
                         div(
                           style = "margin-bottom:20px;",  # keep width consistent with above
-                          DTOutput("transfer_summary_today")
+                          DTOutput("transfer_summary_today", width = "100%")
                         ),
                         div(
                           style = "margin-bottom:20px; display: flex; flex-direction: column; align-items: center;",  # keep width consistent with above
                           tags$div("Aktuelle Flips", 
                                    style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-                          DTOutput("flip_summary_today")
+                          DTOutput("flip_summary_today", width = "100%")
                         )
                       )
                )
@@ -640,8 +640,7 @@ server <- function(input, output, session) {
       options = list(
         dom = 't',
         pageLength = 10,
-        scrollX = TRUE,
-        scrollY = '1100px'
+        scrollX = TRUE
       )
     ) %>%
       formatCurrency(
@@ -667,8 +666,7 @@ server <- function(input, output, session) {
       selection = "single",
       rownames = FALSE,  # <--- disable row numbers here
       options = list(dom = 't', pageLength = 10,
-                     scrollX = TRUE,
-                     scrollY = '1100px'),
+                     scrollX = TRUE),
       colnames = c(
         "Verkaufsdatum",
         "Spieler",
