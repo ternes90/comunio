@@ -659,7 +659,7 @@ server <- function(input, output, session) {
     
     df <- flip_data() %>%
       filter(Verkaufsdatum == latest_date) %>%
-      select(Verkaufsdatum, Spieler, Besitzer, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Gewinn) %>%
+      select(Einkaufsdatum, Einkaufspreis, Spieler, Besitzer, Verkaufspreis, Gewinn) %>%
       arrange(desc(Verkaufsdatum))
     
     datatable(
@@ -670,11 +670,10 @@ server <- function(input, output, session) {
                      scrollX = TRUE,
                      paging = FALSE),
       colnames = c(
-        "Verkaufsdatum",
-        "Spieler",
-        "Verkäufer",
         "Kaufdatum",
         "Einkaufspreis",
+        "Spieler",
+        "Verkäufer",
         "Verkaufspreis",
         "Gewinn/Verlust (€)"
       )
