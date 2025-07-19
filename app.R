@@ -249,22 +249,12 @@ ui <- navbarPage(
              DTOutput("kapital_uebersicht_table")
            )
   ),
-  
-  tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
-  
-  
   # UI-Seite oder tags$head einfügen
   tags$script(HTML("
   $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
-    Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
+    Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
   });
-")),
-  tags$style(HTML("
-  .dataTables_wrapper {
-    overflow-x: auto !important;
-  }
 "))
-  
   
 )
 
@@ -650,7 +640,8 @@ server <- function(input, output, session) {
       options = list(
         dom = 't',
         pageLength = 10,
-        scrollX = TRUE
+        scrollX = TRUE,
+        scrollY = '400px'
       )
     ) %>%
       formatCurrency(
@@ -676,7 +667,8 @@ server <- function(input, output, session) {
       selection = "single",
       rownames = FALSE,  # <--- disable row numbers here
       options = list(dom = 't', pageLength = 10,
-                     scrollX = TRUE),
+                     scrollX = TRUE,
+                     scrollY = '400px'),
       colnames = c(
         "Verkaufsdatum",
         "Spieler",
