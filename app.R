@@ -252,9 +252,15 @@ ui <- navbarPage(
   # UI-Seite oder tags$head einfügen
   tags$script(HTML("
   $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
-    Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
+    Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
   });
+")),
+  tags$style(HTML("
+  .dataTables_wrapper {
+    overflow-x: auto !important;
+  }
 "))
+  
   
 )
 
