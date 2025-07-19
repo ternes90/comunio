@@ -249,6 +249,10 @@ ui <- navbarPage(
              DTOutput("kapital_uebersicht_table")
            )
   ),
+  
+  tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+  
+  
   # UI-Seite oder tags$head einfügen
   tags$script(HTML("
   $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
