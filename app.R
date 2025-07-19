@@ -612,10 +612,7 @@ server <- function(input, output, session) {
         MW_Trend,
         Hoechstgebot,
         Diff_Hoechst_prev_pct_fmt,
-        Flip_Potenzial_fmt,
-        Zweitbietender,
-        Zweitgebot,
-        Diff_Zweit_prev_pct_fmt
+        Flip_Potenzial_fmt
       ) %>%
       rename(
         "Datum" = Datum,
@@ -626,10 +623,7 @@ server <- function(input, output, session) {
         "Trend" = MW_Trend,
         "Preis" = Hoechstgebot,
         "Δ Preis (%)" = Diff_Hoechst_prev_pct_fmt,
-        "Flip (€)" = Flip_Potenzial_fmt,
-        "Zweitbieter" = Zweitbietender,
-        "Zweitgebot" = Zweitgebot,
-        "Δ Zweitgebot (%)" = Diff_Zweit_prev_pct_fmt
+        "Flip (€)" = Flip_Potenzial_fmt
       )
     
     datatable(
@@ -645,7 +639,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       formatCurrency(
-        columns = c("MW Vortag", "MW Heute", "Preis", "Zweitgebot"),
+        columns = c("MW Vortag", "MW Heute", "Preis"),
         currency = "", interval = 3, mark = ".", digits = 0
       )
   })
