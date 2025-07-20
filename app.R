@@ -961,17 +961,19 @@ server <- function(input, output, session) {
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
       geom_col(show.legend = FALSE) +
-      geom_text(aes(label = format(Gesamtgewinn, big.mark = ".", scientific = FALSE),
-                    hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1))) +
+      geom_text(aes(label = format(Gesamtgewinn, big.mark = ".", scientific = FALSE)),
+                position = position_stack(vjust = 0.5), 
+                color = "black", fontface = "bold", size = 5) +
       coord_flip(ylim = c(lim_min, lim_max)) +
-      scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
+      scale_fill_manual(values = c("TRUE" = "#66cdaa",  # helleres Grün (Medium Aquamarine)
+                                   "FALSE" = "#ff6f61")) + # helleres Rot (Coral)
       theme_minimal() +
       theme(axis.text.y = element_text(size = 15, color = "black"),
             axis.text.x = element_text(size = 12, color = "black"),
             plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black")) +
       labs(title = "Flip Gewinne/Verluste", x = "", y = "")
-    
   })
+  
   
   ## ---- Gebote preview ----
   output$gebote_preview <- renderPlot({
