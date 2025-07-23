@@ -564,14 +564,15 @@ server <- function(input, output, session) {
   ## ---- Transferaktivitäten ----
   
   output$transfer_summary_today <- DT::renderDT({
-    latest_date <- max(transfers$Datum, na.rm = TRUE)
+    # Use current date, not just latest available in data
+    today <- Sys.Date()
     
-    # Filter for today’s transfers, excluding Computer buyers
+    # Only today’s transfers, excluding Computer buyers
     todays_transfers <- transfers %>%
-      filter(Datum == latest_date, Hoechstbietender != "Computer")
+      filter(Datum == today, Hoechstbietender != "Computer")
     
-    mw_today <- ap_df %>% filter(Datum == latest_date) %>% select(Spieler, Marktwert_today = Marktwert)
-    mw_prev <- ap_df %>% filter(Datum == (latest_date - 1)) %>% select(Spieler, Marktwert_prev = Marktwert)
+    mw_today <- ap_df %>% filter(Datum == today) %>% select(Spieler, Marktwert_today = Marktwert)
+    mw_prev <- ap_df %>% filter(Datum == (today - 1)) %>% select(Spieler, Marktwert_prev = Marktwert)
     
     df <- todays_transfers %>%
       left_join(mw_today, by = "Spieler") %>%
@@ -643,6 +644,7 @@ server <- function(input, output, session) {
         currency = "", interval = 3, mark = ".", digits = 0
       )
   })
+  
   
   
   

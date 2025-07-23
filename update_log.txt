@@ -1,0 +1,8 @@
+[2025-07-23 22:13:39] Server gestartet.
+[2025-07-23 22:14:04] Update-App ausgelöst.
+[2025-07-23 22:15:35] Server gestartet.
+[2025-07-23 22:15:43] Update-App ausgelöst.
+[2025-07-23 22:15:43] Fehler: [WinError 10053] Eine bestehende Verbindung wurde softwaregesteuert
+durch den Hostcomputer abgebrochen
+[2025-07-23 22:15:45] Update-App ausgelöst.
+[2025-07-23 22:38:29] Update-App ausgelöst.
