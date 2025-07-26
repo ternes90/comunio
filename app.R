@@ -564,20 +564,34 @@ server <- function(input, output, session) {
   ## ---- Transferaktivitäten ----
   
   output$transfer_summary_today <- DT::renderDT({
-    # Use current date, not just latest available in data
     today <- Sys.Date()
     
-    # Only today’s transfers, excluding Computer buyers
-    todays_transfers <- transfers %>%
-      filter(Datum == today, Hoechstbietender != "Computer")
+    # Sicherstellen, dass Zweitgebot existiert
+    if (!"Zweitgebot" %in% names(transfers)) {
+      transfers$Zweitgebot <- NA_real_
+    }
     
-    mw_today <- ap_df %>% filter(Datum == today) %>% select(Spieler, Marktwert_today = Marktwert)
-    mw_prev <- ap_df %>% filter(Datum == (today - 1)) %>% select(Spieler, Marktwert_prev = Marktwert)
+    # Nur heutige Transfers (exkl. Computer)
+    todays_transfers <- transfers %>%
+      filter(Datum == today, Hoechstbietender != "Computer") %>%
+      select(Spieler, Hoechstbietender, Hoechstgebot, Zweitgebot, Datum)
+    
+    mw_today <- ap_df %>%
+      filter(Datum == today) %>%
+      select(Spieler, Marktwert_today = Marktwert)
+    
+    mw_prev <- ap_df %>%
+      filter(Datum == (today - 1)) %>%
+      select(Spieler, Marktwert_prev = Marktwert)
     
     df <- todays_transfers %>%
       left_join(mw_today, by = "Spieler") %>%
       left_join(mw_prev, by = "Spieler") %>%
       mutate(
+        Zweitgebot = as.numeric(gsub("[^0-9]", "", Zweitgebot)),
+        Hoechstgebot = as.numeric(Hoechstgebot),
+        Marktwert_prev = as.numeric(Marktwert_prev),
+        Marktwert_today = as.numeric(Marktwert_today),
         Diff_Hoechst_prev_abs = Hoechstgebot - Marktwert_prev,
         Diff_Hoechst_prev_pct = ifelse(!is.na(Marktwert_prev) & Marktwert_prev > 0,
                                        100 * Diff_Hoechst_prev_abs / Marktwert_prev, NA),
@@ -589,18 +603,25 @@ server <- function(input, output, session) {
           Marktwert_today > Marktwert_prev ~ '<span style="color:green; font-weight:bold;">▲</span>',
           Marktwert_today < Marktwert_prev ~ '<span style="color:red; font-weight:bold;">▼</span>',
           TRUE ~ "–"
-        )
-      ) %>%
-      mutate(
-        Diff_Hoechst_prev_pct_fmt = ifelse(is.na(Diff_Hoechst_prev_pct), "-", paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"), round(abs(Diff_Hoechst_prev_pct),1), " %")),
-        Diff_Zweit_prev_pct_fmt = ifelse(is.na(Diff_Zweit_prev_pct), "-", paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"), round(abs(Diff_Zweit_prev_pct),1), " %")),
+        ),
+        Diff_Hoechst_prev_pct_fmt = ifelse(
+          is.na(Diff_Hoechst_prev_pct), "-",
+          paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"),
+                 round(abs(Diff_Hoechst_prev_pct), 1), " %")
+        ),
+        Diff_Zweit_prev_pct_fmt = ifelse(
+          is.na(Diff_Zweit_prev_pct), "-",
+          paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"),
+                 round(abs(Diff_Zweit_prev_pct), 1), " %")
+        ),
         Flip_Potenzial_fmt = ifelse(
-          is.na(Flip_Potenzial), 
-          "-",
+          is.na(Flip_Potenzial), "-",
           ifelse(
             Flip_Potenzial >= 0,
-            paste0('<span style="color:darkgreen; font-weight:bold;">+', format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>"),
-            paste0('<span style="color:red; font-weight:bold;">-', format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>")
+            paste0('<span style="color:darkgreen; font-weight:bold;">+',
+                   format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>"),
+            paste0('<span style="color:red; font-weight:bold;">-',
+                   format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>")
           )
         )
       ) %>%
@@ -629,7 +650,7 @@ server <- function(input, output, session) {
     
     datatable(
       df,
-      escape = FALSE,  # allow HTML in Trend and Flip columns
+      escape = FALSE,
       rownames = FALSE,
       selection = "single",
       options = list(
