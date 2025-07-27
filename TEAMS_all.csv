@@ -1,6 +1,5 @@
 ﻿Manager;Spieler;Position
 Thomas;Burkardt;Sturm
-Thomas;Weiper;Sturm
 Thomas;Diehl;Sturm
 Thomas;Glatzel;Sturm
 Thomas;Borges Sanches;Sturm
@@ -68,7 +67,6 @@ Andreas;Dompé;Sturm
 Andreas;Sahiti;Sturm
 Andreas;Schmid;Mittelfeld
 Andreas;Stöger;Mittelfeld
-Andreas;Millot;Mittelfeld
 Andreas;Svanberg;Mittelfeld
 Andreas;Tousart;Mittelfeld
 Andreas;Keitel;Mittelfeld
@@ -119,14 +117,16 @@ Nico;Saliakas;Abwehr
 Nico;Hendriks;Abwehr
 Nico;Muheim;Abwehr
 Nico;Zentner;Tor
+Christian;Jeong;Sturm
 Christian;Zivzivadze;Sturm
 Christian;Schöppner;Mittelfeld
 Christian;Khedira;Mittelfeld
 Christian;Chaïbi;Mittelfeld
 Christian;Kömür;Mittelfeld
+Christian;Beste;Mittelfeld
 Christian;Raphaël Guerreiro;Abwehr
+Christian;Stark;Abwehr
 Christian;Tapsoba;Abwehr
-Christian;Smolčić;Abwehr
 Christian;Elfadli;Abwehr
 Christian;Agyekum;Abwehr
 Christian;Grabara;Tor
