@@ -82,7 +82,7 @@ ui <- navbarPage(
                tags$div("Aktueller Transfermarkt", 
                         style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
                div(
-                 style = "width: 100%;",
+                 style = "width: 100%; margin-bottom: 50px;",
                  DTOutput("transfermarkt_preview", width = "100%")
                )
              )
