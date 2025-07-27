@@ -23,58 +23,72 @@ ui <- navbarPage(
   tabPanel("Dashboard",
            fluidPage(
              
-             # NEW ROW: Aktuelle Transfers - Zusammenfassung
-             fluidRow(
-               column(12,
-                      div(
-                        style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
-                        tags$div("Aktuelle Transfers", 
-                                 style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-                        div(
-                          style = "margin-bottom:20px;",  # keep width consistent with above
-                          DTOutput("transfer_summary_today", width = "100%")
-                        ),
-                        div(
-                          style = "margin-bottom:20px; display: flex; flex-direction: column; align-items: center;",  # keep width consistent with above
-                          tags$div("Aktuelle Flips", 
-                                   style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-                          DTOutput("flip_summary_today", width = "100%")
-                        )
-                      )
+             # Aktuelle Transfers - Zusammenfassung
+             div(
+               style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
+               tags$div("Aktuelle Transfers", 
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+               div(
+                 style = "margin-bottom:20px; width: 100%;",
+                 DTOutput("transfer_summary_today", width = "100%")
+               ),
+               tags$div("Aktuelle Flips", 
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+               div(
+                 style = "margin-bottom:20px; width: 100%;",
+                 DTOutput("flip_summary_today", width = "100%")
                )
              ),
              
-             
-             fluidRow(
-               column(6, plotOutput("mw_zeitachse_preview", height = 350, click = "mw_zeitachse_click")),
-               column(6, DTOutput("kreditrahmen_uebersicht_preview"))
+             # Marktwert-Zeitachse
+             div(
+               style = "margin-bottom: 20px;",
+               plotOutput("mw_zeitachse_preview", height = 350, width = "100%", click = "mw_zeitachse_click")
              ),
-             fluidRow(
-               column(6, DTOutput("mein_team_tabelle_preview")),
-               fluidRow(
-                 column(6, plotOutput("flip_preview", height = 300, click = "flip_click")),
-                 column(6, plotOutput("gebote_preview", height = 350, click = "gebote_click")),
-                 column(6, DTOutput("flip_einnahmen_uebersicht_preview"))
+             
+             # Kreditrahmen-Übersicht
+             div(
+               style = "margin-bottom: 20px;",
+               DTOutput("kreditrahmen_uebersicht_preview", width = "100%")
+             ),
+             
+             # Mein Team Tabelle
+             div(
+               style = "margin-bottom: 20px;",
+               DTOutput("mein_team_tabelle_preview", width = "100%")
+             ),
+             
+             # Flip-Vorschau
+             div(
+               style = "margin-bottom: 20px;",
+               plotOutput("flip_preview", height = 300, width = "100%", click = "flip_click")
+             ),
+             
+             # Gebote Vorschau
+             div(
+               style = "margin-bottom: 20px;",
+               plotOutput("gebote_preview", height = 350, width = "100%", click = "gebote_click")
+             ),
+             
+             # Flip-Einnahmen Übersicht
+             div(
+               style = "margin-bottom: 20px;",
+               DTOutput("flip_einnahmen_uebersicht_preview", width = "100%")
+             ),
+             
+             # Transfermarkt Vorschau
+             div(
+               style = "display: flex; flex-direction: column; align-items: center;",
+               tags$div("Aktueller Transfermarkt", 
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
+               div(
+                 style = "width: 100%;",
+                 DTOutput("transfermarkt_preview", width = "100%")
                )
-             ),
-             
-             fluidRow(
-               column(12,
-                      div(
-                        style = "display: flex; flex-direction: column; align-items: center;",
-                        tags$div("Aktueller Transfermarkt", 
-                                 style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
-                        div(
-                          style = "width: 100%;",  # or fixed width like 600px
-                          DTOutput("transfermarkt_preview")
-                        )
-                      )
-               )
-             ),
-             
-             
+             )
            )
   ),
+  
   
   
   ## ---- Marktwert-Entwicklung ----
