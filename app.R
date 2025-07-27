@@ -794,11 +794,9 @@ server <- function(input, output, session) {
       dat %>% select(Position, Spieler, Marktwert, Diff_fmt),
       rownames = FALSE,
       options = list(
-        pageLength = 28,
         dom = 't',
         ordering = FALSE,
-        paging = FALSE,
-        scrollY = '1100px'
+        paging = FALSE
       ),
       colnames = c("Position", "Spieler", "Marktwert", "Tagesveränderung")
     ) %>%
