@@ -41,30 +41,40 @@ ui <- navbarPage(
              ),
              
              # Marktwert-Zeitachse
+             tags$div("Marktwerte", 
+                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
              div(
                style = "margin-bottom: 20px;",
                plotOutput("mw_zeitachse_preview", height = 350, width = "100%", click = "mw_zeitachse_click")
              ),
              
              # Kreditrahmen-Übersicht
+             tags$div("Teamwerte, Kontostände und Kreditrahmen", 
+                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
              div(
                style = "margin-bottom: 20px;",
                DTOutput("kreditrahmen_uebersicht_preview", width = "100%")
              ),
              
              # Mein Team Tabelle
+             tags$div("Mein Team", 
+                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
              div(
                style = "margin-bottom: 20px;",
                DTOutput("mein_team_tabelle_preview", width = "100%")
              ),
              
              # Flip-Vorschau
+             tags$div("Flip Übersicht", 
+                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
              div(
                style = "margin-bottom: 20px;",
                plotOutput("flip_preview", height = 300, width = "100%", click = "flip_click")
              ),
              
              # Gebote Vorschau
+             tags$div("Bieterprofile", 
+                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
              div(
                style = "margin-bottom: 20px;",
                plotOutput("gebote_preview", height = 350, width = "100%", click = "gebote_click")
@@ -74,7 +84,7 @@ ui <- navbarPage(
              div(
                style = "display: flex; flex-direction: column; align-items: center;",
                tags$div("Aktueller Transfermarkt", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin: 20px 0 10px 0;"),
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
                div(
                  style = "width: 100%; margin-bottom: 50px;",
                  DTOutput("transfermarkt_preview", width = "100%")
@@ -115,8 +125,8 @@ ui <- navbarPage(
                           fluidRow(
                             column(3, actionButton("select_all", "Alle")),
                             column(3, actionButton("select_none", "Keine")),
-                            column(3, actionButton("select_custom", "Custom 1")),
-                            column(3, actionButton("select_last3", "Custom 2"))
+                            column(3, actionButton("select_last3", "Custom 1")),
+                            column(3, actionButton("select_custom", "Custom 2"))
                           ),
                           br(),  # Abstand
                           checkboxGroupInput("selected_seasons", "Saisons auswählen zum Vergleich:",
@@ -150,21 +160,15 @@ ui <- navbarPage(
              id = "kader_tabs",
              tabPanel(
                "Mein Kader",
-               div(style = "margin-top:30px;",
-                   uiOutput("mein_kader")
-               )
+               uiOutput("mein_kader")
              ),
              tabPanel(
                "Alle Kader",
-               div(style = "margin-top:30px;",
-                   uiOutput("kader_uebersicht_ui")
-               )
+               uiOutput("kader_uebersicht_ui")
              ),
              tabPanel(
                "Kaderwert-Plot",
-               div(style = "margin-top:30px;",
-                   plotOutput("kaderwert_plot", height = 600)
-               )
+               plotOutput("kaderwert_plot", height = 600)
              )
            )
   ),
@@ -215,7 +219,7 @@ ui <- navbarPage(
              ),
              tabPanel("Zusammenfassung",
                       tags$div(
-                        style = "display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px; margin-top: 20px;",
+                        style = "display: flex; justify-content: center; align-items: center; gap: 40px;",
                         
                         # Checkbox 1
                         tags$label(
@@ -287,21 +291,35 @@ ui <- navbarPage(
              DTOutput("kapital_uebersicht_table")
            )
   ),
-  # UI-Seite oder tags$head einfügen
-  tags$script(HTML("
-  $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
-    Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
-  });
-")),
   
-  tags$style(HTML("
-  /* Für genau diese Tabelle */
-  #kreditrahmen_uebersicht_preview table.dataTable td,
-  #kreditrahmen_uebersicht_preview table.dataTable th {
-    text-align: left !important;
-  }
-"))
-  
+  # In Deiner UI (z.B. ui.R)
+  tags$head(
+    # --- Click‑Event für kapital_uebersicht_table ---
+    tags$script(HTML("
+    $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
+      Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
+    });
+  ")),
+    
+    # --- Linksbündige Ausrichtung für alle drei Tabellen ---
+    tags$style(HTML("
+    /* kreditrahmen_uebersicht_preview, transfer_summary_today, flip_summary_today */
+    #kreditrahmen_uebersicht_preview table.dataTable td,
+    #kreditrahmen_uebersicht_preview table.dataTable th,
+    #transfer_summary_today table.dataTable td,
+    #transfer_summary_today table.dataTable th,
+    #flip_summary_today table.dataTable td,
+    #flip_summary_today table.dataTable th {
+      text-align: left !important;
+    }
+  ")),
+    tags$style(HTML("
+    /* Abstand oben für alle Tab-Panes */
+    .tab-content > .tab-pane {
+      margin-top: 20px; margin-bottom: 20px;
+    }
+  "))
+  )
   
 )
 
@@ -379,34 +397,6 @@ server <- function(input, output, session) {
   })
   
   # ---- DATEN / df / list ----
-  
-  ## ---- sommerpause_df ----
-  sommerpause_df <- readr::read_csv("data/MW_Sommerpause_2024.csv") %>%
-    mutate(
-      Datum_raw = as.Date(x),  # x in "2024-06-06" etc.
-      Datum = as.Date(format(Datum_raw, "2025-%m-%d"))
-    ) %>%
-    filter(Datum >= as.Date("2025-06-06")) %>%
-    arrange(Datum) %>%
-    mutate(
-      MW_startwert = y[Datum == as.Date("2025-06-06")][1],
-      MW_rel_normiert = y / MW_startwert
-    )
-  
-  ## ---- sommerpause_21_df ----
-  sommerpause_21_df <- readr::read_csv("data/MW_Sommerpause_2021.csv") %>%
-    mutate(
-      # Erst Datum als Date parsen
-      Datum = as.Date(x),
-      # Dann Jahr auf 2025 setzen
-      Datum = as.Date(format(Datum, "2025-%m-%d")),
-    ) %>%
-    filter(Datum >= as.Date("2025-06-06")) %>%
-    arrange(Datum) %>%
-    mutate(
-      MW_startwert = y[Datum == as.Date("2025-06-06")][1],
-      MW_rel_normiert = y / MW_startwert
-    )
   
   ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
   
@@ -623,111 +613,71 @@ server <- function(input, output, session) {
   # ---- DASHBOARD ----
   
   ## ---- Transferaktivitäten ----
-  
   output$transfer_summary_today <- DT::renderDT({
     today <- Sys.Date()
     
-    # Sicherstellen, dass Zweitgebot existiert
-    if (!"Zweitgebot" %in% names(transfers)) {
-      transfers$Zweitgebot <- NA_real_
-    }
-    
-    # Nur heutige Transfers (exkl. Computer)
-    todays_transfers <- transfers %>%
+    df <- transfers %>%
       filter(Datum == today, Hoechstbietender != "Computer") %>%
-      select(Spieler, Hoechstbietender, Hoechstgebot, Zweitgebot, Datum)
-    
-    mw_today <- ap_df %>%
-      filter(Datum == today) %>%
-      select(Spieler, Marktwert_today = Marktwert)
-    
-    mw_prev <- ap_df %>%
-      filter(Datum == (today - 1)) %>%
-      select(Spieler, Marktwert_prev = Marktwert)
-    
-    df <- todays_transfers %>%
-      left_join(mw_today, by = "Spieler") %>%
-      left_join(mw_prev, by = "Spieler") %>%
+      left_join(
+        ap_df %>% filter(Datum == today)   %>% select(Spieler, Marktwert_today = Marktwert),
+        by = "Spieler"
+      ) %>%
+      left_join(
+        ap_df %>% filter(Datum == today-1) %>% select(Spieler, Marktwert_prev  = Marktwert),
+        by = "Spieler"
+      ) %>%
       mutate(
-        Zweitgebot = as.numeric(gsub("[^0-9]", "", Zweitgebot)),
-        Hoechstgebot = as.numeric(Hoechstgebot),
-        Marktwert_prev = as.numeric(Marktwert_prev),
-        Marktwert_today = as.numeric(Marktwert_today),
-        Diff_Hoechst_prev_abs = Hoechstgebot - Marktwert_prev,
-        Diff_Hoechst_prev_pct = ifelse(!is.na(Marktwert_prev) & Marktwert_prev > 0,
-                                       100 * Diff_Hoechst_prev_abs / Marktwert_prev, NA),
-        Flip_Potenzial = Marktwert_today - Hoechstgebot,
-        Diff_Zweit_prev_pct = ifelse(!is.na(Zweitgebot) & !is.na(Marktwert_prev) & Marktwert_prev > 0,
-                                     100 * (Zweitgebot - Marktwert_prev) / Marktwert_prev, NA),
-        MW_Trend = case_when(
-          is.na(Marktwert_prev) | is.na(Marktwert_today) ~ "–",
-          Marktwert_today > Marktwert_prev ~ '<span style="color:green; font-weight:bold;">▲</span>',
-          Marktwert_today < Marktwert_prev ~ '<span style="color:red; font-weight:bold;">▼</span>',
-          TRUE ~ "–"
+        Preis     = as.numeric(Hoechstgebot),
+        MW_Vortag = as.numeric(Marktwert_prev),
+        MW_Heute  = as.numeric(Marktwert_today),
+        Diff_pct  = ifelse(!is.na(MW_Vortag) & MW_Vortag > 0,
+                           100 * (Preis - MW_Vortag) / MW_Vortag,
+                           NA_real_),
+        `Δ Preis (%)` = ifelse(
+          is.na(Diff_pct), "-",
+          paste0(ifelse(Diff_pct >= 0, "+", "-"),
+                 round(abs(Diff_pct), 1), " %")
         ),
-        Diff_Hoechst_prev_pct_fmt = ifelse(
-          is.na(Diff_Hoechst_prev_pct), "-",
-          paste0(ifelse(Diff_Hoechst_prev_pct >= 0, "+", "-"),
-                 round(abs(Diff_Hoechst_prev_pct), 1), " %")
-        ),
-        Diff_Zweit_prev_pct_fmt = ifelse(
-          is.na(Diff_Zweit_prev_pct), "-",
-          paste0(ifelse(Diff_Zweit_prev_pct >= 0, "+", "-"),
-                 round(abs(Diff_Zweit_prev_pct), 1), " %")
-        ),
-        Flip_Potenzial_fmt = ifelse(
-          is.na(Flip_Potenzial), "-",
-          ifelse(
-            Flip_Potenzial >= 0,
-            paste0('<span style="color:darkgreen; font-weight:bold;">+',
-                   format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>"),
-            paste0('<span style="color:red; font-weight:bold;">-',
-                   format(abs(Flip_Potenzial), big.mark = ".", decimal.mark = ","), " €</span>")
+        pot        = MW_Heute - Preis,
+        `Flip (€)` = case_when(
+          is.na(pot)            ~ "-",
+          pot >= 0              ~ paste0(
+            '<span style="color:darkgreen;font-weight:bold;">+',
+            format(pot, big.mark=".", decimal.mark=","), " €</span>"
+          ),
+          TRUE                  ~ paste0(
+            '<span style="color:red;font-weight:bold;">-',
+            format(abs(pot), big.mark=".", decimal.mark=","), " €</span>"
           )
+        ),
+        Trend      = case_when(
+          is.na(MW_Vortag) | is.na(MW_Heute) ~ "–",
+          MW_Heute > MW_Vortag               ~ '<span style="color:green;font-weight:bold;">▲</span>',
+          MW_Heute < MW_Vortag               ~ '<span style="color:red;font-weight:bold;">▼</span>',
+          TRUE                               ~ "–"
         )
       ) %>%
-      select(
-        Datum,
-        Marktwert_prev,
+      transmute(
+        Datum       = today,
+        `MW Vortag` = MW_Vortag,
         Spieler,
-        Hoechstbietender,
-        Marktwert_today,
-        MW_Trend,
-        Hoechstgebot,
-        Diff_Hoechst_prev_pct_fmt,
-        Flip_Potenzial_fmt
-      ) %>%
-      rename(
-        "Datum" = Datum,
-        "MW Vortag" = Marktwert_prev,
-        "Spieler" = Spieler,
-        "Käufer" = Hoechstbietender,
-        "MW Heute" = Marktwert_today,
-        "Trend" = MW_Trend,
-        "Preis" = Hoechstgebot,
-        "Δ Preis (%)" = Diff_Hoechst_prev_pct_fmt,
-        "Flip (€)" = Flip_Potenzial_fmt
+        Käufer      = Hoechstbietender,
+        `MW Heute`  = MW_Heute,
+        Trend,
+        Preis,
+        `Δ Preis (%)`,
+        `Flip (€)`
       )
     
     datatable(
-      df,
-      escape = FALSE,
-      rownames = FALSE,
-      selection = "single",
-      options = list(
-        dom = 't',
-        pageLength = 10,
-        scrollX = TRUE,
-        paging = FALSE
-      )
+      df, escape = FALSE, rownames = FALSE, selection = "single",
+      options = list(dom = 't', pageLength = 10, scrollX = TRUE, paging = FALSE)
     ) %>%
       formatCurrency(
         columns = c("MW Vortag", "MW Heute", "Preis"),
         currency = "", interval = 3, mark = ".", digits = 0
       )
   })
-  
-  
   
   
   ## ---- Flipaktivitäten ----
@@ -765,10 +715,10 @@ server <- function(input, output, session) {
       )
   })
   
-  
   ## ---- Zeitachse ----
   output$mw_zeitachse_preview <- renderPlot({
     df <- mw_evolution_data()
+    sp <- sommerpause_data()
     
     # Ø MW pro Tag
     plotdata <- df %>%
@@ -777,38 +727,72 @@ server <- function(input, output, session) {
     
     # Kombinieren
     lines_df <- bind_rows(
-      plotdata %>% transmute(Datum = TM_Stand, Wert = MW_mean, Typ = "Durchschnitt TM-Spieler"),
-      gesamt_mw_df %>% transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
-    )
+      plotdata %>% transmute(Datum = TM_Stand, Wert = MW_mean,  Typ = "Durchschnitt TM-Spieler"),
+      gesamt_mw_df %>% transmute(Datum = Datum,     Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
+    ) %>%
+      # Stelle sicher, dass Datum auch wirklich ein Date ist
+      mutate(Datum = as.Date(Datum)) %>%
+      # Alle Zeilen mit NA in Wert oder Datum rauswerfen
+      filter(!is.na(Wert), !is.na(Datum))
+    
     
     ggplot() +
-      geom_line(data = lines_df, aes(x = Datum, y = Wert, color = Typ), linewidth = 1.2) +
-      geom_line(data = sommerpause_df, aes(x = Datum, y = MW_rel_normiert), color = "red", linetype = "dashed", linewidth = 1) +
-      geom_line(data = sommerpause_21_df, aes(x = Datum, y = MW_rel_normiert), color = "orange", linetype = "dashed", linewidth = 1) +
+      # Linien ohne NA, oder mit na.rm
+      geom_line(
+        data = lines_df %>% filter(!is.na(Wert)),
+        aes(x = Datum, y = Wert, color = Typ),
+        linewidth = 1.2,
+        na.rm    = TRUE
+      ) +
+      # Sommerpause‑Linien: ebenfalls NA-frei machen
+      geom_line(
+        data = filter(sp, Saison=="Sommerpause_2024") %>% filter(!is.na(MW_rel_normiert)),
+        aes(x = Datum, y = MW_rel_normiert),
+        color     = "red",
+        linetype  = "dashed",
+        linewidth = 1,
+        na.rm     = TRUE
+      ) +
+      geom_line(
+        data = filter(sp, Saison=="Sommerpause_2021") %>% filter(!is.na(MW_rel_normiert)),
+        aes(x = Datum, y = MW_rel_normiert),
+        color     = "orange",
+        linetype  = "dashed",
+        linewidth = 1,
+        na.rm     = TRUE
+      ) +
       coord_cartesian(ylim = c(0.75, 1.4)) +
       scale_color_manual(values = c(
         "Durchschnitt TM-Spieler" = "#005c99",
-        "Gesamtmarktwert" = "darkgrey"
+        "Gesamtmarktwert"          = "darkgrey"
       )) +
       labs(
-        title = "Marktwerte", x = NULL, y = "relativer MW", color = NULL
+        x = NULL, y = "relativer MW", color = NULL
       ) +
-      geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
-                 color = "darkred", size = 1.5) +
+      geom_vline(
+        xintercept = as.Date("2025-08-22"),
+        linetype   = "dotted",
+        color      = "darkred",
+        size       = 1.5
+      ) +
       annotate(
         "text",
-        x = as.Date("2025-08-22"),
-        y = 1.02,  # ggf. anpassen je nach Plot-Skalierung
-        label = "Saisonstart",
-        color = "darkred",
-        angle = 90,
-        vjust = -0.5,
+        x       = as.Date("2025-08-22"),
+        y       = 1.02,
+        label   = "Saisonstart",
+        color   = "darkred",
+        angle   = 90,
+        vjust   = -0.5,
         fontface = "bold",
-        size = 4
+        size    = 6
       ) +
-      theme_minimal(base_size = 12) +
-      theme(legend.position = "bottom",
-            plot.title = element_text(size = 16, color = "black", face = "bold"))
+      theme_minimal(base_size = 16) +
+      theme(
+        legend.position   = "bottom",
+        plot.title        = element_text(size = 16, color = "black", face = "bold")
+      )
+    
+      
   })
   
   ## ---- Kontostände ----
@@ -913,7 +897,7 @@ server <- function(input, output, session) {
       theme(axis.text.y = element_text(size = 15, color = "black"),
             axis.text.x = element_text(size = 12, color = "black"),
             plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black")) +
-      labs(title = "Flip Gewinne/Verluste", x = "", y = "")
+      labs(x = "", y = "")
   })
   
   
@@ -938,8 +922,7 @@ server <- function(input, output, session) {
       geom_hline(
         data = mean_total,
         aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9,
-        inherit.aes = FALSE
+        linetype = "dashed", color = "grey60", linewidth = 0.9
       ) +
       geom_text(
         data = mean_total,
@@ -947,18 +930,16 @@ server <- function(input, output, session) {
         color = "grey30", # Dunkelrot
         fontface = "bold",
         size = 5,
-        nudge_x = 1,
-        inherit.aes = FALSE
+        nudge_x = 1
       ) +
       facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
       labs(
-        title = "Bieterprofile",
         x = "",
-        y = "Abweichung vom Vortags-MW (%)"
+        y = ""
       ) +
       scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
       scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      theme_minimal(base_size = 13) +
+      theme_minimal(base_size = 16) +
       theme(
         legend.position = "bottom",
         plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black"),
@@ -1074,7 +1055,6 @@ server <- function(input, output, session) {
       )
   })
   
-  
   # ---- MARKTWERTENTWICKLUNG ----
   ## ---- Besitzhistorie bauen ----
   besitzhistorie <- reactive({
@@ -1158,6 +1138,7 @@ server <- function(input, output, session) {
   ## ---- Ausgabe-Plot ----
   output$mw_evolution <- renderPlot({
     df <- mw_evolution_data()
+    sp <- sommerpause_data()  
     
     # Mittelwert + SD der TM-Spieler pro Tag
     plotdata <- df %>%
@@ -1176,7 +1157,7 @@ server <- function(input, output, session) {
         transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
     )
     
-    p <- ggplot() +
+    ggplot() +
       # Schattierung für SD
       geom_ribbon(
         data = plotdata,
@@ -1187,7 +1168,8 @@ server <- function(input, output, session) {
       geom_line(
         data = lines_df,
         aes(x = Datum, y = Wert, color = Typ),
-        linewidth = 1.2
+        linewidth = 1.2,
+        na.rm     = TRUE
       ) +
       geom_point(
         data = plotdata,
@@ -1221,20 +1203,24 @@ server <- function(input, output, session) {
       )) +
       theme_minimal(base_size = 14) +
       theme(legend.position = "none") +
+      # --- hier kommen die beiden Sommerpause‑Linien aus sp ---
       geom_line(
-        data = sommerpause_df,
+        data = filter(sp, Saison == "Sommerpause_2024"),
         aes(x = Datum, y = MW_rel_normiert),
-        color = "red",
-        linewidth = 1.3,
-        linetype = "dashed") + 
-          geom_line(
-        data = sommerpause_21_df,
+        color    = "red",
+        linetype = "dashed",
+        linewidth= 1.3,
+        na.rm     = TRUE
+      ) +
+      geom_line(
+        data = filter(sp, Saison == "Sommerpause_2021"),
         aes(x = Datum, y = MW_rel_normiert),
-        color = "orange",
-        linewidth = 1.3,
-        linetype = "dashed")
+        color    = "orange",
+        linetype = "dashed",
+        linewidth= 1.3,
+        na.rm     = TRUE
+      )
     
-    p
   })
   
   ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
@@ -1320,8 +1306,7 @@ server <- function(input, output, session) {
   ## ---- Je Klasse Marktwert-Entwicklung ab 15.06.2025 ----
   
   data_now <- reactive({
-    df <- read.csv("data/ALL_PLAYERS.csv", sep = ";", encoding = "UTF-8")
-    df$Datum <- as.Date(df$Datum, format = "%d.%m.%Y")
+    df <- ap_df
     
     start_date <- as.Date("2025-06-16")
     end_date <- max(df$Datum, na.rm = TRUE)
@@ -1393,21 +1378,48 @@ server <- function(input, output, session) {
   })
   
   
-  ## ---- Historische Martkwertverläufe ----
+  ## ---- Hist. Martkwertverläufe - Chronologie ----
   
   data_path <- "./global_MW"
   
   seasons <- c("2004-05", "2005-06", "2006-07", "2007-08", "2008-09",
                "2009-10", "2010-11", "2011-12", "2012-13", "2013-14",
                "2014-15", "2015-16", "2016-17", "2017-18", "2018-19",
-               "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25")
+               "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "Sommerpause_2021", "Sommerpause_2024")
+  
+  # Nur die regulären Saisons (ohne Sommerpause)
+  real_seasons <- seasons[!grepl("^Sommerpause", seasons)]
+  n_real       <- length(real_seasons)
+  drop_idx     <- c(1:3, (n_real-4):n_real)
   
   load_season_data <- function(season) {
-    file_name <- paste0(data_path, "/historic_market_values_", season, ".csv")
+    file_name <- file.path(data_path, paste0("historic_market_values_", season, ".csv"))
     if (!file.exists(file_name)) return(NULL)
-    read_csv(file_name, show_col_types = FALSE) %>%
-      mutate(Saison = season)
+    readr::read_csv(file_name, show_col_types = FALSE) %>%
+      # Spalte für Jahresanfang in 2025 nur für „Sommerpause“ umschreiben
+      mutate(
+        Datum_raw = as.Date(Datum),
+        Datum = if (grepl("^Sommerpause", season)) {
+          as.Date(format(Datum_raw, "2025-%m-%d"))
+        } else {
+          Datum_raw
+        },
+        Saison = season
+      )
   }
+  
+  sommerpause_data <- reactive({
+    all_season_data() %>%
+      filter(Saison %in% c("Sommerpause_2021", "Sommerpause_2024")) %>%
+      filter(Datum >= as.Date("2025-06-06")) %>%
+      arrange(Datum) %>%
+      group_by(Saison) %>%
+      mutate(
+        MW_startwert = Marktwert[Datum == as.Date("2025-06-06")][1],
+        MW_rel_normiert = Marktwert / MW_startwert
+      ) %>%
+      ungroup()
+  })
   
   # Alle Saison-Daten laden
   all_season_data <- reactive({
@@ -1428,69 +1440,67 @@ server <- function(input, output, session) {
         x = "Datum",
         y = "Marktwert"
       ) +
-      theme_minimal() +
+      theme_minimal(base_size = 16) +
       theme(legend.position = "bottom")
   })
   
   # Historische Saisonverläufe - Vergleichsauswahl (normalisierte Zeitachse)
   normalized_data <- reactive({
     req(input$selected_seasons)
-    df <- all_season_data()
-    df <- df %>% filter(Saison %in% input$selected_seasons)
-    
-    df <- df %>%
-      mutate(Datum = as.Date(Datum)) %>%
-      group_by(Saison) %>%
+    all_season_data() %>%
+      filter(Saison %in% input$selected_seasons) %>%
+      # statt alle zu nehmen, hier nur echte Saisons
+      filter(!grepl("^Sommerpause", Saison)) %>%
       mutate(
+        Datum = as.Date(Datum),
         saison_start = as.Date(paste0(substr(Saison, 1, 4), "-07-01")),
         days_since_start = as.integer(Datum - saison_start)
       ) %>%
-      ungroup() %>%
       filter(days_since_start >= 0)
-    
-    df
   })
   
-  ## ---- historical_seasons_plot_selected ----
+  ## ---- Hist. Saisonverläufe - Select ----
   
-  # Initiale Auswahl der Checkboxen
-  observe({
-    selected <- seasons[-c(1:3, length(seasons) - 4)]
-    updateCheckboxGroupInput(session, "selected_seasons",
-                             choices = seasons,
-                             selected = selected)
-  })
+  # Einmalige Initialisierung der Checkbox-Choices
+  observeEvent(TRUE, {
+    sel <- c(real_seasons[n_real], real_seasons[n_real-2])
+    updateCheckboxGroupInput(
+      session, "selected_seasons",
+      choices  = real_seasons,
+      selected = sel
+    )
+  }, once = TRUE)
   
-  # Button: Alle auswählen
+  # Button-Handler nur noch auf real_seasons beziehen:
   observeEvent(input$select_all, {
-    updateCheckboxGroupInput(session, "selected_seasons",
-                             choices = seasons,
-                             selected = seasons)
+    updateCheckboxGroupInput(
+      session, "selected_seasons",
+      choices  = real_seasons,
+      selected = real_seasons
+    )
   })
-  
-  # Button: Keine auswählen
   observeEvent(input$select_none, {
-    updateCheckboxGroupInput(session, "selected_seasons",
-                             choices = seasons,
-                             selected = character(0))
+    updateCheckboxGroupInput(
+      session, "selected_seasons",
+      choices  = real_seasons,
+      selected = character(0)
+    )
   })
-  
-  # Button: Custom (ohne die ersten 3 und 5. letzten)
   observeEvent(input$select_custom, {
-    selected <- seasons[-c(1:3, length(seasons) - 4)]
-    updateCheckboxGroupInput(session, "selected_seasons",
-                             choices = seasons,
-                             selected = selected)
+    updateCheckboxGroupInput(
+      session, "selected_seasons",
+      choices  = real_seasons,
+      selected = real_seasons[-drop_idx]
+    )
   })
-  
-  # Button: Letzte und drittletzte Season
   observeEvent(input$select_last3, {
-    selected <- c(seasons[length(seasons)], seasons[length(seasons)-2])
-    updateCheckboxGroupInput(session, "selected_seasons",
-                             choices = seasons,
-                             selected = selected)
+    sel <- c(real_seasons[n_real], real_seasons[n_real-2])
+    updateCheckboxGroupInput(
+      session, "selected_seasons",
+      choices  = real_seasons,
+      selected = sel
+    )
   })
-  
   
   output$historical_seasons_plot_selected <- renderPlot({
     df <- normalized_data()
@@ -1659,7 +1669,7 @@ server <- function(input, output, session) {
         x = "Tage seit 1. Juli",
         y = "Marktwert"
       ) +
-      theme_minimal() +
+      theme_minimal(base_size = 16) +
       theme(legend.position = "bottom")
   })
   
@@ -1941,169 +1951,163 @@ server <- function(input, output, session) {
   })
   
   ## ---- Transfer-Simulator ----
-  
   output$transfer_simulator <- renderDT({
-    req(verfuegbares_kapital_dominik())
-    req(kontostand_dominik())
-    mein_kapital <- verfuegbares_kapital_dominik()
-    mein_kontostand <- kontostand_dominik()
-    
-    # Spieler heute ablaufend
-    heute_spieler <- tm_df %>%
-      mutate(
-        Restzeit = trimws(Restzeit),
-        Restkategorie = case_when(
-          grepl("^[0-9]+h", Restzeit) ~ "heute",
-          TRUE ~ "später"
-        ),
-        Mindestgebot_num = as.numeric(gsub("\\.", "", Mindestgebot))
-      ) %>%
-      filter(Restkategorie == "heute") %>%
-      select(Spieler, Mindestgebot_num) %>%
-      mutate(
-        Restbetrag_num = mein_kapital - Mindestgebot_num
-      )
-    
-    # Rest-Kontostand berechnen
-    Rest_Kontostand <- ifelse(
-      heute_spieler$Restbetrag_num >= 0,
-      mein_kontostand - pmax(heute_spieler$Mindestgebot_num - (mein_kapital - mein_kontostand), 0),
-      mein_kontostand - heute_spieler$Mindestgebot_num
+  # Verfügbares Kapital und Kontostand
+  req(verfuegbares_kapital_dominik())
+  req(kontostand_dominik())
+  mein_kapital    <- verfuegbares_kapital_dominik()
+  mein_kontostand <- kontostand_dominik()
+  
+  # Spieler, die heute auslaufen
+  heute_spieler <- tm_df %>%
+    mutate(
+      Restzeit        = trimws(Restzeit),
+      Restkategorie   = case_when(
+        grepl("^[0-9]+h", Restzeit) ~ "heute",
+        TRUE                       ~ "später"
+      ),
+      Mindestgebot_num = as.numeric(gsub("\\.", "", Mindestgebot))
+    ) %>%
+    filter(Restkategorie == "heute") %>%
+    select(Spieler, Mindestgebot_num) %>%
+    mutate(
+      Restbetrag_num = mein_kapital - Mindestgebot_num
     )
+  
+  # Berechnung des Rest-Kontostands (Vorstufe)
+  Rest_Kontostand <- ifelse(
+    heute_spieler$Restbetrag_num >= 0,
+    mein_kontostand - pmax(heute_spieler$Mindestgebot_num - (mein_kapital - mein_kontostand), 0),
+    mein_kontostand - heute_spieler$Mindestgebot_num
+  )
+  
+  # Aktuellen Marktwert ermitteln
+  max_datum <- max(ap_df$Datum, na.rm = TRUE)
+  aktuelle_mw <- ap_df %>%
+    filter(Datum == max_datum) %>%
+    select(Spieler, Marktwert = Marktwert) %>%
+    mutate(Marktwert = as.numeric(Marktwert))
+  
+  # Eigene Spieler
+  meine_spieler <- teams_df %>%
+    filter(Manager == "Dominik") %>%
+    select(Spieler)
+  
+  # Angebote laden und Kreditverlust berechnen
+  angebote_df <- readr::read_delim(
+      "data/ANGEBOTE.csv", delim = ";",
+      locale = locale(decimal_mark = ",", grouping_mark = ".")
+    ) %>%
+    rename(Angebot = `Angebot (€)`) %>%
+    mutate(Spieler = trimws(Spieler)) %>%
+    inner_join(meine_spieler, by = "Spieler") %>%
+    left_join(aktuelle_mw, by = "Spieler") %>%
+    mutate(
+      Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
+      Kreditverlust = Marktwert / 4
+    ) %>%
+    arrange(desc(Angebot))
+  
+  # Funktion: welche Spieler verkaufen, um Defizit zu decken
+  berechne_deckung <- function(defizit, mindestgebot) {
+    rest                 <- defizit
+    verkauft             <- character(0)
+    total_einnahme       <- 0
+    total_kreditverlust  <- 0
+    i                    <- 1
     
-    # Marktwertdaten vorbereiten
-    max_datum <- max(ap_df$Datum, na.rm = TRUE)
-    aktuelle_mw <- ap_df %>%
-      filter(Datum == max_datum) %>%
-      select(Spieler, Marktwert = Marktwert) %>%
-      mutate(Marktwert = as.numeric(Marktwert))
-    
-    # Spieler im Besitz von Dominik
-    meine_spieler <- teams_df %>%
-      filter(Manager == "Dominik") %>%
-      select(Spieler)
-    
-    # Lade ANGEBOTE.csv + berechne Kreditverlust auf Basis Marktwert
-    angebote_df <- readr::read_delim("data/ANGEBOTE.csv", delim = ";", 
-                                     locale = locale(decimal_mark = ",", grouping_mark = ".")) %>%
-      rename(Angebot = `Angebot (€)`) %>%
-      mutate(Spieler = trimws(Spieler)) %>%
-      inner_join(meine_spieler, by = "Spieler") %>%
-      left_join(aktuelle_mw, by = "Spieler") %>%
-      mutate(
-        Marktwert = ifelse(is.na(Marktwert), Angebot, Marktwert),
-        Kreditverlust = Marktwert / 4
-      ) %>%
-      arrange(desc(Angebot))
-    
-    berechne_deckung <- function(defizit, mindestgebot) {
-      rest <- defizit
-      verkauft <- character(0)
-      total_einnahme <- 0
-      total_kreditverlust <- 0
-      i <- 1
+    while (rest > 0 && i <= nrow(angebote_df)) {
+      s  <- angebote_df$Spieler[i]
+      a  <- angebote_df$Angebot[i]
+      kv <- angebote_df$Kreditverlust[i]
       
-      while (rest > 0 && i <= nrow(angebote_df)) {
-        s <- angebote_df$Spieler[i]
-        a <- angebote_df$Angebot[i]
-        kv <- angebote_df$Kreditverlust[i]
-        
-        verkauft <- c(verkauft, s)
-        total_einnahme <- total_einnahme + a
-        total_kreditverlust <- total_kreditverlust + kv
-        
-        rest <- defizit - total_einnahme + total_kreditverlust
-        i <- i + 1
-      }
+      verkauft            <- c(verkauft, s)
+      total_einnahme      <- total_einnahme + a
+      total_kreditverlust <- total_kreditverlust + kv
       
-      if (rest > 0) {
-        return(list(
-          deckung = "<span style='color:red;font-weight:bold;'>N/A</span>",
-          rest_kapital = NA,
-          rest_kontostand = NA
-        ))
-      } else {
-        rest_kapital <- mein_kapital - defizit
-        rest_kontostand <- mein_kontostand + total_einnahme - mindestgebot
-        return(list(
-          deckung = paste(verkauft, collapse = ", "),
-          rest_kapital = rest_kapital,
-          rest_kontostand = rest_kontostand
-        ))
-      }
+      rest <- defizit - total_einnahme + total_kreditverlust
+      i    <- i + 1
     }
     
-    
-    # Deckung & Restkapital berechnen
-    deckungsergebnisse <- Map(function(restbetrag, mindestgebot) {
-      if (restbetrag >= 0) {
-        list(
-          deckung = "-",
-          rest_kapital = restbetrag,
-          rest_kontostand = mein_kontostand - mindestgebot
-        )
-      } else {
-        berechne_deckung(abs(restbetrag), mindestgebot)
-      }
-    }, heute_spieler$Restbetrag_num, heute_spieler$Mindestgebot_num)
-    
-    
-    heute_spieler$Deckung <- vapply(deckungsergebnisse, function(x) {
-      if (is.null(x) || is.null(x$deckung)) return(NA_character_)
-      x$deckung
-    }, character(1))
-    
-    heute_spieler$Restkapital_num <- vapply(deckungsergebnisse, function(x) {
-      if (is.null(x) || is.null(x$rest_kapital)) return(NA_real_)
-      x$rest_kapital
-    }, numeric(1))
-    
-    heute_spieler$Rest_Kontostand_num <- vapply(deckungsergebnisse, function(x) {
-      if (is.null(x) || is.null(x$rest_kontostand)) return(NA_real_)
-      x$rest_kontostand
-    }, numeric(1))
-      
-    
-    
-    # Formatierung
-    heute_spieler <- heute_spieler %>%
-      mutate(
-        Mindestgebot = paste0(format(Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €"),
-        Restbetrag = ifelse(
-          Restbetrag_num >= 0,
-          paste0("<span style='color:green;font-weight:bold;'>+",
-                 format(Restbetrag_num, big.mark = ".", decimal.mark = ","), " €</span>"),
-          paste0("<span style='color:red;font-weight:bold;'>–",
-                 format(abs(Restbetrag_num), big.mark = ".", decimal.mark = ","), " €</span>")
-        ),
-        `Rest-Kapital` = ifelse(
-          is.na(Restkapital_num),
-          "<span style='color:red;font-weight:bold;'>N/A</span>",
-          paste0(format(round(Restkapital_num), big.mark = ".", decimal.mark = ","), " €")
-        ),
-        `Rest-Kontostand` = ifelse(
-          is.na(Rest_Kontostand_num),
-          "<span style='color:red;font-weight:bold;'>N/A</span>",
-          ifelse(
-            Rest_Kontostand_num >= 0,
-            paste0("<span style='color:green;font-weight:bold;'>", format(round(Rest_Kontostand_num), big.mark = ".", decimal.mark = ","), " €</span>"),
-            paste0("<span style='color:red;font-weight:bold;'>–", format(abs(round(Rest_Kontostand_num)), big.mark = ".", decimal.mark = ","), " €</span>")
-          )
-        )
-      ) %>%
-      arrange(desc(Mindestgebot_num))
-    
-    # Ausgabe
-    datatable(
-      heute_spieler %>%
-        select(Spieler, Mindestgebot, Restbetrag, Deckung, `Rest-Kapital`, `Rest-Kontostand`),
-      escape = FALSE,
-      rownames = FALSE,
-      options = list(dom = "t", pageLength = 20)
+    if (rest > 0) {
+      list(
+        deckung        = "<span style='color:red;font-weight:bold;'>N/A</span>",
+        rest_kapital   = NA,
+        rest_kontostand = NA
+      )
+    } else {
+      rest_kapital   <- mein_kapital - defizit
+      rest_kontostand <- mein_kontostand + total_einnahme - mindestgebot
+      list(
+        deckung        = paste(verkauft, collapse = ", "),
+        rest_kapital   = rest_kapital,
+        rest_kontostand = rest_kontostand
+      )
+    }
+  }
+  
+  # Deckung & Restwerte für jeden Spieler
+  deckungsergebnisse <- Map(function(restbetrag, mindestgebot) {
+    if (restbetrag >= 0) {
+      list(
+        deckung        = "-",
+        rest_kapital   = restbetrag,
+        rest_kontostand = mein_kontostand - mindestgebot
+      )
+    } else {
+      berechne_deckung(abs(restbetrag), mindestgebot)
+    }
+  }, heute_spieler$Restbetrag_num, heute_spieler$Mindestgebot_num)
+  
+  # Ergebnisse in heute_spieler einfügen
+  heute_spieler <- heute_spieler %>%
+    mutate(
+      Deckung            = vapply(deckungsergebnisse, `[[`, character(1), "deckung"),
+      Restkapital_num    = vapply(deckungsergebnisse, `[[`, numeric(1),   "rest_kapital"),
+      Rest_Kontostand_num = vapply(deckungsergebnisse, `[[`, numeric(1),   "rest_kontostand")
     )
-  })
   
+  # Formatierung ohne Währungszeichen in den Zellen
+  heute_spieler <- heute_spieler %>%
+    mutate(
+      Mindestgebot       = format(Mindestgebot_num, big.mark = ".", decimal.mark = ","),
+      `Rest-Kreditrahmen` = ifelse(
+        is.na(Restkapital_num),
+        "<span style='color:red;font-weight:bold;'>N/A</span>",
+        format(round(Restkapital_num), big.mark = ".", decimal.mark = ",")
+      ),
+      `Rest-Kontostand`  = ifelse(
+        is.na(Rest_Kontostand_num),
+        "<span style='color:red;font-weight:bold;'>N/A</span>",
+        ifelse(
+          Rest_Kontostand_num >= 0,
+          paste0("<span style='color:green;font-weight:bold;'>",
+                 format(round(Rest_Kontostand_num), big.mark = ".", decimal.mark = ","),
+                 "</span>"),
+          paste0("<span style='color:red;font-weight:bold;'>–",
+                 format(abs(round(Rest_Kontostand_num)), big.mark = ".", decimal.mark = ","),
+                 "</span>")
+        )
+      )
+    ) %>%
+    arrange(desc(Mindestgebot_num))
   
+  # Ausgabe: nur gewünschte Spalten, mit "(€)" in den Überschriften
+  datatable(
+    heute_spieler %>%
+      select(
+        Spieler,
+        `Mindestgebot (€)`      = Mindestgebot,
+        Deckung,
+        `Rest-Kreditrahmen (€)` = `Rest-Kreditrahmen`,
+        `Rest-Kontostand (€)`   = `Rest-Kontostand`
+      ),
+    escape  = FALSE,
+    rownames = FALSE,
+    options = list(dom = "t", pageLength = 20)
+  )
+})
+
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
@@ -2486,7 +2490,7 @@ server <- function(input, output, session) {
       geom_line(color = "darkgrey", linewidth = 1.2) +
       coord_cartesian(ylim = c(0.75, 1.4)) +
       labs(x = NULL, y = NULL, title = NULL) +
-      theme_minimal(base_size = 10) +
+      theme_minimal(base_size = 12) +
       theme(
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
@@ -2510,8 +2514,9 @@ server <- function(input, output, session) {
       )
     
     # Filter unusual high bids
-    plotdata <- plotdata %>% 
-      filter(Diff_Prozent<=50)
+    plotdata <- data %>%
+      filter(!is.na(Diff_Prozent), Diff_Prozent <= 50)
+    
     
     # Für robustes beeswarm: Gruppengröße pro Facet
     plotdata_beeswarm <- plotdata %>%
@@ -2564,7 +2569,8 @@ server <- function(input, output, session) {
         color = "grey30",
         linetype = "dashed",
         linewidth = 0.8,
-        inherit.aes = FALSE
+        inherit.aes = FALSE,
+        na.rm = TRUE
       ) +
       
       # Mittelwert-Wert als Text
@@ -2586,7 +2592,7 @@ server <- function(input, output, session) {
         color = "#d62728",
         linewidth = 1.2,
         linetype = "solid",
-        inherit.aes = FALSE
+        na.rm = TRUE
       ) +
       # Mittelwert-Wert je MW-Klasse als Text
       geom_text(
@@ -2648,8 +2654,7 @@ server <- function(input, output, session) {
       geom_hline(
         data = mean_total,
         aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9,
-        inherit.aes = FALSE
+        linetype = "dashed", color = "grey60", linewidth = 0.9, na.rm = TRUE
       ) +
       geom_text(
         data = mean_total,
@@ -2657,8 +2662,7 @@ server <- function(input, output, session) {
         color = "black", # Dunkelrot
         fontface = "bold",
         size = 5,
-        vjust = -0.25,
-        inherit.aes = FALSE
+        vjust = -0.25
       ) +
       # Mittelwert je Typ als Text (wie gehabt)
       geom_text(
@@ -2666,8 +2670,7 @@ server <- function(input, output, session) {
         aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
         nudge_x = 0.4,
         fontface = "bold",
-        size = 5,
-        inherit.aes = FALSE
+        size = 5
       ) +
       facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
       labs(
@@ -2734,7 +2737,7 @@ server <- function(input, output, session) {
       summarise(Anzahl_Gebote = n(), .groups = "drop")
     
     ggplot(df, aes(x = Datum, y = Anzahl_Gebote, color = Bieter)) +
-      geom_line(size = 1.2) +
+      geom_line(size = 1.2, na.rm = TRUE  ) +
       geom_point(size = 2, alpha = 0.8) +
       scale_color_brewer(palette = "Paired") +
       labs(
