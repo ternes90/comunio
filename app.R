@@ -372,7 +372,7 @@ server <- function(input, output, session) {
   # ---- DATEN / df / list ----
   
   ## ---- sommerpause_df ----
-  sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
+  sommerpause_df <- readr::read_csv("data/MW_Sommerpause_2024.csv") %>%
     mutate(
       Datum_raw = as.Date(x),  # x in "2024-06-06" etc.
       Datum = as.Date(format(Datum_raw, "2025-%m-%d"))
@@ -385,7 +385,7 @@ server <- function(input, output, session) {
     )
   
   ## ---- sommerpause_21_df ----
-  sommerpause_21_df <- readr::read_csv("MW_Sommerpause_2021.csv") %>%
+  sommerpause_21_df <- readr::read_csv("data/MW_Sommerpause_2021.csv") %>%
     mutate(
       # Erst Datum als Date parsen
       Datum = as.Date(x),
@@ -401,21 +401,21 @@ server <- function(input, output, session) {
   
   ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
   
-  teams_df <- read.csv2("TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
+  teams_df <- read.csv2("data/TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
   
-  transfers <- read.csv2("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
+  transfers <- read.csv2("data/TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
       mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
-  transfermarkt <- read_csv2("TRANSFERMARKT.csv") %>%
+  transfermarkt <- read_csv2("data/TRANSFERMARKT.csv") %>%
     mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
   
-  ap_df <- read.csv2("ALL_PLAYERS.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>% 
+  ap_df <- read.csv2("data/ALL_PLAYERS.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>% 
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
            Marktwert = as.numeric(Marktwert))
   
-  tm_df <- read.csv2("COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")#
+  tm_df <- read.csv2("data/COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")#
   
-  st_df <- readr::read_csv2("STANDINGS.csv", 
+  st_df <- readr::read_csv2("data/STANDINGS.csv", 
                             col_types = cols(
                               Manager = col_character(),
                               Teamwert = col_double(),
@@ -424,11 +424,11 @@ server <- function(input, output, session) {
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
-  ca_df <- read_delim("com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
+  ca_df <- read_delim("data/com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
   ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
   
   #Kaufempfehung etc.
-  ca2_df <- read_delim("com_analytics_transfer_market_computer.csv", delim = ";", locale = locale(encoding = "UTF-8")) %>%
+  ca2_df <- read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";", locale = locale(encoding = "UTF-8")) %>%
     mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>% filter(Datum == max(Datum, na.rm = TRUE))
   ca2_df$SPIELER <- trimws(enc2utf8(as.character(ca2_df$SPIELER)))
   
@@ -1226,7 +1226,7 @@ server <- function(input, output, session) {
   
   ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
   data <- reactive({
-    df <- read.csv("marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
+    df <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
     
     # Datum korrekt parsen (YYYY-MM-DD → %Y-%m-%d)
     df$Datum <- as.Date(df$Datum, format = "%Y-%m-%d")
@@ -1307,7 +1307,7 @@ server <- function(input, output, session) {
   ## ---- Je Klasse Marktwert-Entwicklung ab 15.06.2025 ----
   
   data_now <- reactive({
-    df <- read.csv("ALL_PLAYERS.csv", sep = ";", encoding = "UTF-8")
+    df <- read.csv("data/ALL_PLAYERS.csv", sep = ";", encoding = "UTF-8")
     df$Datum <- as.Date(df$Datum, format = "%d.%m.%Y")
     
     start_date <- as.Date("2025-06-16")
@@ -1971,7 +1971,7 @@ server <- function(input, output, session) {
       select(Spieler)
     
     # Lade ANGEBOTE.csv + berechne Kreditverlust auf Basis Marktwert
-    angebote_df <- readr::read_delim("ANGEBOTE.csv", delim = ";", 
+    angebote_df <- readr::read_delim("data/ANGEBOTE.csv", delim = ";", 
                                      locale = locale(decimal_mark = ",", grouping_mark = ".")) %>%
       rename(Angebot = `Angebot (€)`) %>%
       mutate(Spieler = trimws(Spieler)) %>%
@@ -3306,7 +3306,7 @@ server <- function(input, output, session) {
     transfers <- dat$transfers
     
     transactions <- readr::read_delim(
-      "TRANSACTIONS.csv",
+      "data/TRANSACTIONS.csv",
       delim = ";",
       locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ""),
       show_col_types = FALSE
