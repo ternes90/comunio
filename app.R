@@ -4,6 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
+library(scales)  # ganz oben, falls noch nicht geladen
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -144,11 +145,17 @@ ui <- navbarPage(
   ## ---- Transfermarkt ----
   tabPanel("Transfermarkt",
            tabsetPanel(
+             id = "transfermarkt_tabs",               # ← hier die id
              tabPanel("Transfermarkt Details",
                       DTOutput("transfermarkt_detail")
              ),
-             tabPanel("Transfer-Simulator",
-                      DTOutput("transfer_simulator")
+             tabPanel("Transfer‑Simulator",
+                      selectInput("spieler_select", "Spieler auf Transfermarkt:", choices = NULL),
+                      fluidRow(
+                        column(6, plotOutput("transfer_simulator_plot")),
+                        column(3, checkboxGroupInput("angebote_select", "Angebote für Deckung:", choices = NULL)),
+                        column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
+                      )
              )
            )
   ),
@@ -327,7 +334,10 @@ ui <- navbarPage(
 server <- function(input, output, session) {
   
   verfuegbares_kapital_dominik <- reactiveVal(0)
-  kontostand_dominik <- reactiveVal(0)
+  kontostand_dominik           <- reactiveVal(0)
+  
+  # 0) reaktiver Speicher für tm_trend
+  tm_trend_global <- reactiveVal(NULL)
   
   # Kapital + Kontostand von Dominik beobachten und speichern
   observe({
@@ -337,6 +347,29 @@ server <- function(input, output, session) {
     if (nrow(dominiks_kapital) == 1) {
       verfuegbares_kapital_dominik(dominiks_kapital$Verfügbares_Kapital)
       kontostand_dominik(dominiks_kapital$Aktuelles_Kapital)
+    }
+  })
+  
+  # Server‑Logik zum Wechseln und Vorwählen für Transfer-Simulator
+  observeEvent(input$transfermarkt_detail_rows_selected, {
+    idx <- input$transfermarkt_detail_rows_selected
+    if (length(idx) == 1) {
+      # Hol dir jetzt deinen global gespeicherten tm_trend
+      df <- tm_trend_global()
+      player <- df$Spieler[idx]
+      
+      # Tab wechseln
+      updateTabsetPanel(
+        session,
+        inputId  = "transfermarkt_tabs",
+        selected = "Transfer‑Simulator"
+      )
+      # SelectInput vorwählen
+      updateSelectInput(
+        session,
+        inputId  = "spieler_select",
+        selected = player
+      )
     }
   })
   
@@ -1917,9 +1950,13 @@ server <- function(input, output, session) {
     tm_trend <- tm_trend %>%
      left_join(ca2_df, by = c("Spieler" = "SPIELER"))
     
+    # _Hier_ schiebst du tm_trend in den globalen Speicher:  
+    tm_trend_global(tm_trend)
+    
     DT::datatable(
       tm_trend[, c("Spieler", "Logo", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "IdealesGebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
       colnames = c("Spieler", "Verein", "PPS", "Preis-Leistung", "Hist.", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "Zuschlagsgebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
+      selection = "single",   # ← Single‑Selection
       rownames = FALSE,
       escape = FALSE,
       options = list(
@@ -1951,163 +1988,174 @@ server <- function(input, output, session) {
   })
   
   ## ---- Transfer-Simulator ----
-  output$transfer_simulator <- renderDT({
-  # Verfügbares Kapital und Kontostand
-  req(verfuegbares_kapital_dominik())
-  req(kontostand_dominik())
-  mein_kapital    <- verfuegbares_kapital_dominik()
-  mein_kontostand <- kontostand_dominik()
+  # 2) Reactive DataFrames vorbereiten
+  meine_spieler <- reactive({
+    teams_df %>%
+      filter(Manager == "Dominik") %>%
+      pull(Spieler)
+  })
   
-  # Spieler, die heute auslaufen
-  heute_spieler <- tm_df %>%
-    mutate(
-      Restzeit        = trimws(Restzeit),
-      Restkategorie   = case_when(
-        grepl("^[0-9]+h", Restzeit) ~ "heute",
-        TRUE                       ~ "später"
-      ),
-      Mindestgebot_num = as.numeric(gsub("\\.", "", Mindestgebot))
-    ) %>%
-    filter(Restkategorie == "heute") %>%
-    select(Spieler, Mindestgebot_num) %>%
-    mutate(
-      Restbetrag_num = mein_kapital - Mindestgebot_num
-    )
+  # Aktuelle Marktwerte
+  aktuelle_mw <- reactive({
+    max_datum <- max(ap_df$Datum, na.rm = TRUE)
+    ap_df %>%
+      filter(Datum == max_datum) %>%
+      transmute(Spieler, Marktwert = as.numeric(Marktwert))
+  })
   
-  # Berechnung des Rest-Kontostands (Vorstufe)
-  Rest_Kontostand <- ifelse(
-    heute_spieler$Restbetrag_num >= 0,
-    mein_kontostand - pmax(heute_spieler$Mindestgebot_num - (mein_kapital - mein_kontostand), 0),
-    mein_kontostand - heute_spieler$Mindestgebot_num
+  # Rohdaten der Angebote
+  angebote_raw <- readr::read_delim(
+    "data/ANGEBOTE.csv", delim = ";",
+    locale = locale(decimal_mark = ",", grouping_mark = ".")
   )
   
-  # Aktuellen Marktwert ermitteln
-  max_datum <- max(ap_df$Datum, na.rm = TRUE)
-  aktuelle_mw <- ap_df %>%
-    filter(Datum == max_datum) %>%
-    select(Spieler, Marktwert = Marktwert) %>%
-    mutate(Marktwert = as.numeric(Marktwert))
-  
-  # Eigene Spieler
-  meine_spieler <- teams_df %>%
-    filter(Manager == "Dominik") %>%
-    select(Spieler)
-  
-  # Angebote laden und Kreditverlust berechnen
-  angebote_df <- readr::read_delim(
-      "data/ANGEBOTE.csv", delim = ";",
-      locale = locale(decimal_mark = ",", grouping_mark = ".")
-    ) %>%
-    rename(Angebot = `Angebot (€)`) %>%
-    mutate(Spieler = trimws(Spieler)) %>%
-    inner_join(meine_spieler, by = "Spieler") %>%
-    left_join(aktuelle_mw, by = "Spieler") %>%
-    mutate(
-      Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
-      Kreditverlust = Marktwert / 4
-    ) %>%
-    arrange(desc(Angebot))
-  
-  # Funktion: welche Spieler verkaufen, um Defizit zu decken
-  berechne_deckung <- function(defizit, mindestgebot) {
-    rest                 <- defizit
-    verkauft             <- character(0)
-    total_einnahme       <- 0
-    total_kreditverlust  <- 0
-    i                    <- 1
-    
-    while (rest > 0 && i <= nrow(angebote_df)) {
-      s  <- angebote_df$Spieler[i]
-      a  <- angebote_df$Angebot[i]
-      kv <- angebote_df$Kreditverlust[i]
-      
-      verkauft            <- c(verkauft, s)
-      total_einnahme      <- total_einnahme + a
-      total_kreditverlust <- total_kreditverlust + kv
-      
-      rest <- defizit - total_einnahme + total_kreditverlust
-      i    <- i + 1
-    }
-    
-    if (rest > 0) {
-      list(
-        deckung        = "<span style='color:red;font-weight:bold;'>N/A</span>",
-        rest_kapital   = NA,
-        rest_kontostand = NA
+  angebote_df <- reactive({
+    angebote_raw %>%
+      rename(Angebot = `Angebot (€)`) %>%
+      mutate(
+        Spieler   = trimws(Spieler),
+        Angebot   = as.numeric(gsub("\\.", "", Angebot))
+      ) %>%
+      filter(Spieler %in% meine_spieler()) %>%
+      left_join(aktuelle_mw(), by = "Spieler") %>%
+      mutate(
+        Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
+        Kreditverlust = Marktwert / 4
       )
-    } else {
-      rest_kapital   <- mein_kapital - defizit
-      rest_kontostand <- mein_kontostand + total_einnahme - mindestgebot
-      list(
-        deckung        = paste(verkauft, collapse = ", "),
-        rest_kapital   = rest_kapital,
-        rest_kontostand = rest_kontostand
-      )
-    }
-  }
+  })
   
-  # Deckung & Restwerte für jeden Spieler
-  deckungsergebnisse <- Map(function(restbetrag, mindestgebot) {
-    if (restbetrag >= 0) {
-      list(
-        deckung        = "-",
-        rest_kapital   = restbetrag,
-        rest_kontostand = mein_kontostand - mindestgebot
-      )
-    } else {
-      berechne_deckung(abs(restbetrag), mindestgebot)
-    }
-  }, heute_spieler$Restbetrag_num, heute_spieler$Mindestgebot_num)
+  team_spieler_df <- reactive({
+    aktuelle_mw() %>%
+      semi_join(teams_df %>% filter(Manager == "Dominik"), by = "Spieler")
+  })
   
-  # Ergebnisse in heute_spieler einfügen
-  heute_spieler <- heute_spieler %>%
-    mutate(
-      Deckung            = vapply(deckungsergebnisse, `[[`, character(1), "deckung"),
-      Restkapital_num    = vapply(deckungsergebnisse, `[[`, numeric(1),   "rest_kapital"),
-      Rest_Kontostand_num = vapply(deckungsergebnisse, `[[`, numeric(1),   "rest_kontostand")
+  # 3) UI‑Inputs befüllen
+  observe({
+    # 1) Spieler‑Liste immer füllen
+    updateSelectInput(
+      session, "spieler_select",
+      choices = sort(unique(tm_df$Spieler))
     )
-  
-  # Formatierung ohne Währungszeichen in den Zellen
-  heute_spieler <- heute_spieler %>%
-    mutate(
-      Mindestgebot       = format(Mindestgebot_num, big.mark = ".", decimal.mark = ","),
-      `Rest-Kreditrahmen` = ifelse(
-        is.na(Restkapital_num),
-        "<span style='color:red;font-weight:bold;'>N/A</span>",
-        format(round(Restkapital_num), big.mark = ".", decimal.mark = ",")
-      ),
-      `Rest-Kontostand`  = ifelse(
-        is.na(Rest_Kontostand_num),
-        "<span style='color:red;font-weight:bold;'>N/A</span>",
-        ifelse(
-          Rest_Kontostand_num >= 0,
-          paste0("<span style='color:green;font-weight:bold;'>",
-                 format(round(Rest_Kontostand_num), big.mark = ".", decimal.mark = ","),
-                 "</span>"),
-          paste0("<span style='color:red;font-weight:bold;'>–",
-                 format(abs(round(Rest_Kontostand_num)), big.mark = ".", decimal.mark = ","),
-                 "</span>")
-        )
+    
+    # 2) Angebote‑Checkboxes (Guard für leeres DataFrame)
+    if (nrow(angebote_df()) > 0) {
+      angebot_values <- angebote_df()$Angebot
+      angebot_labels <- paste0(
+        angebote_df()$Spieler,
+        " (", format(angebote_df()$Angebot, big.mark = ".", decimal.mark = ","), " €)"
       )
-    ) %>%
-    arrange(desc(Mindestgebot_num))
+      choices_a <- setNames(angebot_values, angebot_labels)
+    } else {
+      choices_a <- character(0)
+    }
+    updateCheckboxGroupInput(
+      session, "angebote_select",
+      choices = choices_a
+    )
+    
+    # 3) Eigene Team‑Spieler‑Checkboxes (Guard für leeres DataFrame)
+    if (nrow(team_spieler_df()) > 0) {
+      team_values <- team_spieler_df()$Marktwert
+      team_labels <- paste0(
+        team_spieler_df()$Spieler,
+        " (", format(team_spieler_df()$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
+      )
+      choices_t <- setNames(team_values, team_labels)
+    } else {
+      choices_t <- character(0)
+    }
+    updateCheckboxGroupInput(
+      session, "team_select",
+      choices = choices_t
+    )
+  })
   
-  # Ausgabe: nur gewünschte Spalten, mit "(€)" in den Überschriften
-  datatable(
-    heute_spieler %>%
-      select(
-        Spieler,
-        `Mindestgebot (€)`      = Mindestgebot,
-        Deckung,
-        `Rest-Kreditrahmen (€)` = `Rest-Kreditrahmen`,
-        `Rest-Kontostand (€)`   = `Rest-Kontostand`
-      ),
-    escape  = FALSE,
-    rownames = FALSE,
-    options = list(dom = "t", pageLength = 20)
-  )
-})
 
+  
+  # 4) Plot rendern
+  output$transfer_simulator_plot <- renderPlot({
+    req(input$spieler_select)
+    
+    # — (1) Mindestgebot parsen —
+    sel        <- tm_df %>% filter(Spieler == input$spieler_select)
+    mindest    <- suppressWarnings(as.numeric(gsub("\\.", "", sel$Mindestgebot[1])))
+    
+    # — (2) Kontostand & (3) Kreditrahmen —
+    kont        <- kontostand_dominik()
+    all_team    <- sum(team_spieler_df()$Marktwert, na.rm = TRUE)
+    init_credit <- all_team / 4
+    
+    # — (4) Selektionen & (5) Erlöse/Verluste —
+    sel_off      <- if (is.null(input$angebote_select)) numeric(0) else as.numeric(input$angebote_select)
+    sel_team     <- if (is.null(input$team_select))   numeric(0) else as.numeric(input$team_select)
+    sum_off      <- sum(sel_off, na.rm = TRUE)
+    sum_team     <- sum(sel_team, na.rm = TRUE)
+    loss_off     <- sum(angebote_df()$Kreditverlust[angebote_df()$Angebot %in% sel_off], na.rm = TRUE)
+    loss_team    <- sum(sel_team, na.rm = TRUE) / 4
+    final_credit <- init_credit - loss_off - loss_team
+    
+    # — (6) Labels für Deckungsspieler —
+    names_off  <- if (length(sel_off)  > 0) paste(angebote_df() %>% filter(Angebot %in% sel_off)  %>% pull(Spieler), collapse=", ") else ""
+    names_team <- if (length(sel_team) > 0) paste(team_spieler_df() %>% filter(Marktwert %in% sel_team) %>% pull(Spieler), collapse=", ") else ""
+    
+    # — (7) DataFrames bauen —
+    df_mindest <- tibble(type="Mindestgebot", value=mindest)
+    df_segments <- tibble(
+      segment = factor(c("Kontostand","Kreditrahmen","Angebote","Marktwerte"),
+                       levels = rev(c("Kontostand","Kreditrahmen","Angebote","Marktwerte"))),
+      value   = c(kont, final_credit, sum_off, sum_team),
+      label   = c(
+        format(kont, big.mark=".", decimal.mark=","),
+        format(final_credit, big.mark=".", decimal.mark=","),
+        names_off,
+        names_team
+      )
+    )
+    
+    # — (8) Haken/Kreuz —
+    total_avail <- sum(df_segments$value, na.rm = TRUE)
+    ok_label    <- ifelse(total_avail >= mindest, "\u2713", "\u2717")
+    ok_color    <- ifelse(total_avail >= mindest, "green", "red")
+    
+    # — (9) Plot —
+    ggplot() +
+      # a) Mindestgebot‑Balken in Grau
+      geom_col(data = df_mindest,
+               aes(x = type, y = value),
+               fill = "grey70", width = 0.6) +
+      # b) Verfügbar gestapelt
+      geom_col(data = df_segments,
+               aes(x = "Verfügbar", y = value, fill = segment),
+               width = 0.6) +
+      # c) Labels in Verfügbar‑Segments
+      geom_text(data = df_segments,
+                aes(x = "Verfügbar", y = cumsum(value) - value/2, label = label),
+                colour = "black", size = 4) +
+      # d) Label im Mindestgebot‑Balken
+      geom_text(data = df_mindest,
+                aes(x = type, y = value/2, label = format(value, big.mark = ".", decimal.mark = ",")),
+                colour = "black", size = 4) +
+      # e) gestrichelte dunkelrote Linie bei y = mindest
+      geom_hline(yintercept = mindest,
+                 linetype = "dashed",
+                 color    = "darkred",
+                 size     = 0.5) +
+      # f) Haken/Kreuz über Verfügbar
+      annotate("text",
+               x = 2,
+               y = total_avail * 1.05,
+               label = ok_label,
+               size  = 8,
+               colour = ok_color) +
+      # g) Farbpalette nur auf den Verfügbar‑Balken
+      scale_fill_brewer(palette = "Paired") +
+      # h) Achsen & Theme
+      scale_x_discrete(limits = c("Mindestgebot", "Verfügbar")) +
+      scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
+      labs(x = NULL, y = "Betrag (€)", fill = NULL) +
+      theme_minimal(base_size = 16)
+  })
+  
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
