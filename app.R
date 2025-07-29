@@ -292,7 +292,16 @@ ui <- navbarPage(
   $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
     Shiny.setInputValue('kapital_table_cell_clicked', Math.random()); // random um mehrfaches Event zu erlauben
   });
+")),
+  
+  tags$style(HTML("
+  /* Für genau diese Tabelle */
+  #kreditrahmen_uebersicht_preview table.dataTable td,
+  #kreditrahmen_uebersicht_preview table.dataTable th {
+    text-align: left !important;
+  }
 "))
+  
   
 )
 
@@ -802,37 +811,6 @@ server <- function(input, output, session) {
             plot.title = element_text(size = 16, color = "black", face = "bold"))
   })
   
-  ## ---- Mein Team ----
-  output$mein_team_tabelle_preview <- DT::renderDT({
-    df <- mein_kader_df() %>%
-      arrange(Position, Spieler) %>%
-      select(
-        Position,
-        Spieler,
-        Marktwert          = Marktwert_fmt,
-        Tagesveränderung   = Diff_fmt
-      )
-    
-    DT::datatable(
-      df,
-      rownames = FALSE,
-      options = list(dom = 't', ordering = FALSE, paging = FALSE),
-      colnames = c("Position", "Spieler", "Marktwert", "Tagesveränderung")
-    ) %>%
-      DT::formatStyle(
-        "Tagesveränderung",
-        color = DT::styleEqual(
-          unique(df$Tagesveränderung),
-          sapply(unique(df$Tagesveränderung), function(x) {
-            if (grepl("▲", x)) "#388e3c"
-            else if (grepl("▼", x)) "#e53935"
-            else "black"
-          })
-        ),
-        fontWeight = "bold"
-      )
-  })
-  
   ## ---- Kontostände ----
   output$kreditrahmen_uebersicht_preview <- DT::renderDT({
     kapital_df <- kapital_df_reactive() %>%
@@ -873,6 +851,41 @@ server <- function(input, output, session) {
         'Kontostand',
         color = styleInterval(0, c('red', 'black')),
         fontWeight = styleInterval(0, c('bold', NA))
+      )
+  })
+  
+  ## ---- Mein Team ----
+  output$mein_team_tabelle_preview <- DT::renderDT({
+    df <- mein_kader_df() %>%
+      arrange(Position, Spieler) %>%
+      select(
+        Position,
+        Spieler,
+        Marktwert        = Marktwert_fmt,
+        Tagesveränderung = Diff_fmt
+      )
+    
+    DT::datatable(
+      df,
+      rownames = FALSE,
+      colnames = c("Position", "Spieler", "Marktwert", "Tagesveränderung"),
+      options = list(
+        dom       = 't',
+        paging    = FALSE,
+        autoWidth = TRUE      # hier Auto‑Width einschalten
+      )
+    ) %>%
+      DT::formatStyle(
+        "Tagesveränderung",
+        color = DT::styleEqual(
+          unique(df$Tagesveränderung),
+          sapply(unique(df$Tagesveränderung), function(x) {
+            if (grepl("▲", x)) "#388e3c"
+            else if (grepl("▼", x)) "#e53935"
+            else "black"
+          })
+        ),
+        fontWeight = "bold"
       )
   })
   
