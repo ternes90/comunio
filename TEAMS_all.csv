@@ -1,5 +1,5 @@
 ﻿Manager;Spieler;Position
-Thomas;Burkardt;Sturm
+Thomas;Kane;Sturm
 Thomas;Diehl;Sturm
 Thomas;Glatzel;Sturm
 Thomas;Borges Sanches;Sturm
@@ -11,7 +11,6 @@ Thomas;Wahl;Abwehr
 Thomas;Laimer;Abwehr
 Thomas;Treu;Abwehr
 Thomas;Davies;Abwehr
-Thomas;Agu;Abwehr
 Thomas;Meyer;Tor
 Thomas;Heuer Fernandes;Tor
 Alfons;Undav;Sturm
@@ -45,6 +44,7 @@ Christoph;Mwene;Abwehr
 Christoph;Mæhle;Abwehr
 Christoph;Zesiger;Abwehr
 Christoph;Nsoki;Abwehr
+Christoph;Arthur;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Sturm
