@@ -23,7 +23,6 @@ ui <- navbarPage(
   ## ---- Dashboard ----
   tabPanel("Dashboard",
            fluidPage(
-             
              # Aktuelle Transfers - Zusammenfassung
              div(
                style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
@@ -103,13 +102,15 @@ ui <- navbarPage(
                       div(
                         style = "text-align: center; margin-bottom: 10px;",
                         HTML("
-          <b>Legende:</b><br>
-          <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
-          <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
-          <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
-        ")
+      <b>Legende:</b><br>
+      <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
+      <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
+      <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
+    ")
                       ),
-                      plotOutput("mw_evolution", height = 600)
+                      plotOutput("mw_evolution", height = 600),
+                      br(),
+                      plotOutput("mw_daily_change", height = 300)  # ← hier das neue Output
              ),
              tabPanel("MW-Verlauf 24/25 (MW-Klassen)",
                       plotOutput("mw_plot"),
@@ -146,6 +147,7 @@ ui <- navbarPage(
            tabsetPanel(
              id = "transfermarkt_tabs",               # ← hier die id
              tabPanel("Transfermarkt Details",
+                      uiOutput("bid_prediction"),
                       DTOutput("transfermarkt_detail")
              ),
              tabPanel("Transfer‑Simulator",
@@ -220,8 +222,10 @@ ui <- navbarPage(
                       plotOutput("gebote_pro_tag_bieter", height = 600)
              ),
              tabPanel("Gebots-peaks",
-                      plotOutput("aktive_tage_plot", height = 350),
-                      plotOutput("peak_days_heatmap", height = 350)
+                      plotOutput("aktive_tage_plot",       height = 350),
+                      plotOutput("peak_days_heatmap",      height = 350),
+                      hr(),  # optischer Trenner
+                      plotOutput("bids_by_weekday_plot",   height = 350)  # <-- neu
              ),
              tabPanel("Zusammenfassung",
                       tags$div(
@@ -319,12 +323,40 @@ ui <- navbarPage(
       text-align: left !important;
     }
   ")),
+    #Abstand TabPanels oben/unten
     tags$style(HTML("
     /* Abstand oben für alle Tab-Panes */
     .tab-content > .tab-pane {
       margin-top: 20px; margin-bottom: 20px;
     }
-  "))
+  ")),
+    # Hellblaue selection
+    tags$style(HTML("
+  /* 1) DataTables’ default selected fill deaktivieren */
+  :root {
+    --dt-row-selected: transparent !important;
+  }
+
+  /* 2) Soft-blauen Hintergrund + schwarze Schrift für selektierte Zellen */
+  table.dataTable tbody tr.selected td,
+  table.dataTable tbody td.selected {
+    box-shadow: inset 0 0 0 9999px #D3E5FF !important;
+    color: black !important;
+  }
+  
+  /* 3) Falls Links in der Zelle sind */
+  table.dataTable tbody tr.selected td a,
+  table.dataTable tbody td.selected a {
+    color: black !important;
+  }
+
+  /* 4) Hover-State (auch auf ausgewählten Zeilen) */
+  table.dataTable tbody tr:hover,
+  table.dataTable tbody tr:hover td {
+    background-color: #E8F2FF !important;
+    color: inherit !important;
+  }
+"))
   )
   
 )
@@ -711,9 +743,7 @@ server <- function(input, output, session) {
       )
   })
   
-  
-  ## ---- Flipaktivitäten ----
-  
+  ## ---- Flip-Aktivitäten ----
   output$flip_summary_today <- DT::renderDT({
     latest_date <- Sys.Date()
     
@@ -751,9 +781,9 @@ server <- function(input, output, session) {
   output$mw_zeitachse_preview <- renderPlot({
     sp <- sommerpause_data()
     
-    # 1) Trend-Daten aus den letzten 5 Tagen (ohne NA-Datum)
+    # 1) Trend-Daten aus den letzten 3 Tagen
     trend_vals <- gesamt_mw_df %>%
-      filter(!is.na(Datum)) %>%            # <— hier NA rausschmeißen
+      filter(!is.na(Datum)) %>%            
       arrange(Datum) %>%
       tail(3)
     
@@ -780,7 +810,7 @@ server <- function(input, output, session) {
         aes(x = Datum, y = MW_rel_normiert),
         color     = "orange", linetype = "dashed", linewidth = 1, na.rm = TRUE
       ) +
-      # c) Trend-Pfeil aus den letzten 5 Tagen
+      # c) Trend-Pfeil aus den letzten 3 Tagen
       annotate(
         "curve",
         x         = x0,   y      = y0,
@@ -817,8 +847,6 @@ server <- function(input, output, session) {
         plot.title      = element_text(size = 16, face = "bold")
       )
   })
-  
-  
   
   ## ---- Kontostände ----
   output$kreditrahmen_uebersicht_preview <- DT::renderDT({
@@ -898,8 +926,7 @@ server <- function(input, output, session) {
       )
   })
   
-  
-  ## ---- Flip preview ----
+  ## ---- Flip Balken Preview ----
   output$flip_preview <- renderPlot({
     req(nrow(flip_data()) > 0)
     
@@ -925,8 +952,7 @@ server <- function(input, output, session) {
       labs(x = "", y = "")
   })
   
-  
-  ## ---- Gebote preview ----
+  ## ---- Gebotsprofile Preview ----
   output$gebote_preview <- renderPlot({
     req(nrow(gebotsprofil_clean()) > 0)
     plotdata <- gebotsprofil_clean() %>%
@@ -973,112 +999,56 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Transfermarkt preview ----
+  ## ---- Transfermarkt Preview ----
   output$transfermarkt_preview <- DT::renderDT({
+    df <- tm_common()
+    if (is.null(df)) {
+      return(DT::datatable(data.frame()))
+    }
     
-    # Transfermarkt-Daten
-    tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
-    tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
-    tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
-    tm_df$Restzeit <- trimws(tm_df$Restzeit)
-    tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
-    
-    # Die letzten 3 Tage ermitteln
-    last_dates <- sort(unique(ap_df$Datum), decreasing = TRUE)[1:3]
-    names(last_dates) <- c("MW3", "MW2", "MW1") # MW1 = ältester Tag, MW3 = aktuell
-    
-    # Marktwerte für die letzten 3 Tage je Spieler
-    mw1 <- ap_df %>% filter(Datum == last_dates["MW1"]) %>% select(Spieler, MW1 = Marktwert)
-    mw2 <- ap_df %>% filter(Datum == last_dates["MW2"]) %>% select(Spieler, MW2 = Marktwert)
-    mw3 <- ap_df %>% filter(Datum == last_dates["MW3"]) %>% select(Spieler, MW3 = Marktwert)
-    
-    # Merge alle MWs auf Transfermarkt
-    tm_trend <- tm_df %>%
-      left_join(mw1, by = "Spieler") %>%
-      left_join(mw2, by = "Spieler") %>%
-      left_join(mw3, by = "Spieler")
-    
-    # Trendlogik
-    tm_trend$Trend <- mapply(function(mw1, mw2, mw3) {
-      if (any(is.na(c(mw1, mw2, mw3)))) return("–")
-      if (mw1 < mw2 && mw2 < mw3) {
-        return("<span style='color:green;font-weight:bold;'>▲▲</span>")
-      } else if (mw1 > mw2 && mw2 > mw3) {
-        return("<span style='color:red;font-weight:bold;'>▼▼</span>")
-      } else if (mw1 < mw3) {
-        return("<span style='color:green;font-weight:bold;'>▲</span>")
-      } else if (mw1 > mw3) {
-        return("<span style='color:red;font-weight:bold;'>▼</span>")
-      } else {
-        return("–")
-      }
-    }, tm_trend$MW1, tm_trend$MW2, tm_trend$MW3)
-    
-    # Rest wie gehabt…
-    tm_trend$Restkategorie <- dplyr::case_when(
-      grepl("^2d", tm_trend$Restzeit) ~ "übermorgen",
-      grepl("^1d", tm_trend$Restzeit) ~ "morgen",
-      grepl("^[0-9]+h", tm_trend$Restzeit) ~ "heute",
-      TRUE ~ "unbekannt"
-    )
-    tm_trend$Restkategorie <- factor(tm_trend$Restkategorie,
-                                     levels = c("heute", "morgen", "übermorgen", "unbekannt"),
-                                     ordered = TRUE)
-    tm_trend$Marktwert <- paste0(format(tm_trend$Marktwert_num, big.mark = ".", decimal.mark = ","), " €")
-    tm_trend$Mindestgebot <- paste0(format(tm_trend$Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €")
-    tm_trend$MinGeb_Unter_MW <- tm_trend$Mindestgebot_num < tm_trend$Marktwert_num
-    
-    tm_trend <- tm_trend %>%
-      arrange(Restkategorie, desc(Marktwert_num)) %>%
-      select(
-        Spieler, Verein, Marktwert, Mindestgebot, Besitzer,
-        Restkategorie, Trend, MinGeb_Unter_MW
-      ) %>%
-      rename(
-        "Verbleibende Zeit" = Restkategorie,
-        "Trend MW (3 Tage)" = Trend
-      )
-    
-    # Setze den richtigen Pfad (www/logos), falls im Shiny www-Ordner!
-    logo_dir <- "logos" # oder ggf. "www/logos", je nach Shiny-Ordnerstruktur
-    
-    # Logo erzeugen
-    tm_trend$Logo <- paste0(
-      '<img src="', logo_dir, '/', logo_map[tm_trend$Verein], 
-      '" width="28" title="', tm_trend$Verein, '"/>'
-    )
-    tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
+    # nur die gewünschten Spalten
+    sub_df <- df[, c(
+      "Spieler","Logo","Marktwert","Mindestgebot",
+      "Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
+    ), drop = FALSE]
     
     DT::datatable(
-      tm_trend[, c("Spieler", "Logo", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
-      colnames = c("Spieler", "Verein", "Marktwert", "Mindestgebot", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
-      rownames = FALSE,
-      escape = FALSE,
+      sub_df,
+      colnames = c(
+        "Spieler","Verein","Marktwert","Mindestgebot",
+        "Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
+      ),
+      escape    = FALSE,
       selection = "single",
-      options = list(
-        dom = "t",
-        ordering = FALSE,
+      rownames  = FALSE,
+      options   = list(
+        dom        = "t",
+        ordering   = FALSE,
         pageLength = 20,
         columnDefs = list(
-          list(className = 'dt-left', targets = 0:1),
+          list(className = 'dt-left',  targets = 0:1),
           list(className = 'dt-right', targets = 2:6)
         )
       )
     ) %>%
+      # „heute“ rot+fett in Spalte 6 (Verbleibende Zeit)
       DT::formatStyle(
-        'Verbleibende Zeit',
-        target = 'cell',
-        color = DT::styleEqual("heute", "red"),
+        6,
+        target     = "cell",
+        color      = DT::styleEqual("heute", "red"),
         fontWeight = DT::styleEqual("heute", "bold")
       ) %>%
+      # Mindestgebot grün, wenn unter Marktwert (Spalte 4)
       DT::formatStyle(
-        'Mindestgebot',
-        target = 'cell',
-        color = DT::styleEqual(
-          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "green"
+        4,
+        target = "cell",
+        color  = DT::styleEqual(
+          df$Mindestgebot[df$MinGeb_Unter_MW],
+          "green"
         )
       )
   })
+  
   
   # ---- MARKTWERTENTWICKLUNG ----
   ## ---- Gesamtmarktwerte ----
@@ -1199,6 +1169,59 @@ server <- function(input, output, session) {
       )
     
   })
+  
+  ## ---- Tägliche ME-Änderung-Verlauf ----
+  output$mw_daily_change <- renderPlot({
+    
+    # 1) Clean Data (so wie oben)
+    clean_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      arrange(Datum)
+    
+    # 2) Berechne tägliche absolute & relative Veränderung
+    change_df <- clean_df %>%
+      mutate(
+        MW_vortag    = lag(MW_gesamt),
+        abs_change   = MW_gesamt - MW_vortag,
+        pct_change   = round(abs_change / MW_vortag * 100, 1),
+        sign         = ifelse(pct_change >= 0, "positive", "negative")
+      ) %>%
+      filter(!is.na(pct_change))
+    
+    # 3) Plot mit ggplot2
+    ggplot(change_df, aes(x = Datum, y = pct_change, fill = sign)) +
+      geom_col() +
+      geom_text(
+        aes(label = scales::percent(pct_change / 100)),
+        vjust = -0.5,
+        size = 4
+      ) +
+      scale_fill_manual(
+        values = c(
+          positive = "darkgreen",
+          negative = "red"
+        ),
+        guide = FALSE
+      ) +
+      scale_x_date(
+        limits     = c(min(change_df$Datum), as.Date("2025-09-01")),
+        date_breaks= "1 week",
+        date_labels= "%d.%m."
+      ) +
+      labs(
+        title = "Tägliche Marktwert-Veränderung",
+        x     = "Datum",
+        y     = "∆ zum Vortag (%)"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title  = element_text(face = "bold", size = 16)
+      ) +
+      coord_cartesian(ylim = c(min(change_df$pct_change) * 1.1,
+                               max(change_df$pct_change) * 1.1))
+  })
+  
   
   ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
   data <- reactive({
@@ -1654,253 +1677,332 @@ server <- function(input, output, session) {
   
   # ---- TRANSFERMARKT ----
   
+  # 1) avg_bids_wd als Reactive (einmalig im Server)
+  avg_bids_wd <- reactive({
+    gebotsprofil_clean() %>%
+      group_by(Datum, Bieter) %>%
+      summarise(Anzahl = n(), .groups = "drop") %>%
+      # Einen Tag zurückschieben, wenn du das schon so nutzt:
+      mutate(Datum = Datum - 1) %>%
+      mutate(
+        Wochentag = factor(
+          weekdays(Datum, abbreviate = TRUE),
+          levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
+        )
+      ) %>%
+      group_by(Bieter, Wochentag) %>%
+      summarise(avg_bids = mean(Anzahl, na.rm = TRUE), .groups = "drop")
+  })
+  
+  # 2) Vorhersage-Box für heute
+  output$bid_prediction <- renderUI({
+    # Welcher Wochentag ist heute?
+    today_wd <- factor(
+      weekdays(Sys.Date(), abbreviate = TRUE),
+      levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
+    )
+    
+    # Top-3 (ohne dich selbst und Dominik)
+    top3 <- avg_bids_wd() %>%
+      filter(
+        Wochentag == today_wd,
+        !Bieter %in% c("DeinBieterName","Dominik")
+      ) %>%
+      arrange(desc(avg_bids)) %>%
+      slice_head(n = 3)
+    
+    # Wenn nichts da ist, gar nichts anzeigen
+    if (nrow(top3) == 0) return(NULL)
+    
+    # Beschriftung bauen
+    labels <- sprintf(
+      "<b>%s</b> (Ø %s Gebote)",
+      top3$Bieter,
+      format(round(top3$avg_bids, 2), decimal.mark = ",")
+    )
+    
+    HTML(paste0(
+      "<div style='margin:8px 0; padding:8px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;'>",
+      "<strong>Erwartete Bieter heute (", 
+      format(Sys.Date(), "%A, %d.%m.%Y"), "):</strong> ",
+      paste(labels, collapse = " | "),
+      "</div>"
+    ))
+  })
+  
+  
+  
   ## ---- Tabelle ----
   
-  output$transfermarkt_detail <- DT::renderDT({
+  # 1) reactiveVal für den gemeinsamen DataFrame
+  tm_common <- reactiveVal()
+  
+  # 2) Observer oder reactive, der tm_common einmal neu berechnet, 
+  #    sobald tm_df oder ap_df sich ändern:
+  observeEvent(list(tm_df, ap_df), {
     
-    # Transfermarkt-Daten
-    tm_df$Spieler <- trimws(enc2utf8(tm_df$Spieler))
-    tm_df$Marktwert_num <- as.numeric(gsub("\\.", "", tm_df$Marktwert))
-    tm_df$Mindestgebot_num <- as.numeric(gsub("\\.", "", tm_df$Mindestgebot))
-    tm_df$Restzeit <- trimws(tm_df$Restzeit)
-    tm_df$Verein <- trimws(enc2utf8(tm_df$Verein))
+    df <- tm_df
+    # --- Spaltenbereinigung ---
+    df$Spieler        <- trimws(enc2utf8(df$Spieler))
+    df$Marktwert_num  <- as.numeric(gsub("\\.", "", df$Marktwert))
+    df$Mindestgebot_num <- as.numeric(gsub("\\.", "", df$Mindestgebot))
+    df$Restzeit       <- trimws(df$Restzeit)
+    df$Verein         <- trimws(enc2utf8(df$Verein))
     
-    # Die letzten 3 Tage ermitteln
-    last_dates <- sort(unique(ap_df$Datum), decreasing = TRUE)[1:3]
-    names(last_dates) <- c("MW3", "MW2", "MW1") # MW1 = ältester Tag, MW3 = aktuell
+    # --- letzte 3 Tage & Merge ---
+    last_dates <- sort(unique(ap_df$Datum), decreasing=TRUE)[1:3]
+    names(last_dates) <- c("MW3","MW2","MW1")
+    mw_list <- lapply(c("MW1","MW2","MW3"), function(nm) {
+      ap_df %>% 
+        filter(Datum == last_dates[nm]) %>% 
+        select(Spieler, !!nm := Marktwert)
+    })
+    df <- Reduce(function(x,y) left_join(x,y,by="Spieler"), 
+                 c(list(df), mw_list))
     
-    # Marktwerte für die letzten 3 Tage je Spieler
-    mw1 <- ap_df %>% filter(Datum == last_dates["MW1"]) %>% select(Spieler, MW1 = Marktwert)
-    mw2 <- ap_df %>% filter(Datum == last_dates["MW2"]) %>% select(Spieler, MW2 = Marktwert)
-    mw3 <- ap_df %>% filter(Datum == last_dates["MW3"]) %>% select(Spieler, MW3 = Marktwert)
+    # --- Trend berechnen ---
+    df$Trend <- mapply(function(m1,m2,m3) {
+      if(any(is.na(c(m1,m2,m3)))) return("–")
+      if(m1<m2 && m2<m3)          "<span style='color:green;font-weight:bold;'>▲▲</span>"
+      else if(m1>m2 && m2>m3)     "<span style='color:red;font-weight:bold;'>▼▼</span>"
+      else if(m1<m3)              "<span style='color:green;font-weight:bold;'>▲</span>"
+      else if(m1>m3)              "<span style='color:red;font-weight:bold;'>▼</span>"
+      else                        "–"
+    }, df$MW1, df$MW2, df$MW3, SIMPLIFY=TRUE)
     
-    # Merge alle MWs auf Transfermarkt
-    tm_trend <- tm_df %>%
-      left_join(mw1, by = "Spieler") %>%
-      left_join(mw2, by = "Spieler") %>%
-      left_join(mw3, by = "Spieler")
-    
-    # Trendlogik
-    tm_trend$Trend <- mapply(function(mw1, mw2, mw3) {
-      if (any(is.na(c(mw1, mw2, mw3)))) return("–")
-      if (mw1 < mw2 && mw2 < mw3) {
-        return("<span style='color:green;font-weight:bold;'>▲▲</span>")
-      } else if (mw1 > mw2 && mw2 > mw3) {
-        return("<span style='color:red;font-weight:bold;'>▼▼</span>")
-      } else if (mw1 < mw3) {
-        return("<span style='color:green;font-weight:bold;'>▲</span>")
-      } else if (mw1 > mw3) {
-        return("<span style='color:red;font-weight:bold;'>▼</span>")
-      } else {
-        return("–")
-      }
-    }, tm_trend$MW1, tm_trend$MW2, tm_trend$MW3)
-    
-    # Rest wie gehabt…
-    tm_trend$Restkategorie <- dplyr::case_when(
-      grepl("^2d", tm_trend$Restzeit) ~ "übermorgen",
-      grepl("^1d", tm_trend$Restzeit) ~ "morgen",
-      grepl("^[0-9]+h", tm_trend$Restzeit) ~ "heute",
-      TRUE ~ "unbekannt"
+    # --- Restzeit-Kategorien ---
+    df$Restkategorie <- dplyr::case_when(
+      grepl("^2d", df$Restzeit)    ~ "übermorgen",
+      grepl("^1d", df$Restzeit)    ~ "morgen",
+      grepl("^[0-9]+h", df$Restzeit)~ "heute",
+      TRUE                          ~ "unbekannt"
     )
-    tm_trend$Restkategorie <- factor(tm_trend$Restkategorie,
-                                     levels = c("heute", "morgen", "übermorgen", "unbekannt"),
-                                     ordered = TRUE)
-    tm_trend$Marktwert <- paste0(format(tm_trend$Marktwert_num, big.mark = ".", decimal.mark = ","), " €")
-    tm_trend$Mindestgebot <- paste0(format(tm_trend$Mindestgebot_num, big.mark = ".", decimal.mark = ","), " €")
-    tm_trend$MinGeb_Unter_MW <- tm_trend$Mindestgebot_num < tm_trend$Marktwert_num
+    df$Restkategorie <- factor(
+      df$Restkategorie,
+      levels = c("heute","morgen","übermorgen","unbekannt"),
+      ordered = TRUE
+    )
     
-    tm_trend <- tm_trend %>%
+    # --- Formatieren & Flags ---
+    df$Marktwert   <- paste0(format(df$Marktwert_num,  big.mark=".", decimal.mark=",")," €")
+    df$Mindestgebot<- paste0(format(df$Mindestgebot_num,big.mark=".", decimal.mark=",")," €")
+    df$MinGeb_Unter_MW <- df$Mindestgebot_num < df$Marktwert_num
+    
+    # --- Sortierung & Rename für beide Outputs ---
+    df <- df %>%
       arrange(Restkategorie, desc(Marktwert_num)) %>%
-      select(
-        Spieler, Verein, Marktwert, Mindestgebot, Besitzer,
-        Restkategorie, Trend, MinGeb_Unter_MW, Marktwert_num
-      ) %>%
       rename(
-        "Verbleibende Zeit" = Restkategorie,
-        "Trend MW (3 Tage)" = Trend
+        "Verbleibende Zeit"    = Restkategorie,
+        "Trend MW (3 Tage)"    = Trend
       )
     
-    tm_trend$MW_Klasse <- vapply(tm_trend$Marktwert_num, get_mw_klasse, character(1))
+    # --- Logos ---
+    logo_dir <- "logos"
+    df$Logo <- paste0(
+      '<img src="', logo_dir, '/', logo_map[df$Verein],
+      '" width="28" title="', df$Verein, '"/>'
+    )
+    df$Logo[ is.na(logo_map[df$Verein]) ] <- ""
     
-    # Mittelwert-Prozente aus dem Profil
+    # --- in reactiveVal speichern ---
+    tm_common(df)
+  })
+  
+  output$transfermarkt_detail <- DT::renderDT({
+    # Basis‐Tabelle aus reactiveVal holen
+    df <- tm_common()
+    
+    # 1) MW-Klasse bestimmen
+    df$MW_Klasse <- vapply(df$Marktwert_num, get_mw_klasse, character(1))
+    
+    # 2) Gebotsprofil-Daten für Ideales Gebot
     gp_df <- gebotsprofil_mwclass() %>%
       filter(!is.na(Diff_Prozent)) %>%
       mutate(
-        MW_Klasse = factor(MW_Klasse, levels = c(
-          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
-        ))
-      )
-    
-    # Filter unusual high bids
-    gp_df <- gp_df %>% 
-      filter(Typ == "Hoechstgebot") %>% 
-      filter(Diff_Prozent > 0, Diff_Prozent <= 25)
+        MW_Klasse = factor(
+          MW_Klasse,
+          levels = c("<0.5 Mio","0.5–1 Mio","1–2.5 Mio","2.5–5 Mio","5–10 Mio",">10 Mio")
+        )
+      ) %>%
+      filter(Typ == "Hoechstgebot", Diff_Prozent > 0, Diff_Prozent <= 25)
     
     means_klasse <- gp_df %>%
       group_by(MW_Klasse) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
-    tm_trend <- tm_trend %>%
+    df <- df %>%
       left_join(means_klasse, by = "MW_Klasse")
     
-    # Ideales Gebot berechnen – erst jetzt existiert 'Mean'
-    tm_trend$IdealesGebot_num <- round(tm_trend$Marktwert_num * (1 + tm_trend$Mean / 100))
-    # Prozentwert berechnen
-    tm_trend$IdealesGebotProzent <- round(100 * (tm_trend$IdealesGebot_num / tm_trend$Marktwert_num - 1), 1)
-    
-    # Zusammenbauen als HTML (mit kleinem Prozentwert drunter)
-    tm_trend$IdealesGebot <- paste0(
-      format(tm_trend$IdealesGebot_num, big.mark = ".", decimal.mark = ","), " €",
-      '<br><span style="font-size: 85%; color: #666;">(',
-      ifelse(is.na(tm_trend$IdealesGebotProzent), "–", 
-             ifelse(tm_trend$IdealesGebotProzent > 0, "+", "")),
-      ifelse(is.na(tm_trend$IdealesGebotProzent), "", tm_trend$IdealesGebotProzent),
-      "%)</span>"
-    )
-    
-    # Fallback: Wenn kein Mean gefunden wurde, einfach MW nehmen
-    tm_trend$IdealesGebot_num[is.na(tm_trend$IdealesGebot_num)] <- tm_trend$Marktwert_num[is.na(tm_trend$IdealesGebot_num)]
-    tm_trend$IdealesGebot[is.na(tm_trend$IdealesGebot)] <- tm_trend$Marktwert[is.na(tm_trend$IdealesGebot)]
-    
-    # Setze den richtigen Pfad (www/logos), falls im Shiny www-Ordner!
-    logo_dir <- "logos" # oder ggf. "www/logos", je nach Shiny-Ordnerstruktur
-    
-    # EINMAL Logo erzeugen reicht!
-    tm_trend$Logo <- paste0(
-      '<img src="', logo_dir, '/', logo_map[tm_trend$Verein],
-      '" width="28" title="', tm_trend$Verein, '"/>'
-    )
-    tm_trend$Logo[is.na(logo_map[tm_trend$Verein])] <- ""
-    
-    #90% gebot
-    # 1. Transfers laden
-    transfers <- transfers %>% 
+    # 3) Ideales Gebot: dynamisch auf Mindestgebot oder Marktwert
+    df <- df %>% 
       mutate(
-        Hoechstgebot = as.numeric(Hoechstgebot)
+        # Basis-Wert auswählen
+        base_val = ifelse(MinGeb_Unter_MW, Mindestgebot_num, Marktwert_num),
+        # Zuschlagsgebot berechnen
+        IdealesGebot_num    = round(base_val * (1 + Mean/100)),
+        IdealesGebotProzent = round(100 * (IdealesGebot_num / base_val - 1), 1),
+        # HTML-Label
+        IdealesGebot = paste0(
+          format(IdealesGebot_num, big.mark = ".", decimal.mark = ","), " €",
+          "<br><span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(IdealesGebotProzent), "–",
+                 paste0(ifelse(IdealesGebotProzent > 0, "+",""), 
+                        IdealesGebotProzent, "%")
+          ),
+          ")</span>"
+        )
       ) %>%
+      # Fallback: wenn kein Profil-Mean vorliegt, dann einfach base_val anzeigen
+      mutate(
+        IdealesGebot_num = ifelse(is.na(IdealesGebot_num), base_val, IdealesGebot_num),
+        IdealesGebot     = ifelse(
+          is.na(IdealesGebotProzent),
+          paste0(format(base_val, big.mark=".", decimal.mark=","), " €"),
+          IdealesGebot
+        )
+      ) %>%
+      select(-base_val)
+    
+    
+    # 4) Maximalgebot (90%-Perzentil) dynamisch auf Mindestgebot oder Marktwert
+    transfers_clean <- transfers %>%
+      mutate(Hoechstgebot = as.numeric(Hoechstgebot)) %>%
       filter(!is.na(Hoechstgebot))
     
-    # 2. Vortags-Marktwert ermitteln
-    # Angenommen, du willst das Vortagsdatum als das max(Datum)-1 nehmen:
-    max_datum <- max(transfers$Datum, na.rm = TRUE)
-    vortag <- max_datum - 1
+    max_datum <- max(transfers_clean$Datum, na.rm = TRUE)
+    vortag    <- max_datum - 1
     
     vortags_mw <- transfermarkt %>%
       filter(TM_Stand == vortag) %>%
       select(Spieler, Marktwert_num = Marktwert)
     
-    # 3. Transfers mit Vortagsmarktwert joinen, aber unrealisitsch hohe gebote >150% rausfiltern
-    transfers_mw <- transfers %>%
+    transfers_mw <- transfers_clean %>%
       left_join(vortags_mw, by = "Spieler") %>%
-      filter(!is.na(Marktwert_num)) %>%  # nur Spieler mit Vortags-MW
-      mutate(MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1))) %>%  
-      mutate(Diff_per_cent =  Hoechstgebot / Marktwert_num) %>% 
-      filter(Diff_per_cent>1, Diff_per_cent<1.33)
+      filter(!is.na(Marktwert_num)) %>%
+      mutate(
+        MW_Klasse     = vapply(Marktwert_num, get_mw_klasse, character(1)),
+        Diff_per_cent = Hoechstgebot / Marktwert_num
+      ) %>%
+      filter(Diff_per_cent > 1, Diff_per_cent < 1.33)
     
-    # 4. 90%-Perzentil Faktor je MW_Klasse berechnen
-    maxgebote_klasse <- transfers_mw  %>% 
+    maxgebote_klasse <- transfers_mw %>%
       group_by(MW_Klasse) %>%
-      summarise(Maximalgebot_90_Faktor = quantile(Diff_per_cent, probs = 0.90, na.rm = TRUE))
+      summarise(Maximalgebot_90_Faktor = quantile(Diff_per_cent, probs = 0.9), .groups = "drop")
     
-    # 5. In tm_trend joinen
-    tm_trend <- tm_trend %>%
+    df <- df %>%
       left_join(maxgebote_klasse, by = "MW_Klasse") %>%
       mutate(
-        Maximalgebot_num_rounded = ifelse(
+        # Basis-Wert wählen
+        base_val = ifelse(MinGeb_Unter_MW, Mindestgebot_num, Marktwert_num),
+        # Maximalgebot berechnen
+        Maximalgebot_num = ifelse(
           is.na(Maximalgebot_90_Faktor),
           NA,
-          round(Marktwert_num * Maximalgebot_90_Faktor)
+          round(base_val * Maximalgebot_90_Faktor)
         ),
-        MaximalgebotProzent = round(100 * (Maximalgebot_num_rounded / Marktwert_num - 1), 1)
-      )
+        MaximalgebotProzent = round(100 * (Maximalgebot_num / base_val - 1), 1),
+        # HTML-Label
+        Maximalgebot = paste0(
+          format(Maximalgebot_num, big.mark = ".", decimal.mark = ","), " €",
+          "<br><span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(MaximalgebotProzent), "–",
+                 paste0(ifelse(MaximalgebotProzent > 0, "+",""),
+                        MaximalgebotProzent, "%")
+          ),
+          ")</span>"
+        )
+      ) %>%
+      # Fallback: wenn kein Faktor da, Einfach base_val anzeigen
+      mutate(
+        Maximalgebot_num = ifelse(is.na(Maximalgebot_num), base_val, Maximalgebot_num),
+        Maximalgebot     = ifelse(
+          is.na(MaximalgebotProzent),
+          paste0(format(base_val, big.mark=".", decimal.mark=","), " €"),
+          Maximalgebot
+        )
+      ) %>%
+      select(-base_val)
     
-    # 6. HTML bauen
-    tm_trend$Maximalgebot <- paste0(
-      format(tm_trend$Maximalgebot_num_rounded, big.mark = ".", decimal.mark = ","), " €",
-      '<br><span style="font-size: 85%; color: #666;">(',
-      ifelse(is.na(tm_trend$MaximalgebotProzent), "–",
-             ifelse(tm_trend$MaximalgebotProzent > 0, "+", "")),
-      ifelse(is.na(tm_trend$MaximalgebotProzent), "", tm_trend$MaximalgebotProzent),
-      "%)</span>"
-    )
     
-    # 1. Beispiel: Bieterprofil-Daten vorbereiten (nur Durchschnitt pro MW_Klasse)
-    # Angenommen, bprofile_df enthält deine Tabelle mit Spalten MW_Klasse und Durchschnitt_Abweichung
-    # Hier als Beispiel:
+    # 5) Minimalgebot anhand eines Beispiel-Bieterprofils,
+    #    nun auf Basis des Mindestgebots statt des Marktwerts
     bprofile_df <- tribble(
-      ~MW_Klasse, ~Durchschnitt_Abweichung,
-      "<0.5 Mio", 0.18,
-      "0.5–1 Mio", 1.18,
-      "1–2.5 Mio", 1.18,
-      "2.5–5 Mio", 1.18,
-      "5–10 Mio", 1.18,
-      ">10 Mio", 0.18
+      ~MW_Klasse,   ~Durchschnitt_Abweichung,
+      "<0.5 Mio",   0.18,
+      "0.5–1 Mio",  1.18,
+      "1–2.5 Mio",  1.18,
+      "2.5–5 Mio",  1.18,
+      "5–10 Mio",   1.18,
+      ">10 Mio",    0.18
     )
     
-    # 3. Beispiel: tm_trend mit Marktwert
-    # tm_trend <- ... (deine bestehende Tabelle mit Marktwert_num)
-    
-    # 4. MW-Klasse ergänzen
-    tm_trend <- tm_trend %>%
+    df <- df %>%
+      left_join(bprofile_df, by = "MW_Klasse") %>%
       mutate(
-        MW_Klasse = vapply(Marktwert_num, get_mw_klasse, character(1))
-      )
-    
-    # 5. Durchschnittliche Abweichung pro Klasse mergen
-    tm_trend <- tm_trend %>%
-      left_join(bprofile_df, by = "MW_Klasse")
-    
-    # 6. Mindestgebot berechnen (Marktwert * (1 + Durchschnitt_Abweichung / 100))
-    tm_trend <- tm_trend %>%
-      mutate(
-        Mindestgebot_empfohlen_num = round(Marktwert_num * (1 + Durchschnitt_Abweichung / 100)),
-        Minimalgebot = paste0(format(Mindestgebot_empfohlen_num, big.mark = ".", decimal.mark = ","), " €")
-      )
-    
-    # 7. Fallback: Wenn Durchschnitt_Abweichung fehlt, Mindestgebot = Marktwert
-    tm_trend <- tm_trend %>%
+        # statt Marktwert_num verwenden wir jetzt Mindestgebot_num
+        Mindestgebot_empfohlen_num = round(
+          Mindestgebot_num * (1 + Durchschnitt_Abweichung / 100)
+        ),
+        Minimalgebot = paste0(
+          format(Mindestgebot_empfohlen_num, big.mark = ".", decimal.mark = ","), " €"
+        )
+      ) %>%
+      # sicherstellen, dass wir nie unter dem originalen Mindestgebot landen
       mutate(
         Minimalgebot_num = as.numeric(gsub("\\.", "", gsub(" €", "", Minimalgebot))),
-        Mindestgebot_num = as.numeric(gsub("\\.", "", gsub(" €", "", Mindestgebot)))
+        Mindestgebot_num  = as.numeric(gsub("\\.", "", gsub(" €", "", Mindestgebot))),
+        Minimalgebot_num  = ifelse(
+          Minimalgebot_num < Mindestgebot_num,
+          Mindestgebot_num,
+          Minimalgebot_num
+        ),
+        Minimalgebot = paste0(
+          format(Minimalgebot_num, big.mark = ".", decimal.mark = ","), " €"
+        ),
+        MinimalgebotProzent = round(
+          100 * (Minimalgebot_num / Marktwert_num - 1),
+          1
+        )
       ) %>%
       mutate(
-        Minimalgebot_num = ifelse(Minimalgebot_num < Mindestgebot_num, Mindestgebot_num, Minimalgebot_num),
-        Minimalgebot = paste0(format(Minimalgebot_num, big.mark = ".", decimal.mark = ","), " €")
+        Minimalgebot = paste0(
+          format(Minimalgebot_num, big.mark = ".", decimal.mark = ","), " €",
+          "<br><span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(MinimalgebotProzent), "–",
+                 paste0(ifelse(MinimalgebotProzent>0, "+",""), MinimalgebotProzent, "%")
+          ),
+          ")</span>"
+        )
       )
     
-    # 8. HTML bauen
-    tm_trend$MinimalgebotProzent <- round(100 * (tm_trend$Minimalgebot_num / tm_trend$Marktwert_num - 1), 1)
     
-    tm_trend$Minimalgebot <- paste0(
-      format(tm_trend$Minimalgebot_num, big.mark = ".", decimal.mark = ","), " €",
-      '<br><span style="font-size: 85%; color: #666;">(',
-      ifelse(is.na(tm_trend$MinimalgebotProzent), "–",
-             ifelse(tm_trend$MinimalgebotProzent > 0, "+", "")),
-      ifelse(is.na(tm_trend$MinimalgebotProzent), "", tm_trend$MinimalgebotProzent),
-      "%)</span>"
-    )
+    # 6) Historische Punkte & Details mergen
+    df <- df %>%
+      left_join(
+        ca_df %>% select(Spieler = SPIELER, `Historische Punkteausbeute` = Historische_Punkteausbeute),
+        by = "Spieler"
+      ) %>%
+      left_join(
+        ca2_df,
+        by = c("Spieler" = "SPIELER")
+      )
     
+    # 7) Global speichern (falls benötigt)
+    tm_trend_global(df)
     
-    
-    #Hist. Punkte, Kaufempfehlung etc. mergen
-    tm_trend <- tm_trend %>%
-      left_join(ca_df %>%
-                  select(
-                    "Spieler" = "SPIELER",
-                    "Historische Punkteausbeute" = `Historische_Punkteausbeute`
-                  ), by = c("Spieler"))
-    
-    tm_trend <- tm_trend %>%
-     left_join(ca2_df, by = c("Spieler" = "SPIELER"))
-    
-    # _Hier_ schiebst du tm_trend in den globalen Speicher:  
-    tm_trend_global(tm_trend)
-    
+    # 8) Datatable rendern
     DT::datatable(
-      tm_trend[, c("Spieler", "Logo", "Punkte pro Spiel", "Preis-Leistung", "Historische Punkteausbeute", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "IdealesGebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)")],
-      colnames = c("Spieler", "Verein", "PPS", "Preis-Leistung", "Hist.", "Marktwert", "Zielwert", "Mindestgebot", "Minimalgebot", "Zuschlagsgebot", "Maximalgebot", "Gebote", "Empfehlung", "Besitzer", "Verbleibende Zeit", "Trend MW (3 Tage)"),
-      selection = "single",   # ← Single‑Selection
+      df[, c(
+        "Spieler","Logo","Punkte pro Spiel","Preis-Leistung","Historische Punkteausbeute",
+        "Marktwert","Zielwert","Mindestgebot","Minimalgebot","IdealesGebot",
+        "Maximalgebot","Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
+      )],
+      colnames = c(
+        "Spieler","Verein","PPS","Preis-Leistung","Hist.",
+        "Marktwert","Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
+        "Maximalgebot","Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
+      ),
+      selection = "single",
       rownames = FALSE,
       escape = FALSE,
       options = list(
@@ -1908,7 +2010,7 @@ server <- function(input, output, session) {
         ordering = FALSE,
         pageLength = 20,
         columnDefs = list(
-          list(className = 'dt-left', targets = 0:1),
+          list(className = 'dt-left',  targets = 0:1),
           list(className = 'dt-right', targets = 2:7)
         )
       )
@@ -1916,18 +2018,14 @@ server <- function(input, output, session) {
       DT::formatStyle(
         'Verbleibende Zeit',
         target = 'cell',
-        color = DT::styleEqual("heute", "red"),
+        color      = DT::styleEqual("heute", "red"),
         fontWeight = DT::styleEqual("heute", "bold")
       ) %>%
       DT::formatStyle(
         'Mindestgebot',
-        target = 'cell',
-        color = DT::styleEqual(
-          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "green"
-        ),
-        fontWeight = DT::styleEqual(
-          tm_trend$Mindestgebot[tm_trend$MinGeb_Unter_MW], "bold"
-        )
+        target    = 'cell',
+        color     = DT::styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW], "green"),
+        fontWeight= DT::styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW], "bold")
       )
   })
   
@@ -2279,34 +2377,13 @@ server <- function(input, output, session) {
       "</tbody></table>"
     )
     
-    # Summen-Zeile
-    summe <- df_pre %>%
-      filter(!is.na(Kaufpreis)) %>%
-      summarise(Gesamt = sum(Marktwert_aktuell - Kaufpreis, na.rm = TRUE)) %>% 
-      pull(Gesamt)
-    
-    summe_fmt <- if (is.na(summe)) {
-      ""
-    } else if (summe > 0) {
-      sprintf("<span style='color:#388e3c; font-weight:bold;'>Gesamtgewinn: +%s €</span>",
-              format(summe, big.mark = ".", decimal.mark = ","))
-    } else if (summe < 0) {
-      sprintf("<span style='color:#e53935; font-weight:bold;'>Gesamtverlust: –%s €</span>",
-              format(abs(summe), big.mark = ".", decimal.mark = ","))
-    } else {
-      "<span style='color:grey; font-weight:bold;'>±0 €</span>"
-    }
-    
     # UI ausgeben
     tagList(
-      HTML(table_html),
-      tags$div(HTML(summe_fmt), style = "margin-top:12px; font-size:1.1em;")
+      HTML(table_html)
     )
   })
   
-  
   ## ---- Alle Kader ----
-  
   output$kader_uebersicht_ui <- renderUI({
     
     manager_list <- sort(unique(teams_df$Manager))
@@ -2703,8 +2780,7 @@ server <- function(input, output, session) {
   })
   
   ## ---- Gebote pro Tag ----
-  
-  output$gebote_pro_tag <- renderPlot({
+    output$gebote_pro_tag <- renderPlot({
     df <- gebotsprofil_clean() %>%
       group_by(Datum, Bieter) %>%
       summarise(Anzahl_Gebote = n(), .groups = "drop")
@@ -2743,13 +2819,11 @@ server <- function(input, output, session) {
   })
   
   ## ---- Durchschnittliche Gebotszahl pro Tag je Konkurrent ----
-  
   gebote_tag_bieter <- reactive({
     gebotsprofil_clean() %>%
       group_by(Datum, Bieter) %>%
       summarise(Anzahl_Gebote = n(), .groups = "drop")
   })
-  
   
   output$gebote_pro_tag_bieter <- renderPlot({
     df <- gebote_tag_bieter()
@@ -2768,7 +2842,6 @@ server <- function(input, output, session) {
   })
   
   ## ---- Aktive Tage pro Spieler ----
-  
   output$aktive_tage_plot <- renderPlot({
     aktive_tage <- gebotsprofil_clean() %>%
       group_by(Bieter) %>%
@@ -2786,10 +2859,7 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14)
   })
   
-  
-  
   ## ---- Gebots-Peaks ----
-  
   output$peak_days_heatmap <- renderPlot({
     # Alle möglichen Kombinationen Bieter x Datum erzeugen (auch 0 Gebote!)
     all_dates <- seq.Date(
@@ -2840,6 +2910,26 @@ server <- function(input, output, session) {
       theme(
         axis.text.x = element_text(angle = 60, hjust = 1),
         panel.grid = element_blank()
+      )
+  })
+  
+  ## ---- Aktive Wochentage ----
+  output$bids_by_weekday_plot <- renderPlot({
+    df <- avg_bids_wd()
+    
+    ggplot(df, aes(x = Wochentag, y = avg_bids)) +
+      geom_col(fill = "darkcyan") +
+      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      labs(
+        title = "Ø Gebote (vom Vortag) pro Manager und Wochentag",
+        x     = "Wochentag",
+        y     = "Ø Gebote"
+      ) +
+      theme_minimal(base_size = 12) +
+      theme(
+        strip.text  = element_text(face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title  = element_text(face = "bold")
       )
   })
   
