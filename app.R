@@ -104,7 +104,6 @@ ui <- navbarPage(
                         style = "text-align: center; margin-bottom: 10px;",
                         HTML("
           <b>Legende:</b><br>
-          <span style='color:#005c99; font-weight:bold;'>▍</span> Ø MW TM-Spieler &nbsp;&nbsp;
           <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
           <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
           <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
@@ -748,60 +747,53 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Zeitachse ----
+  ## ---- Martkwerte-Zeitachse ----
   output$mw_zeitachse_preview <- renderPlot({
-    df <- mw_evolution_data()
     sp <- sommerpause_data()
     
-    # Ø MW pro Tag
-    plotdata <- df %>%
-      group_by(TM_Stand) %>%
-      summarise(MW_mean = mean(MW_rel, na.rm = TRUE), .groups = "drop")
+    # 1) Trend-Daten aus den letzten 5 Tagen (ohne NA-Datum)
+    trend_vals <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%            # <— hier NA rausschmeißen
+      arrange(Datum) %>%
+      tail(3)
     
-    # Kombinieren
-    lines_df <- bind_rows(
-      plotdata %>% transmute(Datum = TM_Stand, Wert = MW_mean,  Typ = "Durchschnitt TM-Spieler"),
-      gesamt_mw_df %>% transmute(Datum = Datum,     Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
-    ) %>%
-      # Stelle sicher, dass Datum auch wirklich ein Date ist
-      mutate(Datum = as.Date(Datum)) %>%
-      # Alle Zeilen mit NA in Wert oder Datum rauswerfen
-      filter(!is.na(Wert), !is.na(Datum))
-    
+    x0 <- trend_vals$Datum[1]
+    y0 <- trend_vals$MW_rel_normiert[1]
+    x1 <- trend_vals$Datum[3]
+    y1 <- trend_vals$MW_rel_normiert[3]
     
     ggplot() +
-      # Linien ohne NA, oder mit na.rm
+      # a) Gesamtmarktwert-Linie
       geom_line(
-        data = lines_df %>% filter(!is.na(Wert)),
+        data = gesamt_mw_df %>% transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert"),
         aes(x = Datum, y = Wert, color = Typ),
-        linewidth = 1.2,
-        na.rm    = TRUE
+        linewidth = 1.2, na.rm = TRUE
       ) +
-      # Sommerpause‑Linien: ebenfalls NA-frei machen
+      # b) Sommerpausen-Linien
       geom_line(
-        data = filter(sp, Saison=="Sommerpause_2024") %>% filter(!is.na(MW_rel_normiert)),
+        data = filter(sp, Saison == "Sommerpause_2024"),
         aes(x = Datum, y = MW_rel_normiert),
-        color     = "red",
-        linetype  = "dashed",
-        linewidth = 1,
-        na.rm     = TRUE
+        color     = "red", linetype = "dashed", linewidth = 1, na.rm = TRUE
       ) +
       geom_line(
-        data = filter(sp, Saison=="Sommerpause_2021") %>% filter(!is.na(MW_rel_normiert)),
+        data = filter(sp, Saison == "Sommerpause_2021"),
         aes(x = Datum, y = MW_rel_normiert),
-        color     = "orange",
-        linetype  = "dashed",
-        linewidth = 1,
-        na.rm     = TRUE
+        color     = "orange", linetype = "dashed", linewidth = 1, na.rm = TRUE
       ) +
+      # c) Trend-Pfeil aus den letzten 5 Tagen
+      annotate(
+        "curve",
+        x         = x0,   y      = y0,
+        xend      = x1,   yend   = y1,
+        curvature = 0,
+        arrow     = arrow(length = unit(0.35, "cm"), type = "closed"),
+        color     = if (y1 > y0) "darkgreen" else "red",
+        size      = 1.5
+      ) +
+      # d) Limits, Farben & Labels
       coord_cartesian(ylim = c(0.75, 1.4)) +
-      scale_color_manual(values = c(
-        "Durchschnitt TM-Spieler" = "#005c99",
-        "Gesamtmarktwert"          = "darkgrey"
-      )) +
-      labs(
-        x = NULL, y = "relativer MW", color = NULL
-      ) +
+      scale_color_manual(values = c("Gesamtmarktwert" = "darkgrey")) +
+      labs(x = NULL, y = "relativer MW", color = NULL) +
       geom_vline(
         xintercept = as.Date("2025-08-22"),
         linetype   = "dotted",
@@ -810,23 +802,23 @@ server <- function(input, output, session) {
       ) +
       annotate(
         "text",
-        x       = as.Date("2025-08-22"),
-        y       = 1.02,
-        label   = "Saisonstart",
-        color   = "darkred",
-        angle   = 90,
-        vjust   = -0.5,
+        x     = as.Date("2025-08-22"),
+        y     = 1.02,
+        label = "Saisonstart",
+        angle = 90,
+        vjust = -0.5,
         fontface = "bold",
-        size    = 6
+        size  = 6,
+        color = "darkred"
       ) +
       theme_minimal(base_size = 16) +
       theme(
-        legend.position   = "bottom",
-        plot.title        = element_text(size = 16, color = "black", face = "bold")
+        legend.position = "bottom",
+        plot.title      = element_text(size = 16, face = "bold")
       )
-    
-      
   })
+  
+  
   
   ## ---- Kontostände ----
   output$kreditrahmen_uebersicht_preview <- DT::renderDT({
@@ -1089,56 +1081,7 @@ server <- function(input, output, session) {
   })
   
   # ---- MARKTWERTENTWICKLUNG ----
-  ## ---- Besitzhistorie bauen ----
-  besitzhistorie <- reactive({
-    transfers <- data_all()$transfers
-    
-    wechsel <- transfers %>%
-      arrange(Spieler, Datum) %>%
-      select(Spieler, Datum, Hoechstbietender) %>%
-      rename(Besitzer = Hoechstbietender)
-    
-    besitz <- list()
-    for (spieler in unique(wechsel$Spieler)) {
-      sub <- wechsel %>% filter(Spieler == spieler) %>% arrange(Datum)
-      for (i in 1:nrow(sub)) {
-        startdatum <- sub$Datum[i]
-        enddatum <- if (i < nrow(sub)) sub$Datum[i + 1] - 1 else as.Date("2100-01-01")
-        besitz[[length(besitz) + 1]] <- data.frame(
-          Spieler = spieler,
-          Besitzer = sub$Besitzer[i],
-          Startdatum = startdatum,
-          Enddatum = enddatum
-        )
-      }
-    }
-    bind_rows(besitz)
-  })
-  
-  ## ---- Marktwert-Entwicklung aller Spieler (normiert auf ersten Wert) ----
-  mw_evolution_data <- reactive({
-    tm <- data_all()$transfermarkt %>%
-      mutate(
-        TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"),
-        Besitzer_eff = nickname_mapping[Besitzer]
-      )
-    
-    besitz <- besitzhistorie()
-    
-    tm_besitz <- tm %>%
-      left_join(besitz, by = "Spieler") %>%
-      filter(TM_Stand >= Startdatum, TM_Stand <= Enddatum)
-    
-    tm_besitz %>%
-      group_by(Spieler, Besitzer_eff) %>%
-      arrange(TM_Stand) %>%
-      mutate(MW_rel = Marktwert / first(Marktwert)) %>%
-      ungroup() %>%
-      select(TM_Stand, Spieler, Besitzer = Besitzer_eff, Marktwert, MW_rel)
-  })
-  
   ## ---- Gesamtmarktwerte ----
-  
   # Manuell zusätzliche Tagesdaten ergänzen
   manuelle_werte <- tibble::tibble(
     Datum = as.Date(c(
@@ -1168,46 +1111,39 @@ server <- function(input, output, session) {
       MW_rel_normiert = MW_gesamt / 1487390000  # Referenzwert vom 01.06.2025
     )
   
-  ## ---- Ausgabe-Plot ----
+  ## ---- MW-Verlauf ----
   output$mw_evolution <- renderPlot({
-    df <- mw_evolution_data()
-    sp <- sommerpause_data()  
+    sp <- sommerpause_data()
     
-    # Mittelwert + SD der TM-Spieler pro Tag
-    plotdata <- df %>%
-      group_by(TM_Stand) %>%
-      summarise(
-        MW_mean = mean(MW_rel, na.rm = TRUE),
-        MW_sd = sd(MW_rel, na.rm = TRUE),
-        .groups = "drop"
+    # 1) Saubere Daten (ohne NA) und sortiert
+    clean_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      arrange(Datum)
+    
+    # 2) Indices für 5-Tage-Fenster (letztes Fenster darf kürzer sein)
+    n   <- nrow(clean_df)
+    idx <- seq(1, n, by = 5)
+    
+    # 3) Arrow-Dataframe zusammenbauen
+    arrow_df <- tibble(
+      x0 = clean_df$Datum[idx],
+      y0 = clean_df$MW_rel_normiert[idx],
+      x1 = clean_df$Datum[pmin(idx + 5, n)],
+      y1 = clean_df$MW_rel_normiert[pmin(idx + 5, n)]
+    ) %>%
+      mutate(
+        color = ifelse(y1 > y0, "darkgreen", "red")
       )
     
-    # Kombinierte Daten für Linienplot
-    lines_df <- bind_rows(
-      plotdata %>%
-        transmute(Datum = TM_Stand, Wert = MW_mean, Typ = "Durchschnitt TM-Spieler"),
-      gesamt_mw_df %>%
-        transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert")
-    )
     
     ggplot() +
-      # Schattierung für SD
-      geom_ribbon(
-        data = plotdata,
-        aes(x = TM_Stand, ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd),
-        fill = "#b3cde0", alpha = 0.4
-      ) +
       # Linien für MW-Verläufe
       geom_line(
-        data = lines_df,
+        data = gesamt_mw_df %>%
+          transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert"),
         aes(x = Datum, y = Wert, color = Typ),
         linewidth = 1.2,
         na.rm     = TRUE
-      ) +
-      geom_point(
-        data = plotdata,
-        aes(x = TM_Stand, y = MW_mean),
-        color = "#005c99", size = 1.5, alpha = 0.7
       ) +
       geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
                  color = "darkred", size = 1.5) +
@@ -1222,19 +1158,27 @@ server <- function(input, output, session) {
         fontface = "bold",
         size = 4
       ) +
+      
+      geom_segment(
+        data        = arrow_df,
+        aes(x = x0, y = y0, xend = x1, yend = y1),
+        arrow       = arrow(length = unit(0.3, "cm"), type = "closed"),
+        color       = arrow_df$color,
+        size        = 1.2,
+        inherit.aes = FALSE
+      ) +
+      
       coord_cartesian(ylim = c(0.5, 1.6)) +
       labs(
         title = "Marktwertentwicklung (relativ zum Startwert)",
-        subtitle = "Schattierung = ±1 SD (TM Spieler)",
         x = "Datum",
         y = "Relativer Marktwert",
         color = "Linientyp"
       ) +
       scale_color_manual(values = c(
-        "Durchschnitt TM-Spieler" = "#005c99",
         "Gesamtmarktwert" = "darkgrey"
       )) +
-      theme_minimal(base_size = 14) +
+      theme_minimal(base_size = 16) +
       theme(legend.position = "none") +
       # --- hier kommen die beiden Sommerpause‑Linien aus sp ---
       geom_line(
