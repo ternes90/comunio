@@ -4,8 +4,7 @@ library(lubridate)
 library(ggbeeswarm)
 library(readxl)
 library(DT)
-library(scales)  # ganz oben, falls noch nicht geladen
-#library(ggrepel)
+library(scales)
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -703,7 +702,7 @@ server <- function(input, output, session) {
     )
   }
   
-  # Render UIs
+  ## ---- Render UIs ----
   output$manager_select_ui <- renderUI({
     # Besitzer ohne "Computer"
     mgrs <- setdiff(unique(transfers$Besitzer), "Computer")
@@ -711,12 +710,10 @@ server <- function(input, output, session) {
       inputId  = "manager_select",
       label    = "Manager auswählen:",
       choices  = sort(mgrs),
-      selected = sort(mgrs)[1]
+      selected = sort(mgrs)[5]
     )
   })
   
-  
-
   # ---- DASHBOARD ----
   
   ## ---- Transferaktivitäten ----
@@ -1332,15 +1329,13 @@ server <- function(input, output, session) {
         size = 3
       ) +
       # d) Spielernamen daneben
-      # geom_text_repel(
-      #   data        = events,
-      #   aes(x = Datum, y = y_dot, label = Spieler, color = type),
-      #   nudge_x     = 0.2,
-      #   direction   = "y",
-      #   hjust       = 0,
-      #   segment.size= 0,
-      #   size        = 4
-      # ) +
+      geom_text(
+        data     = events,
+        aes(x = Datum, y = y_dot, label = Spieler, color = type),
+        position = position_jitter(width  = 0,
+                                   height = 0.21),
+        size     = 4
+      ) +
       # e) Farben festlegen, Legende ausblenden
       scale_color_manual(
         values = c(buy = "darkgreen", sell = "red"),
