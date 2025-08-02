@@ -5,6 +5,7 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)  # ganz oben, falls noch nicht geladen
+library(ggrepel)
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -112,6 +113,19 @@ ui <- navbarPage(
                       br(),
                       plotOutput("mw_daily_change", height = 300)  # ← hier das neue Output
              ),
+             
+             # — Neuer Sub-Tab für Manager-Events auf Gesamt-MW —
+             tabPanel("Käufe und Verkäufe",
+                      fluidRow(
+                        column(4,
+                               uiOutput("manager_select_ui")      # Platzhalter
+                        )
+                      ),
+                      br(),
+                      plotOutput("mw_events", height = 600)
+             )
+             ,
+             
              tabPanel("MW-Verlauf 24/25 (MW-Klassen)",
                       plotOutput("mw_plot"),
                       plotOutput("mw_plot_now")
@@ -150,7 +164,8 @@ ui <- navbarPage(
                       uiOutput("bid_prediction"),
                       DTOutput("transfermarkt_detail")
              ),
-             tabPanel("Transfer‑Simulator",
+             tabPanel(title = "Transfer-Simulator",
+                      value = "transfer_simulator",
                       selectInput("spieler_select", "Spieler auf Transfermarkt:", choices = NULL),
                       fluidRow(
                         column(6, plotOutput("transfer_simulator_plot")),
@@ -302,6 +317,13 @@ ui <- navbarPage(
            )
   ),
   
+  ## ---- Notizen ----
+  tabPanel("Notes/Learnings",
+           fluidPage(
+             DTOutput("notes_learnings")
+           )
+  ),
+  
   # In Deiner UI (z.B. ui.R)
   tags$head(
     # --- Click‑Event für kapital_uebersicht_table ---
@@ -382,27 +404,26 @@ server <- function(input, output, session) {
   })
   
   # Server‑Logik zum Wechseln und Vorwählen für Transfer-Simulator
-  observeEvent(input$transfermarkt_detail_rows_selected, {
-    idx <- input$transfermarkt_detail_rows_selected
-    if (length(idx) == 1) {
-      # Hol dir jetzt deinen global gespeicherten tm_trend
-      df <- tm_trend_global()
-      player <- df$Spieler[idx]
-      
-      # Tab wechseln
-      updateTabsetPanel(
-        session,
-        inputId  = "transfermarkt_tabs",
-        selected = "Transfer‑Simulator"
-      )
-      # SelectInput vorwählen
-      updateSelectInput(
-        session,
-        inputId  = "spieler_select",
-        selected = player
-      )
-    }
+  observeEvent(input$transfer_row, {
+    idx <- input$transfer_row
+    df  <- tm_trend_global()        # global gespeichertes DataFrame
+    player <- df$Spieler[idx]
+    
+    # Tab wechseln
+    updateTabsetPanel(
+      session,
+      inputId  = "transfermarkt_tabs", 
+      selected = "transfer_simulator"      # <-- exakt der Wert aus value= oben
+    )
+    
+    # Spieler im SelectInput vorwählen
+    updateSelectInput(
+      session,
+      inputId  = "spieler_select",
+      selected = player
+    )
   })
+  
   
   # Link vom Dashboard zum MW Trend tab
   observeEvent(input$mw_zeitachse_click, {
@@ -460,7 +481,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # ---- DATEN / df / list ----
+  # ---- Daten / df / list / functions ----
   
   ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
   
@@ -657,7 +678,7 @@ server <- function(input, output, session) {
     if (nrow(tm) == 1) tm$Marktwert else NA
   }
   
-  # MW-Klasse bestimmen
+  ## ---- MW-Klasse bestimmen ----
   get_mw_klasse <- function(mw) {
     if (mw < 5e5) {
       "<0.5 Mio"
@@ -673,6 +694,28 @@ server <- function(input, output, session) {
       ">10 Mio"
     }
   }
+  
+  ## ---- Hilfsfunktion, um pro Zeile einen Shiny-Button zu erzeugen ----
+  shinyButton <- function(id, label = "→") {
+    sprintf(
+      '<button class="btn btn-xs btn-primary" onclick="Shiny.setInputValue(\'transfer_row\', %s, {priority: \'event\'})">%s</button>',
+      id, label
+    )
+  }
+  
+  # Render UIs
+  output$manager_select_ui <- renderUI({
+    # Besitzer ohne "Computer"
+    mgrs <- setdiff(unique(transfers$Besitzer), "Computer")
+    selectInput(
+      inputId  = "manager_select",
+      label    = "Manager auswählen:",
+      choices  = sort(mgrs),
+      selected = sort(mgrs)[1]
+    )
+  })
+  
+  
 
   # ---- DASHBOARD ----
   
@@ -1222,7 +1265,118 @@ server <- function(input, output, session) {
                                max(change_df$pct_change) * 1.1))
   })
   
+  ## ---- MW-events ----
+  library(ggrepel)
   
+  output$mw_events <- renderPlot({
+    req(input$manager_select)
+    
+    # 1) Gesamtmarktwert-Daten
+    clean_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      arrange(Datum)
+    
+    y_min <- min(clean_df$MW_rel_normiert, na.rm = TRUE)
+    y_max <- max(clean_df$MW_rel_normiert, na.rm = TRUE)
+    
+    # 2) Transfer-Historie aufbereiten
+    tr <- transfers %>%
+      mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>%
+      arrange(Datum) %>%
+      group_by(Spieler) %>%
+      ungroup()
+    
+    # 3a) Buy-Events: Manager ist Höchstbietender
+    buys <- tr %>%
+      filter(Hoechstbietender == input$manager_select) %>%
+      mutate(type = "buy")
+    
+    # 3b) Sell-Events: Manager war Vorbesitzer und Computer kauft
+    sells <- tr %>%
+      filter(Besitzer == input$manager_select, Hoechstbietender == "Computer") %>%
+      mutate(type = "sell")
+    
+    # 3c) Zusammentragen
+    events <- bind_rows(buys, sells)
+    req(nrow(events) > 0)
+    
+    # 4) Y-Offsets pro Tag berechnen, damit Punkte nicht überlappen
+    events <- events %>%
+      arrange(Datum) %>%
+      group_by(Datum) %>%
+      mutate(
+        n     = n(),
+        idx   = row_number(),
+        y_dot = 1.2 + (idx - (n + 1) / 2) * 0.05
+      ) %>%
+      ungroup()
+    
+    # 5) Zeichnen
+    ggplot() +
+      # a) Gesamt-Marktwert
+      geom_line(
+        data      = clean_df,
+        aes(x = Datum, y = MW_rel_normiert),
+        color     = "darkgrey",
+        size      = 1.2,
+        na.rm     = TRUE
+      ) +
+      # b) Vertikale Linien für buy/sell
+      geom_vline(
+        data = events,
+        aes(xintercept = as.numeric(Datum), color = type),
+        size = 1
+      ) +
+      # c) Punkte auf den y_dot-Positionen
+      geom_point(
+        data = events,
+        aes(x = Datum, y = y_dot, color = type),
+        size = 3
+      ) +
+      # d) Spielernamen daneben
+      geom_text_repel(
+        data        = events,
+        aes(x = Datum, y = y_dot, label = Spieler, color = type),
+        nudge_x     = 0.2,
+        direction   = "y",
+        hjust       = 0,
+        segment.size= 0,
+        size        = 4
+      ) +
+      # e) Farben festlegen, Legende ausblenden
+      scale_color_manual(
+        values = c(buy = "darkgreen", sell = "red"),
+        guide  = FALSE
+      ) +
+      # f) Saisonstart-Linie & Label
+      geom_vline(
+        xintercept = as.Date("2025-08-22"),
+        linetype   = "dotted",
+        color      = "darkred",
+        size       = 1.5
+      ) +
+      annotate(
+        "text",
+        x     = as.Date("2025-08-22"),
+        y     = 1.25,
+        label = "Saisonstart",
+        angle = 90,
+        vjust = -0.5,
+        fontface= "bold",
+        size   = 4,
+        color  = "darkred"
+      ) +
+      # g) Limits & Theme
+      coord_cartesian(ylim = c(0.5, 1.6)) +
+      labs(
+        x = "Datum",
+        y = "Relativer Marktwert"
+      ) +
+      theme_minimal(base_size = 16) +
+      theme(legend.position = "none")
+  })
+  
+
   ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
   data <- reactive({
     df <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
@@ -1812,6 +1966,8 @@ server <- function(input, output, session) {
     # Basis‐Tabelle aus reactiveVal holen
     df <- tm_common()
     
+    req(nrow(df) > 0)  # Stopt, falls df leer ist
+    
     # 1) MW-Klasse bestimmen
     df$MW_Klasse <- vapply(df$Marktwert_num, get_mw_klasse, character(1))
     
@@ -1990,42 +2146,107 @@ server <- function(input, output, session) {
     # 7) Global speichern (falls benötigt)
     tm_trend_global(df)
     
-    # 8) Datatable rendern
+    # 8) Aktion-Spalte bauen
+    df$action <- sprintf(
+      '<button class="btn btn-xs btn-primary view-btn" data-row="%d">→</button>',
+      seq_len(nrow(df))
+    )
+    
+    # Copy-Buttons in die Tabelle
+    df <- df %>%
+      mutate(
+        Minimalgebot = paste0(
+          format(Minimalgebot_num, big.mark=".", decimal.mark=","),
+          " € ",
+          "<button class='btn btn-xs btn-light copy-btn' data-value='",
+          Minimalgebot_num, "' title='Kopieren'>📋</button>",
+          "<br><span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(MinimalgebotProzent),"–",
+                 paste0(ifelse(MinimalgebotProzent>0,"+",""),
+                        MinimalgebotProzent,"%")),
+          ")</span>"
+        ),
+        IdealesGebot = paste0(
+          format(IdealesGebot_num, big.mark=".", decimal.mark=","),
+          " € ",
+          "<button class='btn btn-xs btn-light copy-btn' data-value='",
+          IdealesGebot_num, "' title='Kopieren'>📋</button>",
+          "<br><span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(IdealesGebotProzent),"–",
+                 paste0(ifelse(IdealesGebotProzent>0,"+",""),
+                        IdealesGebotProzent,"%")),
+          ")</span>"
+        )
+      )
+    
+    cols <- c(
+      "Spieler","Logo","Punkte pro Spiel","Preis-Leistung",
+      "Historische Punkteausbeute","Marktwert","Zielwert",
+      "Mindestgebot","Minimalgebot","IdealesGebot",
+      "Maximalgebot","Gebote","Empfehlung","Besitzer",
+      "Verbleibende Zeit","Trend MW (3 Tage)","action"
+    )
+    sub_df <- df[, cols]
+    
     DT::datatable(
-      df[, c(
-        "Spieler","Logo","Punkte pro Spiel","Preis-Leistung","Historische Punkteausbeute",
-        "Marktwert","Zielwert","Mindestgebot","Minimalgebot","IdealesGebot",
-        "Maximalgebot","Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
-      )],
+      sub_df,
       colnames = c(
-        "Spieler","Verein","PPS","Preis-Leistung","Hist.",
-        "Marktwert","Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
-        "Maximalgebot","Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
+        "Spieler","Verein","PPS","Preis-Leistung","Hist.","Marktwert",
+        "Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
+        "Maximalgebot","Gebote","Empfehlung","Besitzer",
+        "Verbleibende Zeit","Trend MW (3 Tage)","Aktion"
       ),
-      selection = "single",
-      rownames = FALSE,
-      escape = FALSE,
+      escape    = FALSE,
+      selection = "none",
+      rownames  = FALSE,
+      callback = JS(
+        # JS-Fallback-Funktion
+        "function fallbackCopy(text) {",
+        "  var ta = document.createElement('textarea');",
+        "  ta.value = text;",
+        "  ta.style.position = 'fixed'; ta.style.top = 0; ta.style.left = 0;",
+        "  document.body.appendChild(ta);",
+        "  ta.focus(); ta.select();",
+        "  try { document.execCommand('copy'); } catch (err) { console.error(err); }",
+        "  document.body.removeChild(ta);",
+        "}",
+        # Transfer-Simulator Button
+        "table.on('click', 'button.view-btn', function() {",
+        "  Shiny.setInputValue('transfer_row', $(this).data('row'), {priority:'event'});",
+        "});",
+        # Copy-Button mit Clipboard-API + Fallback
+        "table.on('click', 'button.copy-btn', function() {",
+        "  var val = $(this).attr('data-value');",
+        "  if (navigator.clipboard && navigator.clipboard.writeText) {",
+        "    navigator.clipboard.writeText(val)",
+        "      .catch(function() { fallbackCopy(val); });",
+        "  } else {",
+        "    fallbackCopy(val);",
+        "  }",
+        "});"
+      ),
       options = list(
-        dom = "t",
-        ordering = FALSE,
+        dom        = "t",
+        ordering   = FALSE,
         pageLength = 20,
         columnDefs = list(
           list(className = 'dt-left',  targets = 0:1),
-          list(className = 'dt-right', targets = 2:7)
+          list(className = 'dt-right', targets = 2:7),
+          list(className = 'dt-center',targets = ncol(sub_df)-1)
         )
       )
     ) %>%
-      DT::formatStyle(
+      formatStyle(
         'Verbleibende Zeit',
-        target = 'cell',
-        color      = DT::styleEqual("heute", "red"),
-        fontWeight = DT::styleEqual("heute", "bold")
+        target     = 'cell',
+        color      = styleEqual("heute","red"),
+        fontWeight = styleEqual("heute","bold")
       ) %>%
-      DT::formatStyle(
+      formatStyle(
         'Mindestgebot',
-        target    = 'cell',
-        color     = DT::styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW], "green"),
-        fontWeight= DT::styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW], "bold")
+        target     = 'cell',
+        color      = styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW],"green"),
+        fontWeight = styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW],"bold")
       )
   })
   
@@ -3518,6 +3739,32 @@ server <- function(input, output, session) {
         ),
         fontWeight = "bold"
       )
+  })
+  
+  # ---- NOTES/LEARNINGS ----
+  
+  output$notes_learnings <- DT::renderDT({
+    # 1) Lese alle Zeilen aus der Text-Datei
+    lines <- readLines("data/learnings.txt", warn = FALSE)
+    # 2) Entferne führende '- ' und Leerzeichen
+    notes <- trimws(gsub("^[-\\s]+", "", lines))
+    # 3) In ein DataFrame packen
+    df_notes <- data.frame(
+      Note = notes,
+      stringsAsFactors = FALSE
+    )
+    # 4) Als einfache Tabelle rendern
+    DT::datatable(
+      df_notes,
+      rownames = FALSE,
+      colnames = "Notes / Learnings",
+      escape   = FALSE,
+      options  = list(
+        dom        = "t",
+        pageLength = nrow(df_notes),
+        ordering   = FALSE
+      )
+    )
   })
   
 }
