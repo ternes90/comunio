@@ -5,7 +5,7 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)  # ganz oben, falls noch nicht geladen
-library(ggrepel)
+#library(ggrepel)
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -1266,8 +1266,6 @@ server <- function(input, output, session) {
   })
   
   ## ---- MW-events ----
-  library(ggrepel)
-  
   output$mw_events <- renderPlot({
     req(input$manager_select)
     
@@ -1334,15 +1332,15 @@ server <- function(input, output, session) {
         size = 3
       ) +
       # d) Spielernamen daneben
-      geom_text_repel(
-        data        = events,
-        aes(x = Datum, y = y_dot, label = Spieler, color = type),
-        nudge_x     = 0.2,
-        direction   = "y",
-        hjust       = 0,
-        segment.size= 0,
-        size        = 4
-      ) +
+      # geom_text_repel(
+      #   data        = events,
+      #   aes(x = Datum, y = y_dot, label = Spieler, color = type),
+      #   nudge_x     = 0.2,
+      #   direction   = "y",
+      #   hjust       = 0,
+      #   segment.size= 0,
+      #   size        = 4
+      # ) +
       # e) Farben festlegen, Legende ausblenden
       scale_color_manual(
         values = c(buy = "darkgreen", sell = "red"),
