@@ -1,6 +1,7 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Diehl;Sturm
+Thomas;Richter;Sturm
 Thomas;Doan;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Nusa;Mittelfeld
@@ -33,6 +34,7 @@ Alfons;Gulácsi;Tor
 Christoph;Ilić;Sturm
 Christoph;B. Touré;Sturm
 Christoph;Amiri;Mittelfeld
+Christoph;Remberg;Mittelfeld
 Christoph;Ouédraogo;Mittelfeld
 Christoph;Gouweleeuw;Abwehr
 Christoph;Mainka;Abwehr
@@ -83,7 +85,6 @@ Dominik;Amoura;Sturm
 Dominik;Sieb;Sturm
 Dominik;Ceesay;Sturm
 Dominik;Grifo;Mittelfeld
-Dominik;Musiala;Mittelfeld
 Dominik;Groß;Mittelfeld
 Dominik;Sabitzer;Mittelfeld
 Dominik;Haberer;Mittelfeld
