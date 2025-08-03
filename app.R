@@ -3709,27 +3709,27 @@ server <- function(input, output, session) {
       )
     ) %>%
       formatCurrency(
-        columns = c(
-          "Startkapital", "Teamwert", "Kreditrahmen", "Ausgaben",
-          "Einnahmen", "Transaction_Summe", "Aktuelles_Kapital", "Verfügbares_Kapital"
-        ),
-        currency = "",
-        interval = 3,
-        mark = ".",
-        digits = 0,
-        dec.mark = ","
+        columns = c("Startkapital","Teamwert","Kreditrahmen","Ausgaben","Einnahmen","Transaction_Summe","Aktuelles_Kapital","Verfügbares_Kapital"),
+        currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       ) %>%
       formatStyle(
         'Aktuelles_Kapital',
-        color = styleInterval(0, c('red', 'black')),
+        color      = styleInterval(0, c('red','black')),
         fontWeight = styleInterval(0, c('bold', NA))
-      ) %>%
+      ) -> dt  # Pipe-Ergebnis zwischenspeichern
+    
+    # automatische Farb-Mappings für Entwicklung_Trend
+    trends <- sort(unique(kapital_df$Entwicklung_Trend))
+    colors <- sapply(trends, function(x) {
+      if      (grepl("^▲", x)) "green"
+      else if (grepl("^▼", x)) "red"
+      else                      "black"
+    })
+    
+    dt %>%
       formatStyle(
         'Entwicklung_Trend',
-        color = styleEqual(
-          c("-", "0 €", unique(kapital_df$Entwicklung_Trend[grepl("^▲", kapital_df$Entwicklung_Trend)]), unique(kapital_df$Entwicklung_Trend[grepl("^▼", kapital_df$Entwicklung_Trend)])),
-          c("black", "black", rep("green", sum(grepl("^▲", kapital_df$Entwicklung_Trend))), rep("red", sum(grepl("^▼", kapital_df$Entwicklung_Trend))))
-        ),
+        color      = styleEqual(trends, colors),
         fontWeight = "bold"
       )
   })
