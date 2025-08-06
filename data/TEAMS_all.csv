@@ -11,12 +11,12 @@ Thomas;Laimer;Abwehr
 Thomas;Davies;Abwehr
 Thomas;Svensson;Abwehr
 Thomas;N. Banks;Abwehr
-Thomas;Voll;Tor
 Thomas;Heuer Fernandes;Tor
 Alfons;Undav;Sturm
 Alfons;Tietz;Sturm
 Alfons;Dinkçi;Sturm
 Alfons;S. Banks;Sturm
+Alfons;Maier;Mittelfeld
 Alfons;B. Dárdai;Mittelfeld
 Alfons;J. Hofmann;Mittelfeld
 Alfons;Martel;Mittelfeld
@@ -28,6 +28,7 @@ Alfons;Akpoguma;Abwehr
 Alfons;Querfeld;Abwehr
 Alfons;Süle;Abwehr
 Alfons;Lührs;Abwehr
+Alfons;Mané;Abwehr
 Alfons;Gulácsi;Tor
 Alfons;Peretz;Tor
 Christoph;Ilić;Sturm
@@ -74,12 +75,10 @@ Andreas;Alvero;Mittelfeld
 Andreas;Hincapié;Abwehr
 Andreas;Matsima;Abwehr
 Andreas;Fischer;Abwehr
-Andreas;Chiarodia;Abwehr
 Andreas;Torunarigha;Abwehr
 Andreas;Pauli;Abwehr
 Andreas;Omlin;Tor
 Andreas;Vandevoordt;Tor
-Dominik;Openda;Sturm
 Dominik;Scienza;Sturm
 Dominik;Sieb;Sturm
 Dominik;Ceesay;Sturm
