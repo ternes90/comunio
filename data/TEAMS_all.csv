@@ -1,6 +1,8 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
+Thomas;Poulsen;Sturm
 Thomas;Diehl;Sturm
+Thomas;Kastanaras;Sturm
 Thomas;Doan;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Nusa;Mittelfeld
@@ -15,6 +17,7 @@ Alfons;Undav;Sturm
 Alfons;Tietz;Sturm
 Alfons;Dinkçi;Sturm
 Alfons;S. Banks;Sturm
+Alfons;Irié;Sturm
 Alfons;Maier;Mittelfeld
 Alfons;B. Dárdai;Mittelfeld
 Alfons;J. Hofmann;Mittelfeld
@@ -39,6 +42,7 @@ Christoph;Gouweleeuw;Abwehr
 Christoph;Mainka;Abwehr
 Christoph;Theate;Abwehr
 Christoph;Upamecano;Abwehr
+Christoph;Koulierakis;Abwehr
 Christoph;Mwene;Abwehr
 Christoph;Hanche-Olsen;Abwehr
 Christoph;Atubolu;Tor
@@ -69,7 +73,6 @@ Andreas;Tousart;Mittelfeld
 Andreas;Keitel;Mittelfeld
 Andreas;Tohumcu;Mittelfeld
 Andreas;Röhl;Mittelfeld
-Andreas;Alvero;Mittelfeld
 Andreas;Hincapié;Abwehr
 Andreas;Matsima;Abwehr
 Andreas;Fischer;Abwehr
@@ -78,6 +81,7 @@ Andreas;Pauli;Abwehr
 Andreas;Omlin;Tor
 Andreas;Vandevoordt;Tor
 Dominik;Scienza;Sturm
+Dominik;Boniface;Sturm
 Dominik;Sieb;Sturm
 Dominik;Ceesay;Sturm
 Dominik;Groß;Mittelfeld
@@ -85,6 +89,7 @@ Dominik;Haberer;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;M. Wolf;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
+Dominik;N. Collins;Abwehr
 Dominik;Zesiger;Abwehr
 Dominik;Ritzka;Abwehr
 Dominik;Netz;Abwehr
