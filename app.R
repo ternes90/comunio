@@ -317,11 +317,11 @@ ui <- navbarPage(
   ),
   
   ## ---- Notizen ----
-  tabPanel("Notes/Learnings",
-           fluidPage(
-             DTOutput("notes_learnings")
-           )
-  ),
+  # tabPanel("Notes/Learnings",
+  #          fluidPage(
+  #            DTOutput("notes_learnings")
+  #          )
+  # ),
   
   # In Deiner UI (z.B. ui.R)
   tags$head(
@@ -3736,29 +3736,29 @@ server <- function(input, output, session) {
   
   # ---- NOTES/LEARNINGS ----
   
-  output$notes_learnings <- DT::renderDT({
-    # 1) Lese alle Zeilen aus der Text-Datei
-    lines <- readLines("data/learnings.txt", warn = FALSE)
-    # 2) Entferne führende '- ' und Leerzeichen
-    notes <- trimws(gsub("^[-\\s]+", "", lines))
-    # 3) In ein DataFrame packen
-    df_notes <- data.frame(
-      Note = notes,
-      stringsAsFactors = FALSE
-    )
-    # 4) Als einfache Tabelle rendern
-    DT::datatable(
-      df_notes,
-      rownames = FALSE,
-      colnames = "Notes / Learnings",
-      escape   = FALSE,
-      options  = list(
-        dom        = "t",
-        pageLength = nrow(df_notes),
-        ordering   = FALSE
-      )
-    )
-  })
+  # output$notes_learnings <- DT::renderDT({
+  #   # 1) Lese alle Zeilen aus der Text-Datei
+  #   lines <- readLines("data/learnings.txt", warn = FALSE)
+  #   # 2) Entferne führende '- ' und Leerzeichen
+  #   notes <- trimws(gsub("^[-\\s]+", "", lines))
+  #   # 3) In ein DataFrame packen
+  #   df_notes <- data.frame(
+  #     Note = notes,
+  #     stringsAsFactors = FALSE
+  #   )
+  #   # 4) Als einfache Tabelle rendern
+  #   DT::datatable(
+  #     df_notes,
+  #     rownames = FALSE,
+  #     colnames = "Notes / Learnings",
+  #     escape   = FALSE,
+  #     options  = list(
+  #       dom        = "t",
+  #       pageLength = nrow(df_notes),
+  #       ordering   = FALSE
+  #     )
+  #   )
+  # })
   
 }
 
