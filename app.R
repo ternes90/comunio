@@ -56,14 +56,6 @@ ui <- navbarPage(
                DTOutput("kreditrahmen_uebersicht_preview", width = "100%")
              ),
              
-             # Mein Team Tabelle
-             tags$div("Mein Team", 
-                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-             div(
-               style = "margin-bottom: 20px;",
-               DTOutput("mein_team_tabelle_preview", width = "100%")
-             ),
-             
              # Flip-Vorschau
              tags$div("Flip Übersicht", 
                       style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
@@ -71,25 +63,6 @@ ui <- navbarPage(
                style = "margin-bottom: 20px;",
                plotOutput("flip_preview", height = 300, width = "100%", click = "flip_click")
              ),
-             
-             # Gebote Vorschau
-             tags$div("Bieterprofile", 
-                      style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-             div(
-               style = "margin-bottom: 20px;",
-               plotOutput("gebote_preview", height = 350, width = "100%", click = "gebote_click")
-             ),
-             
-             # Transfermarkt Vorschau
-             div(
-               style = "display: flex; flex-direction: column; align-items: center;",
-               tags$div("Aktueller Transfermarkt", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-               div(
-                 style = "width: 100%; margin-bottom: 50px;",
-                 DTOutput("transfermarkt_preview", width = "100%")
-               )
-             )
            )
   ),
   
@@ -98,62 +71,46 @@ ui <- navbarPage(
   ## ---- Marktwert-Entwicklung ----
   tabPanel("Marktwert-Entwicklung",
            tabsetPanel(
-             tabPanel("MW-Verlauf", 
+             id = "mw_tabs",  # <— NEU
+             tabPanel(title = "MW-Verlauf", value = "mw_verlauf",
                       div(
                         style = "text-align: center; margin-bottom: 10px;",
-                        HTML("
-      <b>Legende:</b><br>
-      <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
-      <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
-      <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021
-    ")
+                        HTML("<b>Legende:</b><br>
+             <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
+             <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
+             <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021")
                       ),
                       plotOutput("mw_evolution", height = 600),
                       br(),
-                      plotOutput("mw_daily_change", height = 300)  # ← hier das neue Output
+                      plotOutput("mw_daily_change", height = 300)
              ),
-             
-             # — Neuer Sub-Tab für Manager-Events auf Gesamt-MW —
-             tabPanel("Käufe und Verkäufe",
-                      fluidRow(
-                        column(4,
-                               uiOutput("manager_select_ui")      # Platzhalter
-                        )
-                      ),
+             tabPanel(title = "Käufe und Verkäufe", value = "mw_events_tab",
+                      fluidRow(column(4, uiOutput("manager_select_ui"))),
                       br(),
                       plotOutput("mw_events", height = 600)
-             )
-             ,
-             
-             tabPanel("MW-Verlauf 24/25 (MW-Klassen)",
+             ),
+             tabPanel(title = "MW-Verlauf 24/25 (MW-Klassen)", value = "mw_klassen",
                       plotOutput("mw_plot"),
                       plotOutput("mw_plot_now")
              ),
-             tabPanel("Hist. Saisonverläufe - Chronologie",
-                      plotOutput("historical_seasons_plot_all", height = 600)
-             ),
-             tabPanel("Hist. Saisonverläufe - Select",
+             tabPanel(title = "Hist. Saisonverläufe - Select", value = "mw_hist_sel",
                       sidebarLayout(
                         sidebarPanel(
-                          # Buttons oberhalb der Checkboxen
                           fluidRow(
                             column(3, actionButton("select_all", "Alle")),
                             column(3, actionButton("select_none", "Keine")),
                             column(3, actionButton("select_last3", "Custom 1")),
                             column(3, actionButton("select_custom", "Custom 2"))
                           ),
-                          br(),  # Abstand
-                          checkboxGroupInput("selected_seasons", "Saisons auswählen zum Vergleich:",
-                                             choices = NULL, selected = NULL)
+                          br(),
+                          checkboxGroupInput("selected_seasons","Saisons auswählen zum Vergleich:", choices=NULL, selected=NULL)
                         ),
-                        mainPanel(
-                          plotOutput("historical_seasons_plot_selected", height = 600)
-                        )
+                        mainPanel(plotOutput("historical_seasons_plot_selected", height = 600))
                       )
              )
-             
            )
-  ),
+  )
+  ,
   
   ## ---- Transfermarkt ----
   tabPanel("Transfermarkt",
@@ -285,24 +242,29 @@ ui <- navbarPage(
              tabPanel("Flip-Arten",
                       fluidPage(
                         fluidRow(
-                          column(7, plotOutput("flip_effizienz", height = 500)),
-                          column(5, plotOutput("flip_cumcat", height = 500))
+                          column(6, plotOutput("flip_effizienz", height = 600)),
+                          column(6, plotOutput("flip_cumcat", height = 600))
                         )
                       )
              ),
              
-             # TAB 3: Kader-Flip + Historie
-             tabPanel("Kader & Historie",
+             # TAB 3: Kader-Flip
+             tabPanel("Kader-Flip",
                       fluidPage(
                         fluidRow(
                           column(12, DTOutput("flip_kader"))
-                        ),
-                        br(),
+                        )
+                      )
+             ),
+             
+             # TAB 4: Historie
+             tabPanel("Historie",
+                      fluidPage(
                         fluidRow(
-                          column(4,
+                          column(2,
                                  selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
                           ),
-                          column(8, DTOutput("flip_player_table"))
+                          column(10, DTOutput("flip_player_table"))
                         )
                       )
              )
@@ -536,6 +498,28 @@ server <- function(input, output, session) {
     "Dr. Bier" = "Dominik",
     "Calli" = "Pascal",
     "Computer" = "Computer"
+  )
+  
+  # Mapping von Vereinsnamen zu Dateinamen
+  logo_map <- c(
+    "1. FC Köln" = "1 FC Köln.png",
+    "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
+    "Borussia Dortmund" = "Borussia Dortmund.png",
+    "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
+    "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
+    "FC Augsburg" = "FC Augsburg.png",
+    "FC Bayern München" = "FC Bayern München.png",
+    "Hamburger SV" = "Hamburger SV.png",
+    "1.FC Heidenheim" = "Heidenheim.png",
+    "RB Leipzig" = "Leipzig.png",
+    "1. FSV Mainz 05" = "Mainz 05.png",
+    "Sport-Club Freiburg" = "SC Freiburg.png",
+    "FC St. Pauli" = "St Pauli.png",
+    "SV Werder Bremen" = "SV Werder Bremen.png",
+    "TSG Hoffenheim" = "TSG Hoffenheim.png",
+    "1.FC Union Berlin" = "Union Berlin.png",
+    "VfB Stuttgart" = "VfB Stuttgart.png",
+    "VfL Wolfsburg" = "VfL Wolfsburg.png"
   )
   
   ## ---- data_all ----
@@ -817,75 +801,43 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Martkwerte-Zeitachse ----
+  ## ---- Marktwerttrend ----
   output$mw_zeitachse_preview <- renderPlot({
-    sp <- sommerpause_data()
+    df <- subset(gesamt_mw_df, !is.na(Datum))
+    if (nrow(df) < 3) return(NULL)
     
-    # 1) Trend-Daten aus den letzten 3 Tagen
-    trend_vals <- gesamt_mw_df %>%
-      filter(!is.na(Datum)) %>%            
-      arrange(Datum) %>%
-      tail(3)
+    last_day <- max(df$Datum, na.rm = TRUE)
+    win_days <- 14L
+    df_short <- df[df$Datum >= (last_day - win_days), , drop = FALSE]
+    if (nrow(df_short) < 3) df_short <- tail(df[order(df$Datum), ], 3)
     
-    x0 <- trend_vals$Datum[1]
-    y0 <- trend_vals$MW_rel_normiert[1]
-    x1 <- trend_vals$Datum[3]
-    y1 <- trend_vals$MW_rel_normiert[3]
+    trend_vals <- tail(df_short[order(df_short$Datum), ], 3)
+    x0 <- trend_vals$Datum[1]; y0 <- trend_vals$MW_rel_normiert[1]
+    x1 <- trend_vals$Datum[3]; y1 <- trend_vals$MW_rel_normiert[3]
     
-    ggplot() +
-      # a) Gesamtmarktwert-Linie
-      geom_line(
-        data = gesamt_mw_df %>% transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert"),
-        aes(x = Datum, y = Wert, color = Typ),
-        linewidth = 1.2, na.rm = TRUE
+    ggplot(df_short, aes(Datum, MW_rel_normiert)) +
+      geom_line(linewidth = 1.1, color = "darkgrey", na.rm = TRUE) +
+      geom_segment(
+        aes(x = x0, y = y0, xend = x1, yend = y1),
+        arrow = arrow(length = unit(0.35, "cm"), type = "closed"),
+        color = if (y1 > y0) "darkgreen" else "red",
+        linewidth = 1.4,
+        inherit.aes = FALSE
       ) +
-      # b) Sommerpausen-Linien
-      geom_line(
-        data = filter(sp, Saison == "Sommerpause_2024"),
-        aes(x = Datum, y = MW_rel_normiert),
-        color     = "red", linetype = "dashed", linewidth = 1, na.rm = TRUE
-      ) +
-      geom_line(
-        data = filter(sp, Saison == "Sommerpause_2021"),
-        aes(x = Datum, y = MW_rel_normiert),
-        color     = "orange", linetype = "dashed", linewidth = 1, na.rm = TRUE
-      ) +
-      # c) Trend-Pfeil aus den letzten 3 Tagen
-      annotate(
-        "curve",
-        x         = x0,   y      = y0,
-        xend      = x1,   yend   = y1,
-        curvature = 0,
-        arrow     = arrow(length = unit(0.35, "cm"), type = "closed"),
-        color     = if (y1 > y0) "darkgreen" else "red",
-        size      = 1.5
-      ) +
-      # d) Limits, Farben & Labels
-      coord_cartesian(ylim = c(0.75, 1.4)) +
-      scale_color_manual(values = c("Gesamtmarktwert" = "darkgrey")) +
-      labs(x = NULL, y = "relativer MW", color = NULL) +
-      geom_vline(
-        xintercept = as.Date("2025-08-22"),
-        linetype   = "dotted",
-        color      = "darkred",
-        size       = 1.5
-      ) +
-      annotate(
-        "text",
-        x     = as.Date("2025-08-22"),
-        y     = 1.02,
-        label = "Saisonstart",
-        angle = 90,
-        vjust = -0.5,
-        fontface = "bold",
-        size  = 6,
-        color = "darkred"
-      ) +
-      theme_minimal(base_size = 16) +
-      theme(
-        legend.position = "bottom",
-        plot.title      = element_text(size = 16, face = "bold")
-      )
+      scale_x_date(limits = c(last_day - win_days, last_day),
+                   date_labels = "%d.%m.") +
+      labs(x = NULL, y = "relativer MW") +
+      # Saisonstart nur zeichnen, wenn im sichtbaren Fenster:
+      { if (as.Date("2025-08-22") >= (last_day - win_days) && as.Date("2025-08-22") <= last_day)
+        list(
+          geom_vline(xintercept = as.Date("2025-08-22"),
+                     linetype = "dotted", color = "darkred", linewidth = 1.2),
+          annotate("text", x = as.Date("2025-08-22"), y = 1.02, label = "Saisonstart",
+                   angle = 90, vjust = -0.5, fontface = "bold", size = 5, color = "darkred")
+        )
+        else NULL } +
+      theme_minimal(base_size = 14) +
+      theme(legend.position = "none")
   })
   
   ## ---- Kontostände ----
@@ -894,18 +846,15 @@ server <- function(input, output, session) {
       select(
         Manager,
         Teamwert,
-        Entwicklung_Trend,
         Kontostand = Aktuelles_Kapital,
         `Verfügbares Kapital` = Verfügbares_Kapital
-      ) %>%
-      rename(Teamwert_Entwicklung = Entwicklung_Trend)
+      ) 
     
     DT::datatable(
       kapital_df,
       colnames = c(
         "Manager",
         "Teamwert (€)",
-        "Teamwert-Entwicklung",
         "Kontostand (€)",
         "Verfügbares Kapital (€)"
       ),
@@ -913,7 +862,7 @@ server <- function(input, output, session) {
       options = list(
         pageLength = 10,
         autoWidth = TRUE,
-        order = list(list(5, 'desc')),  # Sortierung nach Verfügbares Kapital (Spalte 5)
+        order = list(list(4, 'desc')),  # Sortierung nach Verfügbares Kapital (Spalte 5)
         dom = 't'
       )
     ) %>%
@@ -931,162 +880,30 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Mein Team ----
-  output$mein_team_tabelle_preview <- DT::renderDT({
-    df <- mein_kader_df() %>%
-      arrange(Position, Spieler) %>%
-      select(
-        Position,
-        Spieler,
-        Marktwert        = Marktwert_fmt,
-        Tagesveränderung = Diff_fmt
-      )
-    
-    DT::datatable(
-      df,
-      rownames = FALSE,
-      colnames = c("Position", "Spieler", "Marktwert", "Tagesveränderung"),
-      options = list(
-        dom       = 't',
-        paging    = FALSE,
-        autoWidth = TRUE      # hier Auto‑Width einschalten
-      )
-    ) %>%
-      DT::formatStyle(
-        "Tagesveränderung",
-        color = DT::styleEqual(
-          unique(df$Tagesveränderung),
-          sapply(unique(df$Tagesveränderung), function(x) {
-            if (grepl("▲", x)) "#388e3c"
-            else if (grepl("▼", x)) "#e53935"
-            else "black"
-          })
-        ),
-        fontWeight = "bold"
-      )
+  ## ---- Flip Balken Preview ----
+  flip_summary_by_owner <- reactive({
+    fd <- flip_data()
+    fd %>% group_by(Besitzer) %>% summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
   })
   
-  ## ---- Flip Balken Preview ----
   output$flip_preview <- renderPlot({
-    req(nrow(flip_data()) > 0)
+    req(input$main_navbar == "Dashboard")
+    df <- flip_summary_by_owner()
+    req(nrow(df) > 0)
     
-    df <- flip_data() %>%
-      group_by(Besitzer) %>%
-      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
-    
-    lim_min <- min(df$Gesamtgewinn, na.rm = TRUE) - 1e6
-    lim_max <- max(df$Gesamtgewinn, na.rm = TRUE) + 1e6
+    lim_min <- -1e7
+    lim_max <- 1e7
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
       geom_col(show.legend = FALSE) +
       geom_text(aes(label = format(Gesamtgewinn, big.mark = ".", scientific = FALSE)),
-                position = position_stack(vjust = 0.5), 
-                color = "black", fontface = "bold", size = 5) +
+                position = position_stack(vjust = 0.5), size = 6) +
       coord_flip(ylim = c(lim_min, lim_max)) +
-      scale_fill_manual(values = c("TRUE" = "#66cdaa",  # helleres Grün (Medium Aquamarine)
-                                   "FALSE" = "#ff6f61")) + # helleres Rot (Coral)
-      theme_minimal() +
-      theme(axis.text.y = element_text(size = 15, color = "black"),
-            axis.text.x = element_text(size = 12, color = "black"),
-            plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black")) +
-      labs(x = "", y = "")
-  })
-  
-  ## ---- Gebotsprofile Preview ----
-  output$gebote_preview <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent))
-    # Mittelwert über beide Typen je Bieter
-    mean_total <- plotdata %>%
-      group_by(Bieter) %>%
-      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
-    # Mittelwerte je Typ
-    means <- plotdata %>%
-      group_by(Bieter, Typ) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
-      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      # Gesamter Mittelwert als gestrichelte Linie und Text
-      geom_hline(
-        data = mean_total,
-        aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9
-      ) +
-      geom_text(
-        data = mean_total,
-        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "grey30", # Dunkelrot
-        fontface = "bold",
-        size = 5,
-        nudge_x = 1
-      ) +
-      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
-      labs(
-        x = "",
-        y = ""
-      ) +
-      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("TRUE" = "#66cdaa", "FALSE" = "#ff6f61")) +
       theme_minimal(base_size = 16) +
-      theme(
-        legend.position = "bottom",
-        plot.title = element_text(size = 16, face = "bold", hjust = 0, color = "black"),
-        strip.text = element_text(face = "bold", size = 12),
-        axis.text.x = element_blank()
-      )
-  })
-  
-  ## ---- Transfermarkt Preview ----
-  output$transfermarkt_preview <- DT::renderDT({
-    df <- tm_common()
-    if (is.null(df)) {
-      return(DT::datatable(data.frame()))
-    }
-    
-    # nur die gewünschten Spalten
-    sub_df <- df[, c(
-      "Spieler","Logo","Marktwert","Mindestgebot",
-      "Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
-    ), drop = FALSE]
-    
-    DT::datatable(
-      sub_df,
-      colnames = c(
-        "Spieler","Verein","Marktwert","Mindestgebot",
-        "Besitzer","Verbleibende Zeit","Trend MW (3 Tage)"
-      ),
-      escape    = FALSE,
-      selection = "single",
-      rownames  = FALSE,
-      options   = list(
-        dom        = "t",
-        ordering   = FALSE,
-        pageLength = 20,
-        columnDefs = list(
-          list(className = 'dt-left',  targets = 0:1),
-          list(className = 'dt-right', targets = 2:6)
-        )
-      )
-    ) %>%
-      # „heute“ rot+fett in Spalte 6 (Verbleibende Zeit)
-      DT::formatStyle(
-        6,
-        target     = "cell",
-        color      = DT::styleEqual("heute", "red"),
-        fontWeight = DT::styleEqual("heute", "bold")
-      ) %>%
-      # Mindestgebot grün, wenn unter Marktwert (Spalte 4)
-      DT::formatStyle(
-        4,
-        target = "cell",
-        color  = DT::styleEqual(
-          df$Mindestgebot[df$MinGeb_Unter_MW],
-          "green"
-        )
-      )
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank())
   })
   
   
@@ -1123,6 +940,8 @@ server <- function(input, output, session) {
   
   ## ---- MW-Verlauf ----
   output$mw_evolution <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs      == "mw_verlauf")
     sp <- sommerpause_data()
     
     # 1) Saubere Daten (ohne NA) und sortiert
@@ -1212,6 +1031,8 @@ server <- function(input, output, session) {
   
   ## ---- Tägliche ME-Änderung-Verlauf ----
   output$mw_daily_change <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs      == "mw_verlauf")
     
     # 1) Clean Data (so wie oben)
     clean_df <- gesamt_mw_df %>%
@@ -1264,6 +1085,8 @@ server <- function(input, output, session) {
   
   ## ---- MW-events ----
   output$mw_events <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs      == "mw_events_tab")
     req(input$manager_select)
     
     # 1) Gesamtmarktwert-Daten
@@ -1407,6 +1230,8 @@ server <- function(input, output, session) {
   
   
   output$mw_plot <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs      == "mw_klassen")
     df <- data()
     
     # Ø MW je Klasse & Datum
@@ -1509,6 +1334,8 @@ server <- function(input, output, session) {
   })
   
   output$mw_plot_now <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs      == "mw_klassen")
     df_plot_norm <- data_now()
     
     ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
@@ -1575,22 +1402,6 @@ server <- function(input, output, session) {
     bind_rows(dfs)
   })
   
-  # Historische Saisonverläufe - Alle anzeigen
-  output$historical_seasons_plot_all <- renderPlot({
-    df <- all_season_data()
-    req(nrow(df) > 0)
-    
-    ggplot(df, aes(x = as.Date(Datum), y = Marktwert, color = Saison)) +
-      geom_line() +
-      labs(
-        title = "Historische Marktwertverläufe aller Saisons",
-        x = "Datum",
-        y = "Marktwert"
-      ) +
-      theme_minimal(base_size = 16) +
-      theme(legend.position = "bottom")
-  })
-  
   # Historische Saisonverläufe - Vergleichsauswahl (normalisierte Zeitachse)
   normalized_data <- reactive({
     req(input$selected_seasons)
@@ -1650,6 +1461,8 @@ server <- function(input, output, session) {
   })
   
   output$historical_seasons_plot_selected <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs      == "mw_hist_sel")
     df <- normalized_data()
     req(nrow(df) > 0)
     req(input$selected_seasons)
@@ -1973,7 +1786,7 @@ server <- function(input, output, session) {
           levels = c("<0.5 Mio","0.5–1 Mio","1–2.5 Mio","2.5–5 Mio","5–10 Mio",">10 Mio")
         )
       ) %>%
-      filter(Typ == "Hoechstgebot", Diff_Prozent > 0, Diff_Prozent <= 25)
+      filter(Typ == "Hoechstgebot", Diff_Prozent > 0, Diff_Prozent <= 100)
     
     means_klasse <- gp_df %>%
       group_by(MW_Klasse) %>%
@@ -2416,28 +2229,6 @@ server <- function(input, output, session) {
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
   
-  # Mapping von Vereinsnamen zu Dateinamen
-  logo_map <- c(
-    "1. FC Köln" = "1 FC Köln.png",
-    "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
-    "Borussia Dortmund" = "Borussia Dortmund.png",
-    "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
-    "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
-    "FC Augsburg" = "FC Augsburg.png",
-    "FC Bayern München" = "FC Bayern München.png",
-    "Hamburger SV" = "Hamburger SV.png",
-    "1.FC Heidenheim" = "Heidenheim.png",
-    "RB Leipzig" = "Leipzig.png",
-    "1. FSV Mainz 05" = "Mainz 05.png",
-    "Sport-Club Freiburg" = "SC Freiburg.png",
-    "FC St. Pauli" = "St Pauli.png",
-    "SV Werder Bremen" = "SV Werder Bremen.png",
-    "TSG Hoffenheim" = "TSG Hoffenheim.png",
-    "1.FC Union Berlin" = "Union Berlin.png",
-    "VfB Stuttgart" = "VfB Stuttgart.png",
-    "VfL Wolfsburg" = "VfL Wolfsburg.png"
-  )
-  
   #PPS usw. mergen
   ca_df <- ca_df %>%
     select(
@@ -2790,16 +2581,8 @@ server <- function(input, output, session) {
     
     plotdata <- data %>%
       filter(!is.na(Diff_Prozent)) %>%
-      mutate(
-        MW_Klasse = factor(MW_Klasse, levels = c(
-          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
-        ))
-      )
-    
-    # Filter unusual high bids
-    plotdata <- data %>%
-      filter(!is.na(Diff_Prozent), Diff_Prozent <= 50)
-    
+      mutate(MW_Klasse = factor(MW_Klasse, levels = c("<0.5 Mio","0.5–1 Mio","1–2.5 Mio","2.5–5 Mio","5–10 Mio",">10 Mio"))) %>%
+      filter(Diff_Prozent <= 50)
     
     # Für robustes beeswarm: Gruppengröße pro Facet
     plotdata_beeswarm <- plotdata %>%
@@ -3541,14 +3324,20 @@ server <- function(input, output, session) {
   ## ---- Flip-Historie je Spieler ----
   output$flip_player_table <- renderDT({
     req(input$flip_player_select)
+    today <- Sys.Date()
+    mw_today <- ap_df %>% 
+      filter(Datum == today) %>% 
+      select(Spieler, Marktwert)
     
     flip_data() %>%
       filter(Besitzer == input$flip_player_select) %>%
-      select(Verkaufsdatum, Spieler, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Gewinn) %>%
+      left_join(mw_today, by = "Spieler") %>% 
+      select(Verkaufsdatum, Spieler, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Marktwert, Gewinn) %>%
       arrange(desc(Verkaufsdatum)) %>%
       datatable(
-        options = list(pageLength = 10),
-        colnames = c("Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Gewinn/Verlust (€)")
+        options = list(dom = "t",
+                       paging = FALSE),
+        colnames = c("Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Aktueller Marktwert", "Gewinn/Verlust (€)")
       )
   })
   
