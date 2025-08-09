@@ -49,7 +49,7 @@ ui <- navbarPage(
              ),
              
              # Kreditrahmen-Übersicht
-             tags$div("Teamwerte, Kontostände und Kreditrahmen", 
+             tags$div("Kontostände", 
                       style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
              div(
                style = "margin-bottom: 20px;",
@@ -188,9 +188,6 @@ ui <- navbarPage(
              tabPanel("Gebots-Frequenz",
                       plotOutput("gebote_pro_tag", height = 350),
                       plotOutput("gebote_pro_tag_linie", height = 350)
-             ),
-             tabPanel("Gebots-Frequenz je Konkurrent",
-                      plotOutput("gebote_pro_tag_bieter", height = 600)
              ),
              tabPanel("Gebots-peaks",
                       plotOutput("aktive_tage_plot",       height = 350),
@@ -746,20 +743,19 @@ server <- function(input, output, session) {
         )
       ) %>%
       transmute(
-        Datum       = today,
-        `MW Vortag` = MW_Vortag,
         Spieler,
         Käufer      = Hoechstbietender,
-        `MW Heute`  = MW_Heute,
         Trend,
+        `Flip (€)`,
+        `MW Vortag` = MW_Vortag,
+        `MW Heute`  = MW_Heute,
         Preis,
-        `Δ Preis (%)`,
-        `Flip (€)`
+        `Δ Preis (%)`
       )
     
     datatable(
       df, escape = FALSE, rownames = FALSE, selection = "single",
-      options = list(dom = 't', pageLength = 10, scrollX = TRUE, paging = FALSE)
+      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
     ) %>%
       formatCurrency(
         columns = c("MW Vortag", "MW Heute", "Preis"),
@@ -773,33 +769,39 @@ server <- function(input, output, session) {
     
     df <- flip_data() %>%
       filter(Verkaufsdatum == latest_date) %>%
-      select(Einkaufsdatum, Einkaufspreis, Spieler, Besitzer, Verkaufspreis, Gewinn) %>%
+      select(Spieler, Besitzer, Gewinn, Einkaufspreis, Verkaufspreis, Einkaufsdatum) %>%
       arrange(desc(Einkaufsdatum))
     
     datatable(
       df,
       selection = "single",
-      rownames = FALSE,  # <--- disable row numbers here
+      rownames = FALSE,
       options = list(dom = 't', pageLength = 10,
                      scrollX = TRUE,
                      paging = FALSE),
       colnames = c(
-        "Kaufdatum",
-        "Einkaufspreis",
         "Spieler",
         "Verkäufer",
+        "Gewinn/Verlust (€)",
+        "Einkaufspreis",
         "Verkaufspreis",
-        "Gewinn/Verlust (€)"
+        "Kaufdatum"
       )
     ) %>%
       formatCurrency(
         columns = c("Einkaufspreis", "Verkaufspreis", "Gewinn"),
-        currency = "",  # kein Währungssymbol
+        currency = "",
         interval = 3,
-        mark = ".",     # Tausenderpunkt
+        mark = ".",
         digits = 0
+      ) %>%
+      formatStyle(
+        'Gewinn',
+        color = styleInterval(0, c('#e53935', '#388e3c')),  # rot bei <0, grün bei >0
+        fontWeight = 'bold'
       )
   })
+  
   
   ## ---- Marktwerttrend ----
   output$mw_zeitachse_preview <- renderPlot({
@@ -827,16 +829,7 @@ server <- function(input, output, session) {
       scale_x_date(limits = c(last_day - win_days, last_day),
                    date_labels = "%d.%m.") +
       labs(x = NULL, y = "relativer MW") +
-      # Saisonstart nur zeichnen, wenn im sichtbaren Fenster:
-      { if (as.Date("2025-08-22") >= (last_day - win_days) && as.Date("2025-08-22") <= last_day)
-        list(
-          geom_vline(xintercept = as.Date("2025-08-22"),
-                     linetype = "dotted", color = "darkred", linewidth = 1.2),
-          annotate("text", x = as.Date("2025-08-22"), y = 1.02, label = "Saisonstart",
-                   angle = 90, vjust = -0.5, fontface = "bold", size = 5, color = "darkred")
-        )
-        else NULL } +
-      theme_minimal(base_size = 14) +
+      theme_minimal(base_size = 16) +
       theme(legend.position = "none")
   })
   
@@ -848,30 +841,27 @@ server <- function(input, output, session) {
         Teamwert,
         Kontostand = Aktuelles_Kapital,
         `Verfügbares Kapital` = Verfügbares_Kapital
-      ) 
+      ) %>%
+      mutate(across(c(Teamwert, Kontostand, `Verfügbares Kapital`), as.numeric)) %>%
+      as.data.frame()
+    
+    idx_vk <- which(names(kapital_df) == "Verfügbares Kapital") - 1L  # 0-basiert
     
     DT::datatable(
       kapital_df,
-      colnames = c(
-        "Manager",
-        "Teamwert (€)",
-        "Kontostand (€)",
-        "Verfügbares Kapital (€)"
-      ),
+      rownames = FALSE,
+      colnames = c("Manager","Teamwert (€)","Kontostand (€)","Verfügbares Kapital (€)"),
       escape = FALSE,
       options = list(
-        pageLength = 10,
+        paging = FALSE,
         autoWidth = TRUE,
-        order = list(list(4, 'desc')),  # Sortierung nach Verfügbares Kapital (Spalte 5)
+        order = list(list(idx_vk, 'desc')),
         dom = 't'
       )
     ) %>%
       formatCurrency(
         columns = c("Teamwert", "Kontostand", "Verfügbares Kapital"),
-        currency = "",
-        interval = 3,
-        mark = ".",
-        digits = 0
+        currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       ) %>%
       formatStyle(
         'Kontostand',
@@ -879,6 +869,7 @@ server <- function(input, output, session) {
         fontWeight = styleInterval(0, c('bold', NA))
       )
   })
+  
   
   ## ---- Flip Balken Preview ----
   flip_summary_by_owner <- reactive({
@@ -1639,19 +1630,24 @@ server <- function(input, output, session) {
   
   # 1) avg_bids_wd als Reactive (einmalig im Server)
   avg_bids_wd <- reactive({
-    gebotsprofil_clean() %>%
+    gp <- gebotsprofil_clean() %>%
       group_by(Datum, Bieter) %>%
       summarise(Anzahl = n(), .groups = "drop") %>%
-      # Einen Tag zurückschieben, wenn du das schon so nutzt:
-      mutate(Datum = Datum - 1) %>%
-      mutate(
-        Wochentag = factor(
-          weekdays(Datum, abbreviate = TRUE),
-          levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
-        )
-      ) %>%
+      mutate(Datum = Datum - 1)
+    
+    gp %>%
+      tidyr::complete(
+        Bieter,
+        Datum = seq(min(Datum), max(Datum), by = "day"),
+        fill = list(Anzahl = 0)
+      ) %>% mutate(
+      Wochentag = factor(
+        weekdays(Datum, abbreviate = TRUE),
+        levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
+      )
+    ) %>%
       group_by(Bieter, Wochentag) %>%
-      summarise(avg_bids = mean(Anzahl, na.rm = TRUE), .groups = "drop")
+      summarise(avg_bids = mean(Anzahl), .groups = "drop")
   })
   
   # 2) Vorhersage-Box für heute
@@ -2265,6 +2261,7 @@ server <- function(input, output, session) {
       select(Spieler, Kaufpreis = Hoechstgebot)
     
     # Zusammenführen & Berechnungen
+    # Zusammenführen & Berechnungen
     df_pre <- df0 %>%
       left_join(mw_aktuell, by = "Spieler") %>%
       left_join(kaufpreise, by = "Spieler") %>%
@@ -2279,7 +2276,7 @@ server <- function(input, output, session) {
           TRUE             ~ "<span style='color:grey;'>±0 € seit Kauf</span>"
         )
       ) %>%
-      # Tages-Diff
+      # Tages-Diff + aktuelle MW-Formatierung
       left_join(
         gesamt_mw_roh %>%
           group_by(Spieler) %>%
@@ -2292,8 +2289,8 @@ server <- function(input, output, session) {
             Marktwert_fmt = paste0(format(Marktwert, big.mark=".", decimal.mark=","), " €"),
             Diff_fmt      = case_when(
               is.na(Diff) ~ "",
-              Diff > 0    ~ sprintf("▲ %s €", format(Diff, big.mark=".", decimal.mark=",")),
-              Diff < 0    ~ sprintf("▼ %s €", format(abs(Diff), big.mark=".", decimal.mark=",")),
+              Diff > 0    ~ sprintf("<span style='color:#388e3c;'>▲ %s €</span>", format(Diff, big.mark=".", decimal.mark=",")),
+              Diff < 0    ~ sprintf("<span style='color:#e53935;'>▼ %s €</span>", format(abs(Diff), big.mark=".", decimal.mark=",")),
               TRUE        ~ "–"
             )
           ) %>%
@@ -2303,10 +2300,11 @@ server <- function(input, output, session) {
       # CA-Daten mergen und umbenennen
       left_join(ca_df, by = c("Spieler" = "SPIELER")) %>%
       rename(
-        "Punkte pro Spiel"         = Punkte_pro_Spiel,
-        "Preis-Leistung"           = Preis_Leistung,
+        "Punkte pro Spiel"           = Punkte_pro_Spiel,
+        "Preis-Leistung"             = Preis_Leistung,
         "Historische Punkteausbeute" = Historische_Punkteausbeute
       )
+    
     
     # Logo-Spalte
     logo_dir <- "logos"
@@ -2813,29 +2811,6 @@ server <- function(input, output, session) {
       ) +
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  ## ---- Durchschnittliche Gebotszahl pro Tag je Konkurrent ----
-  gebote_tag_bieter <- reactive({
-    gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
-  })
-  
-  output$gebote_pro_tag_bieter <- renderPlot({
-    df <- gebote_tag_bieter()
-    ggplot(df, aes(x = Bieter, y = Anzahl_Gebote, color = Bieter, fill = Bieter)) +
-      geom_boxplot(width = 0.5, alpha = 0.2, outlier.shape = NA) +
-      ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      labs(
-        title = "Gebotsanzahl pro Tag je Konkurrent (Boxplot + Beeswarm)",
-        x = "Bieter",
-        y = "Gebote pro Tag"
-      ) +
-      scale_color_brewer(palette = "Paired") +
-      scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 14) +
-      theme(legend.position = "none", axis.text.x = element_text(angle = 30, hjust = 1))
   })
   
   ## ---- Aktive Tage pro Spieler ----
@@ -3476,9 +3451,11 @@ server <- function(input, output, session) {
   
   output$kapital_uebersicht_table <- renderDT({
     kapital_df <- kapital_df_reactive()
+    rownames(kapital_df) <- NULL
     
     datatable(
       kapital_df,
+      rownames = FALSE,
       colnames = c(
         "Manager",
         "Startkapital (€)",
@@ -3492,7 +3469,8 @@ server <- function(input, output, session) {
         "Verfügbares Kapital (€)"
       ),
       options = list(
-        pageLength = 10,
+        dom = 't',
+        paging = FALSE,  
         autoWidth = TRUE,
         order = list(list(which(colnames(kapital_df) == "Verfügbares_Kapital") - 1, 'desc'))
       )
