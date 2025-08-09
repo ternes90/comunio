@@ -1364,7 +1364,6 @@ server <- function(input, output, session) {
   # Nur die regulären Saisons (ohne Sommerpause)
   real_seasons <- seasons[!grepl("^Sommerpause", seasons)]
   n_real       <- length(real_seasons)
-  drop_idx     <- c(1:3, (n_real-4):n_real)
   
   load_season_data <- function(season) {
     file_name <- file.path(data_path, paste0("historic_market_values_", season, ".csv"))
@@ -1445,10 +1444,11 @@ server <- function(input, output, session) {
     )
   })
   observeEvent(input$select_custom, {
+    sel2 <- tail(real_seasons, 4)
     updateCheckboxGroupInput(
       session, "selected_seasons",
       choices  = real_seasons,
-      selected = real_seasons[-drop_idx]
+      selected = sel2
     )
   })
   observeEvent(input$select_last3, {
