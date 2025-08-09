@@ -32,3 +32,4 @@ __pycache__/
 # Sonstiges
 .DS_Store
 *.bak
+results_gpt-4o-mini.csv
