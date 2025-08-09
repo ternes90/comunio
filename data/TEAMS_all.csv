@@ -19,6 +19,7 @@ Alfons;Dinkçi;Sturm
 Alfons;S. Banks;Sturm
 Alfons;Irié;Sturm
 Alfons;Maier;Mittelfeld
+Alfons;Kemlein;Mittelfeld
 Alfons;Martel;Mittelfeld
 Alfons;Banzuzi;Mittelfeld
 Alfons;Kristensen;Abwehr
@@ -26,11 +27,15 @@ Alfons;Ginter;Abwehr
 Alfons;Giannoulis;Abwehr
 Alfons;Akpoguma;Abwehr
 Alfons;Querfeld;Abwehr
+Alfons;Pieper;Abwehr
 Alfons;Süle;Abwehr
 Alfons;Lührs;Abwehr
 Alfons;Mané;Abwehr
+Alfons;Coulibaly;Abwehr
 Alfons;Gulácsi;Tor
 Alfons;Peretz;Tor
+Alfons;Dickes;Tor
+Christoph;Burkardt;Sturm
 Christoph;Ilić;Sturm
 Christoph;B. Touré;Sturm
 Christoph;Amiri;Mittelfeld
@@ -45,7 +50,6 @@ Christoph;Hanche-Olsen;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Sturm
-Pascal;Haller;Sturm
 Pascal;Larsson;Mittelfeld
 Pascal;Irvine;Mittelfeld
 Pascal;Can;Mittelfeld
@@ -79,11 +83,11 @@ Andreas;Omlin;Tor
 Andreas;Vandevoordt;Tor
 Dominik;Scienza;Sturm
 Dominik;Sieb;Sturm
+Dominik;Skov Olsen;Sturm
 Dominik;Ceesay;Sturm
 Dominik;Groß;Mittelfeld
 Dominik;Haberer;Mittelfeld
 Dominik;Chabot;Abwehr
-Dominik;M. Wolf;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
 Dominik;Zesiger;Abwehr
 Dominik;Ritzka;Abwehr
@@ -92,14 +96,12 @@ Dominik;Koudossou;Abwehr
 Dominik;Mets;Abwehr
 Dominik;Malatini;Abwehr
 Dominik;Al-Dakhil;Abwehr
-Dominik;Keller;Abwehr
 Dominik;Ogbus;Abwehr
 Dominik;Neuer;Tor
 Dominik;Kauã Santos;Tor
 Nico;Olise;Sturm
 Nico;Hložek;Sturm
 Nico;Höler;Sturm
-Nico;Bahoya;Sturm
 Nico;Gregoritsch;Sturm
 Nico;Wahi;Sturm
 Nico;Knauff;Mittelfeld
@@ -107,6 +109,7 @@ Nico;Schäfer;Mittelfeld
 Nico;Dorsch;Mittelfeld
 Nico;Doekhi;Abwehr
 Nico;Saliakas;Abwehr
+Nico;Chaves;Abwehr
 Nico;Hendriks;Abwehr
 Nico;Muheim;Abwehr
 Nico;Zentner;Tor
