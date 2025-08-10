@@ -1,10 +1,5 @@
-for (pkg in c("httr2", "reticulate")) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    install.packages(pkg, repos = "https://cran.rstudio.com")
-  }
-  library(pkg, character.only = TRUE)
-}
-
+if (!requireNamespace("reticulate", quietly = TRUE)) install.packages("reticulate", repos = "https://cran.rstudio.com")
+#if (!requireNamespace("httr2", quietly = TRUE)) install.packages("httr2", repos = "https://cran.rstudio.com")
 
 library(shiny)
 library(tidyverse)
@@ -13,8 +8,8 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-library(httr2)
-library(jsonlite)
+#library(httr2)
+#library(jsonlite)
 library(reticulate)
 
 
