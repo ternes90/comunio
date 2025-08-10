@@ -146,8 +146,7 @@ ui <- navbarPage(
                         column(12, DTOutput("gpt_result"))
                       )
              )
-             
-             
+            
            )
   ),
   
