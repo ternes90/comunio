@@ -1727,7 +1727,7 @@ server <- function(input, output, session) {
     }, df$MW1, df$MW2, df$MW3, SIMPLIFY=TRUE)
     
     # --- Restzeit-Kategorien ---
-    df$Restkategorie <- dplyr::case_when(
+    df$Restkategorie <- case_when(
       grepl("^2d", df$Restzeit)    ~ "übermorgen",
       grepl("^1d", df$Restzeit)    ~ "morgen",
       grepl("^[0-9]+h", df$Restzeit)~ "heute",
@@ -2260,7 +2260,6 @@ server <- function(input, output, session) {
       slice(1) %>%
       select(Spieler, Kaufpreis = Hoechstgebot)
     
-    # Zusammenführen & Berechnungen
     # Zusammenführen & Berechnungen
     df_pre <- df0 %>%
       left_join(mw_aktuell, by = "Spieler") %>%
@@ -2958,54 +2957,56 @@ server <- function(input, output, session) {
     # Käufe (nur echte Käufe durch Manager)
     einkaeufe <- transfers %>%
       filter(Hoechstbietender != "Computer") %>%
-      select(Spieler, Einkaufsdatum = Datum, Einkaufspreis = Hoechstgebot, Besitzer = Hoechstbietender) %>%
-      arrange(Besitzer, Spieler, Einkaufsdatum)
+      transmute(
+        Spieler,
+        Einkaufsdatum = Datum,
+        Einkaufspreis = as.numeric(Hoechstgebot),
+        Besitzer = Hoechstbietender
+      )
     
-    # Verkäufe
+    # Verkäufe: aktueller Besitzer verkauft an anderen
     verkaeufe <- transfers %>%
-      filter(Besitzer != Hoechstbietender) %>%
-      select(Spieler, Verkaufsdatum = Datum, Verkaufspreis = Hoechstgebot, Besitzer)
+      filter(!is.na(Besitzer), Besitzer != Hoechstbietender) %>%
+      transmute(
+        Spieler,
+        Verkaufsdatum = Datum,
+        Verkaufspreis = as.numeric(Hoechstgebot),
+        Verkaeufer = Besitzer
+      )
     
-    # Flip-Paare bauen
-    flips <- list()
+    # letzter Kauf je Spieler×Besitzer
+    einkaeufe_latest <- einkaeufe %>%
+      arrange(Spieler, Besitzer, desc(Einkaufsdatum)) %>%
+      distinct(Spieler, Besitzer, .keep_all = TRUE)
     
-    for (i in 1:nrow(verkaeufe)) {
-      verkauf <- verkaeufe[i, ]
-      
-      # Suche den frühesten unbenutzten Kauf
-      kauf_kandidat <- einkaeufe %>%
-        filter(Spieler == verkauf$Spieler,
-               Besitzer == verkauf$Besitzer,
-               Einkaufsdatum < verkauf$Verkaufsdatum) %>%
-        arrange(Einkaufsdatum) %>%
-        slice(1)
-      
-      if (nrow(kauf_kandidat) == 1) {
-        # Flip speichern
-        flips[[length(flips) + 1]] <- data.frame(
-          Spieler = verkauf$Spieler,
-          Besitzer = verkauf$Besitzer,
-          Einkaufsdatum = kauf_kandidat$Einkaufsdatum,
-          Einkaufspreis = kauf_kandidat$Einkaufspreis,
-          Verkaufsdatum = verkauf$Verkaufsdatum,
-          Verkaufspreis = verkauf$Verkaufspreis,
-          Gewinn = verkauf$Verkaufspreis - kauf_kandidat$Einkaufspreis
-        )
-        
-        # Den Kauf aus der Liste entfernen (= "verbraucht")
-        einkaeufe <- einkaeufe %>%
-          filter(!(Spieler == kauf_kandidat$Spieler &
-                     Besitzer == kauf_kandidat$Besitzer &
-                     Einkaufsdatum == kauf_kandidat$Einkaufsdatum))
-      }
-    }
+    # erster Verkauf nach diesem Kauf (falls vorhanden)
+    matches <- verkaeufe %>%
+      inner_join(einkaeufe_latest, by = "Spieler") %>%
+      filter(Verkaeufer == Besitzer, Verkaufsdatum >= Einkaufsdatum) %>%
+      group_by(Spieler, Besitzer, Einkaufsdatum, Einkaufspreis) %>%
+      slice_min(Verkaufsdatum, with_ties = FALSE) %>%
+      ungroup() %>%
+      transmute(
+        Spieler, Besitzer, Einkaufsdatum, Einkaufspreis,
+        Verkaufsdatum, Verkaufspreis,
+        Gewinn = Verkaufspreis - Einkaufspreis
+      )
     
-    if (length(flips) > 0) {
-      bind_rows(flips)
-    } else {
-      data.frame()  # leeres DF wenn keine Flips
-    }
+    # letzte Käufe ohne nachfolgenden Verkauf (NA-Verkaufsspalten)
+    unmatched <- einkaeufe_latest %>%
+      anti_join(matches %>% select(Spieler, Besitzer, Einkaufsdatum), 
+                       by = c("Spieler","Besitzer","Einkaufsdatum")) %>%
+      mutate(
+        Verkaufsdatum = as.Date(NA),
+        Verkaufspreis = NA_real_,
+        Gewinn = NA_real_
+      ) %>%
+      select(Spieler, Besitzer, Einkaufsdatum, Einkaufspreis,
+                    Verkaufsdatum, Verkaufspreis, Gewinn)
+    
+    bind_rows(matches, unmatched)
   })
+  
   
   
   ## ---- Flip-Gesamtsumme ----
@@ -3066,13 +3067,18 @@ server <- function(input, output, session) {
     flip_data() %>%
       mutate(
         Flip_Kategorie = case_when(
+          is.na(Gewinn) ~ "Kein Verkauf",
           abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
-          abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
+          abs(Gewinn) < 1e5   ~ "Mini-Flip 25–99k",
           abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
-          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
-          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
+          abs(Gewinn) < 5e5   ~ "Mittel-Flip 250–499k",
+          TRUE                ~ "Mega-Flip ≥500k"
         ),
-        Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
+        Flip_Ergebnis = case_when(
+          is.na(Gewinn) ~ "Noch offen",
+          Gewinn >= 0   ~ "Gewinn",
+          TRUE          ~ "Verlust"
+        ),
         Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
       ) %>%
       mutate(
@@ -3086,7 +3092,8 @@ server <- function(input, output, session) {
           "Verlust - Mini-Flip 25–99k",
           "Verlust - Klein-Flip 100–249k",
           "Verlust - Mittel-Flip 250–499k",
-          "Verlust - Mega-Flip ≥500k"
+          "Verlust - Mega-Flip ≥500k",
+          "Noch offen - Kein Verkauf"
         ))
       ) %>%
       count(Besitzer, Flip_Label) %>%
@@ -3103,7 +3110,8 @@ server <- function(input, output, session) {
           "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
           "Verlust - Klein-Flip 100–249k"  = "#e57373",
           "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
-          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
+          "Verlust - Mega-Flip ≥500k"      = "#b71c1c",
+          "Noch offen - Kein Verkauf"     = "#b0bec5"
         )
       ) +
       labs(
@@ -3115,7 +3123,6 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
   })
-  
   
   
   ## ---- FLIP-Kumuliert je Flip-Art ----
@@ -3238,14 +3245,14 @@ server <- function(input, output, session) {
           paste0("-", format(abs(sum_diff), big.mark = ".", decimal.mark = ","), " €")
         ),
         avg_flip = ifelse(team_size > 0, sum_diff / team_size, NA_real_),
-        `Ø Flip-Einnahme pro Spieler` = dplyr::case_when(
+        `Ø Flip-Einnahme pro Spieler` = case_when(
           is.na(avg_flip)            ~ "",
           avg_flip > 0              ~ paste0("+", format(round(avg_flip), big.mark = ".", decimal.mark = ","), " €"),
           avg_flip < 0              ~ paste0("-", format(abs(round(avg_flip)), big.mark = ".", decimal.mark = ","), " €"),
           TRUE                      ~ "±0 €"
         ),
         vortag_diff = sum_diff - sum_diff_yesterday,
-        `Vortag-Diff` = dplyr::case_when(
+        `Vortag-Diff` = case_when(
           is.na(vortag_diff)        ~ "",
           vortag_diff > 0           ~ sprintf("<span style='color:#388e3c;'>+%s €</span>", format(vortag_diff, big.mark = ".", decimal.mark = ",")),
           vortag_diff < 0           ~ sprintf("<span style='color:#e53935;'>–%s €</span>", format(abs(vortag_diff), big.mark = ".", decimal.mark = ",")),
@@ -3267,7 +3274,7 @@ server <- function(input, output, session) {
       left_join(teamwert_vortag, by = "Manager") %>%
       mutate(
         vortag_diff_rel = vortag_diff / as.numeric(Teamwert_vortag) * 100,
-        `Vortag-Diff (% Teamwert)` = dplyr::case_when(
+        `Vortag-Diff (% Teamwert)` = case_when(
           is.na(vortag_diff_rel)        ~ "",
           vortag_diff_rel > 0           ~ sprintf("<span style='color:#388e3c;'>+%.2f %%</span>", vortag_diff_rel),
           vortag_diff_rel < 0           ~ sprintf("<span style='color:#e53935;'>–%.2f %%</span>", abs(vortag_diff_rel)),
