@@ -1,3 +1,5 @@
+if (!requireNamespace("httr2", quietly = TRUE)) install.packages("httr2", repos = "https://cran.rstudio.com")
+
 library(shiny)
 library(tidyverse)
 library(lubridate)
