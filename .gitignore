@@ -34,3 +34,4 @@ __pycache__/
 *.bak
 results_gpt-4o-mini.csv
 deep_research_players_with_clubs.R
+!gpt_player.py
