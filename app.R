@@ -5,7 +5,7 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-#library(httr2)
+library(httr2)
 library(jsonlite)
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
