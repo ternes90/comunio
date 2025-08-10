@@ -28,7 +28,6 @@ Alfons;Akpoguma;Abwehr
 Alfons;Querfeld;Abwehr
 Alfons;Pieper;Abwehr
 Alfons;Süle;Abwehr
-Alfons;Lührs;Abwehr
 Alfons;Mané;Abwehr
 Alfons;Coulibaly;Abwehr
 Alfons;Gulácsi;Tor
@@ -54,6 +53,7 @@ Pascal;Irvine;Mittelfeld
 Pascal;Can;Mittelfeld
 Pascal;Skhiri;Mittelfeld
 Pascal;Kainz;Mittelfeld
+Pascal;Tah;Abwehr
 Pascal;W. Orbán;Abwehr
 Pascal;Caci;Abwehr
 Pascal;Elvedi;Abwehr
@@ -80,9 +80,11 @@ Andreas;Omlin;Tor
 Andreas;Vandevoordt;Tor
 Dominik;Scienza;Sturm
 Dominik;Sieb;Sturm
+Dominik;Topp;Sturm
 Dominik;Skov Olsen;Sturm
 Dominik;Ceesay;Sturm
 Dominik;Groß;Mittelfeld
+Dominik;Haidara;Mittelfeld
 Dominik;Haberer;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
