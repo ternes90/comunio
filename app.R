@@ -1,5 +1,4 @@
 if (!requireNamespace("reticulate", quietly = TRUE)) install.packages("reticulate", repos = "https://cran.rstudio.com")
-#if (!requireNamespace("httr2", quietly = TRUE)) install.packages("httr2", repos = "https://cran.rstudio.com")
 
 library(shiny)
 library(tidyverse)
@@ -8,9 +7,8 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-#library(httr2)
-#library(jsonlite)
 library(reticulate)
+source_python("gpt_player.py")  # lädt query_player()
 
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
@@ -139,10 +137,17 @@ ui <- navbarPage(
              tabPanel(title = "Spieler-Info",
                       value = "spieler_info",
                       selectInput("spieler_select2", "Spieler:", choices = NULL),
+                      selectInput("gpt_model", "Modell:", choices = c("gpt-4o-mini", "gpt-4.1"), selected = "gpt-4.1"),
+                      checkboxInput("gpt_use_web", "Websuche mit bevorzugten Domains", value = TRUE),
+                      actionButton("gpt_run", "Research starten"),
+                      
                       fluidRow(
-                        column(6, DTOutput("spieler_info"))
+                        column(12, DTOutput("spieler_info")),
+                        column(12, DTOutput("gpt_result"))
                       )
              )
+             
+             
            )
   ),
   
@@ -502,9 +507,9 @@ server <- function(input, output, session) {
       `Preis-Leistung` = `PREIS-LEISSTUNG`,
       Zielwert = `ZIELWERT`,
       Empfehlung = `KAUFEMPFEHLUNG`,
-      Gebote = `GEBOTSVORHERSAGE`
+      Gebote = `GEBOTSVORHERSAGE`,
+      TEAM
     )
-  
   
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
@@ -2247,21 +2252,22 @@ server <- function(input, output, session) {
   })
   
   ## ---- Spieler Info ----
-  output$spieler_info <- DT::renderDT({
-    today <- Sys.Date()
+  observeEvent(input$gpt_run, {
     req(input$spieler_select2, ca2_df)
+    sp <- input$spieler_select2
+    verein <- ca2_df %>% dplyr::filter(SPIELER == sp) %>% dplyr::pull(TEAM) %>% .[1]
+    if (is.na(verein) || length(verein) == 0) verein <- ""
     
-    selected_player <- input$spieler_select2
+    mdl <- if (is.null(input$gpt_model) || !nzchar(input$gpt_model)) "gpt-4o-mini" else input$gpt_model
+    use_web <- isTRUE(input$gpt_use_web)
     
-    df <- ca2_df %>%
-      filter(SPIELER == selected_player) 
+    res <- py$query_player(sp, verein, mdl, use_web)
     
-    datatable(
-      df, escape = FALSE, rownames = FALSE, selection = "single",
-      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
+    df <- tibble::as_tibble(as.list(res))
+    output$gpt_result <- DT::renderDT(
+      DT::datatable(df, rownames = FALSE, options = list(dom = 't', paging = FALSE, scrollX = TRUE))
     )
   })
-  
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
