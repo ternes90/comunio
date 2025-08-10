@@ -1,4 +1,4 @@
-if (!requireNamespace("httr2", quietly = TRUE)) install.packages("httr2", repos = "https://cran.rstudio.com")
+#if (!requireNamespace("httr2", quietly = TRUE)) install.packages("httr2", repos = "https://cran.rstudio.com")
 
 library(shiny)
 library(tidyverse)
@@ -9,6 +9,7 @@ library(DT)
 library(scales)
 library(httr2)
 library(jsonlite)
+library(reticulate)
 
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
