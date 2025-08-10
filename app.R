@@ -5,8 +5,8 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-#install.packages("reticulate")
-#library(reticulate)
+library(reticulate)
+py_config()
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
