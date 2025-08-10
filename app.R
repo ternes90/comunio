@@ -5,6 +5,8 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
+library(reticulate)
+py_config()
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -115,7 +117,7 @@ ui <- navbarPage(
   ## ---- Transfermarkt ----
   tabPanel("Transfermarkt",
            tabsetPanel(
-             id = "transfermarkt_tabs",               # ← hier die id
+             id = "transfermarkt_tabs",               # id
              tabPanel("Transfermarkt Details",
                       uiOutput("bid_prediction"),
                       DTOutput("transfermarkt_detail")
@@ -127,6 +129,13 @@ ui <- navbarPage(
                         column(6, plotOutput("transfer_simulator_plot")),
                         column(3, checkboxGroupInput("angebote_select", "Angebote für Deckung:", choices = NULL)),
                         column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
+                      )
+             ),
+             tabPanel(title = "Spieler-Info",
+                      value = "spieler_info",
+                      selectInput("spieler_select2", "Spieler:", choices = NULL),
+                      fluidRow(
+                        column(6, DTOutput("spieler_info"))
                       )
              )
            )
@@ -378,6 +387,13 @@ server <- function(input, output, session) {
     updateSelectInput(
       session,
       inputId  = "spieler_select",
+      selected = player
+    )
+    
+    # Spieler im SelectInput2 vorwählen
+    updateSelectInput(
+      session,
+      inputId  = "spieler_select2",
       selected = player
     )
   })
@@ -2102,6 +2118,12 @@ server <- function(input, output, session) {
       choices = sort(unique(tm_df$Spieler))
     )
     
+    # 1.5) Spieler‑Liste immer füllen
+    updateSelectInput(
+      session, "spieler_select2",
+      choices = sort(unique(tm_df$Spieler))
+    )
+    
     # 2) Angebote‑Checkboxes (Guard für leeres DataFrame)
     if (nrow(angebote_df()) > 0) {
       angebot_values <- angebote_df()$Angebot
@@ -2134,8 +2156,6 @@ server <- function(input, output, session) {
       choices = choices_t
     )
   })
-  
-
   
   # 4) Plot rendern
   output$transfer_simulator_plot <- renderPlot({
@@ -2219,6 +2239,22 @@ server <- function(input, output, session) {
       scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
       labs(x = NULL, y = "Betrag (€)", fill = NULL) +
       theme_minimal(base_size = 16)
+  })
+  
+  ## ---- Spieler Info ----
+  output$spieler_info <- DT::renderDT({
+    today <- Sys.Date()
+    req(input$spieler_select2, ca2_df)
+    
+    selected_player <- input$spieler_select2
+    
+    df <- ca2_df %>%
+      filter(SPIELER == selected_player) 
+    
+    datatable(
+      df, escape = FALSE, rownames = FALSE, selection = "single",
+      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
+    )
   })
   
   
