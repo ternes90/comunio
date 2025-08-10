@@ -5,3 +5,4 @@ Version: 0.0.1
 Description: My Comunio Shiny app
 Imports:
     httr2
+	reticulate
