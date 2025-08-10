@@ -6,7 +6,6 @@ library(readxl)
 library(DT)
 library(scales)
 library(reticulate)
-py_config()
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
