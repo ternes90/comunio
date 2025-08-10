@@ -1,4 +1,10 @@
-#if (!requireNamespace("httr2", quietly = TRUE)) install.packages("httr2", repos = "https://cran.rstudio.com")
+# for (pkg in c("httr2", "reticulate")) {
+#   if (!requireNamespace(pkg, quietly = TRUE)) {
+#     install.packages(pkg, repos = "https://cran.rstudio.com")
+#   }
+#   library(pkg, character.only = TRUE)
+# }
+
 
 library(shiny)
 library(tidyverse)
