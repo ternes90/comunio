@@ -1,3 +1,4 @@
+readRenviron(".Renviron") 
 library(shiny)
 library(tidyverse)
 library(lubridate)
@@ -5,8 +6,6 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-library(reticulate)
-source_python("gpt_player.py")
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -131,15 +130,13 @@ ui <- navbarPage(
                         column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
                       )
              ),
-             tabPanel(title = "Spieler-Info",
-                      value  = "spieler_info",
-                      selectInput("spieler_select2", "Spieler:", choices = NULL),
-                      selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
-                      actionButton("gpt_run", "Research starten"),
-                      fluidRow(
-                        column(12, DTOutput("spieler_info")),
-                        column(12, DTOutput("gpt_result"))
-                      )
+             tabPanel(
+               title = "Spieler-Info", value = "spieler_info",
+               selectInput("spieler_select2", "Spieler:", choices = NULL),
+               selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
+               actionButton("gpt_run", "Research starten"),
+               fluidRow(column(12, DTOutput("spieler_info")),
+                        column(12, DTOutput("gpt_result")))
              )
              
              
@@ -2253,14 +2250,28 @@ server <- function(input, output, session) {
   ## ---- Spieler Info ----
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
-    req(python_ok && have_query)
     
+    # 1) reticulate nur bei Bedarf installieren + laden
+    if (!requireNamespace("reticulate", quietly = TRUE)) {
+      showNotification("Installiere reticulate … einmalig", type = "message", duration = 5)
+      install.packages("reticulate", repos = "https://cran.rstudio.com")
+    }
+    library(reticulate)
+    
+    # 2) Python-Bridge nur einmal sourcen
+    if (!exists("query_player", mode = "function")) {
+      source_python("gpt_player.py")  # def query_player(spieler, verein, modell)
+      if (!exists("query_player", mode = "function")) {
+        showNotification("query_player() nicht gefunden.", type = "error"); return()
+      }
+    }
+    
+    # 3) Verein ermitteln
     src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
     req(exists("ca2_df", inherits = TRUE) || exists("ca_df2", inherits = TRUE))
     
     sp <- input$spieler_select2
-    sp_norm <- tolower(trimws(sp))  # FIX
-    
+    sp_norm <- tolower(trimws(sp))
     verein <- src_df %>%
       mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
       filter(SPIELER_norm == sp_norm) %>%
@@ -2269,16 +2280,16 @@ server <- function(input, output, session) {
     
     mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
     
+    # 4) Aufruf
     res <- try(query_player(sp, verein, mdl), silent = TRUE)
     if (inherits(res, "try-error")) {
-      showNotification(paste("Fehler:", conditionMessage(attr(res, "condition"))), type = "error")
-      return()
+      showNotification(paste("Fehler:", conditionMessage(attr(res, "condition"))), type = "error"); return()
     }
     
     df <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
     output$gpt_result <- DT::renderDT(
-      DT::datatable(df, rownames = FALSE, escape = FALSE,
-                    options = list(dom = 't', paging = FALSE, scrollX = TRUE))
+      datatable(df, rownames = FALSE, escape = FALSE,
+                options = list(dom = 't', paging = FALSE, scrollX = TRUE))
     )
   })
   
