@@ -135,17 +135,17 @@ ui <- navbarPage(
                       )
              ),
              tabPanel(title = "Spieler-Info",
-                      value = "spieler_info",
+                      value  = "spieler_info",
                       selectInput("spieler_select2", "Spieler:", choices = NULL),
-                      selectInput("gpt_model", "Modell:", choices = c("gpt-4o-mini", "gpt-4.1"), selected = "gpt-4.1"),
-                      checkboxInput("gpt_use_web", "Websuche mit bevorzugten Domains", value = TRUE),
+                      selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
                       actionButton("gpt_run", "Research starten"),
-                      
                       fluidRow(
                         column(12, DTOutput("spieler_info")),
                         column(12, DTOutput("gpt_result"))
                       )
              )
+             
+             
             
            )
   ),
@@ -2252,21 +2252,39 @@ server <- function(input, output, session) {
   
   ## ---- Spieler Info ----
   observeEvent(input$gpt_run, {
-    req(input$spieler_select2, ca2_df)
+    req(input$spieler_select2)
+    
+    # Quelle für TEAM: ca_df2 (Fallback auf ca2_df, falls erster nicht existiert)
+    src_df <- if (exists("ca_df2")) ca_df2 else ca2_df
+    req(src_df)
+    
     sp <- input$spieler_select2
-    verein <- ca2_df %>% dplyr::filter(SPIELER == sp) %>% dplyr::pull(TEAM) %>% .[1]
-    if (is.na(verein) || length(verein) == 0) verein <- ""
+    sp_norm <- tolower(trimws(sp))
     
-    mdl <- if (is.null(input$gpt_model) || !nzchar(input$gpt_model)) "gpt-4o-mini" else input$gpt_model
-    use_web <- isTRUE(input$gpt_use_web)
+    verein <- src_df %>%
+      dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
+      dplyr::filter(SPIELER_norm == sp_norm) %>%
+      dplyr::pull(TEAM) %>%
+      .[1]
     
-    res <- py$query_player(sp, verein, mdl, use_web)
+    if (is.null(verein) || length(verein) == 0 || is.na(verein)) verein <- ""
+    
+    mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
+    
+    res <- py$query_player(sp, verein, mdl)
     
     df <- tibble::as_tibble(as.list(res))
+    
     output$gpt_result <- DT::renderDT(
-      DT::datatable(df, rownames = FALSE, options = list(dom = 't', paging = FALSE, scrollX = TRUE))
+      DT::datatable(
+        df,
+        rownames = FALSE,
+        escape = FALSE,                 # lässt klickbare Links in Info zu
+        options = list(dom = 't', paging = FALSE, scrollX = TRUE)
+      )
     )
   })
+  
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
