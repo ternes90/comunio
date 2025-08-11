@@ -7,18 +7,14 @@ library(DT)
 library(scales)
 
 python_ok <- requireNamespace("reticulate", quietly = TRUE)
-
+have_query <- FALSE
 if (python_ok) {
   library(reticulate)
-  if (!exists("py", inherits = TRUE)) {
-    py <- reticulate::import("__main__")  # stabile py-Bindung
-  }
-  source_python("gpt_player.py")          # liefert z.B. query_player()
+  source_python("gpt_player.py")           # definiert R-Funktion query_player()
+  have_query <- exists("query_player") && is.function(query_player)
 } else {
-  py <- NULL
   query_player <- function(...) stop("reticulate fehlt")
 }
-
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -2262,38 +2258,34 @@ server <- function(input, output, session) {
   ## ---- Spieler Info ----
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
+    req(python_ok && have_query)
     
-    # Quelle für TEAM: ca_df2 (Fallback auf ca2_df, falls erster nicht existiert)
-    src_df <- if (exists("ca_df2")) ca_df2 else ca2_df
-    req(src_df)
+    src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
+    req(exists("ca2_df", inherits = TRUE) || exists("ca_df2", inherits = TRUE))
     
     sp <- input$spieler_select2
-    sp_norm <- tolower(trimws(sp))
+    sp_norm <- tolower(trimws(sp))  # FIX
     
-    verein <- src_df %>%
-      dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
-      dplyr::filter(SPIELER_norm == sp_norm) %>%
-      dplyr::pull(TEAM) %>%
-      .[1]
-    
-    if (is.null(verein) || length(verein) == 0 || is.na(verein)) verein <- ""
+    verein <- src_df |>
+      dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) |>
+      dplyr::filter(SPIELER_norm == sp_norm) |>
+      dplyr::pull(TEAM) |>
+      { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
     
     mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
     
-    res <- py$query_player(sp, verein, mdl)
+    res <- try(query_player(sp, verein, mdl), silent = TRUE)
+    if (inherits(res, "try-error")) {
+      showNotification(paste("Fehler:", conditionMessage(attr(res, "condition"))), type = "error")
+      return()
+    }
     
-    df <- tibble::as_tibble(as.list(res))
-    
+    df <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
     output$gpt_result <- DT::renderDT(
-      DT::datatable(
-        df,
-        rownames = FALSE,
-        escape = FALSE,                 # lässt klickbare Links in Info zu
-        options = list(dom = 't', paging = FALSE, scrollX = TRUE)
-      )
+      DT::datatable(df, rownames = FALSE, escape = FALSE,
+                    options = list(dom = 't', paging = FALSE, scrollX = TRUE))
     )
   })
-  
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
