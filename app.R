@@ -2252,30 +2252,37 @@ server <- function(input, output, session) {
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
     
-    # Lade-Notification starten
+    # Lade-Notification starten (bleibt bis removeNotification)
     load_id <- showNotification(
-      "🔍 Websuche & Analyse läuft … bitte warten",
-      type = "message",
-      duration = NULL,     # bleibt bis removeNotification()
-      closeButton = FALSE
+      "🔍 Spieler-Research läuft …",
+      type = "message", duration = NULL, closeButton = FALSE
     )
     
-    # 1) reticulate ggf. installieren
+    on.exit({
+      # Fallback: falls unten irgendwo return passiert, Notification sicher entfernen
+      try(removeNotification(load_id), silent = TRUE)
+    }, add = TRUE)
+    
+    # 1) reticulate sicherstellen
     if (!requireNamespace("reticulate", quietly = TRUE)) {
       install.packages("reticulate", repos = "https://cran.rstudio.com")
     }
-    
-    # 2) reticulate laden
     library(reticulate)
     
-    # 3) Python-Datei nur einmal sourcen
+    # 2) Python-Skript nur einmal laden
     if (!exists("query_player", mode = "function")) {
-      source_python("gpt_player.py")
+      tryCatch(
+        source_python("gpt_player.py"),
+        error = function(e) {
+          showNotification(paste("Fehler beim Laden von gpt_player.py:", e$message), type = "error")
+          stop(e)
+        }
+      )
     }
     
-    # 4) Verein suchen
-    src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
+    # 3) Verein ermitteln
     req(exists("ca2_df", inherits = TRUE) || exists("ca_df2", inherits = TRUE))
+    src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
     
     sp <- input$spieler_select2
     sp_norm <- tolower(trimws(sp))
@@ -2287,25 +2294,31 @@ server <- function(input, output, session) {
     
     mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
     
-    # 5) API-Abfrage in tryCatch, damit Notification immer entfernt wird
-    res <- NULL
-    tryCatch({
-      res <- query_player(sp, verein, mdl)
-    }, error = function(e) {
-      removeNotification(load_id)
-      showNotification(paste("Fehler:", e$message), type = "error")
-      return()
-    })
-    
-    # Lade-Notification entfernen
-    removeNotification(load_id)
-    
-    # 6) Ergebnis anzeigen
-    df <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
-    output$gpt_result <- DT::renderDT(
-      DT::datatable(df, rownames = FALSE, escape = FALSE,
-                    options = list(dom = 't', paging = FALSE, scrollX = TRUE))
+    # 4) API-Call mit Fehlerbehandlung
+    res <- tryCatch(
+      query_player(sp, verein, mdl),
+      error = function(e) {
+        showNotification(paste("Fehler bei query_player():", e$message), type = "error")
+        stop(e)
+      }
     )
+    
+    # 5) UTF-8 fix vor Datatable
+    res_r <- reticulate::py_to_r(res)
+    res_r[] <- lapply(res_r, function(x) enc2utf8(as.character(x)))
+    df <- tibble::as_tibble(res_r)
+    
+    # 6) Anzeige
+    output$gpt_result <- DT::renderDT(
+      DT::datatable(
+        df,
+        rownames = FALSE, escape = FALSE,
+        options = list(dom = 't', paging = FALSE, scrollX = TRUE)
+      )
+    )
+    
+    # Lade-Notification sauber schließen
+    removeNotification(load_id)
   })
   
   
