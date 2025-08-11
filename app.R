@@ -1,5 +1,3 @@
-if (!requireNamespace("reticulate", quietly = TRUE)) install.packages("reticulate", repos = "https://cran.rstudio.com")
-
 library(shiny)
 library(tidyverse)
 library(lubridate)
@@ -7,8 +5,14 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-library(reticulate)
-source_python("gpt_player.py")  # lädt query_player()
+
+python_ok <- requireNamespace("reticulate", quietly = TRUE)
+if (python_ok) {
+  library(reticulate)
+  source_python("gpt_player.py")
+} else {
+  query_player <- function(...) stop("reticulate fehlt")
+}
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
