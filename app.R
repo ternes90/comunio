@@ -136,7 +136,7 @@ ui <- navbarPage(
                actionButton("gpt_run", "Research starten"),
                fluidRow(
                  column(12, DTOutput("spieler_info")),
-                 column(12, DTOutput("gpt_result"))   
+                 column(12, DTOutput("gpt_result"))   # direktes DT, kein Spinner/Wrapper
                )
              )
              
@@ -2249,19 +2249,35 @@ server <- function(input, output, session) {
   })
   
   ## ---- Spieler Info ----
-  if (!exists("query_player", mode = "function")) {
-    reticulate::source_python("gpt_player.py")
-  }
-  
-  get_src_df <- reactive({
-    req(exists("ca_df2", inherits = TRUE) || exists("ca2_df", inherits = TRUE))
-    if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
-  })
-  
-  gpt_req <- eventReactive(input$gpt_run, {
+  observeEvent(input$gpt_run, {
     req(input$spieler_select2)
+    
+    # Lade-Notification starten
+    load_id <- showNotification(
+      "🔍 Websuche & Analyse läuft … bitte warten",
+      type = "message",
+      duration = NULL,     # bleibt bis removeNotification()
+      closeButton = FALSE
+    )
+    
+    # 1) reticulate ggf. installieren
+    if (!requireNamespace("reticulate", quietly = TRUE)) {
+      install.packages("reticulate", repos = "https://cran.rstudio.com")
+    }
+    
+    # 2) reticulate laden
+    library(reticulate)
+    
+    # 3) Python-Datei nur einmal sourcen
+    if (!exists("query_player", mode = "function")) {
+      source_python("gpt_player.py")
+    }
+    
+    # 4) Verein suchen
+    src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
+    req(exists("ca2_df", inherits = TRUE) || exists("ca_df2", inherits = TRUE))
+    
     sp <- input$spieler_select2
-    src_df <- get_src_df()
     sp_norm <- tolower(trimws(sp))
     verein <- src_df %>%
       dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
@@ -2269,39 +2285,26 @@ server <- function(input, output, session) {
       dplyr::pull(TEAM) %>%
       { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
     
-    mdl <- input$gpt_model
+    mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
     
-    # Persistente Notification + Progress
-    notif_id <- showNotification("Research gestartet …", type = "message", duration = NULL)
-    on.exit(removeNotification(notif_id), add = TRUE)
-    
-    withProgress(message = "Research läuft …", value = 0, {
-      incProgress(0.15, detail = "Initialisiere")
-      res <- try(query_player(sp, verein, mdl), silent = TRUE)
-      
-      if (inherits(res, "try-error")) {
-        removeNotification(notif_id)
-        showNotification("Fehler bei query_player()", type = "error")
-        message("Fehler bei query_player(): ", conditionMessage(attr(res, "condition")))
-        return(NULL)
-      }
-      
-      incProgress(0.7, detail = "Verarbeite Ergebnis")
-      out <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
-      
-      incProgress(0.15, detail = "Fertig")
-      out
+    # 5) API-Abfrage in tryCatch, damit Notification immer entfernt wird
+    res <- NULL
+    tryCatch({
+      res <- query_player(sp, verein, mdl)
+    }, error = function(e) {
+      removeNotification(load_id)
+      showNotification(paste("Fehler:", e$message), type = "error")
+      return()
     })
-  })
-  
-  output$gpt_result <- DT::renderDT({
-    df <- gpt_req()
-    req(df)
-    DT::datatable(
-      df,
-      rownames = FALSE,
-      escape = FALSE,
-      options = list(dom = 't', paging = FALSE, scrollX = TRUE)
+    
+    # Lade-Notification entfernen
+    removeNotification(load_id)
+    
+    # 6) Ergebnis anzeigen
+    df <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
+    output$gpt_result <- DT::renderDT(
+      DT::datatable(df, rownames = FALSE, escape = FALSE,
+                    options = list(dom = 't', paging = FALSE, scrollX = TRUE))
     )
   })
   
