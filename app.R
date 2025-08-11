@@ -10,7 +10,6 @@ library(scales)
 library(reticulate)
 source_python("gpt_player.py")  # lädt query_player()
 
-
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
 # ---- UI ----
