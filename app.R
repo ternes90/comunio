@@ -1,4 +1,3 @@
-readRenviron(".Renviron") 
 library(shiny)
 library(tidyverse)
 library(lubridate)
