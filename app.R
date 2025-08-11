@@ -5,16 +5,17 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
+library(reticulate)
 
-python_ok <- requireNamespace("reticulate", quietly = TRUE)
-have_query <- FALSE
-if (python_ok) {
-  library(reticulate)
-  source_python("gpt_player.py")           # definiert R-Funktion query_player()
-  have_query <- exists("query_player") && is.function(query_player)
-} else {
-  query_player <- function(...) stop("reticulate fehlt")
-}
+# python_ok <- requireNamespace("reticulate", quietly = TRUE)
+# have_query <- FALSE
+# if (python_ok) {
+#   library(reticulate)
+#   source_python("gpt_player.py")           # definiert R-Funktion query_player()
+#   have_query <- exists("query_player") && is.function(query_player)
+# } else {
+#   query_player <- function(...) stop("reticulate fehlt")
+# }
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
