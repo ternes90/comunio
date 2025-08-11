@@ -5,6 +5,7 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
+library(shinycssloaders)
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -134,8 +135,12 @@ ui <- navbarPage(
                selectInput("spieler_select2", "Spieler:", choices = NULL),
                selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
                actionButton("gpt_run", "Research starten"),
-               fluidRow(column(12, DTOutput("spieler_info")),
-                        column(12, DTOutput("gpt_result")))
+               fluidRow(
+                 column(12, DTOutput("spieler_info")),
+                 column(12,
+                        uiOutput("gpt_result_ui")  # wir steuern selbst, was angezeigt wird
+                 )
+               )
              )
              
              
@@ -2247,64 +2252,51 @@ server <- function(input, output, session) {
   })
   
   ## ---- Spieler Info ----
-  observeEvent(input$gpt_run, {
-    req(input$spieler_select2)
-    
-    withProgress(message = "Spieler-Research", value = 0, {
-      
-      incProgress(0.05, detail = "Vorbereiten …")
-      
-      # 1) reticulate ggf. installieren
-      if (!requireNamespace("reticulate", quietly = TRUE)) {
-        incProgress(0.15, detail = "Installiere reticulate …")
-        install.packages("reticulate", repos = "https://cran.rstudio.com")
-      }
-      
-      # 2) reticulate laden
-      incProgress(0.25, detail = "Lade Python-Bridge …")
-      library(reticulate)
-      
-      # 3) Python-Datei nur einmal sourcen
-      if (!exists("query_player", mode = "function")) {
-        incProgress(0.35, detail = "Lade gpt_player.py …")
-        source_python("gpt_player.py")
-      }
-      
-      # 4) Verein suchen
-      incProgress(0.45, detail = "Ermittle Verein …")
-      src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
-      req(exists("ca2_df", inherits = TRUE) || exists("ca_df2", inherits = TRUE))
-      
-      sp <- input$spieler_select2
-      sp_norm <- tolower(trimws(sp))
-      verein <- src_df |>
-        dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) |>
-        dplyr::filter(SPIELER_norm == sp_norm) |>
-        dplyr::pull(TEAM) |>
-        { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
-      
-      mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
-      
-      # 5) API-Abfrage
-      incProgress(0.65, detail = "Frage Quellen ab …")
-      res <- try(query_player(sp, verein, mdl), silent = TRUE)
-      
-      # 6) Ergebnis prüfen + anzeigen
-      incProgress(0.9, detail = "Bereite Tabelle auf …")
-      if (inherits(res, "try-error")) {
-        showNotification(paste("Fehler:", conditionMessage(attr(res, "condition"))), type = "error")
-        return()
-      }
-      
-      df <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
-      output$gpt_result <- DT::renderDT(
-        DT::datatable(df, rownames = FALSE, escape = FALSE,
-                      options = list(dom = 't', paging = FALSE, scrollX = TRUE))
-      )
-      
-      incProgress(1, detail = "Fertig.")
-    })
+  if (!exists("query_player", mode = "function")) {
+    source_python("gpt_player.py")
+  }
+  
+  get_src_df <- reactive({
+    req(exists("ca_df2", inherits = TRUE) || exists("ca2_df", inherits = TRUE))
+    if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
   })
+  
+  gpt_req <- eventReactive(input$gpt_run, {
+    req(input$spieler_select2)
+    sp <- input$spieler_select2
+    src_df <- get_src_df()
+    sp_norm <- tolower(trimws(sp))
+    verein <- src_df %>%
+      mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
+      filter(SPIELER_norm == sp_norm) %>%
+      pull(TEAM) %>%
+      { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
+    
+    mdl <- input$gpt_model
+    res <- try(query_player(sp, verein, mdl), silent = TRUE)
+    if (inherits(res, "try-error")) {
+      showNotification("Fehler bei query_player()", type = "error")
+      message("Fehler bei query_player(): ", conditionMessage(attr(res, "condition")))
+      return(NULL)
+    }
+    tibble::as_tibble(as.list(reticulate::py_to_r(res)))
+  })
+  
+  output$gpt_result <- DT::renderDT({
+    df <- gpt_req()
+    req(df)
+    datatable(df, rownames = FALSE, escape = FALSE,
+              options = list(dom = 't', paging = FALSE, scrollX = TRUE))
+  })
+  
+  # UI-Wrapper für Spinner, der immer angezeigt wird, auch beim ersten Klick
+  output$gpt_result_ui <- renderUI({
+    withSpinner(DTOutput("gpt_result"), type = 6, color = "#0dc5c1")
+  })
+  
+  # Optional: wenn ausgeblendet, nicht rechnen
+  #outputOptions(output, "gpt_result", suspendWhenHidden = TRUE)
+  
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
