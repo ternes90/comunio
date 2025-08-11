@@ -1,4 +1,4 @@
-if (!requireNamespace("reticulate", quietly = TRUE)) install.packages("reticulate", repos = "https://cran.rstudio.com")
+#if (!requireNamespace("reticulate", quietly = TRUE)) install.packages("reticulate", repos = "https://cran.rstudio.com")
 
 library(shiny)
 library(tidyverse)
