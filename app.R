@@ -5,7 +5,6 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
-library(shinycssloaders)
 
 last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
 
@@ -137,9 +136,7 @@ ui <- navbarPage(
                actionButton("gpt_run", "Research starten"),
                fluidRow(
                  column(12, DTOutput("spieler_info")),
-                 column(12,
-                        uiOutput("gpt_result_ui")  # wir steuern selbst, was angezeigt wird
-                 )
+                 column(12, DTOutput("gpt_result"))   
                )
              )
              
@@ -2253,7 +2250,7 @@ server <- function(input, output, session) {
   
   ## ---- Spieler Info ----
   if (!exists("query_player", mode = "function")) {
-    source_python("gpt_player.py")
+    reticulate::source_python("gpt_player.py")
   }
   
   get_src_df <- reactive({
@@ -2267,35 +2264,46 @@ server <- function(input, output, session) {
     src_df <- get_src_df()
     sp_norm <- tolower(trimws(sp))
     verein <- src_df %>%
-      mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
-      filter(SPIELER_norm == sp_norm) %>%
-      pull(TEAM) %>%
+      dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
+      dplyr::filter(SPIELER_norm == sp_norm) %>%
+      dplyr::pull(TEAM) %>%
       { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
     
     mdl <- input$gpt_model
-    res <- try(query_player(sp, verein, mdl), silent = TRUE)
-    if (inherits(res, "try-error")) {
-      showNotification("Fehler bei query_player()", type = "error")
-      message("Fehler bei query_player(): ", conditionMessage(attr(res, "condition")))
-      return(NULL)
-    }
-    tibble::as_tibble(as.list(reticulate::py_to_r(res)))
+    
+    # Persistente Notification + Progress
+    notif_id <- showNotification("Research gestartet …", type = "message", duration = NULL)
+    on.exit(removeNotification(notif_id), add = TRUE)
+    
+    withProgress(message = "Research läuft …", value = 0, {
+      incProgress(0.15, detail = "Initialisiere")
+      res <- try(query_player(sp, verein, mdl), silent = TRUE)
+      
+      if (inherits(res, "try-error")) {
+        removeNotification(notif_id)
+        showNotification("Fehler bei query_player()", type = "error")
+        message("Fehler bei query_player(): ", conditionMessage(attr(res, "condition")))
+        return(NULL)
+      }
+      
+      incProgress(0.7, detail = "Verarbeite Ergebnis")
+      out <- tibble::as_tibble(as.list(reticulate::py_to_r(res)))
+      
+      incProgress(0.15, detail = "Fertig")
+      out
+    })
   })
   
   output$gpt_result <- DT::renderDT({
     df <- gpt_req()
     req(df)
-    datatable(df, rownames = FALSE, escape = FALSE,
-              options = list(dom = 't', paging = FALSE, scrollX = TRUE))
+    DT::datatable(
+      df,
+      rownames = FALSE,
+      escape = FALSE,
+      options = list(dom = 't', paging = FALSE, scrollX = TRUE)
+    )
   })
-  
-  # UI-Wrapper für Spinner, der immer angezeigt wird, auch beim ersten Klick
-  output$gpt_result_ui <- renderUI({
-    withSpinner(DTOutput("gpt_result"), type = 6, color = "#0dc5c1")
-  })
-  
-  # Optional: wenn ausgeblendet, nicht rechnen
-  #outputOptions(output, "gpt_result", suspendWhenHidden = TRUE)
   
   
   # ---- KADER-ENTWICKLUNG ----
