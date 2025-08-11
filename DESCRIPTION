@@ -1,8 +1,16 @@
-Package: comunioapp
+Package: comunio-analyse
 Type: Shiny
-Title: Comunio App
+Title: Comunio Analyse
 Version: 0.0.1
-Description: My Comunio Shiny app
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
 Imports:
-    httr2
-	reticulate
+    shiny,
+    tidyverse,
+    lubridate,
+    ggbeeswarm,
+    readxl,
+    DT,
+    scales,
+    reticulate
