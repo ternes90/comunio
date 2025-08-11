@@ -9,7 +9,6 @@ library(scales)
 python_ok <- requireNamespace("reticulate", quietly = TRUE)
 have_query <- FALSE
 if (python_ok) {
-  install.packages("reticulate", repos = "https://cran.rstudio.com")
   library(reticulate)
   source_python("gpt_player.py")           # definiert R-Funktion query_player()
   have_query <- exists("query_player") && is.function(query_player)
