@@ -72,7 +72,7 @@ ui <- navbarPage(
              div(
                style = "margin-bottom: 20px;",
                plotOutput("flip_preview", height = 300, width = "100%", click = "flip_click")
-             ),
+             )
            )
   ),
   
@@ -847,12 +847,14 @@ server <- function(input, output, session) {
     x0 <- trend_vals$Datum[1]; y0 <- trend_vals$MW_rel_normiert[1]
     x1 <- trend_vals$Datum[3]; y1 <- trend_vals$MW_rel_normiert[3]
     
+    col_seg <- if (y1 > y0) "darkgreen" else "red"
+    
     ggplot(df_short, aes(Datum, MW_rel_normiert)) +
       geom_line(linewidth = 1.1, color = "darkgrey", na.rm = TRUE) +
       geom_segment(
         aes(x = x0, y = y0, xend = x1, yend = y1),
         arrow = arrow(length = unit(0.35, "cm"), type = "closed"),
-        color = if (y1 > y0) "darkgreen" else "red",
+        color = col_seg,
         linewidth = 1.4,
         inherit.aes = FALSE
       ) +
@@ -1744,7 +1746,8 @@ server <- function(input, output, session) {
         select(Spieler, !!nm := Marktwert)
     })
     df <- Reduce(function(x,y) left_join(x,y,by="Spieler"), 
-                 c(list(df), mw_list))
+                 c(list(df), mw_list)
+    )
     
     # --- Trend berechnen ---
     df$Trend <- mapply(function(m1,m2,m3) {
@@ -2266,10 +2269,10 @@ server <- function(input, output, session) {
     sp <- input$spieler_select2
     sp_norm <- tolower(trimws(sp))  # FIX
     
-    verein <- src_df |>
-      dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) |>
-      dplyr::filter(SPIELER_norm == sp_norm) |>
-      dplyr::pull(TEAM) |>
+    verein <- src_df %>%
+      mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
+      filter(SPIELER_norm == sp_norm) %>%
+      pull(TEAM) %>%
       { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
     
     mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
