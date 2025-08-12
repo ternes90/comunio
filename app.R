@@ -131,6 +131,13 @@ ui <- navbarPage(
              ),
              tabPanel(
                title = "Spieler-Info", value = "spieler_info",
+               radioButtons(
+                 "spieler_filter",
+                 label = NULL,
+                 choices = c("Transfermarkt", "Alle", "Mein Team"),
+                 selected = "Transfermarkt",
+                 inline = TRUE
+               ),
                selectInput("spieler_select2", "Spieler:", choices = NULL),
                
                tags$div("Marktwertverlauf",
@@ -463,6 +470,40 @@ server <- function(input, output, session) {
     )
   })
   
+  # Spielerlisten für Spiler-Info wählen
+  observeEvent(input$spieler_filter, {
+    sel <- input$spieler_filter
+    
+    if (sel == "Transfermarkt") {
+      updateSelectInput(session, "spieler_select2",
+                        choices = sort(unique(tm_df$Spieler))
+      )
+      
+    } else if (sel == "Mein Team") {
+      choices <- teams_df %>%
+        dplyr::filter(Manager == "Dominik") %>%
+        dplyr::pull(Spieler) %>%
+        sort()
+      updateSelectInput(session, "spieler_select2", choices = choices)
+      
+    } else if (sel == "Alle") {
+      ap_df <- read.csv2(
+        "data/ALL_PLAYERS.csv",
+        sep = ";", na.strings = c("", "NA"),
+        stringsAsFactors = FALSE, fileEncoding = "UTF-8"
+      ) %>%
+        dplyr::mutate(
+          Datum = as.Date(Datum, format = "%d.%m.%Y"),
+          Marktwert = as.numeric(Marktwert)
+        )
+      
+      choices <- ap_df %>%
+        dplyr::filter(Datum == Sys.Date()) %>%
+        dplyr::pull(Spieler) %>%
+        sort()
+      updateSelectInput(session, "spieler_select2", choices = choices)
+    }
+  })
   
   # Link vom Dashboard zum MW Trend tab
   observeEvent(input$mw_zeitachse_click, {
@@ -2456,61 +2497,66 @@ server <- function(input, output, session) {
   
   
   ### ---- Prompt builder ----
-  # Hilfsfunktionen
+  # ---- Verein aus ap_df (heute, sonst jüngstes Datum), Fallback ca*_df ----
   get_verein <- function(sp) {
+    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
+    sel  <- norm(sp)
+    
+    if (exists("ap_df", inherits=TRUE) && is.data.frame(ap_df) && nrow(ap_df) > 0) {
+      tmp <- ap_df %>%
+        mutate(.k = norm(Spieler), Datum = as.Date(Datum)) %>%
+        filter(.k == sel)
+      if (nrow(tmp) > 0) {
+        today <- Sys.Date()
+        row <- tmp %>% filter(Datum == today) %>% slice_tail(n=1)
+        if (nrow(row) == 0) row <- tmp %>% arrange(desc(Datum)) %>% slice_head(n=1)
+        ve <- as.character(row$Verein[1])
+        if (nzchar(ve)) return(ve)
+      }
+    }
+    
+    # Fallback: bestehende Tabellen
     src <- if (exists("ca2_df", inherits=TRUE)) ca2_df
     else if (exists("ca_df2", inherits=TRUE)) ca_df2
-    else if (exists("ca_df", inherits=TRUE)) ca_df
+    else if (exists("ca_df",  inherits=TRUE)) ca_df
     else NULL
-    if (is.null(src)) return("")
-    sp_norm <- tolower(trimws(sp))
-    tmp <- src %>%
-      mutate(.k = tolower(trimws(SPIELER))) %>%
-      filter(.k == sp_norm)
-    if (nrow(tmp) == 0) return("")
-    col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else NA
-    if (is.na(col)) return("")
-    v <- as.character(tmp[[col]][1]); ifelse(is.na(v), "", v)
+    if (is.null(src) || !is.data.frame(src) || nrow(src) == 0) return("")
+    sp_norm <- sel
+    tmp2 <- src %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sp_norm)
+    if (nrow(tmp2) == 0) return("")
+    col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else return("")
+    v <- as.character(tmp2[[col]][1]); ifelse(is.na(v), "", v)
   }
   
+  # ---- Prompt mit Zeilen-Header + drei Scores untereinander ----
   build_prompt <- function(sp, ve) {
-    header <- "Spieler\nVerein\n"
-    today  <- format(Sys.Date(), "%Y-%m-%d")
+    today <- format(Sys.Date(), "%Y-%m-%d")
     paste0(
       "Gib GENAU dieses Format zurück:\n",
-      header, "\n",
-      # Zweite Zeile MUSS mit 'Spieler;Verein;' beginnen
+      "Spieler\nVerein\n\n",
       ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
       ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
       "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
-      "In 'Info' kurz und faktenbasiert: Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
-      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Tatsachen-Aussage mit [1], [2] … belegen. ",
-      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, mind. 2 Domains bevorzugt (Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien). ",
+      "Info: Kurz, faktenbasiert zu Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
+      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Aussage mit [1], [2] … belegen. ",
+      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, bevorzugt Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien. ",
       "Meide Social Media.\n\n",
-      # Scores untereinander
-      "Danach GENAU drei neue Zeilen:\n",
       "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
       "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
       "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
-      "Suchfenster fokussiert die letzten 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
+      "Suchfenster: primär letzte 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
       "Stand: ", today, ". Antworte NUR in diesem Format."
     )
   }
   
-  
-  # Reactive Prompt
+  # ---- Reactive bleibt gleich ----
   gpt_prompt <- reactive({
     req(input$spieler_select2)
     sp <- input$spieler_select2
     ve <- get_verein(sp)
     build_prompt(sp, ve)
   })
-  
   output$gpt_prompt_preview <- renderText(gpt_prompt())
-  
-  observeEvent(input$copied_prompt, {
-    showNotification("Prompt kopiert", type = "message")
-  })
   
   
   # ---- KADER-ENTWICKLUNG ----
