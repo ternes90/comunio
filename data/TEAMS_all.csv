@@ -35,10 +35,10 @@ Alfons;Trapp;Tor
 Alfons;Peretz;Tor
 Christoph;Burkardt;Sturm
 Christoph;Ilić;Sturm
-Christoph;B. Touré;Sturm
 Christoph;Amiri;Mittelfeld
 Christoph;Lynen;Mittelfeld
 Christoph;Remberg;Mittelfeld
+Christoph;B. Touré;Mittelfeld
 Christoph;Mainka;Abwehr
 Christoph;Theate;Abwehr
 Christoph;Upamecano;Abwehr
@@ -47,13 +47,12 @@ Christoph;Hanche-Olsen;Abwehr
 Christoph;Diks;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
-Pascal;Kramarić;Sturm
+Pascal;Kramarić;Mittelfeld
 Pascal;Larsson;Mittelfeld
 Pascal;Irvine;Mittelfeld
 Pascal;Can;Mittelfeld
 Pascal;Skhiri;Mittelfeld
 Pascal;Kainz;Mittelfeld
-Pascal;Tah;Abwehr
 Pascal;W. Orbán;Abwehr
 Pascal;Caci;Abwehr
 Pascal;Elvedi;Abwehr
@@ -88,7 +87,6 @@ Dominik;Haberer;Mittelfeld
 Dominik;Vini Souza;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
-Dominik;Rothe;Abwehr
 Dominik;Zesiger;Abwehr
 Dominik;Ritzka;Abwehr
 Dominik;Netz;Abwehr
