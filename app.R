@@ -156,6 +156,8 @@ ui <- navbarPage(
                
                # NEU: freies Textfeld für die Antwort
                fluidRow(
+                 style = "margin-bottom:200px;",
+                 
                  column(
                    12,
                    uiOutput("gpt_result_box")   # ersetzt früheres DTOutput("gpt_result")
