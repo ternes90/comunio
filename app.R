@@ -149,8 +149,9 @@ ui <- navbarPage(
                actionButton("gpt_run", "Research starten"),
                actionButton("copy_prompt", "Prompt kopieren"),
                div(
-                 style = "display:none;",
-                 textOutput("gpt_prompt_preview")  # gleiche ID behalten
+                 id = "gpt_prompt_container",
+                 style = "position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden;",
+                 verbatimTextOutput("gpt_prompt_preview", placeholder = TRUE)
                ),
                
                # NEU: freies Textfeld für die Antwort
@@ -402,7 +403,9 @@ ui <- navbarPage(
   background: #fafafa;
 }
 ")),
-    tags$head(tags$style(HTML("#gpt_prompt_preview{display:none;}")))
+    tags$head(tags$style(HTML("
+  #gpt_prompt_preview { white-space: pre-wrap; }
+")))
     
     
     
