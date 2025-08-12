@@ -304,13 +304,6 @@ ui <- navbarPage(
            )
   ),
   
-  ## ---- Notizen ----
-  # tabPanel("Notes/Learnings",
-  #          fluidPage(
-  #            DTOutput("notes_learnings")
-  #          )
-  # ),
-  
   # In Deiner UI (z.B. ui.R)
   tags$head(
     # --- Click‑Event für kapital_uebersicht_table ---
@@ -2473,13 +2466,14 @@ server <- function(input, output, session) {
   }
   
   build_prompt <- function(sp, ve) {
-    header <- "Spieler;Verein;Info"
+    header <- "Spieler\nVerein\n"
     today  <- format(Sys.Date(), "%Y-%m-%d")
     paste0(
       "Gib GENAU dieses Format zurück:\n",
       header, "\n",
       # Zweite Zeile MUSS mit 'Spieler;Verein;' beginnen
-      ">>> Die zweite Zeile muss mit '", sp, ";", ve, ";' beginnen. ",
+      ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
+      ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
       "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
       "In 'Info' kurz und faktenbasiert: Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
       "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Tatsachen-Aussage mit [1], [2] … belegen. ",
@@ -2489,7 +2483,7 @@ server <- function(input, output, session) {
       "Danach GENAU drei neue Zeilen:\n",
       "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
       "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Bundesliga_2025_26: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
+      "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
       "Suchfenster fokussiert die letzten 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
       "Stand: ", today, ". Antworte NUR in diesem Format."
     )
@@ -3786,32 +3780,6 @@ server <- function(input, output, session) {
         fontWeight = "bold"
       )
   })
-  
-  # ---- NOTES/LEARNINGS ----
-  
-  # output$notes_learnings <- DT::renderDT({
-  #   # 1) Lese alle Zeilen aus der Text-Datei
-  #   lines <- readLines("data/learnings.txt", warn = FALSE)
-  #   # 2) Entferne führende '- ' und Leerzeichen
-  #   notes <- trimws(gsub("^[-\\s]+", "", lines))
-  #   # 3) In ein DataFrame packen
-  #   df_notes <- data.frame(
-  #     Note = notes,
-  #     stringsAsFactors = FALSE
-  #   )
-  #   # 4) Als einfache Tabelle rendern
-  #   DT::datatable(
-  #     df_notes,
-  #     rownames = FALSE,
-  #     colnames = "Notes / Learnings",
-  #     escape   = FALSE,
-  #     options  = list(
-  #       dom        = "t",
-  #       pageLength = nrow(df_notes),
-  #       ordering   = FALSE
-  #     )
-  #   )
-  # })
   
 }
 
