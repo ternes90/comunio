@@ -366,35 +366,31 @@ ui <- navbarPage(
     color: inherit !important;
   }
 ")),
-    tags$script(HTML("
+    tags$head(tags$script(HTML("
 (function(){
-  function fbCopy(text){
+  function copySync(txt){
     var ta=document.createElement('textarea');
-    ta.value=text; document.body.appendChild(ta); ta.select();
-    try{ document.execCommand('copy'); }catch(e){}
+    ta.value=txt;
+    ta.setAttribute('readonly','');
+    ta.style.position='fixed';
+    ta.style.top='0';
+    ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    var ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
     document.body.removeChild(ta);
+    return ok;
   }
   $(document).on('click','#copy_prompt',function(){
-    var el = document.getElementById('gpt_prompt_preview');
-    var txt = el ? (el.textContent || el.innerText || '') : '';
-
-    // 1) neuen Tab sofort öffnen (sichert User-Gesture)
-    var win = window.open('about:blank','_blank');
-
-    function done(){
-      if (win && !win.closed) { win.location.replace('https://chatgpt.com/'); }
-      Shiny.setInputValue('copied_prompt', Date.now(), {priority:'event'});
-    }
-
-    // 2) erst kopieren, dann Ziel-URL setzen
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt).then(done).catch(function(){ fbCopy(txt); done(); });
-    } else {
-      fbCopy(txt); done();
-    }
+    var el=document.getElementById('gpt_prompt_preview');
+    var txt=el ? (el.textContent || el.innerText || '') : '';
+    var ok=copySync(txt);
+    Shiny.setInputValue('copied_prompt', {ok: ok, len: txt.length, t: Date.now()}, {priority:'event'});
+    setTimeout(function(){ window.open('https://chatgpt.com/','_blank'); }, 120);
   });
 })();
-"))
+")))
     
   )
   
