@@ -2410,36 +2410,24 @@ server <- function(input, output, session) {
   
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
+    load_id <- showNotification("🔍 Spieler-Research läuft …", type="message", duration=NULL, closeButton=FALSE)
+    on.exit(try(removeNotification(load_id), silent=TRUE), add=TRUE)
     
-    load_id <- showNotification("🔍 Spieler-Research läuft …",
-                                type = "message", duration = NULL, closeButton = FALSE)
-    on.exit({ try(removeNotification(load_id), silent = TRUE) }, add = TRUE)
-    
-    withProgress(message = "Research läuft …", value = 0, {
-      incProgress(0.10, detail = "Initialisiere Umgebung")
-      
-      if (!requireNamespace("reticulate", quietly = TRUE)) {
-        install.packages("reticulate", repos = "https://cran.rstudio.com")
-      }
+    withProgress(message="Research läuft …", value=0, {
+      incProgress(0.10, detail="Init")
+      if (!requireNamespace("reticulate", quietly=TRUE)) install.packages("reticulate", repos="https://cran.rstudio.com")
       library(reticulate)
       
-      incProgress(0.10, detail = "Lade Python-Skript")
-      
-      if (!exists("query_player_text", mode = "function")) {
-        tryCatch(
-          source_python("gpt_player.py"),
-          error = function(e) {
-            showNotification(paste("Fehler beim Laden von gpt_player.py:", e$message), type = "error")
-            stop(e)
-          }
-        )
+      incProgress(0.10, detail="Lade Python")
+      if (!exists("query_player_text", mode="function")) {
+        key <- Sys.getenv("OPENAI_API_KEY"); if (!nzchar(key)) { showNotification("OPENAI_API_KEY fehlt.", type="error"); return() }
+        reticulate::py_run_string(sprintf("import os; os.environ['OPENAI_API_KEY'] = %s", jsonlite::toJSON(key, auto_unbox=TRUE)))
+        reticulate::source_python("gpt_player.py")
       }
       
-      incProgress(0.15, detail = "Bestimme Verein")
-      
-      req(ca2_df)
-      src_df <- if (exists("ca2_df", inherits = TRUE)) ca2_df else ca_df
-      
+      incProgress(0.15, detail="Verein")
+      req(exists("ca2_df", inherits=TRUE) || exists("ca_df2", inherits=TRUE) || exists("ca_df", inherits=TRUE))
+      src_df <- if (exists("ca2_df", inherits=TRUE)) ca2_df else if (exists("ca_df2", inherits=TRUE)) ca_df2 else ca_df
       sp <- input$spieler_select2
       sp_norm <- tolower(trimws(sp))
       verein <- src_df %>%
@@ -2450,40 +2438,19 @@ server <- function(input, output, session) {
       
       mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
       
-      # Prompt für die Text-Antwort
+      # Prompt bauen (dein Builder)
       prompt_str <- build_prompt(sp, verein)
       output$gpt_prompt_preview <- renderText(prompt_str)
       
-      incProgress(0.40, detail = "Frage API ab")
+      incProgress(0.45, detail="API")
+      res_txt <- tryCatch(py_to_r(query_player_text(sp, verein, mdl, prompt_str)),
+                          error=function(e){ showNotification(paste("query_player_text:", e$message), type="error"); "" })
       
-      # NEU: Textmodus statt CSV/DF
-      res_txt <- tryCatch(
-        {
-          ans <- query_player_text(sp, verein, mdl, prompt_str)
-          py_to_r(ans)
-        },
-        error = function(e) {
-          showNotification(paste("Fehler bei query_player_text():", e$message), type = "error")
-          ""
-        }
-      )
-      
-      incProgress(0.20, detail = "Render Antwort")
-      
-      # Freies Textfeld rendern
-      output$gpt_result_box <- renderUI({
-        tags$pre(id = "gpt_result_pre", res_txt %||% "")
-      })
+      incProgress(0.20, detail="Render")
+      output$gpt_result_box <- renderUI(tags$pre(id="gpt_result_pre", if (nzchar(res_txt)) res_txt else ""))
     })
-    
-    removeNotification(load_id)
   })
   
-  # optionaler Kopieren-Button für den Prompt
-  observeEvent(input$copy_prompt, {
-    # clientseitig via Clipboard; hier nur visuelle Rückmeldung
-    showNotification("Prompt im Vorschau-Feld. Zum Kopieren markieren und Strg+C.", type = "message")
-  })
   
   
   ### ---- Prompt builder ----
