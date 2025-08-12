@@ -132,29 +132,36 @@ ui <- navbarPage(
              tabPanel(
                title = "Spieler-Info", value = "spieler_info",
                selectInput("spieler_select2", "Spieler:", choices = NULL),
-               tags$div("Marktwertverlauf", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-               div(
-                 style = "margin-bottom:20px; width: 100%;",
-                 plotOutput("spieler_info_mw", height = 350, width = "100%")
-               ),
-               tags$div("Leistungsdaten", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-               div(
-                 style = "margin-bottom:20px; width: 100%;",
-                 DTOutput("spieler_info_raw", width = "100%")
-               ),
-               tags$div("Chat GPT Analyse", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+               
+               tags$div("Marktwertverlauf",
+                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
+               div(style = "margin-bottom:20px;width:100%;",
+                   plotOutput("spieler_info_mw", height = 350, width = "100%")),
+               
+               tags$div("Leistungsdaten",
+                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
+               div(style = "margin-bottom:20px;width:100%;",
+                   DTOutput("spieler_info_raw", width = "100%")),
+               
+               tags$div("Chat GPT Analyse",
+                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
                selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
                actionButton("gpt_run", "Research starten"),
                actionButton("copy_prompt", "Prompt kopieren"),
-               verbatimTextOutput("gpt_prompt_preview"),
+               div(
+                 style = "display:none;",
+                 textOutput("gpt_prompt_preview")  # gleiche ID behalten
+               ),
+               
+               # NEU: freies Textfeld für die Antwort
                fluidRow(
-                 column(12, DTOutput("spieler_info")),
-                 column(12, DTOutput("gpt_result"))   
+                 column(
+                   12,
+                   uiOutput("gpt_result_box")   # ersetzt früheres DTOutput("gpt_result")
+                 )
                )
              )
+             
              
              
             
@@ -383,7 +390,21 @@ ui <- navbarPage(
     setTimeout(function(){ window.open('https://chatgpt.com/','_blank'); }, 120);
   });
 })();
-")))
+"))),
+    tags$style(HTML("
+#gpt_result_pre {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 160px;
+  background: #fafafa;
+}
+")),
+    tags$head(tags$style(HTML("#gpt_prompt_preview{display:none;}")))
+    
+    
     
   )
   
@@ -2361,24 +2382,39 @@ server <- function(input, output, session) {
   
   
   ### ---- GPT ----
+  # Prompt-Builder exakt nach Vorgabe
+  build_prompt <- function(sp, ve) {
+    header <- "Spieler\nVerein\n"
+    today  <- format(Sys.Date(), "%Y-%m-%d")
+    paste0(
+      "Gib GENAU dieses Format zurück:\n",
+      header, "\n",
+      ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
+      ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
+      "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
+      "In 'Info' kurz und faktenbasiert: Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
+      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Tatsachen-Aussage mit [1], [2] … belegen. ",
+      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, mind. 2 Domains bevorzugt (Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien). ",
+      "Meide Social Media.\n\n",
+      "Danach GENAU drei neue Zeilen:\n",
+      "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
+      "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
+      "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
+      "Suchfenster fokussiert die letzten 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
+      "Stand: ", today, ". Antworte NUR in diesem Format."
+    )
+  }
+  
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
     
-    # Persistente Lade-Notification starten
-    load_id <- showNotification(
-      "🔍 Spieler-Research läuft …",
-      type = "message", duration = NULL, closeButton = FALSE
-    )
-    
-    on.exit({
-      # Fallback: Notification sicher entfernen
-      try(removeNotification(load_id), silent = TRUE)
-    }, add = TRUE)
+    load_id <- showNotification("🔍 Spieler-Research läuft …",
+                                type = "message", duration = NULL, closeButton = FALSE)
+    on.exit({ try(removeNotification(load_id), silent = TRUE) }, add = TRUE)
     
     withProgress(message = "Research läuft …", value = 0, {
       incProgress(0.10, detail = "Initialisiere Umgebung")
       
-      # 1) reticulate sicherstellen
       if (!requireNamespace("reticulate", quietly = TRUE)) {
         install.packages("reticulate", repos = "https://cran.rstudio.com")
       }
@@ -2386,8 +2422,7 @@ server <- function(input, output, session) {
       
       incProgress(0.10, detail = "Lade Python-Skript")
       
-      # 2) Python-Skript nur einmal laden
-      if (!exists("query_player", mode = "function")) {
+      if (!exists("query_player_text", mode = "function")) {
         tryCatch(
           source_python("gpt_player.py"),
           error = function(e) {
@@ -2399,7 +2434,6 @@ server <- function(input, output, session) {
       
       incProgress(0.15, detail = "Bestimme Verein")
       
-      # 3) Verein ermitteln
       req(ca2_df)
       src_df <- if (exists("ca2_df", inherits = TRUE)) ca2_df else ca_df
       
@@ -2413,39 +2447,41 @@ server <- function(input, output, session) {
       
       mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
       
+      # Prompt für die Text-Antwort
+      prompt_str <- build_prompt(sp, verein)
+      output$gpt_prompt_preview <- renderText(prompt_str)
+      
       incProgress(0.40, detail = "Frage API ab")
       
-      # 4) API-Call mit Fehlerbehandlung
-      res <- tryCatch(
-        query_player(sp, verein, mdl),
+      # NEU: Textmodus statt CSV/DF
+      res_txt <- tryCatch(
+        {
+          ans <- query_player_text(sp, verein, mdl, prompt_str)
+          py_to_r(ans)
+        },
         error = function(e) {
-          showNotification(paste("Fehler bei query_player():", e$message), type = "error")
-          stop(e)
+          showNotification(paste("Fehler bei query_player_text():", e$message), type = "error")
+          ""
         }
       )
       
-      incProgress(0.15, detail = "Verarbeite Ergebnis")
+      incProgress(0.20, detail = "Render Antwort")
       
-      # 5) UTF-8 fix vor Datatable
-      res_r <- py_to_r(res)
-      res_r[] <- lapply(res_r, function(x) enc2utf8(as.character(x)))
-      df <- as_tibble(res_r)
-      
-      incProgress(0.10, detail = "Render Tabelle")
-      
-      # 6) Anzeige
-      output$gpt_result <- DT::renderDT(
-        DT::datatable(
-          df,
-          rownames = FALSE, escape = FALSE,
-          options = list(dom = 't', paging = FALSE, scrollX = TRUE)
-        )
-      )
+      # Freies Textfeld rendern
+      output$gpt_result_box <- renderUI({
+        tags$pre(id = "gpt_result_pre", res_txt %||% "")
+      })
     })
     
-    # Nach erfolgreichem Abschluss: Lade-Notification schließen
     removeNotification(load_id)
   })
+  
+  # optionaler Kopieren-Button für den Prompt
+  observeEvent(input$copy_prompt, {
+    # clientseitig via Clipboard; hier nur visuelle Rückmeldung
+    showNotification("Prompt im Vorschau-Feld. Zum Kopieren markieren und Strg+C.", type = "message")
+  })
+  
   
   ### ---- Prompt builder ----
   # Hilfsfunktionen

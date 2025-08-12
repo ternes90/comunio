@@ -1,8 +1,9 @@
-# gpt_player.py – Websuche-only, frische & vertrauenswürdige Quellen, 2 Passes (max),
-# CSV-Form strikt, differenzierte Scores, robuste Retries gegen alte/unsaubere Quellen
+# gpt_player.py – Websuche-only, frische & vertrauenswürdige Quellen
+# Liefert entweder strukturierte CSV-ähnliche Dicts (query_player)
+# oder ein frei formatiertes Text-Ergebnis für Shiny (query_player_text)
 
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from openai import OpenAI
 
 client = OpenAI()
@@ -13,18 +14,18 @@ CSV_HEADER = ["Spieler", "Verein", "Info", "Stammplatzwahrscheinlichkeit", "Pote
 # ---- Trust / Filter ----
 TRUSTED_DOMAINS = {
     "bundesliga.com", "dfb.de", "dfl.de", "kicker.de", "transfermarkt.de",
-    "ruhrnachrichten.de", "waz.de", "bild.de",  # bild wird nur als Zusatz toleriert
+    "ruhrnachrichten.de", "waz.de", "bild.de",
     "bvb.de", "fc-bayern.com", "rbleipzig.com", "svw.de", "werder.de", "tsg-hoffenheim.de",
     "eintracht.de", "fcn.de", "vfb.de", "herthabsc.com", "borussia.de", "schalke04.de",
     "f95.de", "fcaugsburg.de", "bochum1848.de", "sv98.de", "svd98.de", "hsv.de", "stpauli.com",
 }
-DISCOURAGED = {"twitter.com","x.com","instagram.com","tiktok.com","facebook.com","reddit.com","youtube.com","wikipedia.org"}
+DISCOURAGED = {"twitter.com", "x.com", "instagram.com", "tiktok.com", "facebook.com", "reddit.com", "youtube.com", "wikipedia.org"}
 
-# ---------- Utils ----------
-
+# ---------- Regex ----------
 DATE_PAT = re.compile(r"(\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4})")
 MD_LINK_PAT = re.compile(r"\[[^\]]{1,80}\]\(https?://[^)]+?\)")
 
+# ---------- Utils ----------
 def _clamp_num(x: str) -> str:
     try:
         v = float(str(x).replace(",", "."))
@@ -80,9 +81,7 @@ def _trusted_mix(urls: list[str]) -> bool:
     if not urls: return False
     hosts = {_domain(u) for u in urls}
     discouraged = hosts & DISCOURAGED
-    # mindestens eine Trusted-Domain
     trusted = any(any(td in h for td in TRUSTED_DOMAINS) for h in hosts)
-    # Social-only ist schlecht
     if trusted: return True
     return False if hosts and hosts == discouraged else trusted
 
@@ -108,7 +107,6 @@ def _parse_csv_like(spieler_in: str, verein_in: str, txt: str, prefer_input_club
     ve_out = verein_in if (prefer_input_club and verein_in) else (ve_model if ve_model else (verein_in or ""))
     info_out = info_raw if info_raw else "Unklar"
 
-    # Wenn Unklar -> harte 0/0/0
     if info_out.strip().lower() == "unklar":
         n1, n2, n3 = "0.0", "0.0", "0.0"
 
@@ -129,7 +127,6 @@ def _score_floor(info: str, n1: str, n2: str, n3: str) -> tuple[str, str, str]:
     if any(x > 0.0 for x in (a, b, c)):
         return (f"{a:.1f}", f"{b:.1f}", f"{c:.1f}")
 
-    # Text-Heuristik
     stamm = 1.0; pot = 1.0; bl = 1.0; keys = info_l
     if any(k in keys for k in ["klarer stamm","gesetzt","startelf","stammspieler","erste elf"]):
         stamm = 2.5; bl = max(bl, 2.0)
@@ -153,15 +150,14 @@ def _score_floor(info: str, n1: str, n2: str, n3: str) -> tuple[str, str, str]:
 
     return (f"{stamm:.1f}", f"{pot:.1f}", f"{bl:.1f}")
 
-# ---------- Prompt ----------
-
+# ---------- Prompt (CSV-Modus, bestehend) ----------
 PREFERRED_SOURCES_TEXT = (
     "Bevorzuge Vereinsseiten, bundesliga.com/de, dfb.de, kicker.de, transfermarkt.de sowie lokale Qualitätsmedien "
     "(z. B. Ruhr Nachrichten/WAZ in Dortmund). Meide Social-Media-Posts und reine Aggregatoren."
 )
 
-def _build_prompt(spieler: str, verein: str, today_iso: str, days_limit: int | None,
-                  allow_player_only: bool, allow_infer_club: bool, stricter: bool=False) -> str:
+def _build_prompt_csv(spieler: str, verein: str, today_iso: str, days_limit: int | None,
+                      allow_player_only: bool, allow_infer_club: bool, stricter: bool=False) -> str:
     scope = ""
     if days_limit:
         scope = (
@@ -199,9 +195,7 @@ def _build_prompt(spieler: str, verein: str, today_iso: str, days_limit: int | N
         "Info ohne Semikolons, max. 500 Wörter, deutsch."
     )
 
-    strict_tail = ""
-    if stricter:
-        strict_tail = "Auch wenn nur ältere Inhalte vorliegen: gib sie mit Datum an und bewerte trotzdem. "
+    strict_tail = "Auch wenn nur ältere Inhalte vorliegen: gib sie mit Datum an und bewerte trotzdem. " if stricter else ""
 
     return (
         f"Gib eine CSV mit genau diesen Spalten zurück:\n{';'.join(CSV_HEADER)}\n"
@@ -233,8 +227,7 @@ def _ask_gpt(prompt: str, model: str) -> str:
     except Exception:
         return ""
 
-# ---------- Public API (max 2 Calls) ----------
-
+# ---------- Öffentliche API (CSV-ähnlich) ----------
 def query_player(spieler: str, verein: str, model: str = None):
     mdl = model or DEFAULT_MODEL
     today_iso = date.today().isoformat()
@@ -257,7 +250,6 @@ def query_player(spieler: str, verein: str, model: str = None):
         if _contains_markdown_link(info):
             return True
         urls = _extract_urls(info)
-        # Mind. eine vertrauenswürdige Domain und mind. ein frisches Datum
         if not _trusted_mix(urls):
             return True
         if not fresh_enough(info, fresh_days):
@@ -266,15 +258,15 @@ def query_player(spieler: str, verein: str, model: str = None):
 
     # Pass 1: 60 Tage
     txt = _ask_gpt(
-        _build_prompt(spieler, verein_clean, today_iso, days_limit=60, allow_player_only=True, allow_infer_club=True),
+        _build_prompt_csv(spieler, verein_clean, today_iso, days_limit=60, allow_player_only=True, allow_infer_club=True),
         mdl
     )
     if not needs_retry(txt, 60):
         parts = _parse_csv_like(spieler, verein_clean, txt, prefer_input_club=bool(verein_clean))
     else:
-        # Pass 2: 270 Tage (letzter Versuch)
+        # Pass 2: 270 Tage
         txt = _ask_gpt(
-            _build_prompt(spieler, verein_clean, today_iso, days_limit=270, allow_player_only=True, allow_infer_club=True, stricter=True),
+            _build_prompt_csv(spieler, verein_clean, today_iso, days_limit=270, allow_player_only=True, allow_infer_club=True, stricter=True),
             mdl
         )
         if not txt or ";" not in txt:
@@ -291,3 +283,61 @@ def query_player(spieler: str, verein: str, model: str = None):
         "Potenzial": s2,
         "Bundesliga_2025_26": s3
     }
+
+# ---------- Textmodus für Shiny ----------
+def _build_prompt_text(spieler: str, verein: str) -> str:
+    today = date.today().isoformat()
+    header = "Spieler\nVerein\n"
+    return (
+        "Gib GENAU dieses Format zurück:\n"
+        f"{header}\n"
+        f">>> Die erste Zeile muss mit '{spieler}' beginnen. "
+        f">>> Die zweite Zeile muss mit '{verein}' beginnen. "
+        "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n"
+        "In 'Info' kurz und faktenbasiert: Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. "
+        "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Tatsachen-Aussage mit [1], [2] … belegen. "
+        "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, mind. 2 Domains bevorzugt "
+        "(Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien). "
+        "Meide Social Media.\n\n"
+        "Danach GENAU drei neue Zeilen:\n"
+        "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n"
+        "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n"
+        "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n"
+        "Suchfenster fokussiert die letzten 60 Tage, sonst ältere verlässliche Quellen mit Datum. "
+        f"Stand: {today}. Antworte NUR in diesem Format."
+    )
+
+def _basic_text_sanity(sp: str, ve: str, txt: str) -> str:
+    t = (txt or "").strip()
+    if not t:
+        return f"{sp}\n{ve}\nInfo: Unklar\nQuellen:\nStammplatz: 0.0\nPotenzial: 0.0\nWechselwahrscheinlichkeit: 0.0"
+    return t
+
+def query_player_text(spieler: str, verein: str, model: str = None, prompt_override: str | None = None):
+    """
+    Textantwort für Shiny-UI.
+    Nutzt die gleiche Websuche wie query_player.
+    """
+    mdl = model or DEFAULT_MODEL
+    prompt = prompt_override if prompt_override else _build_prompt_text(spieler, verein)
+
+    tools = [{
+        "type": "web_search_preview",
+        "user_location": {"type": "approximate", "country": "DE"},
+        "search_context_size": "high"
+    }]
+    try:
+        resp = client.responses.create(
+            model=mdl,
+            input=prompt,
+            tools=tools,
+            tool_choice={"type": "web_search_preview"},
+            temperature=0.25,
+            max_output_tokens=5000,
+            store=False
+        )
+        out = (resp.output_text or "")
+    except Exception:
+        out = ""
+
+    return _basic_text_sanity(spieler, verein, out)
