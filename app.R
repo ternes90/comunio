@@ -304,13 +304,6 @@ ui <- navbarPage(
            )
   ),
   
-  ## ---- Notizen ----
-  # tabPanel("Notes/Learnings",
-  #          fluidPage(
-  #            DTOutput("notes_learnings")
-  #          )
-  # ),
-  
   # In Deiner UI (z.B. ui.R)
   tags$head(
     # --- Click‑Event für kapital_uebersicht_table ---
@@ -365,32 +358,44 @@ ui <- navbarPage(
     background-color: #E8F2FF !important;
     color: inherit !important;
   }
-")),
-    tags$head(tags$script(HTML("
+")),tags$script(HTML("
 (function(){
-  function copySync(txt){
-    var ta=document.createElement('textarea');
-    ta.value=txt;
-    ta.setAttribute('readonly','');
-    ta.style.position='fixed';
-    ta.style.top='0';
-    ta.style.left='-9999px';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    var ok=false;
-    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
-    document.body.removeChild(ta);
-    return ok;
-  }
   $(document).on('click','#copy_prompt',function(){
-    var el=document.getElementById('gpt_prompt_preview');
-    var txt=el ? (el.textContent || el.innerText || '') : '';
-    var ok=copySync(txt);
-    Shiny.setInputValue('copied_prompt', {ok: ok, len: txt.length, t: Date.now()}, {priority:'event'});
-    setTimeout(function(){ window.open('https://chatgpt.com/','_blank'); }, 120);
+    var el = document.getElementById('gpt_prompt_preview');
+    var txt = el ? (el.textContent || el.innerText || '') : '';
+    if(!txt){
+      Shiny.setInputValue('copied_prompt',{ok:false,reason:'leer'},{priority:'event'});
+      return;
+    }
+
+    var win = window.open('about:blank','_blank','noopener');
+    if(!win){
+      Shiny.setInputValue('copied_prompt',{ok:false,reason:'popup'},{priority:'event'});
+      return;
+    }
+
+    function onMsg(ev){
+      if(ev && ev.data && ev.data.copied){
+        Shiny.setInputValue('copied_prompt',{ok:true,len:ev.data.len,t:Date.now()},{priority:'event'});
+        window.removeEventListener('message', onMsg);
+      }
+    }
+    window.addEventListener('message', onMsg);
+
+    var html = '<!doctype html><meta charset=\"utf-8\"><title>Weiter…</title>'
+      + '<script>(function(){'
+      + 'function copySync(t){var ta=document.createElement(\"textarea\");ta.value=t;ta.setAttribute(\"readonly\",\"\");ta.style.position=\"fixed\";ta.style.left=\"-9999px\";document.body.appendChild(ta);ta.select();try{document.execCommand(\"copy\");}catch(e){};document.body.removeChild(ta);} '
+      + 'var t=' + JSON.stringify(txt) + ';'
+      + 'setTimeout(function(){ copySync(t); parent.postMessage({copied:true,len:t.length}, \"*\"); setTimeout(function(){ location.replace(\"https://chatgpt.com/\"); }, 120); }, 50);'
+      + '})();<\\/script>'
+      + '<body style=\"font:14px system-ui;padding:16px\">Prompt wird kopiert… ChatGPT öffnet gleich.</body>';
+
+    win.document.open(); win.document.write(html); win.document.close();
   });
 })();
-")))
+"))
+    
+    
     
   )
   
@@ -2506,8 +2511,14 @@ server <- function(input, output, session) {
   
   output$gpt_prompt_preview <- renderText(gpt_prompt())
   
-  observeEvent(input$copied_prompt, {
-    showNotification("Prompt kopiert", type = "message")
+  observeEvent(input$copied_prompt, ignoreInit = TRUE, {
+    if (isTRUE(input$copied_prompt$ok)) {
+      len <- if (!is.null(input$copied_prompt$len)) input$copied_prompt$len else NA_integer_
+      showNotification(paste0("Prompt kopiert (", len, " Zeichen) und ChatGPT geöffnet"), type = "message")
+    } else {
+      reason <- if (!is.null(input$copied_prompt$reason)) input$copied_prompt$reason else "unbekannt"
+      showNotification(paste("Aktion fehlgeschlagen:", reason), type = "error")
+    }
   })
   
   
