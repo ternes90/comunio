@@ -132,6 +132,20 @@ ui <- navbarPage(
              tabPanel(
                title = "Spieler-Info", value = "spieler_info",
                selectInput("spieler_select2", "Spieler:", choices = NULL),
+               tags$div("Marktwertverlauf", 
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+               div(
+                 style = "margin-bottom:20px; width: 100%;",
+                 plotOutput("spieler_info_mw", height = 350, width = "100%")
+               ),
+               tags$div("Leistungsdaten", 
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+               div(
+                 style = "margin-bottom:20px; width: 100%;",
+                 DTOutput("spieler_info_raw", width = "100%")
+               ),
+               tags$div("Chat GPT Analyse", 
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
                selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
                actionButton("gpt_run", "Research starten"),
                fluidRow(
@@ -489,21 +503,22 @@ server <- function(input, output, session) {
   ca_df <- read_delim("data/com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
   ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
   
+  #PPS usw. mergen
+  ca_df <- ca_df %>%
+    select(
+      SPIELER,
+      Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
+      Preis_Leistung = `PREIS-LEISTUNG`,
+      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
+    )
+  
   #Kaufempfehung etc.
   ca2_df <- read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";", locale = locale(encoding = "UTF-8")) %>%
     mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>% filter(Datum == max(Datum, na.rm = TRUE))
   ca2_df$SPIELER <- trimws(enc2utf8(as.character(ca2_df$SPIELER)))
   
-  ca2_df <- ca2_df %>%
-    select(
-      SPIELER,
-      `Punkte pro Spiel` = `PUNKTE / SPIEL`,
-      `Preis-Leistung` = `PREIS-LEISSTUNG`,
-      Zielwert = `ZIELWERT`,
-      Empfehlung = `KAUFEMPFEHLUNG`,
-      Gebote = `GEBOTSVORHERSAGE`,
-      TEAM
-    )
+  #All player hist. MW
+  mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
@@ -923,7 +938,7 @@ server <- function(input, output, session) {
   # ---- MARKTWERTENTWICKLUNG ----
   ## ---- Gesamtmarktwerte ----
   # Manuell zusätzliche Tagesdaten ergänzen
-  manuelle_werte <- tibble::tibble(
+  manuelle_werte <- tibble(
     Datum = as.Date(c(
       "2025-06-01", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05",
       "2025-06-06", "2025-06-07", "2025-06-08", "2025-06-09", "2025-06-10",
@@ -1964,7 +1979,15 @@ server <- function(input, output, session) {
         by = "Spieler"
       ) %>%
       left_join(
-        ca2_df,
+        ca2_df %>%
+            select(
+              SPIELER,
+              `Punkte pro Spiel` = `PUNKTE / SPIEL`,
+              `Preis-Leistung` = `PREIS-LEISSTUNG`,
+              Zielwert = `ZIELWERT`,
+              Empfehlung = `KAUFEMPFEHLUNG`,
+              Gebote = `GEBOTSVORHERSAGE`
+            ),
         by = c("Spieler" = "SPIELER")
       )
     
@@ -2249,92 +2272,165 @@ server <- function(input, output, session) {
   })
   
   ## ---- Spieler Info ----
+  ### ---- MW ----
+  # Server
+  output$spieler_info_mw <- renderPlot({
+    req(input$spieler_select2, mw_all, ap_df)
+    
+    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
+    sel  <- norm(input$spieler_select2)
+    
+    hist <- mw_all %>%
+      mutate(Datum = as.Date(Datum),
+             Marktwert = as.numeric(Marktwert),
+             K = norm(Spieler),
+             src = factor("hist", levels = c("hist","daily")))
+    
+    daily <- ap_df %>%
+      mutate(Datum = as.Date(Datum),
+             Marktwert = as.numeric(Marktwert),
+             K = norm(Spieler),
+             src = factor("daily", levels = c("hist","daily")))
+    
+    df <- bind_rows(hist, daily) %>%
+      filter(K == sel) %>%
+      arrange(Datum, src) %>%         # hist zuerst, daily danach
+      group_by(Datum) %>% slice_tail(n = 1) %>% ungroup()
+    
+    req(nrow(df) > 0)
+    x_min <- as.Date("2024-06-01")
+    x_max <- max(df$Datum, na.rm = TRUE)
+    
+    ggplot(df, aes(x = Datum, y = Marktwert)) +
+      geom_line() +
+      geom_point(size = 1) +
+      scale_x_date(limits = c(x_min, x_max)) +
+      labs(title = "",
+           x = NULL, y = "Marktwert (€)") +
+      theme_minimal(base_size = 16)
+  })
+  
+  
+  ### ---- Leistungsdaten ----
+  output$spieler_info_raw <- DT::renderDT({
+    req(input$spieler_select2)
+    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
+    sel  <- norm(input$spieler_select2)
+    
+    df  <- if (exists("ca2_df", inherits=TRUE) && is.data.frame(ca2_df)) ca2_df %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel) else data.frame()
+    df2 <- if (exists("ca_df",  inherits=TRUE) && is.data.frame(ca_df))  ca_df  %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel) else data.frame()
+    
+    out <- if (nrow(df) > 0 && nrow(df2) > 0) {
+      left_join(df, select(df2, -SPIELER), by = ".k")
+    } else if (nrow(df) > 0) {
+      df
+    } else {
+      df2
+    }
+    
+    if ("SPIELER" %in% names(out)) {
+      out$SPIELER <- paste0(toupper(substr(out$SPIELER, 1, 1)), substring(out$SPIELER, 2))
+    }
+    if (".k" %in% names(out)) out <- select(out, -.k)
+    
+    DT::datatable(out, escape = FALSE, rownames = FALSE,
+                  options = list(dom = 't', scrollX = TRUE, paging = FALSE))
+  })
+  
+  
+  
+  ### ---- GPT ----
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
     
-    # Lade-Notification starten (bleibt bis removeNotification)
+    # Persistente Lade-Notification starten
     load_id <- showNotification(
       "🔍 Spieler-Research läuft …",
       type = "message", duration = NULL, closeButton = FALSE
     )
     
     on.exit({
-      # Fallback: falls unten irgendwo return passiert, Notification sicher entfernen
+      # Fallback: Notification sicher entfernen
       try(removeNotification(load_id), silent = TRUE)
     }, add = TRUE)
     
-    # 1) reticulate sicherstellen
-    if (!requireNamespace("reticulate", quietly = TRUE)) {
-      install.packages("reticulate", repos = "https://cran.rstudio.com")
-    }
-    library(reticulate)
-    
-    # 2) Python-Skript nur einmal laden
-    if (!exists("query_player", mode = "function")) {
-      tryCatch(
-        source_python("gpt_player.py"),
+    withProgress(message = "Research läuft …", value = 0, {
+      incProgress(0.10, detail = "Initialisiere Umgebung")
+      
+      # 1) reticulate sicherstellen
+      if (!requireNamespace("reticulate", quietly = TRUE)) {
+        install.packages("reticulate", repos = "https://cran.rstudio.com")
+      }
+      library(reticulate)
+      
+      incProgress(0.10, detail = "Lade Python-Skript")
+      
+      # 2) Python-Skript nur einmal laden
+      if (!exists("query_player", mode = "function")) {
+        tryCatch(
+          source_python("gpt_player.py"),
+          error = function(e) {
+            showNotification(paste("Fehler beim Laden von gpt_player.py:", e$message), type = "error")
+            stop(e)
+          }
+        )
+      }
+      
+      incProgress(0.15, detail = "Bestimme Verein")
+      
+      # 3) Verein ermitteln
+      req(ca2_df)
+      src_df <- if (exists("ca2_df", inherits = TRUE)) ca2_df else ca_df
+      
+      sp <- input$spieler_select2
+      sp_norm <- tolower(trimws(sp))
+      verein <- src_df %>%
+        mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
+        filter(SPIELER_norm == sp_norm) %>%
+        pull(if ("TEAM" %in% names(src_df)) TEAM else VEREIN) %>%
+        { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
+      
+      mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
+      
+      incProgress(0.40, detail = "Frage API ab")
+      
+      # 4) API-Call mit Fehlerbehandlung
+      res <- tryCatch(
+        query_player(sp, verein, mdl),
         error = function(e) {
-          showNotification(paste("Fehler beim Laden von gpt_player.py:", e$message), type = "error")
+          showNotification(paste("Fehler bei query_player():", e$message), type = "error")
           stop(e)
         }
       )
-    }
-    
-    # 3) Verein ermitteln
-    req(exists("ca2_df", inherits = TRUE) || exists("ca_df2", inherits = TRUE))
-    src_df <- if (exists("ca_df2", inherits = TRUE)) ca_df2 else ca2_df
-    
-    sp <- input$spieler_select2
-    sp_norm <- tolower(trimws(sp))
-    verein <- src_df %>%
-      dplyr::mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
-      dplyr::filter(SPIELER_norm == sp_norm) %>%
-      dplyr::pull(TEAM) %>%
-      { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
-    
-    mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
-    
-    # 4) API-Call mit Fehlerbehandlung
-    res <- tryCatch(
-      query_player(sp, verein, mdl),
-      error = function(e) {
-        showNotification(paste("Fehler bei query_player():", e$message), type = "error")
-        stop(e)
-      }
-    )
-    
-    # 5) UTF-8 fix vor Datatable
-    res_r <- reticulate::py_to_r(res)
-    res_r[] <- lapply(res_r, function(x) enc2utf8(as.character(x)))
-    df <- tibble::as_tibble(res_r)
-    
-    # 6) Anzeige
-    output$gpt_result <- DT::renderDT(
-      DT::datatable(
-        df,
-        rownames = FALSE, escape = FALSE,
-        options = list(dom = 't', paging = FALSE, scrollX = TRUE)
+      
+      incProgress(0.15, detail = "Verarbeite Ergebnis")
+      
+      # 5) UTF-8 fix vor Datatable
+      res_r <- py_to_r(res)
+      res_r[] <- lapply(res_r, function(x) enc2utf8(as.character(x)))
+      df <- as_tibble(res_r)
+      
+      incProgress(0.10, detail = "Render Tabelle")
+      
+      # 6) Anzeige
+      output$gpt_result <- DT::renderDT(
+        DT::datatable(
+          df,
+          rownames = FALSE, escape = FALSE,
+          options = list(dom = 't', paging = FALSE, scrollX = TRUE)
+        )
       )
-    )
+    })
     
-    # Lade-Notification sauber schließen
+    # Nach erfolgreichem Abschluss: Lade-Notification schließen
     removeNotification(load_id)
   })
   
   
+  
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
-  
-  #PPS usw. mergen
-  ca_df <- ca_df %>%
-    select(
-      SPIELER,
-      Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
-      Preis_Leistung = `PREIS-LEISTUNG`,
-      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
-    )
-  
-  # 1) Reaktive Daten-Vorbereitung
+    # 1) Reaktive Daten-Vorbereitung
   mein_kader_df <- reactive({
     # Basis: alle Spieler von Dominik
     df0 <- teams_df %>%
@@ -2612,7 +2708,7 @@ server <- function(input, output, session) {
   
   
   ## ---- Kaderwert-Entwicklung ----
-  manuelle_standings <- tibble::tibble(
+  manuelle_standings <- tibble(
     Manager = rep(c(
       "Thomas", "Alfons", "Christoph", "Pascal",
       "Andreas", "Dominik", "Nico", "Christian"
