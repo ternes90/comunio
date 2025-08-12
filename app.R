@@ -148,9 +148,11 @@ ui <- navbarPage(
                         style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
                selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
                actionButton("gpt_run", "Research starten"),
+               actionButton("copy_prompt", "Prompt kopieren"),
+               verbatimTextOutput("gpt_prompt_preview"),
                fluidRow(
                  column(12, DTOutput("spieler_info")),
-                 column(12, DTOutput("gpt_result"))   # direktes DT, kein Spinner/Wrapper
+                 column(12, DTOutput("gpt_result"))   
                )
              )
              
@@ -363,6 +365,35 @@ ui <- navbarPage(
     background-color: #E8F2FF !important;
     color: inherit !important;
   }
+")),
+    tags$script(HTML("
+(function(){
+  function fbCopy(text){
+    var ta=document.createElement('textarea');
+    ta.value=text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+  $(document).on('click','#copy_prompt',function(){
+    // 1) Neues Fenster öffnen
+    window.open('https://chatgpt.com/','_blank');
+
+    // 2) Prompt aus Preview kopieren
+    var el=document.getElementById('gpt_prompt_preview');
+    var txt = el ? (el.innerText || el.textContent || '') : '';
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){
+        Shiny.setInputValue('copied_prompt', Date.now(), {priority:'event'});
+      }).catch(function(){
+        fbCopy(txt);
+        Shiny.setInputValue('copied_prompt', Date.now(), {priority:'event'});
+      });
+    } else {
+      fbCopy(txt);
+      Shiny.setInputValue('copied_prompt', Date.now(), {priority:'event'});
+    }
+  });
+})();
 "))
   )
   
@@ -2426,6 +2457,61 @@ server <- function(input, output, session) {
     removeNotification(load_id)
   })
   
+  ### ---- Prompt builder ----
+  # Hilfsfunktionen
+  get_verein <- function(sp) {
+    src <- if (exists("ca2_df", inherits=TRUE)) ca2_df
+    else if (exists("ca_df2", inherits=TRUE)) ca_df2
+    else if (exists("ca_df", inherits=TRUE)) ca_df
+    else NULL
+    if (is.null(src)) return("")
+    sp_norm <- tolower(trimws(sp))
+    tmp <- src %>%
+      mutate(.k = tolower(trimws(SPIELER))) %>%
+      filter(.k == sp_norm)
+    if (nrow(tmp) == 0) return("")
+    col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else NA
+    if (is.na(col)) return("")
+    v <- as.character(tmp[[col]][1]); ifelse(is.na(v), "", v)
+  }
+  
+  build_prompt <- function(sp, ve) {
+    header <- "Spieler;Verein;Info"
+    today  <- format(Sys.Date(), "%Y-%m-%d")
+    paste0(
+      "Gib GENAU dieses Format zurück:\n",
+      header, "\n",
+      # Zweite Zeile MUSS mit 'Spieler;Verein;' beginnen
+      ">>> Die zweite Zeile muss mit '", sp, ";", ve, ";' beginnen. ",
+      "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
+      "In 'Info' kurz und faktenbasiert: Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
+      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Tatsachen-Aussage mit [1], [2] … belegen. ",
+      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, mind. 2 Domains bevorzugt (Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien). ",
+      "Meide Social Media.\n\n",
+      # Scores untereinander
+      "Danach GENAU drei neue Zeilen:\n",
+      "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
+      "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
+      "Bundesliga_2025_26: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
+      "Suchfenster fokussiert die letzten 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
+      "Stand: ", today, ". Antworte NUR in diesem Format."
+    )
+  }
+  
+  
+  # Reactive Prompt
+  gpt_prompt <- reactive({
+    req(input$spieler_select2)
+    sp <- input$spieler_select2
+    ve <- get_verein(sp)
+    build_prompt(sp, ve)
+  })
+  
+  output$gpt_prompt_preview <- renderText(gpt_prompt())
+  
+  observeEvent(input$copied_prompt, {
+    showNotification("Prompt kopiert", type = "message")
+  })
   
   
   # ---- KADER-ENTWICKLUNG ----
