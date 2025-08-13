@@ -152,7 +152,7 @@ ui <- navbarPage(
                
                tags$div("Chat GPT Analyse",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
-               selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4.1"),
+               selectInput("gpt_model", "Modell:", choices = c("gpt-4.1", "gpt-4o-mini"), selected = "gpt-4o-mini"),
                actionButton("gpt_run", "Research starten"),
                actionButton("copy_prompt", "Prompt kopieren"),
                div(
@@ -2511,7 +2511,7 @@ server <- function(input, output, session) {
       
       incProgress(0.20, detail="Prompt")
       prompt_str <- gpt_prompt()                  # <— einheitlich
-      mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
+      mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4o-mini"
       
       incProgress(0.40, detail="API")
       # Spieler + Verein einmal sauber herleiten:

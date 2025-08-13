@@ -3,7 +3,7 @@ from datetime import date
 from openai import OpenAI
 
 client = OpenAI()
-DEFAULT_MODEL = "gpt-4.1"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 def _build_prompt_text(spieler: str, verein: str) -> str:
     today = date.today().isoformat()
