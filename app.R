@@ -418,7 +418,9 @@ ui <- navbarPage(
 ")),
     tags$head(tags$style(HTML("
   #gpt_prompt_preview { white-space: pre-wrap; }
-")))
+"))),
+    tags$style(HTML("#gpt_result_pre a{word-break: break-all;}"))
+    
     
     
     
@@ -2432,7 +2434,7 @@ server <- function(input, output, session) {
   
   
   ### ---- GPT ----
-  ### ---- Helpers: EINMAL definieren ----
+  ### ---- Helpers ----
   get_verein <- function(sp) {
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
     sel  <- norm(sp)
@@ -2481,6 +2483,24 @@ server <- function(input, output, session) {
     )
   }
   
+  make_links <- function(x){
+    # 1) Markdown-Links -> HTML
+    x <- gsub("\\[([^\\]]+)\\]\\((https?://[^)\\s]+)\\)",
+              "<a href='\\2' target='_blank'>\\1</a>", x, perl=TRUE)
+    
+    # 2) Nackte URLs -> HTML (breiter Zeichensatz, ohne bereits verlinkte)
+    pat <- "(?<!href=['\"])\\bhttps?://[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+"
+    m <- gregexpr(pat, x, perl=TRUE)
+    regmatches(x, m) <- lapply(regmatches(x, m), function(urls){
+      vapply(urls, function(u){
+        # evtl. angehängte Satzzeichen am Ende abschneiden
+        u2 <- sub("[)\\]\\},.?!:;]+$", "", u)
+        sprintf("<a href='%s' target='_blank'>%s</a>", u2, u2)
+      }, character(1))
+    })
+    x
+  }
+  
   ### ---- Prompt zentral bauen ----
   gpt_prompt <- reactive({
     req(input$spieler_select2)
@@ -2521,7 +2541,12 @@ server <- function(input, output, session) {
                           error=function(e){ showNotification(paste("query_player_text:", e$message), type="error"); "" })
       
       incProgress(0.20, detail="Render")
-      output$gpt_result_box <- renderUI(tags$pre(id="gpt_result_pre", if (nzchar(res_txt)) res_txt else ""))
+      output$gpt_result_box <- renderUI({
+        if (!nzchar(res_txt)) return("")
+        html_txt <- make_links(res_txt)
+        tags$pre(id="gpt_result_pre", HTML(html_txt))
+      })
+      
     })
   })
   
