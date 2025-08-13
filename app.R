@@ -397,19 +397,23 @@ ui <- navbarPage(
     var txt=el ? (el.textContent || el.innerText || '') : '';
     var ok=copySync(txt);
     Shiny.setInputValue('copied_prompt', {ok: ok, len: txt.length, t: Date.now()}, {priority:'event'});
-    setTimeout(function(){ window.open('https://chatgpt.com/','_blank'); }, 120);
+    setTimeout(function(){ window.open('https://chatgpt.com/g/g-p-683f0c4df880819194f9186282be1c2c-comunio-tipps-pro-player/project','_blank'); }, 120);
   });
 })();
 "))),
     tags$style(HTML("
-#gpt_result_pre {
+#gpt_result_pre{
   white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 12px;
-  min-height: 160px;
-  background: #fafafa;
+  word-break: break-word;
+   font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.55;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
 ")),
     tags$head(tags$style(HTML("
@@ -2428,76 +2432,7 @@ server <- function(input, output, session) {
   
   
   ### ---- GPT ----
-  # Prompt-Builder exakt nach Vorgabe
-  build_prompt <- function(sp, ve) {
-    header <- "Spieler\nVerein\n"
-    today  <- format(Sys.Date(), "%Y-%m-%d")
-    paste0(
-      "Gib GENAU dieses Format zurück:\n",
-      header, "\n",
-      ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
-      ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
-      "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
-      "In 'Info' kurz und faktenbasiert: Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
-      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Tatsachen-Aussage mit [1], [2] … belegen. ",
-      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, mind. 2 Domains bevorzugt (Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien). ",
-      "Meide Social Media.\n\n",
-      "Danach GENAU drei neue Zeilen:\n",
-      "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
-      "Suchfenster fokussiert die letzten 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
-      "Stand: ", today, ". Antworte NUR in diesem Format."
-    )
-  }
-  
-  observeEvent(input$gpt_run, {
-    req(input$spieler_select2)
-    load_id <- showNotification("🔍 Spieler-Research läuft …", type="message", duration=NULL, closeButton=FALSE)
-    on.exit(try(removeNotification(load_id), silent=TRUE), add=TRUE)
-    
-    withProgress(message="Research läuft …", value=0, {
-      incProgress(0.10, detail="Init")
-      if (!requireNamespace("reticulate", quietly=TRUE)) install.packages("reticulate", repos="https://cran.rstudio.com")
-      library(reticulate)
-      
-      incProgress(0.10, detail="Lade Python")
-      if (!exists("query_player_text", mode="function")) {
-        key <- Sys.getenv("OPENAI_API_KEY"); if (!nzchar(key)) { showNotification("OPENAI_API_KEY fehlt.", type="error"); return() }
-        reticulate::py_run_string(sprintf("import os; os.environ['OPENAI_API_KEY'] = %s", jsonlite::toJSON(key, auto_unbox=TRUE)))
-        reticulate::source_python("gpt_player.py")
-      }
-      
-      incProgress(0.15, detail="Verein")
-      req(exists("ca2_df", inherits=TRUE) || exists("ca_df2", inherits=TRUE) || exists("ca_df", inherits=TRUE))
-      src_df <- if (exists("ca2_df", inherits=TRUE)) ca2_df else if (exists("ca_df2", inherits=TRUE)) ca_df2 else ca_df
-      sp <- input$spieler_select2
-      sp_norm <- tolower(trimws(sp))
-      verein <- src_df %>%
-        mutate(SPIELER_norm = tolower(trimws(SPIELER))) %>%
-        filter(SPIELER_norm == sp_norm) %>%
-        pull(if ("TEAM" %in% names(src_df)) TEAM else VEREIN) %>%
-        { if (length(.) > 0 && !is.na(.[1])) .[1] else "" }
-      
-      mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
-      
-      # Prompt bauen (dein Builder)
-      prompt_str <- build_prompt(sp, verein)
-      output$gpt_prompt_preview <- renderText(prompt_str)
-      
-      incProgress(0.45, detail="API")
-      res_txt <- tryCatch(py_to_r(query_player_text(sp, verein, mdl, prompt_str)),
-                          error=function(e){ showNotification(paste("query_player_text:", e$message), type="error"); "" })
-      
-      incProgress(0.20, detail="Render")
-      output$gpt_result_box <- renderUI(tags$pre(id="gpt_result_pre", if (nzchar(res_txt)) res_txt else ""))
-    })
-  })
-  
-  
-  
-  ### ---- Prompt builder ----
-  # ---- Verein aus ap_df (heute, sonst jüngstes Datum), Fallback ca*_df ----
+  ### ---- Helpers: EINMAL definieren ----
   get_verein <- function(sp) {
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
     sel  <- norm(sp)
@@ -2515,20 +2450,17 @@ server <- function(input, output, session) {
       }
     }
     
-    # Fallback: bestehende Tabellen
     src <- if (exists("ca2_df", inherits=TRUE)) ca2_df
     else if (exists("ca_df2", inherits=TRUE)) ca_df2
     else if (exists("ca_df",  inherits=TRUE)) ca_df
     else NULL
     if (is.null(src) || !is.data.frame(src) || nrow(src) == 0) return("")
-    sp_norm <- sel
-    tmp2 <- src %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sp_norm)
+    tmp2 <- src %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel)
     if (nrow(tmp2) == 0) return("")
     col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else return("")
     v <- as.character(tmp2[[col]][1]); ifelse(is.na(v), "", v)
   }
   
-  # ---- Prompt mit Zeilen-Header + drei Scores untereinander ----
   build_prompt <- function(sp, ve) {
     today <- format(Sys.Date(), "%Y-%m-%d")
     paste0(
@@ -2549,15 +2481,49 @@ server <- function(input, output, session) {
     )
   }
   
-  # ---- Reactive bleibt gleich ----
+  ### ---- Prompt zentral bauen ----
   gpt_prompt <- reactive({
     req(input$spieler_select2)
     sp <- input$spieler_select2
     ve <- get_verein(sp)
     build_prompt(sp, ve)
   })
+  
   output$gpt_prompt_preview <- renderText(gpt_prompt())
   
+  ### ---- GPT-Call und Prompt-Copy ----
+  observeEvent(input$gpt_run, {
+    req(input$spieler_select2)
+    load_id <- showNotification("🔍 Spieler-Research läuft …", type="message", duration=NULL, closeButton=FALSE)
+    on.exit(try(removeNotification(load_id), silent=TRUE), add=TRUE)
+    
+    withProgress(message="Research läuft …", value=0, {
+      incProgress(0.10, detail="Init")
+      if (!requireNamespace("reticulate", quietly=TRUE)) install.packages("reticulate", repos="https://cran.rstudio.com")
+      library(reticulate)
+      
+      incProgress(0.10, detail="Lade Python")
+      if (!exists("query_player_text", mode="function")) {
+        key <- Sys.getenv("OPENAI_API_KEY"); if (!nzchar(key)) { showNotification("OPENAI_API_KEY fehlt.", type="error"); return() }
+        reticulate::py_run_string(sprintf("import os; os.environ['OPENAI_API_KEY'] = %s", jsonlite::toJSON(key, auto_unbox=TRUE)))
+        reticulate::source_python("gpt_player.py")
+      }
+      
+      incProgress(0.20, detail="Prompt")
+      prompt_str <- gpt_prompt()                  # <— einheitlich
+      mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4.1"
+      
+      incProgress(0.40, detail="API")
+      # Spieler + Verein einmal sauber herleiten:
+      sp <- input$spieler_select2
+      ve <- get_verein(sp)
+      res_txt <- tryCatch(py_to_r(query_player_text(sp, ve, mdl, prompt_str)),
+                          error=function(e){ showNotification(paste("query_player_text:", e$message), type="error"); "" })
+      
+      incProgress(0.20, detail="Render")
+      output$gpt_result_box <- renderUI(tags$pre(id="gpt_result_pre", if (nzchar(res_txt)) res_txt else ""))
+    })
+  })
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
