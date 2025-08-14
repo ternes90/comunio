@@ -1,7 +1,6 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Nusa;Sturm
-Thomas;Diehl;Sturm
 Thomas;Ceesay;Sturm
 Thomas;Thielmann;Sturm
 Thomas;M. Eggestein;Mittelfeld
@@ -16,7 +15,7 @@ Thomas;Ostrzinski;Tor
 Alfons;Undav;Sturm
 Alfons;Tietz;Sturm
 Alfons;Dinkçi;Sturm
-Alfons;S. Banks;Sturm
+Alfons;Seiwald;Mittelfeld
 Alfons;Baumgartner;Mittelfeld
 Alfons;Bénes;Mittelfeld
 Alfons;Maier;Mittelfeld
@@ -28,7 +27,6 @@ Alfons;Ginter;Abwehr
 Alfons;Giannoulis;Abwehr
 Alfons;Akpoguma;Abwehr
 Alfons;Querfeld;Abwehr
-Alfons;Pieper;Abwehr
 Alfons;Deman;Abwehr
 Alfons;Mané;Abwehr
 Alfons;Coulibaly;Abwehr
@@ -80,9 +78,9 @@ Dominik;Sieb;Sturm
 Dominik;Topp;Sturm
 Dominik;Skov Olsen;Sturm
 Dominik;Groß;Mittelfeld
-Dominik;F. Nmecha;Mittelfeld
 Dominik;Götze;Mittelfeld
 Dominik;Haberer;Mittelfeld
+Dominik;Jóhannesson;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
 Dominik;Mæhle;Abwehr
@@ -95,7 +93,6 @@ Dominik;Al-Dakhil;Abwehr
 Dominik;Ogbus;Abwehr
 Dominik;Neuer;Tor
 Nico;Olise;Sturm
-Nico;Hložek;Sturm
 Nico;Höler;Sturm
 Nico;Gregoritsch;Sturm
 Nico;Wahi;Sturm
@@ -104,7 +101,6 @@ Nico;Schäfer;Mittelfeld
 Nico;Dorsch;Mittelfeld
 Nico;Doekhi;Abwehr
 Nico;Saliakas;Abwehr
-Nico;Chaves;Abwehr
 Nico;Hendriks;Abwehr
 Nico;Muheim;Abwehr
 Nico;Zentner;Tor
