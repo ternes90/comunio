@@ -5,10 +5,10 @@ Thomas;Ceesay;Sturm
 Thomas;Thielmann;Sturm
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Čović;Mittelfeld
+Thomas;Vidić;Mittelfeld
 Thomas;Grimaldo;Abwehr
 Thomas;Wahl;Abwehr
 Thomas;Laimer;Abwehr
-Thomas;Davies;Abwehr
 Thomas;Svensson;Abwehr
 Thomas;Heuer Fernandes;Tor
 Thomas;Ostrzinski;Tor
@@ -17,7 +17,6 @@ Alfons;Tietz;Sturm
 Alfons;Dinkçi;Sturm
 Alfons;Seiwald;Mittelfeld
 Alfons;Baumgartner;Mittelfeld
-Alfons;Bénes;Mittelfeld
 Alfons;Maier;Mittelfeld
 Alfons;Kemlein;Mittelfeld
 Alfons;Nordin;Mittelfeld
@@ -71,8 +70,7 @@ Andreas;Matsima;Abwehr
 Andreas;Fischer;Abwehr
 Andreas;Torunarigha;Abwehr
 Andreas;Pauli;Abwehr
-Andreas;Omlin;Tor
-Andreas;Vandevoordt;Tor
+Andreas;Zetterer;Tor
 Dominik;Scienza;Sturm
 Dominik;Sieb;Sturm
 Dominik;Topp;Sturm
@@ -84,9 +82,11 @@ Dominik;Jóhannesson;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
 Dominik;Mæhle;Abwehr
+Dominik;D. Nemeth;Abwehr
 Dominik;Zesiger;Abwehr
 Dominik;Ritzka;Abwehr
 Dominik;Netz;Abwehr
+Dominik;Ullrich;Abwehr
 Dominik;Mets;Abwehr
 Dominik;Malatini;Abwehr
 Dominik;Al-Dakhil;Abwehr
