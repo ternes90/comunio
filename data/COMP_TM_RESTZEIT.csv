@@ -1,16 +1,14 @@
 ﻿Spieler;Marktwert;Mindestgebot;Besitzer;TM_Stand;Restzeit;Verein
-Robatsch;280.000;280.000;Computer;15.08.2025;1d, 20h;FC St. Pauli
-Gendrey;470.000;470.000;Computer;15.08.2025;1d, 20h;TSG Hoffenheim
-Widmer;450.000;450.000;Computer;15.08.2025;1d, 20h;1. FSV Mainz 05
-Pedersen;200.000;200.000;Computer;15.08.2025;1d, 20h;FC Augsburg
-Süle;2.380.000;2.380.000;Computer;15.08.2025;1d, 20h;Borussia Dortmund
-Poku;6.060.000;6.060.000;Computer;15.08.2025;1d, 20h;Bayer 04 Leverkusen
-Majer;5.200.000;5.200.000;Computer;15.08.2025;1d, 20h;VfL Wolfsburg
-Schlager;4.780.000;4.720.000;Computer;15.08.2025;20h;RB Leipzig
-Kimmich;16.580.000;16.600.000;Computer;15.08.2025;20h;FC Bayern München
-Raab;170.000;180.000;Computer;15.08.2025;20h;1.FC Union Berlin
-Vasilj;2.730.000;2.690.000;Computer;15.08.2025;20h;FC St. Pauli
-Musah;160.000;160.000;Computer;15.08.2025;20h;SV Werder Bremen
-N. Banks;1.300.000;1.150.000;Computer;15.08.2025;20h;FC Augsburg
-Hämmerle;170.000;170.000;Computer;15.08.2025;20h;FC Augsburg
-Kilian;170.000;170.000;Computer;15.08.2025;20h;1. FC Köln
+;;;Computer;15.08.2025;1d, 17h;1. FSV Mainz 05
+Pedersen;200.000;200.000;Computer;15.08.2025;1d, 17h;FC Augsburg
+Süle;2.380.000;2.380.000;Computer;15.08.2025;1d, 17h;Borussia Dortmund
+Poku;6.060.000;6.060.000;Computer;15.08.2025;1d, 17h;Bayer 04 Leverkusen
+Majer;5.200.000;5.200.000;Computer;15.08.2025;1d, 17h;VfL Wolfsburg
+Schlager;4.780.000;4.720.000;Computer;15.08.2025;17h;RB Leipzig
+Kimmich;16.580.000;16.600.000;Computer;15.08.2025;17h;FC Bayern München
+Raab;170.000;180.000;Computer;15.08.2025;17h;1.FC Union Berlin
+Vasilj;2.730.000;2.690.000;Computer;15.08.2025;17h;FC St. Pauli
+Musah;160.000;160.000;Computer;15.08.2025;17h;SV Werder Bremen
+N. Banks;1.300.000;1.150.000;Computer;15.08.2025;17h;FC Augsburg
+Hämmerle;170.000;170.000;Computer;15.08.2025;17h;FC Augsburg
+Kilian;170.000;170.000;Computer;15.08.2025;17h;1. FC Köln
