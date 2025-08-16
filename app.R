@@ -1755,9 +1755,9 @@ server <- function(input, output, session) {
       theme(legend.position = "bottom")
   })
   
-  
-  
   # ---- TRANSFERMARKT ----
+  
+  ## ---- INFO: Durchschnittliche Gebote pro Wochentag ----
   
   # 1) avg_bids_wd als Reactive (einmalig im Server)
   avg_bids_wd <- reactive({
@@ -1767,7 +1767,7 @@ server <- function(input, output, session) {
       mutate(Datum = Datum - 1)
     
     gp %>%
-      tidyr::complete(
+      complete(
         Bieter,
         Datum = seq(min(Datum), max(Datum), by = "day"),
         fill = list(Anzahl = 0)
@@ -1817,24 +1817,23 @@ server <- function(input, output, session) {
     ))
   })
   
-  
-  
+
   ## ---- Tabelle ----
   
   # 1) reactiveVal für den gemeinsamen DataFrame
-  tm_common <- reactiveVal()
+  tm_common <- reactiveVal(NULL)
   
-  # 2) Observer oder reactive, der tm_common einmal neu berechnet, 
-  #    sobald tm_df oder ap_df sich ändern:
+  # 2) Observer oder reactive, der tm_common einmal neu berechnet, sobald tm_df oder ap_df sich ändern:
   observeEvent(list(tm_df, ap_df), {
     
-    df <- tm_df
-    # --- Spaltenbereinigung ---
-    df$Spieler        <- trimws(enc2utf8(df$Spieler))
-    df$Marktwert_num  <- as.numeric(gsub("\\.", "", df$Marktwert))
-    df$Mindestgebot_num <- as.numeric(gsub("\\.", "", df$Mindestgebot))
-    df$Restzeit       <- trimws(df$Restzeit)
-    df$Verein         <- trimws(enc2utf8(df$Verein))
+    df <- tm_df %>%
+      mutate(
+        Spieler          = trimws(enc2utf8(Spieler)),
+        Marktwert_num    = as.numeric(gsub("\\.", "", Marktwert)),
+        Mindestgebot_num = as.numeric(gsub("\\.", "", Mindestgebot)),
+        Restzeit         = trimws(Restzeit),
+        Verein           = trimws(enc2utf8(Verein))
+      )
     
     # --- letzte 3 Tage & Merge ---
     last_dates <- sort(unique(ap_df$Datum), decreasing=TRUE)[1:3]
@@ -1899,8 +1898,8 @@ server <- function(input, output, session) {
   output$transfermarkt_detail <- DT::renderDT({
     # Basis‐Tabelle aus reactiveVal holen
     df <- tm_common()
-    
-    req(nrow(df) > 0)  # Stopt, falls df leer ist
+    req(nrow(df) > 0)
+    df <- as.data.frame(df, stringsAsFactors = FALSE)
     
     # 1) MW-Klasse bestimmen
     df$MW_Klasse <- vapply(df$Marktwert_num, get_mw_klasse, character(1))
@@ -2065,7 +2064,6 @@ server <- function(input, output, session) {
         )
       )
     
-    
     # 6) Historische Punkte & Details mergen
     df <- df %>%
       left_join(
@@ -2121,14 +2119,21 @@ server <- function(input, output, session) {
         )
       )
     
-    cols <- c(
-      "Spieler","Logo","Punkte pro Spiel","Preis-Leistung",
-      "Historische Punkteausbeute","Marktwert","Zielwert",
-      "Mindestgebot","Minimalgebot","IdealesGebot",
-      "Maximalgebot","Gebote","Empfehlung","Besitzer",
-      "Verbleibende Zeit","Trend MW (3 Tage)","action"
-    )
-    sub_df <- df[, cols]
+    # fehlende Spalten auffüllen
+    needed <- c("Spieler","Logo","Punkte pro Spiel","Preis-Leistung",
+                "Historische Punkteausbeute","Marktwert","Zielwert",
+                "Mindestgebot","Minimalgebot","IdealesGebot",
+                "Maximalgebot","Gebote","Empfehlung","Besitzer",
+                "Verbleibende Zeit","Trend MW (3 Tage)","action")
+    for (nm in setdiff(needed, names(df))) df[[nm]] <- NA_character_
+    sub_df <- df[, needed, drop = FALSE]
+    
+    # List-Spalten zu String (falls vorhanden)
+    is_list_col <- vapply(sub_df, is.list, logical(1))
+    if (any(is_list_col)) sub_df[is_list_col] <- lapply(sub_df[is_list_col], function(x) vapply(x, toString, ""))
+    
+    # NACH sub_df gebaut wurde
+    sub_df$MinGeb_Unter_MW <- df$MinGeb_Unter_MW
     
     DT::datatable(
       sub_df,
@@ -2136,7 +2141,7 @@ server <- function(input, output, session) {
         "Spieler","Verein","PPS","Preis-Leistung","Hist.","Marktwert",
         "Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
         "Maximalgebot","Gebote","Empfehlung","Besitzer",
-        "Verbleibende Zeit","Trend MW (3 Tage)","Aktion"
+        "Verbleibende Zeit","Trend MW (3 Tage)","Aktion", ""
       ),
       escape    = FALSE,
       selection = "none",
@@ -2174,21 +2179,22 @@ server <- function(input, output, session) {
         columnDefs = list(
           list(className = 'dt-left',  targets = 0:1),
           list(className = 'dt-right', targets = 2:7),
-          list(className = 'dt-center',targets = ncol(sub_df)-1)
+          list(className = 'dt-center',targets = ncol(sub_df)-2),
+          list(visible=FALSE, targets=ncol(sub_df) - 1)
         )
       )
-    ) %>%
+    ) %>% 
       formatStyle(
         'Verbleibende Zeit',
         target     = 'cell',
         color      = styleEqual("heute","red"),
         fontWeight = styleEqual("heute","bold")
-      ) %>%
+      ) %>% 
       formatStyle(
         'Mindestgebot',
-        target     = 'cell',
-        color      = styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW],"green"),
-        fontWeight = styleEqual(df$Mindestgebot[df$MinGeb_Unter_MW],"bold")
+        valueColumns='MinGeb_Unter_MW',
+        color=styleEqual(c(TRUE), "green"),
+        fontWeight=styleEqual(c(TRUE), "bold")
       )
   })
   
