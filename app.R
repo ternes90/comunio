@@ -45,7 +45,7 @@ ui <- navbarPage(
       tags$style(HTML("
     /* Abstand oben für alle Tab-Panes */
     .tab-content > .tab-pane {
-      margin-top: 20px; margin-bottom: 20px;
+      margin-top: 20px; margin-bottom: 50px;
     }
   ")),
       # Hellblaue selection
@@ -1892,6 +1892,7 @@ server <- function(input, output, session) {
   })
   
   output$transfermarkt_detail <- DT::renderDT({
+    req(input$transfermarkt_tabs == "Transfermarkt Details")   # nur wenn Tab aktiv
     # Basis‐Tabelle aus reactiveVal holen
     df <- tm_common()
     req(nrow(df) > 0)
@@ -1957,9 +1958,15 @@ server <- function(input, output, session) {
     max_datum <- max(transfers_clean$Datum, na.rm = TRUE)
     vortag    <- max_datum - 1
     
+    # eindeutiger Vortag-MW pro Spieler (höchster MW, falls doppelt)
     vortags_mw <- transfermarkt %>%
       filter(TM_Stand == vortag) %>%
-      select(Spieler, Marktwert_num = Marktwert)
+      arrange(Spieler, desc(Marktwert)) %>%
+      distinct(Spieler, .keep_all = TRUE) %>%
+      transmute(Spieler, Marktwert_num = Marktwert)
+    
+    # optionaler Check
+    stopifnot(!any(duplicated(vortags_mw$Spieler)))
     
     transfers_mw <- transfers_clean %>%
       left_join(vortags_mw, by = "Spieler") %>%
@@ -2879,7 +2886,7 @@ server <- function(input, output, session) {
   output$mw_zeitachse_preview_schlank <- renderPlot({
     # Kompletten Zeitraum nutzen, keine Filterung nach Slider
     ggplot(gesamt_mw_df, aes(x = Datum, y = MW_rel_normiert)) +
-      geom_line(color = "darkgrey", linewidth = 1.2) +
+      geom_line(color = "darkgrey", linewidth = 1.2, na.rm = TRUE) +
       coord_cartesian(ylim = c(0.75, 1.4)) +
       labs(x = NULL, y = NULL, title = NULL) +
       theme_minimal(base_size = 12) +
@@ -3377,8 +3384,8 @@ server <- function(input, output, session) {
       mutate(Kumuliert = cumsum(Gewinn)) %>%
       ungroup() %>%
       ggplot(aes(x = Verkaufsdatum, y = Kumuliert, color = Besitzer)) +
-      geom_line(linewidth = 1.2) +
-      geom_point(size = 2, alpha = 0.7) +
+      geom_line(linewidth = 1.2, na.rm = TRUE) +
+      geom_point(size = 2, alpha = 0.7, na.rm = TRUE) +
       scale_color_brewer(palette = "Paired") +
       labs(
         title = "Kumulierte Flip-Gewinne über die Zeit je Spieler",
@@ -3486,7 +3493,7 @@ server <- function(input, output, session) {
       group_by(Besitzer, Flip_Label) %>%
       summarise(Summe = sum(Gewinn), .groups = "drop") %>%
       ggplot(aes(x = Besitzer, y = Summe, fill = Flip_Label)) +
-      geom_col(position = "stack") +
+      geom_col(position = "stack", na.rm = TRUE) +
       labs(
         title = "Gewinne/Verluste kumuliert",
         x = "",
