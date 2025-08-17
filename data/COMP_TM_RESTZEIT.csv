@@ -1,16 +1,16 @@
 ﻿Spieler;Marktwert;Mindestgebot;Besitzer;TM_Stand;Restzeit;Verein
-Doumbia;180.000;180.000;Computer;17.08.2025;1d, 0h;Eintracht Frankfurt
-Hefti;200.000;200.000;Computer;17.08.2025;1d, 0h;Hamburger SV
-Kabar;330.000;330.000;Computer;17.08.2025;1d, 0h;Borussia Dortmund
-Finkgräfe;980.000;980.000;Computer;17.08.2025;1d, 0h;RB Leipzig
-Drljača;160.000;160.000;Computer;17.08.2025;1d, 0h;VfB Stuttgart
-Palacios;4.550.000;4.550.000;Computer;17.08.2025;1d, 0h;Bayer 04 Leverkusen
-Höfler;680.000;680.000;Computer;17.08.2025;1d, 0h;Sport-Club Freiburg
-Robatsch;270.000;280.000;Computer;17.08.2025;0h;FC St. Pauli
-Gendrey;450.000;470.000;Computer;17.08.2025;0h;TSG Hoffenheim
-Widmer;450.000;450.000;Computer;17.08.2025;0h;1. FSV Mainz 05
-Pedersen;200.000;200.000;Computer;17.08.2025;0h;FC Augsburg
-Süle;2.240.000;2.380.000;Computer;17.08.2025;0h;Borussia Dortmund
-Poku;6.060.000;6.060.000;Computer;17.08.2025;0h;Bayer 04 Leverkusen
-Majer;4.780.000;5.200.000;Computer;17.08.2025;0h;VfL Wolfsburg
-Kimmich;15.480.000;16.600.000;Computer;17.08.2025;0h;FC Bayern München
+T. Philipp;160.000;160.000;Computer;17.08.2025;1d, 17h;TSG Hoffenheim
+Leweling;5.310.000;5.310.000;Computer;17.08.2025;1d, 17h;VfB Stuttgart
+Doumbia;180.000;180.000;Computer;17.08.2025;17h;Eintracht Frankfurt
+Hefti;200.000;200.000;Computer;17.08.2025;17h;Hamburger SV
+Kabar;400.000;330.000;Computer;17.08.2025;17h;Borussia Dortmund
+Finkgräfe;920.000;980.000;Computer;17.08.2025;17h;RB Leipzig
+Drljača;170.000;160.000;Computer;17.08.2025;17h;VfB Stuttgart
+Palacios;4.640.000;4.550.000;Computer;17.08.2025;17h;Bayer 04 Leverkusen
+Höfler;710.000;680.000;Computer;17.08.2025;17h;Sport-Club Freiburg
+Robatsch;260.000;280.000;Computer;17.08.2025;17h;FC St. Pauli
+Gendrey;440.000;470.000;Computer;17.08.2025;17h;TSG Hoffenheim
+Widmer;420.000;450.000;Computer;17.08.2025;17h;1. FSV Mainz 05
+Pedersen;210.000;200.000;Computer;17.08.2025;17h;FC Augsburg
+Süle;2.100.000;2.380.000;Computer;17.08.2025;17h;Borussia Dortmund
+Majer;4.840.000;5.200.000;Computer;17.08.2025;17h;VfL Wolfsburg
