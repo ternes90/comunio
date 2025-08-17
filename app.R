@@ -11,14 +11,116 @@ last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error 
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse",
+  id = "main_navbar",
   
   #Pushaktualisierung
-  tags$div(
-    style = "text-align: right; font-size: 12px; color: grey; margin: 5px;",
-    paste("Letztes Update:", last_update)
-  ),
+  header = tagList(
+    tags$div(
+      style = "text-align: right; font-size: 12px; color: grey; margin: 5px;",
+      paste("Letztes Update:", last_update)
+    ),
+    
+    # In Deiner UI (z.B. ui.R)
+    tags$head(
+      # --- Click‑Event für kapital_uebersicht_table ---
+      tags$script(HTML("
+    $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
+      Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
+    });
+  ")),
+      
+      # --- Linksbündige Ausrichtung für alle drei Tabellen ---
+      tags$style(HTML("
+    /* kreditrahmen_uebersicht_preview, transfer_summary_today, flip_summary_today */
+    #kreditrahmen_uebersicht_preview table.dataTable td,
+    #kreditrahmen_uebersicht_preview table.dataTable th,
+    #transfer_summary_today table.dataTable td,
+    #transfer_summary_today table.dataTable th,
+    #flip_summary_today table.dataTable td,
+    #flip_summary_today table.dataTable th {
+      text-align: left !important;
+    }
+  ")),
+      #Abstand TabPanels oben/unten
+      tags$style(HTML("
+    /* Abstand oben für alle Tab-Panes */
+    .tab-content > .tab-pane {
+      margin-top: 20px; margin-bottom: 20px;
+    }
+  ")),
+      # Hellblaue selection
+      tags$style(HTML("
+  /* 1) DataTables’ default selected fill deaktivieren */
+  :root {
+    --dt-row-selected: transparent !important;
+  }
+
+  /* 2) Soft-blauen Hintergrund + schwarze Schrift für selektierte Zellen */
+  table.dataTable tbody tr.selected td,
+  table.dataTable tbody td.selected {
+    box-shadow: inset 0 0 0 9999px #D3E5FF !important;
+    color: black !important;
+  }
   
-  id = "main_navbar",
+  /* 3) Falls Links in der Zelle sind */
+  table.dataTable tbody tr.selected td a,
+  table.dataTable tbody td.selected a {
+    color: black !important;
+  }
+
+  /* 4) Hover-State (auch auf ausgewählten Zeilen) */
+  table.dataTable tbody tr:hover,
+  table.dataTable tbody tr:hover td {
+    background-color: #E8F2FF !important;
+    color: inherit !important;
+  }
+")),
+      tags$head(tags$script(HTML("
+(function(){
+  function copySync(txt){
+    var ta=document.createElement('textarea');
+    ta.value=txt;
+    ta.setAttribute('readonly','');
+    ta.style.position='fixed';
+    ta.style.top='0';
+    ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    var ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+  $(document).on('click','#copy_prompt',function(){
+    var el=document.getElementById('gpt_prompt_preview');
+    var txt=el ? (el.textContent || el.innerText || '') : '';
+    var ok=copySync(txt);
+    Shiny.setInputValue('copied_prompt', {ok: ok, len: txt.length, t: Date.now()}, {priority:'event'});
+    setTimeout(function(){ window.open('https://chatgpt.com/g/g-p-683f0c4df880819194f9186282be1c2c-comunio-tipps-pro-player/project','_blank'); }, 120);
+  });
+})();
+"))),
+      tags$style(HTML("
+#gpt_result_pre{
+  white-space: pre-wrap;
+  word-break: break-word;
+   font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.55;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+")),
+      tags$head(tags$style(HTML("
+  #gpt_prompt_preview { white-space: pre-wrap; }
+"))),
+      tags$style(HTML("#gpt_result_pre a{word-break: break-all;}"))
+    )
+  ),
   
   ## ---- Dashboard ----
   tabPanel("Dashboard",
@@ -320,113 +422,7 @@ ui <- navbarPage(
            fluidPage(
              DTOutput("kapital_uebersicht_table")
            )
-  ),
-  
-  # In Deiner UI (z.B. ui.R)
-  tags$head(
-    # --- Click‑Event für kapital_uebersicht_table ---
-    tags$script(HTML("
-    $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
-      Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
-    });
-  ")),
-    
-    # --- Linksbündige Ausrichtung für alle drei Tabellen ---
-    tags$style(HTML("
-    /* kreditrahmen_uebersicht_preview, transfer_summary_today, flip_summary_today */
-    #kreditrahmen_uebersicht_preview table.dataTable td,
-    #kreditrahmen_uebersicht_preview table.dataTable th,
-    #transfer_summary_today table.dataTable td,
-    #transfer_summary_today table.dataTable th,
-    #flip_summary_today table.dataTable td,
-    #flip_summary_today table.dataTable th {
-      text-align: left !important;
-    }
-  ")),
-    #Abstand TabPanels oben/unten
-    tags$style(HTML("
-    /* Abstand oben für alle Tab-Panes */
-    .tab-content > .tab-pane {
-      margin-top: 20px; margin-bottom: 20px;
-    }
-  ")),
-    # Hellblaue selection
-    tags$style(HTML("
-  /* 1) DataTables’ default selected fill deaktivieren */
-  :root {
-    --dt-row-selected: transparent !important;
-  }
-
-  /* 2) Soft-blauen Hintergrund + schwarze Schrift für selektierte Zellen */
-  table.dataTable tbody tr.selected td,
-  table.dataTable tbody td.selected {
-    box-shadow: inset 0 0 0 9999px #D3E5FF !important;
-    color: black !important;
-  }
-  
-  /* 3) Falls Links in der Zelle sind */
-  table.dataTable tbody tr.selected td a,
-  table.dataTable tbody td.selected a {
-    color: black !important;
-  }
-
-  /* 4) Hover-State (auch auf ausgewählten Zeilen) */
-  table.dataTable tbody tr:hover,
-  table.dataTable tbody tr:hover td {
-    background-color: #E8F2FF !important;
-    color: inherit !important;
-  }
-")),
-    tags$head(tags$script(HTML("
-(function(){
-  function copySync(txt){
-    var ta=document.createElement('textarea');
-    ta.value=txt;
-    ta.setAttribute('readonly','');
-    ta.style.position='fixed';
-    ta.style.top='0';
-    ta.style.left='-9999px';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    var ok=false;
-    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
-    document.body.removeChild(ta);
-    return ok;
-  }
-  $(document).on('click','#copy_prompt',function(){
-    var el=document.getElementById('gpt_prompt_preview');
-    var txt=el ? (el.textContent || el.innerText || '') : '';
-    var ok=copySync(txt);
-    Shiny.setInputValue('copied_prompt', {ok: ok, len: txt.length, t: Date.now()}, {priority:'event'});
-    setTimeout(function(){ window.open('https://chatgpt.com/g/g-p-683f0c4df880819194f9186282be1c2c-comunio-tipps-pro-player/project','_blank'); }, 120);
-  });
-})();
-"))),
-    tags$style(HTML("
-#gpt_result_pre{
-  white-space: pre-wrap;
-  word-break: break-word;
-   font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 18px;
-  line-height: 1.55;
-  color: #1a1a1a;
-  background: #ffffff;
-  border: 1px solid #e6e6e6;
-  border-radius: 10px;
-  padding: 14px 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.04);
-}
-")),
-    tags$head(tags$style(HTML("
-  #gpt_prompt_preview { white-space: pre-wrap; }
-"))),
-    tags$style(HTML("#gpt_result_pre a{word-break: break-all;}"))
-    
-    
-    
-    
   )
-  
 )
 
 # ---- SERVER ----
@@ -577,7 +573,9 @@ server <- function(input, output, session) {
   transfers <- read.csv2("data/TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
       mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
-  transfermarkt <- read_csv2("data/TRANSFERMARKT.csv") %>%
+  transfermarkt <- read_csv2("data/TRANSFERMARKT.csv",
+                             locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
+                             show_col_types = FALSE) %>%
     mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
   
   ap_df <- read.csv2("data/ALL_PLAYERS.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>% 
@@ -591,11 +589,15 @@ server <- function(input, output, session) {
                               Manager = col_character(),
                               Teamwert = col_double(),
                               Datum = col_character()
-                            )
+                            ),
+                            locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
+                            show_col_types = FALSE
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
-  ca_df <- read_delim("data/com_analytics_all_players.csv", delim = ";", locale = locale(encoding = "UTF-8"))
+  ca_df <- read_delim("data/com_analytics_all_players.csv", delim = ";", 
+                      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+                      show_col_types = FALSE)
   ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
   
   #PPS usw. mergen
@@ -608,7 +610,9 @@ server <- function(input, output, session) {
     )
   
   #Kaufempfehung etc.
-  ca2_df <- read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";", locale = locale(encoding = "UTF-8")) %>%
+  ca2_df <- read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";", 
+                       locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+                       show_col_types = FALSE) %>%
     mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>% filter(Datum == max(Datum, na.rm = TRUE))
   ca2_df$SPIELER <- trimws(enc2utf8(as.character(ca2_df$SPIELER)))
   
@@ -889,7 +893,7 @@ server <- function(input, output, session) {
     ) %>%
       formatCurrency(
         columns = c("MW Vortag", "MW Heute", "Preis"),
-        currency = "", interval = 3, mark = ".", digits = 0
+        currency = "", interval = 3, mark = ".", dec.mark = ",", digits = 0
       )
   })
   
@@ -932,7 +936,6 @@ server <- function(input, output, session) {
       )
   })
   
-  
   ## ---- Marktwerttrend ----
   output$mw_zeitachse_preview <- renderPlot({
     df <- subset(gesamt_mw_df, !is.na(Datum))
@@ -943,23 +946,28 @@ server <- function(input, output, session) {
     df_short <- df[df$Datum >= (last_day - win_days), , drop = FALSE]
     if (nrow(df_short) < 3) df_short <- tail(df[order(df$Datum), ], 3)
     
+    # NAs in y entfernen
+    df_short <- df_short[!is.na(df_short$MW_rel_normiert), , drop = FALSE]
+    if (nrow(df_short) < 2) return(NULL)
+    
     trend_vals <- tail(df_short[order(df_short$Datum), ], 3)
     x0 <- trend_vals$Datum[1]; y0 <- trend_vals$MW_rel_normiert[1]
     x1 <- trend_vals$Datum[3]; y1 <- trend_vals$MW_rel_normiert[3]
-    
     col_seg <- if (y1 > y0) "darkgreen" else "red"
     
     ggplot(df_short, aes(Datum, MW_rel_normiert)) +
       geom_line(linewidth = 1.1, color = "darkgrey", na.rm = TRUE) +
+      # Ein-Zeilen-Daten für Segment
       geom_segment(
+        data = data.frame(x0 = x0, y0 = y0, x1 = x1, y1 = y1),
         aes(x = x0, y = y0, xend = x1, yend = y1),
         arrow = arrow(length = unit(0.35, "cm"), type = "closed"),
-        color = col_seg,
-        linewidth = 1.4,
-        inherit.aes = FALSE
+        color = col_seg, linewidth = 1.4, inherit.aes = FALSE
       ) +
       scale_x_date(limits = c(last_day - win_days, last_day),
                    date_labels = "%d.%m.") +
+      # explizite Zahlformatierung vermeidet prettyNum-Warnung
+      scale_y_continuous(labels = scales::label_number(big_mark = ".", decimal_mark = ",")) +
       labs(x = NULL, y = "relativer MW") +
       theme_minimal(base_size = 16) +
       theme(legend.position = "none")
@@ -1019,8 +1027,10 @@ server <- function(input, output, session) {
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
       geom_col(show.legend = FALSE) +
-      geom_text(aes(label = format(Gesamtgewinn, big.mark = ".", scientific = FALSE)),
-                position = position_stack(vjust = 0.5), size = 6) +
+      geom_text(
+        aes(label = format(Gesamtgewinn, big.mark = ".", decimal.mark = ",", scientific = FALSE)),
+        position = position_stack(vjust = 0.5), size = 6
+      ) +
       coord_flip(ylim = c(lim_min, lim_max)) +
       scale_fill_manual(values = c("TRUE" = "#66cdaa", "FALSE" = "#ff6f61")) +
       theme_minimal(base_size = 16) +
@@ -1157,54 +1167,39 @@ server <- function(input, output, session) {
     req(input$main_navbar == "Marktwert-Entwicklung",
         input$mw_tabs      == "mw_verlauf")
     
-    # 1) Clean Data (so wie oben)
     clean_df <- gesamt_mw_df %>%
       filter(!is.na(Datum)) %>%
       arrange(Datum)
     
-    # 2) Berechne tägliche absolute & relative Veränderung
     change_df <- clean_df %>%
       mutate(
-        MW_vortag    = lag(MW_gesamt),
-        abs_change   = MW_gesamt - MW_vortag,
-        pct_change   = round(abs_change / MW_vortag * 100, 1),
-        sign         = ifelse(pct_change >= 0, "positive", "negative")
+        MW_vortag  = lag(MW_gesamt),
+        abs_change = MW_gesamt - MW_vortag,
+        pct_change = 100 * abs_change / MW_vortag
       ) %>%
-      filter(!is.na(pct_change))
+      filter(is.finite(pct_change))  # statt nur !is.na()
     
-    # 3) Plot mit ggplot2
-    ggplot(change_df, aes(x = Datum, y = pct_change, fill = sign)) +
+    ggplot(change_df, aes(x = Datum, y = pct_change, fill = pct_change >= 0)) +
       geom_col() +
       geom_text(
-        aes(label = scales::percent(pct_change / 100)),
-        vjust = -0.5,
+        aes(
+          label = round(pct_change, 1),
+          vjust = ifelse(pct_change >= 0, -0.5, 1.5)
+        ),
         size = 4
       ) +
-      scale_fill_manual(
-        values = c(
-          positive = "darkgreen",
-          negative = "red"
-        ),
-        guide = FALSE
-      ) +
-      scale_x_date(
-        limits     = c(min(change_df$Datum), as.Date("2025-09-01")),
-        date_breaks= "1 week",
-        date_labels= "%d.%m."
-      ) +
-      labs(
-        title = "Tägliche Marktwert-Veränderung",
-        x     = "Datum",
-        y     = "∆ zum Vortag (%)"
-      ) +
+      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = FALSE) +
+      scale_x_date(date_breaks = "1 week", date_labels = "%d.%m.") +
+      labs(title = "Tägliche Marktwert-Veränderung", x = "Datum", y = "∆ zum Vortag (%)") +
       theme_minimal(base_size = 14) +
-      theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title  = element_text(face = "bold", size = 16)
-      ) +
-      coord_cartesian(ylim = c(min(change_df$pct_change) * 1.1,
-                               max(change_df$pct_change) * 1.1))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1),
+            plot.title  = element_text(size = 16)) +
+      coord_cartesian(
+        xlim = c(min(change_df$Datum), as.Date("2025-09-01")),   # schneidet ohne Rows zu droppen
+        ylim = c(min(change_df$pct_change)*1.1, max(change_df$pct_change)*1.1)
+      )
   })
+  
   
   ## ---- MW-events ----
   output$mw_events <- renderPlot({
@@ -1266,7 +1261,7 @@ server <- function(input, output, session) {
       geom_vline(
         data = events,
         aes(xintercept = as.numeric(Datum), color = type),
-        size = 1
+        size = 0.1
       ) +
       # c) Punkte auf den y_dot-Positionen
       geom_point(
@@ -2216,9 +2211,10 @@ server <- function(input, output, session) {
   })
   
   # Rohdaten der Angebote
-  angebote_raw <- readr::read_delim(
+  angebote_raw <- read_delim(
     "data/ANGEBOTE.csv", delim = ";",
-    locale = locale(decimal_mark = ",", grouping_mark = ".")
+    locale = locale(decimal_mark = ",", grouping_mark = "."),
+    show_col_types = FALSE
   )
   
   angebote_df <- reactive({
@@ -3309,16 +3305,23 @@ server <- function(input, output, session) {
     
     # erster Verkauf nach diesem Kauf (falls vorhanden)
     matches <- verkaeufe %>%
-      inner_join(einkaeufe_latest, by = "Spieler") %>%
-      filter(Verkaeufer == Besitzer, Verkaufsdatum >= Einkaufsdatum) %>%
+      inner_join(
+        einkaeufe_latest,
+        by = c("Spieler" = "Spieler", "Verkaeufer" = "Besitzer")
+      ) %>%
+      transmute(
+        Spieler,
+        Besitzer = Verkaeufer,          # explizit setzen
+        Einkaufsdatum,
+        Einkaufspreis,
+        Verkaufsdatum,
+        Verkaufspreis
+      ) %>%
+      filter(Verkaufsdatum >= Einkaufsdatum) %>%
       group_by(Spieler, Besitzer, Einkaufsdatum, Einkaufspreis) %>%
       slice_min(Verkaufsdatum, with_ties = FALSE) %>%
       ungroup() %>%
-      transmute(
-        Spieler, Besitzer, Einkaufsdatum, Einkaufspreis,
-        Verkaufsdatum, Verkaufspreis,
-        Gewinn = Verkaufspreis - Einkaufspreis
-      )
+      mutate(Gewinn = Verkaufspreis - Einkaufspreis)
     
     # letzte Käufe ohne nachfolgenden Verkauf (NA-Verkaufsspalten)
     unmatched <- einkaeufe_latest %>%
@@ -3334,8 +3337,6 @@ server <- function(input, output, session) {
     
     bind_rows(matches, unmatched)
   })
-  
-  
   
   ## ---- Flip-Gesamtsumme ----
   ## -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
@@ -3716,10 +3717,10 @@ server <- function(input, output, session) {
     dat <- data_all()
     transfers <- dat$transfers
     
-    transactions <- readr::read_delim(
+    transactions <- read_delim(
       "data/TRANSACTIONS.csv",
       delim = ";",
-      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ""),
+      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
       show_col_types = FALSE
     ) %>%
       mutate(
