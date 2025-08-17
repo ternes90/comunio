@@ -204,7 +204,7 @@ ui <- navbarPage(
            tabsetPanel(
              id = "bieterprofile_tabs",
              tabPanel(
-               "MW-Klassen",
+               "Global & MW-Klassen",
                
                # Schlanker Zeitstrahl-Plot (kleine Höhe)
                plotOutput("mw_zeitachse_preview_schlank", height = "100px", width = "100%"),
@@ -222,14 +222,15 @@ ui <- navbarPage(
                    )
                )
                ,
+               div(style = "width: 90%; margin: 0 auto;",
+               plotOutput("beeswarm", height = 700)
+               ),
                
                div(style = "width: 90%; margin: 0 auto;",
-                   plotOutput("mwclassplot", height = 700, width = "100%")
+                   plotOutput("mwclassplot", height = 700)
                )
                
-             )
-             ,
-             tabPanel("Punkte", plotOutput("beeswarm", height = 700)),
+             ),
              tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
              tabPanel("Gebots-Frequenz",
                       plotOutput("gebote_pro_tag", height = 350),
@@ -2894,6 +2895,63 @@ server <- function(input, output, session) {
         panel.grid.minor = element_blank()
       )
   })
+  
+  ## ---- Einzeln (Bieter, Typ) ----
+  output$beeswarm <- renderPlot({
+    data <- gebotsprofil_mwclass_filtered()
+    req(nrow(data) > 0)
+    
+    plotdata <- data %>%
+      filter(!is.na(Diff_Prozent))
+    
+    # Mittelwert über beide Typen je Bieter
+    mean_total <- plotdata %>%
+      group_by(Bieter) %>%
+      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+    # Mittelwerte je Typ
+    means <- plotdata %>%
+      group_by(Bieter, Typ) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      # Gesamter Mittelwert als gestrichelte Linie und Text
+      geom_hline(
+        data = mean_total,
+        aes(yintercept = Mean_total),
+        linetype = "dashed", color = "grey60", linewidth = 0.9, na.rm = TRUE
+      ) +
+      geom_text(
+        data = mean_total,
+        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "black", # Dunkelrot
+        fontface = "bold",
+        size = 5,
+        vjust = -0.25
+      ) +
+      # Mittelwert je Typ als Text (wie gehabt)
+      geom_text(
+        data = means,
+        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
+        nudge_x = 0.4,
+        fontface = "bold",
+        size = 5
+      ) +
+      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
+      labs(
+        title = "Gebotsabweichungen je Konkurrent",
+        x = "",
+        y = "Abweichung vom MW Vortag (%)"
+      ) +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      theme_minimal(base_size = 13) +
+      theme(
+        legend.position = "bottom",
+        strip.text = element_text(face = "bold", size = 16)
+      )
+  })
 
   ## ---- MW-Klassen Boxplot+Beeswarm ----
   output$mwclassplot <- renderPlot({
@@ -3017,60 +3075,6 @@ server <- function(input, output, session) {
         legend.position = "none",
         strip.text = element_text(face = "bold", size = 16),
         axis.text.x = element_text(angle = 30, hjust = 1)
-      )
-  })
-  
-  ## ---- Einzeln (Bieter, Typ) ----
-  output$beeswarm <- renderPlot({
-    req(nrow(gebotsprofil_clean()) > 0)
-    plotdata <- gebotsprofil_clean() %>%
-      filter(!is.na(Diff_Prozent))
-    # Mittelwert über beide Typen je Bieter
-    mean_total <- plotdata %>%
-      group_by(Bieter) %>%
-      summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
-    # Mittelwerte je Typ
-    means <- plotdata %>%
-      group_by(Bieter, Typ) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
-    
-    ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
-      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
-      # Gesamter Mittelwert als gestrichelte Linie und Text
-      geom_hline(
-        data = mean_total,
-        aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9, na.rm = TRUE
-      ) +
-      geom_text(
-        data = mean_total,
-        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "black", # Dunkelrot
-        fontface = "bold",
-        size = 5,
-        vjust = -0.25
-      ) +
-      # Mittelwert je Typ als Text (wie gehabt)
-      geom_text(
-        data = means,
-        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
-        nudge_x = 0.4,
-        fontface = "bold",
-        size = 5
-      ) +
-      facet_wrap(~ Bieter, ncol = 4, scales = "free_y") +
-      labs(
-        title = "Gebotsabweichungen je Konkurrent",
-        x = "",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
-      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
-      theme_minimal(base_size = 13) +
-      theme(
-        legend.position = "bottom",
-        strip.text = element_text(face = "bold", size = 16)
       )
   })
   
