@@ -6,15 +6,13 @@ library(readxl)
 library(DT)
 library(scales)
 
-last_update <- tryCatch(readLines("data/last_updated.txt", warn = FALSE), error = function(e) "unbekannt")
-
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse",
   id = "main_navbar",
   
   #Pushaktualisierung
-  header <- tagList(
+  header = tagList(
     tags$div(
       style = "text-align: right; font-size: 12px; color: grey; margin: 5px;",
       span("Letztes Update: "),
