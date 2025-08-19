@@ -14,10 +14,11 @@ ui <- navbarPage(
   id = "main_navbar",
   
   #Pushaktualisierung
-  header = tagList(
+  header <- tagList(
     tags$div(
       style = "text-align: right; font-size: 12px; color: grey; margin: 5px;",
-      paste("Letztes Update:", last_update)
+      span("Letztes Update: "),
+      textOutput("last_update", inline = TRUE)
     ),
     
     # In Deiner UI (z.B. ui.R)
@@ -427,6 +428,14 @@ ui <- navbarPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
+  
+  #Update stempel
+  output$last_update <- renderText({
+    tryCatch(
+      readLines("data/last_updated.txt", warn = FALSE)[1],
+      error = function(e) "unbekannt"
+    )
+  })
   
   verfuegbares_kapital_dominik <- reactiveVal(0)
   kontostand_dominik           <- reactiveVal(0)
