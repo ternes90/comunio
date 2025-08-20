@@ -1,28 +1,31 @@
 ﻿Manager;Spieler;Position
+Thomas;Thielmann;Sturm
 Thomas;Kane;Sturm
 Thomas;Nusa;Sturm
 Thomas;Ceesay;Sturm
-Thomas;Thielmann;Sturm
+Thomas;Hountondji;Sturm
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Čović;Mittelfeld
 Thomas;Vidić;Mittelfeld
 Thomas;Poku;Mittelfeld
-Thomas;Grimaldo;Abwehr
 Thomas;Wahl;Abwehr
 Thomas;Laimer;Abwehr
+Thomas;Grimaldo;Abwehr
 Thomas;Svensson;Abwehr
 Thomas;Ostrzinski;Tor
-Alfons;Undav;Sturm
 Alfons;Tietz;Sturm
 Alfons;Dinkçi;Sturm
+Alfons;Undav;Sturm
 Alfons;Höfler;Mittelfeld
 Alfons;Schlager;Mittelfeld
 Alfons;Martel;Mittelfeld
-Alfons;Kristensen;Abwehr
+Alfons;Král;Mittelfeld
+Alfons;Kerber;Mittelfeld
 Alfons;Ginter;Abwehr
-Alfons;Giannoulis;Abwehr
-Alfons;Querfeld;Abwehr
 Alfons;Deman;Abwehr
+Alfons;Querfeld;Abwehr
+Alfons;Kristensen;Abwehr
+Alfons;Giannoulis;Abwehr
 Alfons;Kabar;Abwehr
 Alfons;Mané;Abwehr
 Alfons;Coulibaly;Abwehr
@@ -30,86 +33,87 @@ Alfons;Gulácsi;Tor
 Alfons;Vasilj;Tor
 Alfons;Raab;Tor
 Christoph;Ilić;Sturm
-Christoph;Amiri;Mittelfeld
 Christoph;Götze;Mittelfeld
+Christoph;Amiri;Mittelfeld
 Christoph;Lynen;Mittelfeld
 Christoph;B. Touré;Mittelfeld
+Christoph;Mwene;Abwehr
+Christoph;Upamecano;Abwehr
 Christoph;Mainka;Abwehr
 Christoph;Theate;Abwehr
-Christoph;Upamecano;Abwehr
-Christoph;Mwene;Abwehr
 Christoph;Diks;Abwehr
-Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
+Christoph;Atubolu;Tor
+Pascal;Can;Mittelfeld
 Pascal;Kramarić;Mittelfeld
+Pascal;Kainz;Mittelfeld
+Pascal;Skhiri;Mittelfeld
 Pascal;Larsson;Mittelfeld
 Pascal;Irvine;Mittelfeld
-Pascal;Can;Mittelfeld
-Pascal;Skhiri;Mittelfeld
-Pascal;Kainz;Mittelfeld
 Pascal;W. Orbán;Abwehr
-Pascal;Caci;Abwehr
 Pascal;Elvedi;Abwehr
 Pascal;Klostermann;Abwehr
+Pascal;Caci;Abwehr
 Pascal;Baumann;Tor
 Pascal;L. Philipp;Tor
-Andreas;Hollerbach;Sturm
 Andreas;Tiago Tomás;Sturm
+Andreas;Hollerbach;Sturm
 Andreas;Dompé;Sturm
 Andreas;Sahiti;Sturm
-Andreas;Schmid;Mittelfeld
 Andreas;Stöger;Mittelfeld
+Andreas;Schmid;Mittelfeld
 Andreas;Svanberg;Mittelfeld
 Andreas;Röhl;Mittelfeld
-Andreas;Hincapié;Abwehr
-Andreas;Matsima;Abwehr
-Andreas;Fischer;Abwehr
 Andreas;Torunarigha;Abwehr
+Andreas;Hincapié;Abwehr
+Andreas;Fischer;Abwehr
+Andreas;Matsima;Abwehr
 Andreas;Pauli;Abwehr
 Andreas;Zetterer;Tor
+Dominik;Topp;Sturm
 Dominik;Scienza;Sturm
 Dominik;Sieb;Sturm
-Dominik;Topp;Sturm
 Dominik;Skov Olsen;Sturm
 Dominik;Groß;Mittelfeld
-Dominik;Leweling;Mittelfeld
 Dominik;Haberer;Mittelfeld
+Dominik;Leweling;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
-Dominik;Chabot;Abwehr
-Dominik;N. Schlotterbeck;Abwehr
-Dominik;Mæhle;Abwehr
-Dominik;D. Nemeth;Abwehr
-Dominik;Zesiger;Abwehr
 Dominik;Ritzka;Abwehr
+Dominik;N. Schlotterbeck;Abwehr
 Dominik;Netz;Abwehr
+Dominik;D. Nemeth;Abwehr
+Dominik;Chabot;Abwehr
+Dominik;Zesiger;Abwehr
 Dominik;Ullrich;Abwehr
-Dominik;Mets;Abwehr
+Dominik;Mæhle;Abwehr
 Dominik;Malatini;Abwehr
+Dominik;Mets;Abwehr
 Dominik;N. Banks;Abwehr
 Dominik;Ogbus;Abwehr
 Dominik;Neuer;Tor
 Dominik;Drljača;Tor
-Nico;Olise;Sturm
-Nico;Höler;Sturm
 Nico;Gregoritsch;Sturm
+Nico;Höler;Sturm
+Nico;Adli;Sturm
+Nico;Olise;Sturm
 Nico;Wahi;Sturm
+Nico;Dorsch;Mittelfeld
 Nico;Knauff;Mittelfeld
 Nico;Schäfer;Mittelfeld
-Nico;Dorsch;Mittelfeld
 Nico;Doekhi;Abwehr
 Nico;Saliakas;Abwehr
 Nico;Hendriks;Abwehr
 Nico;Muheim;Abwehr
 Nico;Zentner;Tor
 Christian;Zivzivadze;Sturm
-Christian;Schöppner;Mittelfeld
 Christian;Khedira;Mittelfeld
-Christian;Jeong;Mittelfeld
-Christian;Chaïbi;Mittelfeld
-Christian;Kömür;Mittelfeld
+Christian;Schöppner;Mittelfeld
 Christian;Beste;Mittelfeld
-Christian;Raphaël Guerreiro;Abwehr
+Christian;Jeong;Mittelfeld
+Christian;Kömür;Mittelfeld
+Christian;Chaïbi;Mittelfeld
 Christian;Stark;Abwehr
+Christian;Raphaël Guerreiro;Abwehr
 Christian;Tapsoba;Abwehr
 Christian;Elfadli;Abwehr
 Christian;Agyekum;Abwehr
