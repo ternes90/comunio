@@ -2320,67 +2320,128 @@ server <- function(input, output, session) {
     loss_team    <- sum(sel_team, na.rm = TRUE) / 4
     final_credit <- init_credit - loss_off - loss_team
     
-    # — (6) Labels für Deckungsspieler —
+    # (6) Namen der verkauften Spieler für Annotation sammeln
     names_off  <- if (length(sel_off)  > 0) paste(angebote_df() %>% filter(Angebot %in% sel_off)  %>% pull(Spieler), collapse=", ") else ""
     names_team <- if (length(sel_team) > 0) paste(team_spieler_df() %>% filter(Marktwert %in% sel_team) %>% pull(Spieler), collapse=", ") else ""
+    sold_names <- paste(c(names_off, names_team), collapse = if (names_off != "" & names_team != "") "; " else "")
     
-    # — (7) DataFrames bauen —
-    df_mindest <- tibble(type="Mindestgebot", value=mindest)
-    df_segments <- tibble(
-      segment = factor(c("Kontostand","Kreditrahmen","Angebote","Marktwerte"),
-                       levels = rev(c("Kontostand","Kreditrahmen","Angebote","Marktwerte"))),
-      value   = c(kont, final_credit, sum_off, sum_team),
-      label   = c(
-        format(kont, big.mark=".", decimal.mark=","),
-        format(final_credit, big.mark=".", decimal.mark=","),
-        names_off,
-        names_team
-      )
+    # — (NEU) 6.5 Zuflüsse zuerst aufs Defizit —
+    deficit   <- max(0, -kont)
+    use_off   <- min(sum_off, deficit)
+    remain_d  <- deficit - use_off
+    use_team  <- min(sum_team, max(0, remain_d))
+    rem_off   <- sum_off  - use_off
+    rem_team  <- sum_team - use_team
+    adj_kont  <- kont + use_off + use_team        # nach Ausgleich
+    rest_def  <- max(0, -adj_kont)                # verbleibendes Defizit (>0)
+    
+    # — (7) Segmente bauen —
+    kont_pos <- max(adj_kont, 0) + rem_off + rem_team      # alles oberhalb 0 als Kontostand +
+    kre_pos  <- max(final_credit, 0)                        # Kreditrahmen +
+    seg_levels <- c("Kontostand –","Kontostand +","Kreditrahmen")
+    
+    df_avail_pos <- tibble(
+      x       = "Verfügbar",
+      segment = factor(c("Kreditrahmen", "Kontostand +"), levels = seg_levels),
+      value   = c(kont_pos, kre_pos),
+      label   = c("", "")   # Zahlen/Spielernamen nicht hier; du annotierst separat
     )
     
-    # — (8) Haken/Kreuz —
-    total_avail <- sum(df_segments$value, na.rm = TRUE)
+    df_avail_neg <- tibble(
+      x       = "Verfügbar",
+      segment = factor("Kontostand –", levels = seg_levels),
+      value   = -rest_def,
+      label   = ""          # kein Text
+    )
+    
+    df_mindest <- tibble(type="Mindestgebot", value=mindest)
+    
+    # Label-Positionen
+    df_pos <- df_avail_pos %>%
+      group_by(x) %>% arrange(x, segment) %>%
+      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
+    
+    df_neg <- df_avail_neg %>%
+      group_by(x) %>% arrange(x, value) %>%
+      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
+    
+    df_plot <- bind_rows(df_pos, df_neg)
+    df_plot <- df_plot %>%
+      mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
+    
+    # Kontostand-Label knapp neben y=0 platzieren
+    y_span <- max(c(df_avail_pos$value[df_avail_pos$x=="Verfügbar"], df_mindest$value), na.rm = TRUE)
+    offset <- 0.03 * max(1, y_span)
+    
+    show_lab <- if (adj_kont < 0) {
+      list(y = 0 - offset,
+           txt = paste0("Kontostand: ", format(round(adj_kont,0), big.mark=".", decimal.mark=",")))
+    } else if (rem_off > 0) {
+      list(y = 0 + offset,
+           txt = paste0("Kontostand: ", format(round(rem_off,0), big.mark=".", decimal.mark=",")))
+    } else if (rem_team > 0) {
+      list(y = 0 + offset,
+           txt = paste0("Marktwerte: ", format(round(rem_team,0), big.mark=".", decimal.mark=",")))
+    } else {
+      NULL
+    }
+    
+    kont_df <- if (is.null(show_lab)) {
+      tibble(x=character(0), y=numeric(0), lab=character(0))
+    } else {
+      tibble(x="Verfügbar", y=show_lab$y, lab=show_lab$txt)
+    }
+    
+    # Haken/Kreuz
+    total_avail <- sum(df_avail_pos$value, na.rm = TRUE)
     ok_label    <- ifelse(total_avail >= mindest, "\u2713", "\u2717")
     ok_color    <- ifelse(total_avail >= mindest, "green", "red")
     
     # — (9) Plot —
     ggplot() +
-      # a) Mindestgebot‑Balken in Grau
       geom_col(data = df_mindest,
-               aes(x = type, y = value),
+               aes(x = "Mindestgebot", y = value),
                fill = "grey70", width = 0.6) +
-      # b) Verfügbar gestapelt
-      geom_col(data = df_segments,
-               aes(x = "Verfügbar", y = value, fill = segment),
-               width = 0.6) +
-      # c) Labels in Verfügbar‑Segments
-      geom_text(data = df_segments,
-                aes(x = "Verfügbar", y = cumsum(value) - value/2, label = label),
+      geom_col(
+        data = df_plot,
+        aes(x = x, y = value, fill = segment, order = stack_order),
+        width = 0.6
+      ) +
+      
+      geom_text(data = df_plot %>% filter(abs(value) > 1e-9, label != ""),
+                aes(x = x, y = ypos, label = label),
                 colour = "black", size = 4) +
-      # d) Label im Mindestgebot‑Balken
+      geom_text(data = kont_df,
+                aes(x = x, y = y, label = lab),
+                fontface = "bold", size = 4.2) +
       geom_text(data = df_mindest,
-                aes(x = type, y = value/2, label = format(value, big.mark = ".", decimal.mark = ",")),
+                aes(x = "Mindestgebot", y = value/2,
+                    label = format(value, big.mark = ".", decimal.mark = ",")),
                 colour = "black", size = 4) +
-      # e) gestrichelte dunkelrote Linie bei y = mindest
-      geom_hline(yintercept = mindest,
-                 linetype = "dashed",
-                 color    = "darkred",
-                 size     = 0.5) +
-      # f) Haken/Kreuz über Verfügbar
-      annotate("text",
-               x = 2,
-               y = total_avail * 1.05,
-               label = ok_label,
-               size  = 8,
-               colour = ok_color) +
-      # g) Farbpalette nur auf den Verfügbar‑Balken
-      scale_fill_brewer(palette = "Paired") +
-      # h) Achsen & Theme
-      scale_x_discrete(limits = c("Mindestgebot", "Verfügbar")) +
+      geom_hline(yintercept = mindest, linetype = "dashed",
+                 color = "darkred", size = 0.5) +
+      geom_hline(yintercept = 0, linetype = "dashed",
+                 color = "black", size = 0.5) +
+      annotate("text", x = 2, y = max(0,total_avail)*1.05,
+               label = ok_label, size = 8, colour = ok_color) +
+      annotate("text", x = 2, y = max(0,total_avail)*1.15,
+               label = sold_names, size = 4, colour = "black") +
+      scale_fill_manual(
+        values = c(
+          "Kontostand –" = "#fb9a99",  # Paired[2], hellblau
+          "Kontostand +" = "#a6cee3",  # Paired[6], orange
+          "Kreditrahmen" = "#b2df8a"   # Paired[8], hellgrün
+        ),
+        breaks = c("Kontostand +","Kontostand –","Kreditrahmen"),
+        labels = c("Kreditrahmen","Defizit","Kapital")
+      ) +
+      scale_x_discrete(limits = c("Mindestgebot","Verfügbar")) +
       scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
       labs(x = NULL, y = "Betrag (€)", fill = NULL) +
       theme_minimal(base_size = 16)
+    
   })
+  
   
   ## ---- Spieler Info ----
   ### ---- MW ----
