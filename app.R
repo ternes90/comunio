@@ -221,15 +221,7 @@ ui <- navbarPage(
                       uiOutput("bid_prediction"),
                       DTOutput("transfermarkt_detail")
              ),
-             tabPanel(title = "Transfer-Simulator",
-                      value = "transfer_simulator",
-                      selectInput("spieler_select", "Spieler auf Transfermarkt:", choices = NULL),
-                      fluidRow(
-                        column(6, plotOutput("transfer_simulator_plot")),
-                        column(3, checkboxGroupInput("angebote_select", "Angebote für Deckung:", choices = NULL)),
-                        column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
-                      )
-             ),
+             
              tabPanel(
                title = "Spieler-Info", value = "spieler_info",
                radioButtons(
@@ -271,8 +263,17 @@ ui <- navbarPage(
                    uiOutput("gpt_result_box")   # ersetzt früheres DTOutput("gpt_result")
                  )
                )
-             )
+             ),
              
+             tabPanel(title = "Transfer-Simulator",
+                      value = "transfer_simulator",
+                      selectInput("spieler_select", "Spieler auf Transfermarkt:", choices = NULL),
+                      fluidRow(
+                        column(6, plotOutput("transfer_simulator_plot")),
+                        column(3, checkboxGroupInput("angebote_select", "Angebote für Deckung:", choices = NULL)),
+                        column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
+                      )
+             )
              
              
             
@@ -437,8 +438,6 @@ server <- function(input, output, session) {
   
   verfuegbares_kapital_dominik <- reactiveVal(0)
   kontostand_dominik           <- reactiveVal(0)
-  
-  # 0) reaktiver Speicher für tm_trend
   tm_trend_global <- reactiveVal(NULL)
   
   # Kapital + Kontostand von Dominik beobachten und speichern
@@ -452,6 +451,7 @@ server <- function(input, output, session) {
     }
   })
   
+  # Action Button 1
   # Server‑Logik zum Wechseln und Vorwählen für Transfer-Simulator
   observeEvent(input$transfer_row, {
     idx <- input$transfer_row
@@ -471,6 +471,21 @@ server <- function(input, output, session) {
       inputId  = "spieler_select",
       selected = player
     )
+  })
+  
+  # Action Button 2
+  observeEvent(input$info_row, {
+    idx <- input$info_row
+    df  <- tm_trend_global()
+    req(idx >= 1, idx <= nrow(df))
+    player <- df$Spieler[idx]
+    
+    # Tab zu Spieler-Info wechseln
+    updateTabsetPanel(
+      session,
+      inputId  = "transfermarkt_tabs",
+      selected = "spieler_info"   # value = "spieler_info"
+    )
     
     # Spieler im SelectInput2 vorwählen
     updateSelectInput(
@@ -479,6 +494,7 @@ server <- function(input, output, session) {
       selected = player
     )
   })
+  
   
   # Spielerlisten für Spiler-Info wählen
   observeEvent(input$spieler_filter, {
@@ -949,7 +965,7 @@ server <- function(input, output, session) {
     if (nrow(df) < 3) return(NULL)
     
     last_day <- max(df$Datum, na.rm = TRUE)
-    win_days <- 14L
+    win_days <- 7L
     df_short <- df[df$Datum >= (last_day - win_days), , drop = FALSE]
     if (nrow(df_short) < 3) df_short <- tail(df[order(df$Datum), ], 3)
     
@@ -1040,7 +1056,7 @@ server <- function(input, output, session) {
       ) +
       coord_flip(ylim = c(lim_min, lim_max)) +
       scale_fill_manual(values = c("TRUE" = "#66cdaa", "FALSE" = "#ff6f61")) +
-      theme_minimal(base_size = 16) +
+      theme_minimal(base_size = 18) +
       theme(axis.text.x = element_blank(),
             axis.title.x = element_blank(),
             axis.title.y = element_blank())
@@ -2102,6 +2118,13 @@ server <- function(input, output, session) {
       seq_len(nrow(df))
     )
     
+    # 9) Aktion2-Spalte bauen
+    df$action2 <- sprintf(
+      '<button class="btn btn-xs btn-info info-btn" data-row="%d">i</button>',
+      seq_len(nrow(df))
+    )
+    
+    
     # Copy-Buttons in die Tabelle
     df <- df %>%
       mutate(
@@ -2134,7 +2157,7 @@ server <- function(input, output, session) {
                 "Historische Punkteausbeute","Marktwert","Zielwert",
                 "Mindestgebot","Minimalgebot","IdealesGebot",
                 "Maximalgebot","Gebote","Empfehlung","Besitzer",
-                "Verbleibende Zeit","Trend MW (3 Tage)","action")
+                "Verbleibende Zeit","Trend MW (3 Tage)", "action2", "action")
     for (nm in setdiff(needed, names(df))) df[[nm]] <- NA_character_
     sub_df <- df[, needed, drop = FALSE]
     
@@ -2151,7 +2174,7 @@ server <- function(input, output, session) {
         "Spieler","Verein","PPS","Preis-Leistung","Hist.","Marktwert",
         "Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
         "Maximalgebot","Gebote","Empfehlung","Besitzer",
-        "Verbleibende Zeit","Trend MW (3 Tage)","Aktion", ""
+        "Angebotsende","Trend","Info", "Rechner", ""
       ),
       escape    = FALSE,
       selection = "none",
@@ -2180,6 +2203,10 @@ server <- function(input, output, session) {
         "  } else {",
         "    fallbackCopy(val);",
         "  }",
+        "});",
+        # Action button 2
+        "table.on('click', 'button.info-btn', function() {",
+        "  Shiny.setInputValue('info_row', $(this).data('row'), {priority:'event'});",
         "});"
       ),
       options = list(
