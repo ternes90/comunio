@@ -1,12 +1,10 @@
 ﻿Manager;Spieler;Position
-Thomas;Thielmann;Sturm
 Thomas;Kane;Sturm
 Thomas;Nusa;Sturm
 Thomas;Ceesay;Sturm
 Thomas;Hountondji;Sturm
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Čović;Mittelfeld
-Thomas;Vidić;Mittelfeld
 Thomas;Poku;Mittelfeld
 Thomas;Wahl;Abwehr
 Thomas;Laimer;Abwehr
@@ -18,7 +16,6 @@ Alfons;Wimmer;Sturm
 Alfons;Undav;Sturm
 Alfons;Dong;Sturm
 Alfons;Baldé;Sturm
-Alfons;Höfler;Mittelfeld
 Alfons;Schlager;Mittelfeld
 Alfons;Martel;Mittelfeld
 Alfons;Král;Mittelfeld
@@ -78,7 +75,6 @@ Dominik;Sieb;Sturm
 Dominik;Skov Olsen;Sturm
 Dominik;Groß;Mittelfeld
 Dominik;Haberer;Mittelfeld
-Dominik;Leweling;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
 Dominik;Ritzka;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
