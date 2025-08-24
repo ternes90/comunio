@@ -609,12 +609,14 @@ server <- function(input, output, session) {
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
            Marktwert = as.numeric(Marktwert))
   
-  tm_df <- read.csv2("data/COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")#
+  tm_df <- read.csv2("data/COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
   
-  st_df <- readr::read_csv2("data/STANDINGS.csv", 
+  st_df <- read_csv2("data/STANDINGS.csv", 
                             col_types = cols(
                               Manager = col_character(),
                               Teamwert = col_double(),
+                              Gesamtpunkte = col_double(),
+                              `letzte Punkte` = col_double(),
                               Datum = col_character()
                             ),
                             locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
