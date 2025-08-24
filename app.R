@@ -178,8 +178,12 @@ ui <- navbarPage(
                         style = "text-align: center; margin-bottom: 10px;",
                         HTML("<b>Legende:</b><br>
              <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
-             <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;
-             <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021")
+             <span style='color:orange; font-weight:bold;'>▍</span> Saison 2021/22 &nbsp;&nbsp;
+             <span style='color:red; font-weight:bold;'>▍</span> Saison 2024/25" )
+           
+             # Für Sommerpause auskommentieren
+             # <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;  
+             # <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021")
                       ),
                       plotOutput("mw_evolution", height = 600),
                       br(),
@@ -1098,7 +1102,9 @@ server <- function(input, output, session) {
   output$mw_evolution <- renderPlot({
     req(input$main_navbar == "Marktwert-Entwicklung",
         input$mw_tabs      == "mw_verlauf")
-    sp <- sommerpause_data()
+    
+    sp <- post_sommerpause_data() 
+    # sp <- sommerpause_data() #Sommerpause
     
     # 1) Saubere Daten (ohne NA) und sortiert
     clean_df <- gesamt_mw_df %>%
@@ -1135,7 +1141,7 @@ server <- function(input, output, session) {
       annotate(
         "text",
         x = as.Date("2025-08-22"),
-        y = 1.02,  # ggf. anpassen je nach Plot-Skalierung
+        y = 0.65,  # ggf. anpassen je nach Plot-Skalierung
         label = "Saisonstart",
         color = "darkred",
         angle = 90,
@@ -1143,7 +1149,45 @@ server <- function(input, output, session) {
         fontface = "bold",
         size = 4
       ) +
-      
+      geom_vline(xintercept = as.Date("2025-09-07"), linetype = "dotted",
+                 color = "darkgreen", size = 1.5) +
+      annotate(
+        "text",
+        x = as.Date("2025-09-07"),
+        y = 0.75,  # ggf. anpassen je nach Plot-Skalierung
+        label = "Kippunkt 1 (19/22/23) 07.09.25",
+        color = "darkgreen",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
+      ) +
+      geom_vline(xintercept = as.Date("2025-10-07"), linetype = "dotted",
+                 color = "orange", size = 1.5) +
+      annotate(
+        "text",
+        x = as.Date("2025-10-07"),
+        y = 0.8,  # ggf. anpassen je nach Plot-Skalierung
+        label = "Kippunkt 2 (18/21) 07.10.25",
+        color = "orange",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
+      ) +
+      geom_vline(xintercept = as.Date("2025-12-24"), linetype = "dotted",
+                 color = "red", size = 1.5) +
+      annotate(
+        "text",
+        x = as.Date("2025-12-24"),
+        y = 0.95,  # ggf. anpassen je nach Plot-Skalierung
+        label = "Kippunkt 3 (13/14/19/24) 24.12.25",
+        color = "red",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
+      ) +
       geom_segment(
         data        = arrow_df,
         aes(x = x0, y = y0, xend = x1, yend = y1),
@@ -1167,7 +1211,8 @@ server <- function(input, output, session) {
       theme(legend.position = "none") +
       # --- hier kommen die beiden Sommerpause‑Linien aus sp ---
       geom_line(
-        data = filter(sp, Saison == "Sommerpause_2024"),
+        #data = filter(sp, Saison == "Sommerpause_2024"), #Sommerpause
+        data = filter(sp, Saison == "2024-25"),
         aes(x = Datum, y = MW_rel_normiert),
         color    = "red",
         linetype = "dashed",
@@ -1175,7 +1220,8 @@ server <- function(input, output, session) {
         na.rm     = TRUE
       ) +
       geom_line(
-        data = filter(sp, Saison == "Sommerpause_2021"),
+        #data = filter(sp, Saison == "Sommerpause_2021"), #Sommerpause
+        data = filter(sp, Saison == "2021-22"),
         aes(x = Datum, y = MW_rel_normiert),
         color    = "orange",
         linetype = "dashed",
@@ -1522,25 +1568,50 @@ server <- function(input, output, session) {
       )
   }
   
-  sommerpause_data <- reactive({
-    all_season_data() %>%
-      filter(Saison %in% c("Sommerpause_2021", "Sommerpause_2024")) %>%
-      filter(Datum >= as.Date("2025-06-06")) %>%
-      arrange(Datum) %>%
-      group_by(Saison) %>%
-      mutate(
-        MW_startwert = Marktwert[Datum == as.Date("2025-06-06")][1],
-        MW_rel_normiert = Marktwert / MW_startwert
-      ) %>%
-      ungroup()
-  })
-  
   # Alle Saison-Daten laden
   all_season_data <- reactive({
     dfs <- lapply(seasons, load_season_data)
     dfs <- dfs[!sapply(dfs, is.null)]
     bind_rows(dfs)
   })
+  
+  #Für Sommerpausenverlaufsvergleich
+  # sommerpause_data <- reactive({
+  #   all_season_data() %>%
+  #     filter(Saison %in% c("Sommerpause_2021", "Sommerpause_2024")) %>%
+  #     filter(Datum >= as.Date("2025-06-06")) %>%
+  #     arrange(Datum) %>%
+  #     group_by(Saison) %>%
+  #     mutate(
+  #       MW_startwert = Marktwert[Datum == as.Date("2025-06-06")][1],
+  #       MW_rel_normiert = Marktwert / MW_startwert
+  #     ) %>%
+  #     ungroup()
+  # })
+  
+  #Für nach-Saisonstart-Saisonsvergleich
+  post_sommerpause_data <- reactive({
+    all_season_data() %>%
+      filter(Saison %in% c("2021-22", "2024-25")) %>% 
+      mutate(Datum_raw = as.Date(Datum)) %>%
+      filter(
+        (Saison == "2021-22" & Datum_raw >= as.Date("2021-06-06") & Datum_raw <= as.Date("2021-12-31")) |
+          (Saison == "2024-25" & Datum_raw >= as.Date("2024-06-06") & Datum_raw <= as.Date("2024-12-31"))
+      ) %>%
+      mutate(
+        Datum = as.Date(format(Datum_raw, "2025-%m-%d"))
+      ) %>% 
+      distinct() %>%
+      arrange(Datum) %>%
+      group_by(Saison) %>%
+      mutate(
+        MW_startwert   = Marktwert[Datum == min(Datum)][1],
+        MW_rel_normiert = Marktwert / MW_startwert
+      ) %>%
+      ungroup()
+  })
+  
+
   
   # Historische Saisonverläufe - Vergleichsauswahl (normalisierte Zeitachse)
   normalized_data <- reactive({
