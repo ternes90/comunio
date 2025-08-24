@@ -426,6 +426,14 @@ ui <- navbarPage(
            fluidPage(
              DTOutput("kapital_uebersicht_table")
            )
+  ),
+  
+  ## ---- Performance ----
+  tabPanel("Performance",
+           fluidPage(
+             column(12, plotOutput("patzierungen_table"), height = 800),
+             column(12, plotOutput("podium_table"), height = 200)
+           )
   )
 )
 
@@ -599,6 +607,33 @@ server <- function(input, output, session) {
   
   transfers <- read.csv2("data/TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
       mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+  
+  # Basis einmal vor dem Summieren abzweigen
+  transactions_base <- read_delim(
+    "data/TRANSACTIONS.csv",
+    delim = ";",
+    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+    show_col_types = FALSE
+  ) %>%
+    mutate(
+      Spieler = as.character(Spieler),
+      Manager = word(Spieler, 1)
+    ) %>%
+    filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000))
+  
+  # Dein unverändertes Objekt für andere Plots
+  transactions <- transactions_base %>%
+    group_by(Manager) %>%
+    summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
+  
+  # Platzierungen auf Basis der gleichen Quelle
+  patzierungen_df <- transactions_base %>%
+    filter(str_detect(Begründung, "^Bonus")) %>%
+    mutate(Platzierung = as.integer(str_extract(Begründung, "\\d+"))) %>%
+    filter(!is.na(Platzierung), Platzierung >= 1, Platzierung <= 8) %>%
+    count(Manager, Platzierung, name = "Anzahl") %>%
+    complete(Manager, Platzierung = 1:8, fill = list(Anzahl = 0)) %>%
+    arrange(Manager, Platzierung)
   
   transfermarkt <- read_csv2("data/TRANSFERMARKT.csv",
                              locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
@@ -3892,20 +3927,6 @@ server <- function(input, output, session) {
     dat <- data_all()
     transfers <- dat$transfers
     
-    transactions <- read_delim(
-      "data/TRANSACTIONS.csv",
-      delim = ";",
-      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-      show_col_types = FALSE
-    ) %>%
-      mutate(
-        Spieler = as.character(Spieler),
-        Manager = word(Spieler, 1)
-      ) %>%
-      filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000)) %>%
-      group_by(Manager) %>%
-      summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
-    
     alle_manager <- names(startkapital_fix)
     
     ausgaben <- transfers %>%
@@ -3938,6 +3959,17 @@ server <- function(input, output, session) {
       ) %>%
       select(Manager, Entwicklung_Trend)
     
+    # NEU: Punkte-Bonus je Spieltag nur einmal zählen
+    punkte_bonus_df <- st_df %>%
+      group_by(Manager) %>%
+      arrange(Datum, .by_group = TRUE) %>%
+      mutate(
+        gp_prev  = lag(Gesamtpunkte, default = 0),
+        counted  = (`letzte Punkte` >= 0) & (Gesamtpunkte - gp_prev == `letzte Punkte`)
+      ) %>%
+      filter(counted) %>%
+      summarise(Punkte_Bonus = sum(`letzte Punkte`, na.rm = TRUE) * 10000, .groups = "drop")
+    
     df <- data.frame(Manager = alle_manager, stringsAsFactors = FALSE) %>%
       left_join(mw_today, by = "Manager") %>%
       mutate(
@@ -3947,18 +3979,21 @@ server <- function(input, output, session) {
         Ausgaben = ausgaben$Ausgaben[match(Manager, ausgaben$Manager)],
         Einnahmen = einnahmen$Einnahmen[match(Manager, einnahmen$Manager)],
         Transaction_Summe = transactions$Transaction_Summe[match(Manager, transactions$Manager)],
+        Punkte_Bonus = punkte_bonus_df$Punkte_Bonus[match(Manager, punkte_bonus_df$Manager)],
         Ausgaben = ifelse(is.na(Ausgaben), 0, Ausgaben),
         Einnahmen = ifelse(is.na(Einnahmen), 0, Einnahmen),
         Transaction_Summe = ifelse(is.na(Transaction_Summe), 0, Transaction_Summe),
-        Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe,
+        Punkte_Bonus = ifelse(is.na(Punkte_Bonus), 0, Punkte_Bonus),
+        Aktuelles_Kapital = Startkapital + Einnahmen - Ausgaben + Transaction_Summe + Punkte_Bonus,
         Verfügbares_Kapital = Aktuelles_Kapital + Kreditrahmen
       ) %>%
       left_join(mw_diff_df, by = "Manager") %>%
       select(Manager, Startkapital, Teamwert, Entwicklung_Trend, Kreditrahmen,
-             Ausgaben, Einnahmen, Transaction_Summe, Aktuelles_Kapital, Verfügbares_Kapital)
+             Ausgaben, Einnahmen, Transaction_Summe, Punkte_Bonus, Aktuelles_Kapital, Verfügbares_Kapital)
     
     df
   })
+  
   
   output$kapital_uebersicht_table <- renderDT({
     kapital_df <- kapital_df_reactive()
@@ -3976,6 +4011,7 @@ server <- function(input, output, session) {
         "Transfer-Ausgaben (€)",
         "Transfer-Einnahmen (€)",
         "Disziplinar-/Bonus-Transaktionen (€)",
+        "Punkte-Bonus (€)",
         "Aktuelles Kapital (€)",
         "Verfügbares Kapital (€)"
       ),
@@ -3987,7 +4023,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       formatCurrency(
-        columns = c("Startkapital","Teamwert","Kreditrahmen","Ausgaben","Einnahmen","Transaction_Summe","Aktuelles_Kapital","Verfügbares_Kapital"),
+        columns = c("Startkapital","Teamwert","Kreditrahmen","Ausgaben","Einnahmen","Transaction_Summe", "Punkte_Bonus","Aktuelles_Kapital","Verfügbares_Kapital"),
         currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       ) %>%
       formatStyle(
@@ -4011,6 +4047,66 @@ server <- function(input, output, session) {
         fontWeight = "bold"
       )
   })
+  
+  # ---- PERFORMANCE ----
+  
+  ## ---- Platzierungen je Spieler ----
+  output$patzierungen_table <- renderPlot({
+    ggplot(patzierungen_df, aes(x = Platzierung, y = Anzahl, fill = Manager)) +
+      geom_col() +
+      facet_wrap(
+        ~ Manager,
+        ncol = 1,
+        scales = "free_y",
+        strip.position = "top"
+      ) +
+      scale_x_continuous(breaks = 1:8) +
+      scale_y_continuous(breaks = function(x) seq(0, ceiling(max(x)), 1)) +
+      scale_fill_brewer(palette = "Paired") +
+      labs(fill = "Manager", x = "", y = "") +
+      theme_minimal(base_size = 18) +
+      theme(
+        strip.text.x = element_text(hjust = 0),
+        axis.text.y = element_text(size = 10),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
+  
+  ## ---- Podium ----
+  # feste Manager-Reihenfolge für konsistente Farben
+  manager_levels <- patzierungen_df %>%
+    distinct(Manager) %>%
+    arrange(Manager) %>%
+    pull(Manager)
+  
+  podium_df <- patzierungen_df %>%
+    filter(Platzierung %in% 1:3) %>%
+    mutate(
+      Manager = factor(Manager, levels = manager_levels),
+      Platzierung = factor(Platzierung, levels = c(3, 2, 1))  # 1 ganz oben
+    ) %>%
+    complete(Platzierung, Manager, fill = list(Anzahl = 0)) %>%
+    arrange(Platzierung, Manager)
+  
+  output$podium_table <- renderPlot({
+    ggplot(podium_df, aes(x = Anzahl, y = Platzierung, fill = Manager)) +
+      geom_col(position = "stack") +
+      scale_x_continuous(breaks = function(x) seq(0, ceiling(max(x)), 1)) +
+      scale_fill_brewer(palette = "Paired") +
+      labs(x = "", y = "Platz", fill = "Manager") +
+      theme_minimal(base_size = 18) +
+      theme(
+        axis.text.y = element_text(face = "bold", size = 20),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
+  
+  
+  
   
 }
 
