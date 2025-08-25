@@ -1174,7 +1174,7 @@ server <- function(input, output, session) {
         na.rm     = TRUE
       ) +
       geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
-                 color = "darkred", size = 1.5) +
+                 color = "darkred", linewidth = 1.5) +
       annotate(
         "text",
         x = as.Date("2025-08-22"),
@@ -1187,7 +1187,7 @@ server <- function(input, output, session) {
         size = 4
       ) +
       geom_vline(xintercept = as.Date("2025-09-07"), linetype = "dotted",
-                 color = "darkgreen", size = 1.5) +
+                 color = "darkgreen", linewidth = 1.5) +
       annotate(
         "text",
         x = as.Date("2025-09-07"),
@@ -1200,7 +1200,7 @@ server <- function(input, output, session) {
         size = 4
       ) +
       geom_vline(xintercept = as.Date("2025-10-07"), linetype = "dotted",
-                 color = "orange", size = 1.5) +
+                 color = "orange", linewidth = 1.5) +
       annotate(
         "text",
         x = as.Date("2025-10-07"),
@@ -1230,7 +1230,7 @@ server <- function(input, output, session) {
         aes(x = x0, y = y0, xend = x1, yend = y1),
         arrow       = arrow(length = unit(0.3, "cm"), type = "closed"),
         color       = arrow_df$color,
-        size        = 1.2,
+        linewidth = 1.2,
         inherit.aes = FALSE
       ) +
       
@@ -1294,7 +1294,7 @@ server <- function(input, output, session) {
         ),
         size = 4
       ) +
-      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = FALSE) +
+      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
       scale_x_date(date_breaks = "1 week", date_labels = "%d.%m.") +
       labs(title = "Tägliche Marktwert-Veränderung", x = "Datum", y = "∆ zum Vortag (%)") +
       theme_minimal(base_size = 14) +
@@ -2505,21 +2505,20 @@ server <- function(input, output, session) {
       mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
     
     # Kontostand-Label knapp neben y=0 platzieren
-    y_span <- max(c(df_avail_pos$value[df_avail_pos$x=="Verfügbar"], df_mindest$value), na.rm = TRUE)
-    offset <- 0.03 * max(1, y_span)
+    y_span  <- max(c(df_avail_pos$value[df_avail_pos$x=="Verfügbar"], df_mindest$value), na.rm = TRUE)
+    offset  <- 0.03 * max(1, y_span)
     
-    show_lab <- if (adj_kont < 0) {
-      list(y = 0 - offset,
-           txt = paste0("Kontostand: ", format(round(adj_kont,0), big.mark=".", decimal.mark=",")))
-    } else if (rem_off > 0) {
-      list(y = 0 + offset,
-           txt = paste0("Kontostand: ", format(round(rem_off,0), big.mark=".", decimal.mark=",")))
-    } else if (rem_team > 0) {
-      list(y = 0 + offset,
-           txt = paste0("Marktwerte: ", format(round(rem_team,0), big.mark=".", decimal.mark=",")))
-    } else {
-      NULL
-    }
+    # Wert wählen: rem_off > rem_team > adj_kont
+    val <- if (rem_off > 0) rem_off else if (rem_team > 0) rem_team else adj_kont
+    
+    titel_neu <- (adj_kont < 0) || (rem_off > 0) || (rem_team > 0)
+    label_txt <- paste0(if (titel_neu) "Neuer Kontostand: " else "Aktueller Kontostand: ",
+                        format(round(val, 0), big.mark = ".", decimal.mark = ","))
+    
+    show_lab <- list(
+      y   = 0 - offset, 
+      txt = label_txt
+    )
     
     kont_df <- if (is.null(show_lab)) {
       tibble(x=character(0), y=numeric(0), lab=character(0))
@@ -2539,7 +2538,7 @@ server <- function(input, output, session) {
                fill = "grey70", width = 0.6) +
       geom_col(
         data = df_plot,
-        aes(x = x, y = value, fill = segment, order = stack_order),
+        aes(x = x, y = value, fill = segment),
         width = 0.6
       ) +
       
