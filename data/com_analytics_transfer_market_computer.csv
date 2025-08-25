@@ -852,18 +852,33 @@ Yalçınkaya;Mittelfeld;Hamburger SV;0;180.000;180.000;0,0;Halten;;0;Computer;23
 Zieliński;Torhüter;VfL Wolfsburg;0;160.000;160.000;0,0;Halten;;0;Computer;23.08.2025
 Darvich;Mittelfeld;VfB Stuttgart;0;2.460.000;2.460.000;0,0;Halten;;0;Computer;23.08.2025
 Luis Díaz;Stürmer;FC Bayern München;0;19.140.000;20.010.000;0,0;Halten;;2;Computer;23.08.2025
-Blaswich;Torhüter;Bayer 04 Leverkusen;0;650.000;600.000;2,7;Halten;N/A;0;Computer;24.08.2025
-Kobel;Torhüter;Borussia Dortmund;0;2.980.000;3.060.000;0,0;Halten;N/A;2;Computer;24.08.2025
-Gnabry;Stürmer;FC Bayern München;0;9.840.000;10.580.000;0,0;Kaufen;N/A;2;Computer;24.08.2025
-Hack;Stürmer;Borussia Mönchengladbach;0;6.510.000;6.420.000;3,8;Halten;N/A;1;Computer;24.08.2025
-Köbbing;Torhüter;1. FC Köln;0;160.000;160.000;0,0;Halten;N/A;0;Computer;24.08.2025
-Jakić;Mittelfeld;FC Augsburg;0;2.820.000;3.150.000;0,0;Kaufen;N/A;2;Computer;24.08.2025
-Openda;Stürmer;RB Leipzig;0;9.780.000;9.240.000;0,0;Halten;N/A;1;Computer;24.08.2025
-Xavi Simons;Mittelfeld;RB Leipzig;0;8.390.000;8.330.000;0,0;Halten;N/A;2;Computer;24.08.2025
-T. Drexler;Abwehr;TSG Hoffenheim;0;380.000;370.000;1,0;Halten;N/A;0;Computer;24.08.2025
-Conteh;Stürmer;1.FC Heidenheim;0;1.170.000;1.110.000;2,0;Halten;N/A;0;Computer;24.08.2025
-Odogu;Abwehr;VfL Wolfsburg;0;420.000;410.000;4,0;Halten;N/A;0;Computer;24.08.2025
-Đurić;Mittelfeld;TSG Hoffenheim;0;260.000;270.000;0,0;Halten;N/A;0;Computer;24.08.2025
-Vidić;Mittelfeld;Borussia Mönchengladbach;0;180.000;190.000;0,0;Halten;N/A;0;Computer;24.08.2025
-Zieliński;Torhüter;VfL Wolfsburg;0;160.000;180.000;0,0;Halten;N/A;0;Computer;24.08.2025
-Ramšak;Stürmer;RB Leipzig;0;170.000;190.000;0,0;Kaufen;N/A;0;Computer;24.08.2025
+Blaswich;Torhüter;Bayer 04 Leverkusen;0;650.000;600.000;2,7;Halten;;0;Computer;24.08.2025
+Kobel;Torhüter;Borussia Dortmund;0;2.980.000;3.060.000;0,0;Halten;;2;Computer;24.08.2025
+Gnabry;Stürmer;FC Bayern München;0;9.840.000;10.580.000;0,0;Kaufen;;2;Computer;24.08.2025
+Hack;Stürmer;Borussia Mönchengladbach;0;6.510.000;6.420.000;3,8;Halten;;1;Computer;24.08.2025
+Köbbing;Torhüter;1. FC Köln;0;160.000;160.000;0,0;Halten;;0;Computer;24.08.2025
+Jakić;Mittelfeld;FC Augsburg;0;2.820.000;3.150.000;0,0;Kaufen;;2;Computer;24.08.2025
+Openda;Stürmer;RB Leipzig;0;9.780.000;9.240.000;0,0;Halten;;1;Computer;24.08.2025
+Xavi Simons;Mittelfeld;RB Leipzig;0;8.390.000;8.330.000;0,0;Halten;;2;Computer;24.08.2025
+T. Drexler;Abwehr;TSG Hoffenheim;0;380.000;370.000;1,0;Halten;;0;Computer;24.08.2025
+Conteh;Stürmer;1.FC Heidenheim;0;1.170.000;1.110.000;2,0;Halten;;0;Computer;24.08.2025
+Odogu;Abwehr;VfL Wolfsburg;0;420.000;410.000;4,0;Halten;;0;Computer;24.08.2025
+Đurić;Mittelfeld;TSG Hoffenheim;0;260.000;270.000;0,0;Halten;;0;Computer;24.08.2025
+Vidić;Mittelfeld;Borussia Mönchengladbach;0;180.000;190.000;0,0;Halten;;0;Computer;24.08.2025
+Zieliński;Torhüter;VfL Wolfsburg;0;160.000;180.000;0,0;Halten;;0;Computer;24.08.2025
+Ramšak;Stürmer;RB Leipzig;0;170.000;190.000;0,0;Kaufen;;0;Computer;24.08.2025
+Blaswich;Torhüter;Bayer 04 Leverkusen;0;590.000;550.000;2,7;Halten;Gut;0;Computer;25.08.2025
+Sabitzer;Mittelfeld;Borussia Dortmund;4;4.810.000;4.910.000;4,0;Halten;Gut;1;Computer;25.08.2025
+Kobel;Torhüter;Borussia Dortmund;3;2.960.000;3.030.000;3,0;Halten;Durchschnittlich;2;Computer;25.08.2025
+Gnabry;Stürmer;FC Bayern München;9;10.030.000;10.220.000;9,0;Halten;Gut;1;Computer;25.08.2025
+Demirović;Stürmer;VfB Stuttgart;2;5.420.000;5.370.000;2,0;Halten;Schlecht;0;Computer;25.08.2025
+Köbbing;Torhüter;1. FC Köln;0;160.000;170.000;0,0;Halten;Schlecht;0;Computer;25.08.2025
+Openda;Stürmer;RB Leipzig;2;9.510.000;9.300.000;2,0;Halten;Schlecht;1;Computer;25.08.2025
+Kim;Abwehr;FC Bayern München;4;3.970.000;4.050.000;4,0;Halten;Durchschnittlich;0;Computer;25.08.2025
+T. Drexler;Abwehr;TSG Hoffenheim;0;360.000;360.000;1,0;Halten;Schlecht;0;Computer;25.08.2025
+Conteh;Stürmer;1.FC Heidenheim;0;1.130.000;1.100.000;2,0;Halten;Schlecht;0;Computer;25.08.2025
+Odogu;Abwehr;VfL Wolfsburg;0;420.000;440.000;4,0;Halten;Gut;0;Computer;25.08.2025
+Vidić;Mittelfeld;Borussia Mönchengladbach;0;170.000;180.000;0,0;Halten;Schlecht;0;Computer;25.08.2025
+Telle;Abwehr;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;Computer;25.08.2025
+Zieliński;Torhüter;VfL Wolfsburg;0;160.000;170.000;0,0;Halten;Schlecht;0;Computer;25.08.2025
+Ramšak;Stürmer;RB Leipzig;0;160.000;180.000;0,0;Kaufen;Schlecht;0;Computer;25.08.2025
