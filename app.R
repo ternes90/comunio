@@ -658,27 +658,40 @@ server <- function(input, output, session) {
                             show_col_types = FALSE
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
-  
-  ca_df <- read_delim("data/com_analytics_all_players.csv", delim = ";", 
-                      locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-                      show_col_types = FALSE)
-  ca_df$SPIELER <- trimws(enc2utf8(as.character(ca_df$SPIELER)))
-  
-  #PPS usw. mergen
-  ca_df <- ca_df %>%
-    select(
+
+  ca_df <- read_delim(
+    "data/com_analytics_all_players.csv",
+    delim = ";",
+    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+    show_col_types = FALSE
+  ) %>%
+    mutate(
+      SPIELER = trimws(enc2utf8(as.character(SPIELER))),
+      Datum   = as.Date(Datum, format = "%d.%m.%Y")
+    ) %>%
+    filter(Datum == max(Datum, na.rm = TRUE)) %>%
+    transmute(
       SPIELER,
+      Position = Positionsgruppe,
+      Verein = POSITION,
       Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
+      Gesamtpunkte = GESAMTPUNKTE,
       Preis_Leistung = `PREIS-LEISTUNG`,
       Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
     )
   
   #Kaufempfehung etc.
-  ca2_df <- read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";", 
-                       locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-                       show_col_types = FALSE) %>%
-    mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>% filter(Datum == max(Datum, na.rm = TRUE))
-  ca2_df$SPIELER <- trimws(enc2utf8(as.character(ca2_df$SPIELER)))
+  ca2_df <- read_delim(
+    "data/com_analytics_transfer_market_computer.csv",
+    delim = ";",
+    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+    show_col_types = FALSE
+  ) %>%
+    mutate(
+      Datum   = as.Date(Datum, format = "%d.%m.%Y"),
+      SPIELER = trimws(enc2utf8(as.character(SPIELER)))
+    ) %>%
+    filter(Datum == max(Datum, na.rm = TRUE))
   
   #All player hist. MW
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
@@ -2208,6 +2221,8 @@ server <- function(input, output, session) {
         ca2_df %>%
             select(
               SPIELER,
+              POSITION,
+              PUNKTE,
               `Punkte pro Spiel` = `PUNKTE / SPIEL`,
               `Preis-Leistung` = `PREIS-LEISSTUNG`,
               Zielwert = `ZIELWERT`,
@@ -2261,7 +2276,7 @@ server <- function(input, output, session) {
       )
     
     # fehlende Spalten auffüllen
-    needed <- c("Spieler","Logo","Punkte pro Spiel","Preis-Leistung",
+    needed <- c("Spieler", "POSITION", "Logo", "PUNKTE", "Punkte pro Spiel","Preis-Leistung",
                 "Historische Punkteausbeute","Marktwert","Zielwert",
                 "Mindestgebot","Minimalgebot","IdealesGebot",
                 "Maximalgebot","Gebote","Empfehlung","Besitzer",
@@ -2279,7 +2294,7 @@ server <- function(input, output, session) {
     DT::datatable(
       sub_df,
       colnames = c(
-        "Spieler","Verein","PPS","Preis-Leistung","Hist.","Marktwert",
+        "Spieler","Position","Verein","Punkte","PPS","Preis-Leistung","Hist.","Marktwert",
         "Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
         "Maximalgebot","Gebote","Empfehlung","Besitzer",
         "Angebotsende","Trend","Info", "Rechner", ""
@@ -2620,30 +2635,20 @@ server <- function(input, output, session) {
   ### ---- Leistungsdaten ----
   output$spieler_info_raw <- DT::renderDT({
     req(input$spieler_select2)
-    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
-    sel  <- norm(input$spieler_select2)
     
-    df  <- if (exists("ca2_df", inherits=TRUE) && is.data.frame(ca2_df)) ca2_df %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel) else data.frame()
-    df2 <- if (exists("ca_df",  inherits=TRUE) && is.data.frame(ca_df))  ca_df  %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel) else data.frame()
+    left  <- ca_df  %>% filter(SPIELER == input$spieler_select2)
+    right <- ca2_df %>% filter(SPIELER == input$spieler_select2)
     
-    out <- if (nrow(df) > 0 && nrow(df2) > 0) {
-      left_join(df, select(df2, -SPIELER), by = ".k")
-    } else if (nrow(df) > 0) {
-      df
-    } else {
-      df2
-    }
+    df <- left %>% left_join(right, by = "SPIELER", suffix = c("", "_TM")) %>% 
+      rename(Spieler = SPIELER, PPS = Punkte_pro_Spiel, `Preis/Leistung` = Preis_Leistung, Historie = Historische_Punkteausbeute) %>%
+      select(-any_of(c("POSITION","TEAM","PUNKTE","PUNKTE / SPIEL")))
     
-    if ("SPIELER" %in% names(out)) {
-      out$SPIELER <- paste0(toupper(substr(out$SPIELER, 1, 1)), substring(out$SPIELER, 2))
-    }
-    if (".k" %in% names(out)) out <- select(out, -.k)
-    
-    DT::datatable(out, escape = FALSE, rownames = FALSE,
-                  options = list(dom = 't', scrollX = TRUE, paging = FALSE))
+    DT::datatable(
+      df,
+      escape = FALSE, rownames = FALSE,
+      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
+    )
   })
-  
-  
   
   ### ---- GPT ----
   ### ---- Helpers ----
@@ -2827,13 +2832,12 @@ server <- function(input, output, session) {
         by = "Spieler"
       ) %>%
       # CA-Daten mergen und umbenennen
-      left_join(ca_df, by = c("Spieler" = "SPIELER")) %>%
+      left_join(ca_df %>% select(-Verein, -Position, -Gesamtpunkte), by = c("Spieler" = "SPIELER")) %>%
       rename(
         "Punkte pro Spiel"           = Punkte_pro_Spiel,
         "Preis-Leistung"             = Preis_Leistung,
         "Historische Punkteausbeute" = Historische_Punkteausbeute
       )
-    
     
     # Logo-Spalte
     logo_dir <- "logos"
@@ -2845,6 +2849,7 @@ server <- function(input, output, session) {
     )
     
     df_pre
+
   })
   
   # 2) output$mein_kader: benutzt mein_kader_df()
