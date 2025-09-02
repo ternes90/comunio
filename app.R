@@ -421,18 +421,19 @@ ui <- navbarPage(
            )
   ),
   
+  ## ---- Performance ----
+  tabPanel("Performance",
+           fluidPage(
+             column(12, plotOutput("patzierungen_table", height = "800px")),
+             column(12, plotOutput("podium_table", height = "200px"))
+           )
+           
+  ),
+  
   ## ---- Kapitalübersicht ----
   tabPanel("Kapitalübersicht",
            fluidPage(
              DTOutput("kapital_uebersicht_table")
-           )
-  ),
-  
-  ## ---- Performance ----
-  tabPanel("Performance",
-           fluidPage(
-             column(12, plotOutput("patzierungen_table"), height = 800),
-             column(12, plotOutput("podium_table"), height = 200)
            )
   )
 )
@@ -3866,6 +3867,65 @@ server <- function(input, output, session) {
       )
   })
   
+  # ---- PERFORMANCE ----
+  
+  ## ---- Platzierungen je Spieler ----
+  output$patzierungen_table <- renderPlot({
+    ymax <- max(patzierungen_df$Anzahl, na.rm = TRUE) + 1
+    
+    ggplot(patzierungen_df, aes(x = Platzierung, y = Anzahl, fill = Manager)) +
+      geom_col() +
+      facet_wrap(~ Manager, ncol = 2, scales = "free_y") +
+      scale_x_continuous(breaks = 1:8) +
+      scale_fill_brewer(palette = "Paired", drop = FALSE) +
+      scale_y_continuous(
+        limits = c(0, ymax),
+        breaks = seq(0, ymax, 1),
+        expand = expansion(mult = c(0, 0))
+      ) +
+      guides(fill = "none") +
+      theme_minimal(base_size = 18) +
+      theme(
+        panel.spacing.y    = unit(1, "lines"),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        strip.text         = element_text(size = 20, face = "bold")
+      )
+  })
+  
+  
+  ## ---- Podium ----
+  # feste Manager-Reihenfolge für konsistente Farben
+  manager_levels <- patzierungen_df %>%
+    distinct(Manager) %>%
+    arrange(Manager) %>%
+    pull(Manager)
+  
+  podium_df <- patzierungen_df %>%
+    filter(Platzierung %in% 1:3) %>%
+    mutate(
+      Manager = factor(Manager, levels = manager_levels),
+      Platzierung = factor(Platzierung, levels = c(3, 2, 1))  # 1 ganz oben
+    ) %>%
+    complete(Platzierung, Manager, fill = list(Anzahl = 0)) %>%
+    arrange(Platzierung, Manager)
+  
+  output$podium_table <- renderPlot({
+    ggplot(podium_df, aes(x = Anzahl, y = Platzierung, fill = Manager)) +
+      geom_col(position = "stack") +
+      scale_x_continuous(breaks = function(x) seq(0, ceiling(max(x)), 1)) +
+      scale_fill_brewer(palette = "Paired", drop = FALSE) +
+      labs(x = "", y = "Platz", fill = "Manager") +
+      theme_minimal(base_size = 18) +
+      theme(
+        axis.text.y = element_text(face = "bold", size = 20),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank()
+      )
+  })
+  
   # ---- KAPITALÜBERSICHT ----
   
   ## ---- Kontostände je Spieler ----
@@ -3998,7 +4058,6 @@ server <- function(input, output, session) {
     df
   })
   
-  
   output$kapital_uebersicht_table <- renderDT({
     kapital_df <- kapital_df_reactive()
     rownames(kapital_df) <- NULL
@@ -4051,66 +4110,6 @@ server <- function(input, output, session) {
         fontWeight = "bold"
       )
   })
-  
-  # ---- PERFORMANCE ----
-  
-  ## ---- Platzierungen je Spieler ----
-  output$patzierungen_table <- renderPlot({
-    ggplot(patzierungen_df, aes(x = Platzierung, y = Anzahl, fill = Manager)) +
-      geom_col() +
-      facet_wrap(
-        ~ Manager,
-        ncol = 1,
-        scales = "free_y",
-        strip.position = "top"
-      ) +
-      scale_x_continuous(breaks = 1:8) +
-      scale_y_continuous(breaks = function(x) seq(0, ceiling(max(x)), 1)) +
-      scale_fill_brewer(palette = "Paired") +
-      labs(fill = "Manager", x = "", y = "") +
-      theme_minimal(base_size = 18) +
-      theme(
-        strip.text.x = element_text(hjust = 0),
-        axis.text.y = element_text(size = 10),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank()
-      )
-  })
-  
-  ## ---- Podium ----
-  # feste Manager-Reihenfolge für konsistente Farben
-  manager_levels <- patzierungen_df %>%
-    distinct(Manager) %>%
-    arrange(Manager) %>%
-    pull(Manager)
-  
-  podium_df <- patzierungen_df %>%
-    filter(Platzierung %in% 1:3) %>%
-    mutate(
-      Manager = factor(Manager, levels = manager_levels),
-      Platzierung = factor(Platzierung, levels = c(3, 2, 1))  # 1 ganz oben
-    ) %>%
-    complete(Platzierung, Manager, fill = list(Anzahl = 0)) %>%
-    arrange(Platzierung, Manager)
-  
-  output$podium_table <- renderPlot({
-    ggplot(podium_df, aes(x = Anzahl, y = Platzierung, fill = Manager)) +
-      geom_col(position = "stack") +
-      scale_x_continuous(breaks = function(x) seq(0, ceiling(max(x)), 1)) +
-      scale_fill_brewer(palette = "Paired") +
-      labs(x = "", y = "Platz", fill = "Manager") +
-      theme_minimal(base_size = 18) +
-      theme(
-        axis.text.y = element_text(face = "bold", size = 20),
-        panel.grid.major.x = element_blank(),
-        panel.grid.minor.x = element_blank(),
-        panel.grid.major.y = element_blank(),
-        panel.grid.minor.y = element_blank()
-      )
-  })
-  
-  
-  
   
 }
 
