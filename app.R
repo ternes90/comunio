@@ -126,19 +126,29 @@ ui <- navbarPage(
            fluidPage(
              # Aktuelle Transfers - Zusammenfassung
              div(
+               style = "display: flex; justify-content: right; margin-bottom:12px;",
+               selectInput("flip_day", label = NULL,
+                           choices = c("Heute", "Gestern"),
+                           selected = "Heute", width = "120px")
+             ),
+             div(
                style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
                tags$div("Aktuelle Transfers", 
                         style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+
                div(
                  style = "margin-bottom:20px; width: 100%;",
                  DTOutput("transfer_summary_today", width = "100%")
                ),
-               tags$div("Aktuelle Flips", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
+               
+               tags$div("Aktuelle Flips",
+                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 6px;"),
+
                div(
                  style = "margin-bottom:20px; width: 100%;",
                  DTOutput("flip_summary_today", width = "100%")
                )
+               
              ),
              
              # Marktwert-Zeitachse
@@ -911,16 +921,16 @@ server <- function(input, output, session) {
   
   ## ---- Transferaktivitäten ----
   output$transfer_summary_today <- DT::renderDT({
-    today <- Sys.Date()
+    selected_date <- if (input$flip_day == "Gestern") Sys.Date() - 1 else Sys.Date()
     
     df <- transfers %>%
-      filter(Datum == today, Hoechstbietender != "Computer") %>%
+      filter(Datum == selected_date, Hoechstbietender != "Computer") %>%
       left_join(
-        ap_df %>% filter(Datum == today)   %>% select(Spieler, Marktwert_today = Marktwert),
+        ap_df %>% filter(Datum == selected_date)   %>% select(Spieler, Marktwert_today = Marktwert),
         by = "Spieler"
       ) %>%
       left_join(
-        ap_df %>% filter(Datum == today-1) %>% select(Spieler, Marktwert_prev  = Marktwert),
+        ap_df %>% filter(Datum == selected_date-1) %>% select(Spieler, Marktwert_prev  = Marktwert),
         by = "Spieler"
       ) %>%
       mutate(
@@ -977,10 +987,10 @@ server <- function(input, output, session) {
   
   ## ---- Flip-Aktivitäten ----
   output$flip_summary_today <- DT::renderDT({
-    latest_date <- Sys.Date()
+    selected_date <- if (input$flip_day == "Gestern") Sys.Date() - 1 else Sys.Date()
     
     df <- flip_data() %>%
-      filter(Verkaufsdatum == latest_date) %>%
+      filter(Verkaufsdatum == selected_date) %>%
       select(Spieler, Besitzer, Gewinn, Einkaufspreis, Verkaufspreis, Einkaufsdatum) %>%
       arrange(desc(Einkaufsdatum))
     
@@ -988,31 +998,14 @@ server <- function(input, output, session) {
       df,
       selection = "single",
       rownames = FALSE,
-      options = list(dom = 't', pageLength = 10,
-                     scrollX = TRUE,
-                     paging = FALSE),
-      colnames = c(
-        "Spieler",
-        "Verkäufer",
-        "Gewinn/Verlust (€)",
-        "Einkaufspreis",
-        "Verkaufspreis",
-        "Kaufdatum"
-      )
+      options = list(dom = 't', pageLength = 10, scrollX = TRUE, paging = FALSE),
+      colnames = c("Spieler","Verkäufer","Gewinn/Verlust (€)","Einkaufspreis","Verkaufspreis","Kaufdatum")
     ) %>%
-      formatCurrency(
-        columns = c("Einkaufspreis", "Verkaufspreis", "Gewinn"),
-        currency = "",
-        interval = 3,
-        mark = ".",
-        digits = 0
-      ) %>%
-      formatStyle(
-        'Gewinn',
-        color = styleInterval(0, c('#e53935', '#388e3c')),  # rot bei <0, grün bei >0
-        fontWeight = 'bold'
-      )
+      formatCurrency(columns = c("Einkaufspreis","Verkaufspreis","Gewinn"),
+                     currency = "", interval = 3, mark = ".", digits = 0) %>%
+      formatStyle('Gewinn', color = styleInterval(0, c('#e53935','#388e3c')), fontWeight = 'bold')
   })
+  
   
   ## ---- Marktwerttrend ----
   output$mw_zeitachse_preview <- renderPlot({
