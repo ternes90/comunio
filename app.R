@@ -1093,8 +1093,9 @@ server <- function(input, output, session) {
     df <- flip_summary_by_owner()
     req(nrow(df) > 0)
     
-    lim_min <- -1e7
-    lim_max <- 1e7
+    abs_max <- max(abs(df$Gesamtgewinn), na.rm = TRUE)
+    lim_min <- -abs_max - 1e5
+    lim_max <-  abs_max + 1e5
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
       geom_col(show.legend = FALSE) +
@@ -3565,27 +3566,36 @@ server <- function(input, output, session) {
   output$flip_summarybar <- renderPlot({
     req(nrow(flip_data()) > 0)
     
-    flip_data() %>%
+    df <- flip_data() %>%
       group_by(Besitzer) %>%
-      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE)) %>%
-      ggplot(aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
+      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
+    
+    abs_max <- max(abs(df$Gesamtgewinn), na.rm = TRUE)
+    lim_min <- -abs_max - 1e6
+    lim_max <-  abs_max + 1e6
+    
+    ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
       geom_col(show.legend = FALSE) +
-      geom_text(aes(label = round(Gesamtgewinn, 0), 
-                    hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)), 
-                position = position_dodge(width = 1)) +
+      geom_text(
+        aes(
+          label = format(round(Gesamtgewinn, 0), big.mark = ".", decimal.mark = ",", scientific = FALSE),
+          hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)
+        ),
+        position = position_dodge(width = 1)
+      ) +
       scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
-      coord_flip() +
+      coord_flip(ylim = c(lim_min, lim_max)) +
       theme_minimal() +
       theme(
         axis.text.y = element_text(size = 16, face = "bold", color = "black"),
         axis.text.x = element_text(size = 16),
-        plot.title = element_text(size = 16, face = "bold")
+        plot.title = element_text(size = 16)
       ) +
       labs(
         title = "Flip-Gewinn/Verlust je Comunio-Spieler (gesamt)",
         x = "",
-        y = "Gewinn/Verlust (€)"
-      ) 
+        y = ""
+      )
   })
   
   
@@ -3604,7 +3614,7 @@ server <- function(input, output, session) {
       scale_color_brewer(palette = "Paired") +
       labs(
         title = "Kumulierte Flip-Gewinne über die Zeit je Spieler",
-        x = "Datum",
+        x = "",
         y = "Kumulierte Gewinne (€)",
         color = "Spieler"
       ) +
