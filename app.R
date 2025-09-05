@@ -1308,7 +1308,7 @@ server <- function(input, output, session) {
       theme(axis.text.x = element_text(angle = 45, hjust = 1),
             plot.title  = element_text(size = 16)) +
       coord_cartesian(
-        xlim = c(min(change_df$Datum), as.Date("2025-09-01")),   # schneidet ohne Rows zu droppen
+        xlim = c(min(change_df$Datum), as.Date("2026-01-01")),   # schneidet ohne Rows zu droppen
         ylim = c(min(change_df$pct_change)*1.1, max(change_df$pct_change)*1.1)
       )
   })
@@ -1459,6 +1459,7 @@ server <- function(input, output, session) {
     df
   })
   
+  ## ---- Hist. je Klasse Marktwert-Entwicklung ab 15.06.2025 ----
   
   output$mw_plot <- renderPlot({
     req(input$main_navbar == "Marktwert-Entwicklung",
@@ -1479,14 +1480,15 @@ server <- function(input, output, session) {
     df_plot_norm <- df_plot %>%
       left_join(startwerte, by = "Klasse") %>%
       mutate(MW_normiert = MW_Ø / Start_MW) %>%
-      filter(Datum <= as.Date("2024-08-15"))
+      filter(Datum <= Sys.Date()- 365)
+    
     
     ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
       geom_line(size = 1.2) +
       labs(
-        title = "Historischer norm. Marktwertverlauf pro Klasse ab 01.06.2024 (Start = 1)",
+        title = "Historischer Marktwertverlauf je Klasse",
         y = "Normierter MW",
-        x = "Datum",
+        x = "",
         color = "MW-Klasse"
       )  + 
       geom_vline(xintercept = as.numeric(Sys.Date() - 365), color = "darkred", linetype = "dashed", linewidth = 1) +
@@ -1503,7 +1505,8 @@ server <- function(input, output, session) {
       ) +
       scale_color_brewer(palette = "Paired") +
       coord_cartesian(ylim = c(0.6, 1.2)) +
-      theme_minimal(base_size = 14)
+      theme_minimal(base_size = 14) +
+      scale_x_date(date_labels = "%b %y")   
   })
   
   ## ---- Je Klasse Marktwert-Entwicklung ab 15.06.2025 ----
@@ -1572,14 +1575,27 @@ server <- function(input, output, session) {
     ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
       geom_line(size = 1.2) +
       labs(
-        title = "Normierter Marktwertverlauf je Klasse (16.06. bis 15.08.2025)",
+        title = "Aktueller Marktwertverlauf je Klasse",
         y = "Normierter MW",
-        x = "Datum",
+        x = "",
         color = "MW-Klasse"
       ) +
       scale_color_brewer(palette = "Paired") +
-      coord_cartesian(ylim = c(0.6, 1.2), xlim = as.Date(c("2025-06-16", "2025-08-15"))) +
-      theme_minimal(base_size = 14)
+      coord_cartesian(ylim = c(0.6, 1.2)) +
+      geom_vline(xintercept = as.numeric(Sys.Date()), color = "darkred", linetype = "dashed", linewidth = 1) +
+      annotate(
+        "text",
+        x = Sys.Date(),
+        y = 0.7,  # ggf. anpassen
+        label = "Heute",
+        color = "darkred",
+        angle = 90,
+        vjust = -0.5,
+        fontface = "bold",
+        size = 4
+      ) +
+      theme_minimal(base_size = 14) +
+      scale_x_date(date_labels = "%b %y")   # 
   })
   
   
@@ -1654,8 +1670,6 @@ server <- function(input, output, session) {
       ) %>%
       ungroup()
   })
-  
-
   
   # Historische Saisonverläufe - Vergleichsauswahl (normalisierte Zeitachse)
   normalized_data <- reactive({
@@ -3830,7 +3844,8 @@ server <- function(input, output, session) {
       rownames = FALSE,
       options = list(
         dom = "t",
-        ordering = FALSE,
+        ordering = TRUE,
+        order = list(list(3, 'desc')),  # Index der Spalte von 0 an gezählt
         columnDefs = list(
           list(className = 'dt-left', targets = 0),
           list(className = 'dt-right', targets = c(1,2,3,4))
@@ -3838,6 +3853,7 @@ server <- function(input, output, session) {
       ),
       escape = FALSE, selection = "single"
     )
+    
   })
   
   ## ---- Flip-Historie je Spieler ----
