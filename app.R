@@ -1082,15 +1082,11 @@ server <- function(input, output, session) {
   })
   
   
-  ## ---- Flip Balken Preview ----
-  flip_summary_by_owner <- reactive({
-    fd <- flip_data()
-    fd %>% group_by(Besitzer) %>% summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
-  })
-  
   output$flip_preview <- renderPlot({
     req(input$main_navbar == "Dashboard")
-    df <- flip_summary_by_owner()
+    df <- flip_data() %>%
+      group_by(Besitzer) %>%
+      summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
     req(nrow(df) > 0)
     
     abs_max <- max(abs(df$Gesamtgewinn), na.rm = TRUE)
@@ -3495,7 +3491,7 @@ server <- function(input, output, session) {
   
   # ---- FLIP-ANALYSE ----
   
-  # -- Flip-Gewinn vorbereiten (angenommen Einkaufspreise und Verkäufe in transfers)
+  # -- Flip-Gewinn vorbereiten: alle Kauf→Verkauf-Zyklen je Spieler×Besitzer
   flip_data <- reactive({
     req(data_all())
     transfers <- data_all()$transfers
@@ -3520,45 +3516,47 @@ server <- function(input, output, session) {
         Verkaeufer = Besitzer
       )
     
-    # letzter Kauf je Spieler×Besitzer
-    einkaeufe_latest <- einkaeufe %>%
-      arrange(Spieler, Besitzer, desc(Einkaufsdatum)) %>%
-      distinct(Spieler, Besitzer, .keep_all = TRUE)
+    # Sequenznummern je Spieler×Besitzer vergeben
+    einkaeufe_seq <- einkaeufe %>%
+      arrange(Spieler, Besitzer, Einkaufsdatum) %>%
+      group_by(Spieler, Besitzer) %>%
+      mutate(Zyklus = row_number()) %>%
+      ungroup()
     
-    # erster Verkauf nach diesem Kauf (falls vorhanden)
-    matches <- verkaeufe %>%
-      inner_join(
-        einkaeufe_latest,
-        by = c("Spieler" = "Spieler", "Verkaeufer" = "Besitzer")
-      ) %>%
-      transmute(
-        Spieler,
-        Besitzer = Verkaeufer,          # explizit setzen
-        Einkaufsdatum,
-        Einkaufspreis,
-        Verkaufsdatum,
-        Verkaufspreis
-      ) %>%
-      filter(Verkaufsdatum >= Einkaufsdatum) %>%
-      group_by(Spieler, Besitzer, Einkaufsdatum, Einkaufspreis) %>%
-      slice_min(Verkaufsdatum, with_ties = FALSE) %>%
+    verkaeufe_seq <- verkaeufe %>%
+      arrange(Spieler, Verkaeufer, Verkaufsdatum) %>%
+      group_by(Spieler, Verkaeufer) %>%
+      mutate(Zyklus = row_number()) %>%
       ungroup() %>%
-      mutate(Gewinn = Verkaufspreis - Einkaufspreis)
+      rename(Besitzer = Verkaeufer)
     
-    # letzte Käufe ohne nachfolgenden Verkauf (NA-Verkaufsspalten)
-    unmatched <- einkaeufe_latest %>%
-      anti_join(matches %>% select(Spieler, Besitzer, Einkaufsdatum), 
-                       by = c("Spieler","Besitzer","Einkaufsdatum")) %>%
-      mutate(
+    # Käufe mit gleich nummeriertem Verkauf paaren
+    matches <- einkaeufe_seq %>%
+      inner_join(verkaeufe_seq, by = c("Spieler","Besitzer","Zyklus")) %>%
+      filter(Verkaufsdatum >= Einkaufsdatum) %>%
+      transmute(
+        Spieler, Besitzer,
+        Einkaufsdatum, Einkaufspreis,
+        Verkaufsdatum, Verkaufspreis,
+        Gewinn = Verkaufspreis - Einkaufspreis
+      )
+    
+    # Offene Zyklen (Kauf ohne nachfolgenden Verkauf)
+    unmatched <- einkaeufe_seq %>%
+      anti_join(matches %>% select(Spieler, Besitzer, Einkaufsdatum),
+                by = c("Spieler","Besitzer","Einkaufsdatum")) %>%
+      transmute(
+        Spieler, Besitzer,
+        Einkaufsdatum, Einkaufspreis,
         Verkaufsdatum = as.Date(NA),
         Verkaufspreis = NA_real_,
         Gewinn = NA_real_
-      ) %>%
-      select(Spieler, Besitzer, Einkaufsdatum, Einkaufspreis,
-                    Verkaufsdatum, Verkaufspreis, Gewinn)
+      )
     
-    bind_rows(matches, unmatched)
+    bind_rows(matches, unmatched) %>%
+      arrange(Spieler, Besitzer, Einkaufsdatum)
   })
+  
   
   ## ---- Flip-Gesamtsumme ----
   ## -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
