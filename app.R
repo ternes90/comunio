@@ -3133,27 +3133,26 @@ server <- function(input, output, session) {
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
     ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
-      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
-      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+      geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.5) +
+      geom_beeswarm(cex = 2, size = 2.5, alpha = 0.5) +
       # Gesamter Mittelwert als gestrichelte Linie und Text
       geom_hline(
         data = mean_total,
         aes(yintercept = Mean_total),
-        linetype = "dashed", color = "grey60", linewidth = 0.9, na.rm = TRUE
+        linetype = "dashed", color = "grey75", linewidth = 0.9, na.rm = TRUE
       ) +
       geom_text(
         data = mean_total,
-        aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
-        color = "black", # Dunkelrot
+        aes(x = 1.5, y = Mean_total, label = round(Mean_total, 1)),
+        color = "grey50", # Dunkelrot
         fontface = "bold",
-        size = 5,
-        vjust = -0.25
+        size = 5
       ) +
       # Mittelwert je Typ als Text (wie gehabt)
       geom_text(
         data = means,
-        aes(x = Typ, y = Mean, label = round(Mean, 1), color = Typ),
-        nudge_x = 0.4,
+        aes(x = Typ, y = Mean, label = round(Mean, 1)),
+        color = "black",
         fontface = "bold",
         size = 5
       ) +
