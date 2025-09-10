@@ -413,6 +413,10 @@ ui <- navbarPage(
                       fluidPage(
                         fluidRow(
                           column(12, DTOutput("flip_kader"))
+                        ),
+                        div(style = "margin-top:30px;"),   # Abstand eingefügt
+                        fluidRow(
+                          column(12, plotOutput("kaufdiff_zeitlinien", height = "1500px"))
                         )
                       )
              ),
@@ -3739,6 +3743,87 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1),
             legend.position = "none")
+  })
+  
+  ## ---- Zeitbalken-Fip
+  ### ---- Kauf-Diff Zeitlinien je Manager (Balken am Kaufdatum) ----
+  output$kaufdiff_zeitlinien <- renderPlot({
+    req(teams_df, gesamt_mw_roh, transfers)
+    
+    manager_list <- sort(unique(teams_df$Manager))
+    
+    # Marktwert aktuell je Spieler
+    mw_aktuell <- gesamt_mw_roh %>%
+      group_by(Spieler) %>%
+      filter(Datum == max(Datum, na.rm = TRUE)) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
+    
+    # letzter Kauf je (Spieler, Manager) inkl. Kaufdatum
+    kaufpreise <- transfers %>%
+      group_by(Spieler, Hoechstbietender) %>%
+      arrange(desc(Datum)) %>%
+      slice(1) %>%
+      transmute(
+        Spieler,
+        Manager = Hoechstbietender,
+        Kaufdatum = as.Date(Datum),
+        Kaufpreis = as.numeric(Hoechstgebot)
+      )
+    
+    # Plot-Daten: aktueller MW + letzter Kauf pro Manager-Kader
+    plot_df <- teams_df %>%
+      select(Manager, Spieler) %>%
+      left_join(mw_aktuell, by = "Spieler") %>%
+      left_join(kaufpreise, by = c("Manager", "Spieler")) %>%
+      mutate(
+        Diff_Kauf = ifelse(is.na(Kaufpreis), NA_real_, Marktwert_aktuell - Kaufpreis),
+        pos = Diff_Kauf >= 0
+      ) %>%
+      filter(!is.na(Kaufpreis), !is.na(Diff_Kauf)) %>%
+      mutate(
+        Manager = factor(Manager, levels = manager_list),
+        Kaufdatum = as.Date(Kaufdatum)
+      )
+    
+    req(nrow(plot_df) > 0)
+    
+    # Format-Helfer
+    fmt_eur <- function(x) format(x, big.mark = ".", decimal.mark = ",")
+    plot_df$label <- ifelse(
+      plot_df$Diff_Kauf >= 0,
+      paste0("+", fmt_eur(round(plot_df$Diff_Kauf, 0)), " €"),
+      paste0("–", fmt_eur(abs(round(plot_df$Diff_Kauf, 0))), " €")
+    )
+    
+    ggplot(plot_df, aes(x = Kaufdatum, y = Diff_Kauf, group = Spieler, fill = pos)) +
+      # Balken am Kaufdatum, nach Spieler leicht gedodged, damit Überlagerung reduziert wird
+      geom_col(width = 12, position = position_dodge2(width = 12, preserve = "single"), show.legend = FALSE) +
+      # Null-Linie
+      geom_hline(yintercept = 0, linewidth = 0.3, color = "grey60") +
+      # Punkt am Baseline exakt am Kaufdatum
+      geom_point(aes(y = 0), size = 1.8, alpha = 0.9,
+                 position = position_dodge2(width = 12, preserve = "single")) +
+      # Wert-Label ober-/unterhalb des Balkens
+      geom_text(
+        aes(label = label, vjust = ifelse(Diff_Kauf >= 0, -0.2, 1.2)),
+        size = 3.5,
+        position = position_dodge2(width = 12, preserve = "single")
+      ) +
+      scale_fill_manual(values = c(`TRUE` = "#388e3c", `FALSE` = "#e53935")) +
+      facet_grid(Manager ~ ., scales = "free_y", switch = "y") +
+      scale_y_continuous(
+        labels = function(x) paste0(fmt_eur(x), " €"),
+        expand = expansion(mult = c(0.05, 0.15))
+      ) +
+      scale_x_date(date_breaks = "1 week", date_labels = "%d.%m.") +
+      scale_fill_manual(values = c(`TRUE` = "#388e3c", `FALSE` = "#e53935"), guide = "none") +
+      labs(x = "", y = "") +
+      theme_minimal(base_size = 14) +
+      theme(
+        strip.placement = "outside",
+        strip.text.y.left = element_text(face = "bold", size = 12),
+        panel.grid.minor = element_blank()
+      )
   })
   
   ## ---- Hypothetischer Kader-Fip ----
