@@ -117,7 +117,15 @@ ui <- navbarPage(
       tags$head(tags$style(HTML("
   #gpt_prompt_preview { white-space: pre-wrap; }
 "))),
-      tags$style(HTML("#gpt_result_pre a{word-break: break-all;}"))
+      tags$style(HTML("#gpt_result_pre a{word-break: break-all;}")),
+      tags$style(HTML("
+    .spieler-card { display:flex; gap:16px; align-items:center; border:1px solid #e5e7eb; border-radius:16px; padding:12px; margin:8px 0 16px 0; }
+    .spieler-card img { border-radius:12px; object-fit:cover; }
+    .spieler-card .meta { flex:1; }
+    .spieler-card .verein { display:flex; align-items:center; gap:8px; font-weight:700; font-size:18px; margin-bottom:6px; }
+    .spieler-card .list { margin:0; padding-left:16px; }
+    .spieler-divider { height:1px; background:#e5e7eb; margin:10px 0 16px 0; }
+  "))
     )
   ),
   
@@ -246,6 +254,12 @@ ui <- navbarPage(
                  inline = TRUE
                ),
                selectInput("spieler_select2", "Spieler:", choices = NULL),
+               uiOutput("spieler_card_header"),
+               
+               tags$div("LI-Leistungsdaten",
+                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
+               div(style = "margin-bottom:20px;width:100%;",
+                   DTOutput("spieler_li_perf", width = "100%")),
                
                tags$div("Marktwertverlauf",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
@@ -711,6 +725,27 @@ server <- function(input, output, session) {
   #All player hist. MW
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
+  ## ---- Liga Insider Info ----
+  li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+  
+  match_li_row <- reactive({
+    req(input$spieler_select2)
+    req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
+    k <- norm_key(input$spieler_select2)
+    tmp <- li_df
+    tmp$k <- norm_key(tmp$Comunio_Name)
+    out <- tmp[tmp$k == k, , drop = FALSE]
+    if (nrow(out) == 0) return(out)
+    out[1, , drop = FALSE]
+  })
+  
+  safe_val <- function(v) ifelse(length(v) == 0 || is.na(v) || !nzchar(as.character(v)), "", as.character(v))
+  safe_img <- function(url, width_px) {
+    url <- safe_val(url)
+    if (!nzchar(url)) return(NULL)
+    tags$img(src = url, width = width_px, onerror = "this.style.display='none'")
+  }
+  
   ## ---- nickname_mapping ----
   nickname_mapping <- c(
     "Alfon" = "Alfons",
@@ -920,6 +955,14 @@ server <- function(input, output, session) {
       selected = sort(mgrs)[5]
     )
   })
+  
+  # ---- Helper function für LI-Mapping ----
+  norm_key <- function(x) {
+    x <- enc2utf8(as.character(x))
+    x <- tolower(trimws(x))
+    x <- chartr("ß", "ss", x)
+    x
+  }
   
   # ---- DASHBOARD ----
   
@@ -2602,8 +2645,141 @@ server <- function(input, output, session) {
   
   
   ## ---- Spieler Info ----
+  # ---- Header-Card Render ----
+  output$spieler_card_header <- renderUI({
+    row <- match_li_row()
+    if (is.null(row) || nrow(row) == 0) return(NULL)
+    
+    foto   <- safe_val(row$Profilfoto_URL[1])
+    wappen <- safe_val(row$Vereinswappen_URL[1])
+    
+    verein <- safe_val(row$Verein[1])
+    pos    <- safe_val(row$Position[1])
+    trikot <- safe_val(row$Trikotnummer[1])
+    vertrag<- safe_val(row$Vertrag_bis[1])
+    nation <- safe_val(row$Nationalität[1])
+    geb    <- safe_val(row$Geburtstag[1])
+    alter  <- safe_val(row$Alter[1])
+    groesse<- safe_val(row$Größe[1])
+    fuss   <- safe_val(row$Starker_Fuß[1])
+    fit    <- safe_val(row$Fitness[1])
+    
+    
+    tags$div(class = "spieler-card",
+             # Bild links
+             if (nzchar(foto)) tags$img(src = foto, width = "240", height = "240", onerror = "this.style.display='none'"),
+             # Text rechts
+             tags$div(class = "meta",
+                      tags$div(class = "verein",
+                               if (nzchar(wappen)) tags$img(src = wappen, width = "24", height = "24", onerror = "this.style.display='none'"),
+                               verein
+                      ),
+                      tags$ul(class = "list",
+                              if (nzchar(pos))     tags$li(paste("Position:", pos)),
+                              if (nzchar(trikot))  tags$li(paste("Trikotnummer:", trikot)),
+                              if (nzchar(vertrag)) tags$li(paste("Vertrag bis:", vertrag)),
+                              if (nzchar(nation))  tags$li(paste("Nationalität:", nation)),
+                              if (nzchar(geb))     tags$li(paste("Geburtstag:", geb)),
+                              if (nzchar(alter))   tags$li(paste("Alter:", alter)),
+                              if (nzchar(groesse)) tags$li(paste("Größe:", groesse)),
+                              if (nzchar(fuss))    tags$li(paste("Starker Fuß:", fuss)),
+                              if (nzchar(fit))     tags$li(paste("Fitness:", fit))
+                      )
+             )
+    )
+  })
+  
+  # ---- LI-Leistungsdaten Render ----
+  output$spieler_li_perf <- renderDT({
+    row <- match_li_row()
+    if (is.null(row) || nrow(row) == 0) {
+      return(datatable(data.frame(Hinweis = "Keine LI-Daten gefunden"), options = list(dom = 't', paging = FALSE)))
+    }
+    
+    cols_perf <- c(
+      "Ø_Note","Punkte_gesamt",
+      grep("^Bilanz_", names(row), value = TRUE),
+      grep("^EQ_", names(row), value = TRUE)
+    )
+    cols_perf <- intersect(cols_perf, names(row))
+    if (length(cols_perf) == 0) {
+      return(datatable(data.frame(Hinweis = "Keine Leistungs-Spalten in li_df"), options = list(dom = 't', paging = FALSE)))
+    }
+    
+    df <- row[, cols_perf, drop = FALSE]
+    
+    # Mapping auf kurze/emojifizierte Labels
+    map <- c(
+      "Ø_Note" = "Ø",
+      "Punkte_gesamt" = "Pts",
+      
+      "Bilanz_Gesamt_Einsätze" = "E G",
+      "Bilanz_BL_Einsätze" = "E BL",
+      "Bilanz_Pokal_Einsätze" = "E Pok",
+      
+      "Bilanz_Gesamt_Tore" = "⚽ G",
+      "Bilanz_BL_Tore" = "⚽ BL",
+      "Bilanz_Pokal_Tore" = "⚽ Pok",
+      
+      "Bilanz_Gesamt_Vorlagen" = "🎯 G",
+      "Bilanz_BL_Vorlagen" = "🎯 BL",
+      "Bilanz_Pokal_Vorlagen" = "🎯 Pok",
+      
+      "Bilanz_Gesamt_Startelf" = "XI G",
+      "Bilanz_BL_Startelf" = "XI BL",
+      "Bilanz_Pokal_Startelf" = "XI Pok",
+      
+      "Bilanz_Gesamt_Einwechslungen" = "↪︎ G",
+      "Bilanz_BL_Einwechslungen" = "↪︎ BL",
+      "Bilanz_Pokal_Einwechslungen" = "↪︎ Pok",
+      
+      "Bilanz_Gesamt_Auswechslungen" = "↩︎ G",
+      "Bilanz_BL_Auswechslungen" = "↩︎ BL",
+      "Bilanz_Pokal_Auswechslungen" = "↩︎ Pok",
+      
+      "Bilanz_Gesamt_Bank" = "Bnk G",
+      "Bilanz_BL_Bank" = "Bnk BL",
+      "Bilanz_Pokal_Bank" = "Bnk Pok",
+      
+      "Bilanz_Gesamt_Nicht_im_Kader" = "NIK G",
+      "Bilanz_BL_Nicht_im_Kader" = "NIK BL",
+      "Bilanz_Pokal_Nicht_im_Kader" = "NIK Pok",
+      
+      "Bilanz_Gesamt_Gelbe" = "🟨 G",
+      "Bilanz_BL_Gelbe" = "🟨 BL",
+      "Bilanz_Pokal_Gelbe" = "🟨 Pok",
+      
+      "Bilanz_Gesamt_Karten_GelbRot" = "🟨🟥 G",
+      "Bilanz_BL_Karten_GelbRot" = "🟨🟥 BL",
+      "Bilanz_Pokal_Karten_GelbRot" = "🟨🟥 Pok",
+      
+      "Bilanz_Gesamt_Karten_Rot" = "🟥 G",
+      "Bilanz_BL_Karten_Rot" = "🟥 BL",
+      "Bilanz_Pokal_Karten_Rot" = "🟥 Pok",
+      
+      "EQ_Gesamt_Quote" = "EQ%",
+      "EQ_Gesamt_Min_von" = "Min v",
+      "EQ_Gesamt_Min_total" = "Min Σ",
+      "EQ_Startelf_." = "XI%",
+      "EQ_Bank_." = "Bnk%",
+      "EQ_Verletzt_." = "Verl%",
+      "EQ_Einwechslungen_." = "↪︎%",
+      "EQ_Ausgewechselt_." = "↩︎%",
+      "EQ_NichtimKader_." = "NIK%"
+    )
+    
+    new_names <- names(df)
+    new_names <- ifelse(new_names %in% names(map), unname(map[new_names]), new_names)
+    names(df) <- new_names
+    
+    datatable(
+      df,
+      escape = FALSE, rownames = FALSE,
+      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
+    )
+  })
+  
   ### ---- MW ----
-  # Server
   output$spieler_info_mw <- renderPlot({
     req(input$spieler_select2, mw_all, ap_df)
     
@@ -2639,7 +2815,6 @@ server <- function(input, output, session) {
            x = NULL, y = "Marktwert (€)") +
       theme_minimal(base_size = 16)
   })
-  
   
   ### ---- Leistungsdaten ----
   output$spieler_info_raw <- DT::renderDT({
