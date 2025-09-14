@@ -3713,66 +3713,70 @@ server <- function(input, output, session) {
     req(data_all())
     transfers <- data_all()$transfers
     
-    # Käufe (nur echte Käufe durch Manager)
+    # --- Events für Käufe und Verkäufe ---
     einkaeufe <- transfers %>%
-      filter(Hoechstbietender != "Computer") %>%
-      transmute(
-        Spieler,
-        Einkaufsdatum = Datum,
-        Einkaufspreis = as.numeric(Hoechstgebot),
-        Besitzer = Hoechstbietender
-      )
+      filter(tolower(Hoechstbietender) != "computer") %>%
+      transmute(Spieler,
+                Besitzer = Hoechstbietender,
+                Datum,
+                Preis = as.numeric(Hoechstgebot),
+                type = "buy")
     
-    # Verkäufe: aktueller Besitzer verkauft an anderen
     verkaeufe <- transfers %>%
-      filter(!is.na(Besitzer), Besitzer != Hoechstbietender) %>%
-      transmute(
-        Spieler,
-        Verkaufsdatum = Datum,
-        Verkaufspreis = as.numeric(Hoechstgebot),
-        Verkaeufer = Besitzer
-      )
+      filter(!is.na(Besitzer), tolower(Besitzer) != tolower(Hoechstbietender)) %>%
+      transmute(Spieler,
+                Besitzer,
+                Datum,
+                Preis = as.numeric(Hoechstgebot),
+                type = "sell")
     
-    # Sequenznummern je Spieler×Besitzer vergeben
-    einkaeufe_seq <- einkaeufe %>%
-      arrange(Spieler, Besitzer, Einkaufsdatum) %>%
+    # --- gemeinsamer Event-Stream ---
+    events <- bind_rows(einkaeufe, verkaeufe) %>%
+      arrange(Spieler, Besitzer, Datum,
+              factor(type, levels = c("buy","sell"))) %>% # bei gleichem Tag: buy vor sell
       group_by(Spieler, Besitzer) %>%
-      mutate(Zyklus = row_number()) %>%
+      mutate(Zyklus = cumsum(type == "buy")) %>%
       ungroup()
     
-    verkaeufe_seq <- verkaeufe %>%
-      arrange(Spieler, Verkaeufer, Verkaufsdatum) %>%
-      group_by(Spieler, Verkaeufer) %>%
-      mutate(Zyklus = row_number()) %>%
+    einkaeufe_seq <- events %>%
+      filter(type == "buy") %>%
+      transmute(Spieler, Besitzer,
+                Einkaufsdatum = Datum,
+                Einkaufspreis = Preis,
+                Zyklus)
+    
+    verkaeufe_seq <- events %>%
+      filter(type == "sell") %>%
+      group_by(Spieler, Besitzer, Zyklus) %>%
+      slice_min(Datum, with_ties = FALSE) %>%
       ungroup() %>%
-      rename(Besitzer = Verkaeufer)
+      transmute(Spieler, Besitzer,
+                Verkaufsdatum = Datum,
+                Verkaufspreis = Preis,
+                Zyklus)
     
-    # Käufe mit gleich nummeriertem Verkauf paaren
     matches <- einkaeufe_seq %>%
-      inner_join(verkaeufe_seq, by = c("Spieler","Besitzer","Zyklus")) %>%
+      inner_join(verkaeufe_seq,
+                 by = c("Spieler","Besitzer","Zyklus")) %>%
       filter(Verkaufsdatum >= Einkaufsdatum) %>%
-      transmute(
-        Spieler, Besitzer,
-        Einkaufsdatum, Einkaufspreis,
-        Verkaufsdatum, Verkaufspreis,
-        Gewinn = Verkaufspreis - Einkaufspreis
-      )
+      transmute(Spieler, Besitzer,
+                Einkaufsdatum, Einkaufspreis,
+                Verkaufsdatum, Verkaufspreis,
+                Gewinn = Verkaufspreis - Einkaufspreis)
     
-    # Offene Zyklen (Kauf ohne nachfolgenden Verkauf)
     unmatched <- einkaeufe_seq %>%
       anti_join(matches %>% select(Spieler, Besitzer, Einkaufsdatum),
                 by = c("Spieler","Besitzer","Einkaufsdatum")) %>%
-      transmute(
-        Spieler, Besitzer,
-        Einkaufsdatum, Einkaufspreis,
-        Verkaufsdatum = as.Date(NA),
-        Verkaufspreis = NA_real_,
-        Gewinn = NA_real_
-      )
+      transmute(Spieler, Besitzer,
+                Einkaufsdatum, Einkaufspreis,
+                Verkaufsdatum = as.Date(NA),
+                Verkaufspreis = NA_real_,
+                Gewinn = NA_real_)
     
     bind_rows(matches, unmatched) %>%
       arrange(Spieler, Besitzer, Einkaufsdatum)
   })
+  
   
   
   ## ---- Flip-Gesamtsumme ----
