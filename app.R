@@ -673,6 +673,13 @@ server <- function(input, output, session) {
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
            Marktwert = as.numeric(Marktwert))
   
+  status_latest <- ap_df %>%
+    group_by(Spieler) %>%
+    arrange(desc(Datum)) %>%
+    slice(1) %>%
+    ungroup() %>%
+    select(Spieler, StatusText, StatusIcon)
+  
   tm_df <- read.csv2("data/COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
   
   st_df <- read_csv2("data/STANDINGS.csv", 
@@ -2284,6 +2291,18 @@ server <- function(input, output, session) {
         by = c("Spieler" = "SPIELER")
       )
     
+    # 6.5) Status hinzufügen
+    df <- df %>%
+      left_join(status_latest, by = "Spieler") %>%
+      mutate(
+        StatusTag = ifelse(
+          is.na(StatusIcon) | StatusIcon == "" | StatusIcon == "icons-status-active-dark",
+          "",
+          sprintf('<img src="%s/%s.png" width="20" height="20" title="%s"/>',
+                  "extracted_icons", StatusIcon, ifelse(is.na(StatusText), "", StatusText))
+        )
+      )
+    
     # 7) Global speichern (falls benötigt)
     tm_trend_global(df)
     
@@ -2328,7 +2347,7 @@ server <- function(input, output, session) {
       )
     
     # fehlende Spalten auffüllen
-    needed <- c("Spieler", "POSITION", "Logo", "PUNKTE", "Punkte pro Spiel","Preis-Leistung",
+    needed <- c("Spieler", "StatusTag", "POSITION", "Logo", "PUNKTE", "Punkte pro Spiel","Preis-Leistung",
                 "Historische Punkteausbeute","Marktwert","Zielwert",
                 "Mindestgebot","Minimalgebot","IdealesGebot",
                 "Maximalgebot","Gebote","Empfehlung","Besitzer",
@@ -2346,7 +2365,7 @@ server <- function(input, output, session) {
     DT::datatable(
       sub_df,
       colnames = c(
-        "Spieler","Position","Verein","Punkte","PPS","Preis-Leistung","Hist.","Marktwert",
+        "Spieler", " ","Position","Verein","Punkte","PPS","Preis-Leistung","Hist.","Marktwert",
         "Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
         "Maximalgebot","Gebote","Empfehlung","Besitzer",
         "Angebotsende","Trend","Info", "Rechner", ""
@@ -3023,6 +3042,21 @@ server <- function(input, output, session) {
         "Historische Punkteausbeute" = Historische_Punkteausbeute
       )
     
+    # StatusIcons
+    df_pre <- df_pre %>%
+      left_join(status_latest, by = "Spieler") %>%
+      mutate(
+        StatusTag = ifelse(
+          is.na(StatusIcon) | StatusIcon == "" | StatusIcon == "icons-status-active-dark",
+          "",  # kein Icon anzeigen bei aktiv/leer
+          sprintf(
+            '<img src="%s/%s.png" width="20" height="20" title="%s"/>',
+            "extracted_icons", StatusIcon, StatusText %||% ""
+          )
+        )
+      )
+    
+    
     # Logo-Spalte
     logo_dir <- "logos"
     df_pre$Logo <- ifelse(
@@ -3045,6 +3079,7 @@ server <- function(input, output, session) {
       pos_name <- unique(gruppe$Position)
       rows <- lapply(seq_len(nrow(gruppe)), function(i) {
         sp     <- gruppe$Spieler[i]
+        stat   <- gruppe$StatusTag[i]
         v      <- gruppe$Logo[i]
         pps    <- gruppe$`Punkte pro Spiel`[i]
         pl     <- gruppe$`Preis-Leistung`[i]
@@ -3060,11 +3095,13 @@ server <- function(input, output, session) {
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
+           <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:right;'>%s</td>
            <td style='padding:4px; text-align:right;'>%s</td>
            <td style='padding:4px; text-align:right;'>%s</td>
          </tr>",
           sp,
+          stat,
           v,
           ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark = ",")),
           ifelse(is.na(pl),  "-", pl),
@@ -3076,7 +3113,7 @@ server <- function(input, output, session) {
       })
       
       paste0(
-        sprintf("<tr><th colspan='8' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos_name),
+        sprintf("<tr><th colspan='9' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos_name),
         paste(rows, collapse = "\n")
       )
     })
@@ -3086,6 +3123,7 @@ server <- function(input, output, session) {
       "<table style='width:100%; border-collapse:collapse;'>",
       "<thead><tr>
          <th style='text-align:left;'>Spieler</th>
+         <th style='text-align:center;'> </th>
          <th style='text-align:center;'>Verein</th>
          <th style='text-align:center;'>Ø Punkte</th>
          <th style='text-align:center;'>Preis-Leistung</th>
