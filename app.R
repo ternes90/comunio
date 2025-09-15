@@ -2452,8 +2452,13 @@ server <- function(input, output, session) {
     show_col_types = FALSE
   )
   
+  # Fallback: falls alte CSVs keine Status-Spalte haben -> als "aktiv" annehmen
+  angebote_raw <- angebote_raw %>%
+    mutate(Status = ifelse(is.na(Status), "aktiv", Status))
+  
   angebote_df <- reactive({
     angebote_raw %>%
+      filter(Status == "aktiv") %>%              # << NEU
       rename(Angebot = `Angebot (€)`) %>%
       mutate(
         Spieler   = trimws(Spieler),
