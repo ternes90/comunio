@@ -306,17 +306,21 @@ ui <- navbarPage(
                       value = "angebot_analyse",
                       
                       fluidRow(
-                        column(4, checkboxGroupInput("trend_filter", "Trend",
+                        column(2, checkboxGroupInput("trend_filter", "Trend",
                                                      choices = c("gestiegen","gefallen","gleich"),
                                                      selected = c("gestiegen","gefallen","gleich")
                         )),
-                        column(4, selectizeInput("verein_filter", "Verein", choices = NULL, multiple = TRUE)),
-                        column(4, selectInput("color_by", "Farbkodierung",
-                                              choices = c("Keine"="none","Trend"="Trend","Verein"="Verein"),
+                        column(3, selectizeInput("verein_filter", "Verein", choices = NULL, multiple = TRUE)),
+                        column(2, checkboxGroupInput("status_filter", "Status",
+                                                     choices = c("aktiv","inaktiv"),
+                                                     selected = c("aktiv","inaktiv")
+                        )),
+                        column(3, selectInput("color_by", "Farbkodierung",
+                                              choices = c("Keine"="none","Trend"="Trend","Verein"="Verein","Status"="Status"),
                                               selected = "Trend"
-                        ))
+                        )),
+                        column(2, checkboxInput("show_labels", "Spielernamen anzeigen", value = FALSE))
                       ),
-                      
                       
                       fluidRow(
                         column(6, plotOutput("rel_angebot_vortag")),
@@ -490,6 +494,8 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
+  #Save beeswarm position
+  pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
   #Update stempel
   output$last_update <- renderText({
     tryCatch(
@@ -768,7 +774,7 @@ server <- function(input, output, session) {
     
     a <- angebote %>%
       mutate(Angebot = as.numeric(.data[[betrag_col]])) %>%
-      select(Spieler, Datum, Angebot)
+      select(Spieler, Datum, Angebot, Status)
     
     spieler_set <- unique(a$Spieler)
     datum_set   <- unique(a$Datum)
@@ -795,7 +801,6 @@ server <- function(input, output, session) {
         )
       )
   })
-  
   
   ## ---- Liga Insider Info ----
   li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
@@ -3040,14 +3045,15 @@ server <- function(input, output, session) {
   
   ## ---- Angebote-Analyse ----
   
+  # Vortag
   output$rel_angebot_vortag <- renderPlot({
     df <- dat_rel_angebote() %>% filter(!is.na(rel_Vortag))
-    if (!is.null(input$trend_filter) && length(input$trend_filter) > 0)
-      df <- df %>% filter(Trend %in% input$trend_filter)
-    if (!is.null(input$verein_filter) && length(input$verein_filter) > 0)
-      df <- df %>% filter(Verein %in% input$verein_filter)
-    
+    if (!is.null(input$trend_filter)  && length(input$trend_filter)  > 0) df <- df %>% filter(Trend  %in% input$trend_filter)
+    if (!is.null(input$verein_filter) && length(input$verein_filter) > 0) df <- df %>% filter(Verein %in% input$verein_filter)
+    if (!is.null(input$status_filter) && length(input$status_filter) > 0) df <- df %>% filter(Status %in% input$status_filter)
     validate(need(nrow(df) > 0, "Keine Daten nach Filter."))
+    
+    df <- df %>% mutate(lbl = paste0(Spieler, " (", scales::percent(rel_Vortag, accuracy = 1), ")"))
     
     m <- mean(df$rel_Vortag, na.rm = TRUE)
     
@@ -3056,11 +3062,29 @@ server <- function(input, output, session) {
                    fill = "#ff6b6b", color = "#ff6b6b", alpha = 0.25)
     
     if (input$color_by == "Trend") {
-      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Trend), width = 0.22, size = 3.5, alpha = 0.6)
+      p <- p + geom_point(aes(color = Trend), position = pos_qr, size = 3.5, alpha = 0.6,
+                          show.legend = FALSE)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Trend),  position = pos_qr, size = 4, max.overlaps = 50, seed = 1, show.legend = FALSE)
+      }
     } else if (input$color_by == "Verein") {
-      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Verein), width = 0.22, size = 3.5, alpha = 0.6)
+      p <- p + geom_point(aes(color = Verein), position = pos_qr, size = 3.5, alpha = 0.6,
+                          show.legend = FALSE)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Verein), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+      }
+    } else if (input$color_by == "Status") {
+      p <- p + geom_point(aes(color = Status), position = pos_qr, size = 3.5, alpha = 0.6,
+                          show.legend = FALSE)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Status), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+      }
     } else {
-      p <- p + ggbeeswarm::geom_quasirandom(width = 0.22, size = 3.5, alpha = 0.6, color = "#ff6b6b")
+      p <- p + geom_point(position = pos_qr, size = 3.5, alpha = 0.6, color = "#ff6b6b",
+                          show.legend = FALSE)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, color = "#ff6b6b", show.legend = FALSE)
+      }
     }
     
     p +
@@ -3076,12 +3100,12 @@ server <- function(input, output, session) {
   
   output$rel_angebot_tag <- renderPlot({
     df <- dat_rel_angebote() %>% filter(!is.na(rel_am_Tag))
-    if (!is.null(input$trend_filter) && length(input$trend_filter) > 0)
-      df <- df %>% filter(Trend %in% input$trend_filter)
-    if (!is.null(input$verein_filter) && length(input$verein_filter) > 0)
-      df <- df %>% filter(Verein %in% input$verein_filter)
-    
+    if (!is.null(input$trend_filter)  && length(input$trend_filter)  > 0) df <- df %>% filter(Trend  %in% input$trend_filter)
+    if (!is.null(input$verein_filter) && length(input$verein_filter) > 0) df <- df %>% filter(Verein %in% input$verein_filter)
+    if (!is.null(input$status_filter) && length(input$status_filter) > 0) df <- df %>% filter(Status %in% input$status_filter)
     validate(need(nrow(df) > 0, "Keine Daten nach Filter."))
+    
+    df <- df %>% mutate(lbl = paste0(Spieler, " (", scales::percent(rel_am_Tag, accuracy = 1), ")"))
     
     m <- mean(df$rel_am_Tag, na.rm = TRUE)
     
@@ -3090,11 +3114,25 @@ server <- function(input, output, session) {
                    fill = "#ff6b6b", color = "#ff6b6b", alpha = 0.25)
     
     if (input$color_by == "Trend") {
-      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Trend), width = 0.22, size = 3.5, alpha = 0.6)
+      p <- p + geom_point(aes(color = Trend), position = pos_qr, size = 3.5, alpha = 0.6)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Trend),  position = pos_qr, size = 4, max.overlaps = 50, seed = 1, show.legend = FALSE)
+      }
     } else if (input$color_by == "Verein") {
-      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Verein), width = 0.22, size = 3.5, alpha = 0.6)
+      p <- p + geom_point(aes(color = Verein), position = pos_qr, size = 3.5, alpha = 0.6)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Verein), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+      }
+    } else if (input$color_by == "Status") {
+      p <- p + geom_point(aes(color = Status), position = pos_qr, size = 3.5, alpha = 0.6)
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Status), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+      }
     } else {
-      p <- p + ggbeeswarm::geom_quasirandom(width = 0.22, size = 3.5, alpha = 0.6, color = "#ff6b6b")
+      p <- p + geom_point(position = pos_qr, size = 3.5, alpha = 0.6, color = "#ff6b6b")
+      if (isTRUE(input$show_labels)) {
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, color = "#ff6b6b", show.legend = FALSE)
+      }
     }
     
     p +
@@ -3107,7 +3145,6 @@ server <- function(input, output, session) {
            title = "Verteilung: Angebot relativ zum Marktwert am Angebots-Tag") +
       theme_minimal(base_size = 12)
   })
-  
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
