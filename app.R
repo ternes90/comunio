@@ -301,6 +301,27 @@ ui <- navbarPage(
                         column(3, checkboxGroupInput("angebote_select", "Angebote für Deckung:", choices = NULL)),
                         column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
                       )
+             ),
+             tabPanel(title = "Angebot-Analyse",
+                      value = "angebot_analyse",
+                      
+                      fluidRow(
+                        column(4, checkboxGroupInput("trend_filter", "Trend",
+                                                     choices = c("gestiegen","gefallen","gleich"),
+                                                     selected = c("gestiegen","gefallen","gleich")
+                        )),
+                        column(4, selectizeInput("verein_filter", "Verein", choices = NULL, multiple = TRUE)),
+                        column(4, selectInput("color_by", "Farbkodierung",
+                                              choices = c("Keine"="none","Trend"="Trend","Verein"="Verein"),
+                                              selected = "Trend"
+                        ))
+                      ),
+                      
+                      
+                      fluidRow(
+                        column(6, plotOutput("rel_angebot_vortag")),
+                        column(6, plotOutput("rel_angebot_tag"))
+                      )
              )
              
              
@@ -732,6 +753,50 @@ server <- function(input, output, session) {
   #All player hist. MW
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
+  #Angebote
+  angebote <- read.csv2(
+    "data/ANGEBOTE.csv",
+    sep = ";",
+    stringsAsFactors = FALSE,
+    fileEncoding = "UTF-8",
+    check.names = FALSE) %>%
+    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) 
+  
+  # --- Reactive: Trend + Verein hinzufügen ---
+  dat_rel_angebote <- reactive({
+    betrag_col <- if ("Angebot (€)" %in% names(angebote)) "Angebot (€)" else "Angebot"
+    
+    a <- angebote %>%
+      mutate(Angebot = as.numeric(.data[[betrag_col]])) %>%
+      select(Spieler, Datum, Angebot)
+    
+    spieler_set <- unique(a$Spieler)
+    datum_set   <- unique(a$Datum)
+    
+    mw_am_tag <- ap_df %>%
+      filter(Spieler %in% spieler_set, Datum %in% datum_set) %>%
+      select(Spieler, Datum, Verein, MW_am_Tag = Marktwert)
+    
+    mw_vortag <- ap_df %>%
+      filter(Spieler %in% spieler_set, Datum %in% (datum_set - 1)) %>%
+      transmute(Spieler, Datum = Datum + 1, MW_Vortag = Marktwert)
+    
+    a %>%
+      left_join(mw_am_tag, by = c("Spieler","Datum")) %>%
+      left_join(mw_vortag, by = c("Spieler","Datum")) %>%
+      mutate(
+        rel_am_Tag = if_else(!is.na(MW_am_Tag)  & MW_am_Tag  > 0, Angebot / MW_am_Tag  - 1, NA_real_),
+        rel_Vortag = if_else(!is.na(MW_Vortag) & MW_Vortag > 0, Angebot / MW_Vortag - 1, NA_real_),
+        Trend = case_when(
+          !is.na(MW_am_Tag) & !is.na(MW_Vortag) & MW_am_Tag >  MW_Vortag ~ "gestiegen",
+          !is.na(MW_am_Tag) & !is.na(MW_Vortag) & MW_am_Tag <  MW_Vortag ~ "gefallen",
+          !is.na(MW_am_Tag) & !is.na(MW_Vortag) & MW_am_Tag == MW_Vortag ~ "gleich",
+          TRUE ~ NA_character_
+        )
+      )
+  })
+  
+  
   ## ---- Liga Insider Info ----
   li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
   
@@ -872,6 +937,12 @@ server <- function(input, output, session) {
   observe({
     updateSelectInput(session, "flip_player_select",
                       choices = sort(unique(flip_data()$Besitzer)))
+  })
+  
+  ## ---- verein_filter ----
+  observe({
+    updateSelectizeInput(session, "verein_filter",
+                         choices = sort(unique(ap_df$Verein)), server = TRUE)
   })
   
   ## ---- MW Klasse vergeben ----
@@ -2429,247 +2500,8 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Transfer-Simulator ----
-  # 2) Reactive DataFrames vorbereiten
-  meine_spieler <- reactive({
-    teams_df %>%
-      filter(Manager == "Dominik") %>%
-      pull(Spieler)
-  })
-  
-  # Aktuelle Marktwerte
-  aktuelle_mw <- reactive({
-    max_datum <- max(ap_df$Datum, na.rm = TRUE)
-    ap_df %>%
-      filter(Datum == max_datum) %>%
-      transmute(Spieler, Marktwert = as.numeric(Marktwert))
-  })
-  
-  # Rohdaten der Angebote
-  angebote_raw <- read_delim(
-    "data/ANGEBOTE.csv", delim = ";",
-    locale = locale(decimal_mark = ",", grouping_mark = "."),
-    show_col_types = FALSE
-  )
-  
-  # Fallback: falls alte CSVs keine Status-Spalte haben -> als "aktiv" annehmen
-  angebote_raw <- angebote_raw %>%
-    mutate(Status = ifelse(is.na(Status), "aktiv", Status))
-  
-  angebote_df <- reactive({
-    angebote_raw %>%
-      filter(Status == "aktiv") %>%              # << NEU
-      rename(Angebot = `Angebot (€)`) %>%
-      mutate(
-        Spieler   = trimws(Spieler),
-        Angebot   = as.numeric(gsub("\\.", "", Angebot))
-      ) %>%
-      filter(Spieler %in% meine_spieler()) %>%
-      left_join(aktuelle_mw(), by = "Spieler") %>%
-      mutate(
-        Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
-        Kreditverlust = Marktwert / 4
-      )
-  })
-  
-  team_spieler_df <- reactive({
-    aktuelle_mw() %>%
-      semi_join(teams_df %>% filter(Manager == "Dominik"), by = "Spieler")
-  })
-  
-  # 3) UI‑Inputs befüllen
-  observe({
-    # 1) Spieler‑Liste immer füllen
-    updateSelectInput(
-      session, "spieler_select",
-      choices = sort(unique(tm_df$Spieler))
-    )
-    
-    # 1.5) Spieler‑Liste immer füllen
-    updateSelectInput(
-      session, "spieler_select2",
-      choices = sort(unique(tm_df$Spieler))
-    )
-    
-    # 2) Angebote‑Checkboxes (Guard für leeres DataFrame)
-    if (nrow(angebote_df()) > 0) {
-      angebot_values <- angebote_df()$Angebot
-      angebot_labels <- paste0(
-        angebote_df()$Spieler,
-        " (", format(angebote_df()$Angebot, big.mark = ".", decimal.mark = ","), " €)"
-      )
-      choices_a <- setNames(angebot_values, angebot_labels)
-    } else {
-      choices_a <- character(0)
-    }
-    updateCheckboxGroupInput(
-      session, "angebote_select",
-      choices = choices_a
-    )
-    
-    # 3) Eigene Team‑Spieler‑Checkboxes (Guard für leeres DataFrame)
-    if (nrow(team_spieler_df()) > 0) {
-      team_values <- team_spieler_df()$Marktwert
-      team_labels <- paste0(
-        team_spieler_df()$Spieler,
-        " (", format(team_spieler_df()$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
-      )
-      choices_t <- setNames(team_values, team_labels)
-    } else {
-      choices_t <- character(0)
-    }
-    updateCheckboxGroupInput(
-      session, "team_select",
-      choices = choices_t
-    )
-  })
-  
-  # 4) Plot rendern
-  output$transfer_simulator_plot <- renderPlot({
-    req(input$spieler_select)
-    
-    # — (1) Mindestgebot parsen —
-    sel        <- tm_df %>% filter(Spieler == input$spieler_select)
-    mindest    <- suppressWarnings(as.numeric(gsub("\\.", "", sel$Mindestgebot[1])))
-    
-    # — (2) Kontostand & (3) Kreditrahmen —
-    kont        <- kontostand_dominik()
-    all_team    <- sum(team_spieler_df()$Marktwert, na.rm = TRUE)
-    init_credit <- all_team / 4
-    
-    # — (4) Selektionen & (5) Erlöse/Verluste —
-    sel_off      <- if (is.null(input$angebote_select)) numeric(0) else as.numeric(input$angebote_select)
-    sel_team     <- if (is.null(input$team_select))   numeric(0) else as.numeric(input$team_select)
-    sum_off      <- sum(sel_off, na.rm = TRUE)
-    sum_team     <- sum(sel_team, na.rm = TRUE)
-    loss_off     <- sum(angebote_df()$Kreditverlust[angebote_df()$Angebot %in% sel_off], na.rm = TRUE)
-    loss_team    <- sum(sel_team, na.rm = TRUE) / 4
-    final_credit <- init_credit - loss_off - loss_team
-    
-    # (6) Namen der verkauften Spieler für Annotation sammeln
-    names_off  <- if (length(sel_off)  > 0) paste(angebote_df() %>% filter(Angebot %in% sel_off)  %>% pull(Spieler), collapse=", ") else ""
-    names_team <- if (length(sel_team) > 0) paste(team_spieler_df() %>% filter(Marktwert %in% sel_team) %>% pull(Spieler), collapse=", ") else ""
-    sold_names <- paste(c(names_off, names_team), collapse = if (names_off != "" & names_team != "") "; " else "")
-    
-    # — (NEU) 6.5 Zuflüsse zuerst aufs Defizit —
-    deficit   <- max(0, -kont)
-    use_off   <- min(sum_off, deficit)
-    remain_d  <- deficit - use_off
-    use_team  <- min(sum_team, max(0, remain_d))
-    rem_off   <- sum_off  - use_off
-    rem_team  <- sum_team - use_team
-    adj_kont  <- kont + use_off + use_team        # nach Ausgleich
-    rest_def  <- max(0, -adj_kont)                # verbleibendes Defizit (>0)
-    
-    # — (7) Segmente bauen —
-    kont_pos <- max(adj_kont, 0) + rem_off + rem_team      # alles oberhalb 0 als Kontostand +
-    kre_pos  <- max(final_credit, 0)                        # Kreditrahmen +
-    seg_levels <- c("Kontostand –","Kontostand +","Kreditrahmen")
-    
-    df_avail_pos <- tibble(
-      x       = "Verfügbar",
-      segment = factor(c("Kreditrahmen", "Kontostand +"), levels = seg_levels),
-      value   = c(kont_pos, kre_pos),
-      label   = c("", "")   # Zahlen/Spielernamen nicht hier; du annotierst separat
-    )
-    
-    df_avail_neg <- tibble(
-      x       = "Verfügbar",
-      segment = factor("Kontostand –", levels = seg_levels),
-      value   = -rest_def,
-      label   = ""          # kein Text
-    )
-    
-    df_mindest <- tibble(type="Mindestgebot", value=mindest)
-    
-    # Label-Positionen
-    df_pos <- df_avail_pos %>%
-      group_by(x) %>% arrange(x, segment) %>%
-      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
-    
-    df_neg <- df_avail_neg %>%
-      group_by(x) %>% arrange(x, value) %>%
-      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
-    
-    df_plot <- bind_rows(df_pos, df_neg)
-    df_plot <- df_plot %>%
-      mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
-    
-    # Kontostand-Label knapp neben y=0 platzieren
-    y_span  <- max(c(df_avail_pos$value[df_avail_pos$x=="Verfügbar"], df_mindest$value), na.rm = TRUE)
-    offset  <- 0.03 * max(1, y_span)
-    
-    # Wert wählen: rem_off > rem_team > adj_kont
-    val <- if (rem_off > 0) rem_off else if (rem_team > 0) rem_team else adj_kont
-    
-    titel_neu <- (adj_kont < 0) || (rem_off > 0) || (rem_team > 0)
-    label_txt <- paste0(if (titel_neu) "Neuer Kontostand: " else "Aktueller Kontostand: ",
-                        format(round(val, 0), big.mark = ".", decimal.mark = ","))
-    
-    show_lab <- list(
-      y   = 0 - offset, 
-      txt = label_txt
-    )
-    
-    kont_df <- if (is.null(show_lab)) {
-      tibble(x=character(0), y=numeric(0), lab=character(0))
-    } else {
-      tibble(x="Verfügbar", y=show_lab$y, lab=show_lab$txt)
-    }
-    
-    # Haken/Kreuz
-    total_avail <- sum(df_avail_pos$value, na.rm = TRUE)
-    ok_label    <- ifelse(total_avail >= mindest, "\u2713", "\u2717")
-    ok_color    <- ifelse(total_avail >= mindest, "green", "red")
-    
-    # — (9) Plot —
-    ggplot() +
-      geom_col(data = df_mindest,
-               aes(x = "Mindestgebot", y = value),
-               fill = "grey70", width = 0.6) +
-      geom_col(
-        data = df_plot,
-        aes(x = x, y = value, fill = segment),
-        width = 0.6
-      ) +
-      
-      geom_text(data = df_plot %>% filter(abs(value) > 1e-9, label != ""),
-                aes(x = x, y = ypos, label = label),
-                colour = "black", size = 4) +
-      geom_text(data = kont_df,
-                aes(x = x, y = y, label = lab),
-                fontface = "bold", size = 4.2) +
-      geom_text(data = df_mindest,
-                aes(x = "Mindestgebot", y = value/2,
-                    label = format(value, big.mark = ".", decimal.mark = ",")),
-                colour = "black", size = 4) +
-      geom_hline(yintercept = mindest, linetype = "dashed",
-                 color = "darkred", size = 0.5) +
-      geom_hline(yintercept = 0, linetype = "dashed",
-                 color = "black", size = 0.5) +
-      annotate("text", x = 2, y = max(0,total_avail)*1.05,
-               label = ok_label, size = 8, colour = ok_color) +
-      annotate("text", x = 2, y = max(0,total_avail)*1.15,
-               label = sold_names, size = 4, colour = "black") +
-      scale_fill_manual(
-        values = c(
-          "Kontostand –" = "#fb9a99",  # Paired[2], hellblau
-          "Kontostand +" = "#a6cee3",  # Paired[6], orange
-          "Kreditrahmen" = "#b2df8a"   # Paired[8], hellgrün
-        ),
-        breaks = c("Kontostand +","Kontostand –","Kreditrahmen"),
-        labels = c("Kreditrahmen","Defizit","Kapital")
-      ) +
-      scale_x_discrete(limits = c("Mindestgebot","Verfügbar")) +
-      scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
-      labs(x = NULL, y = "Betrag (€)", fill = NULL) +
-      theme_minimal(base_size = 16)
-    
-  })
-  
-  
   ## ---- Spieler Info ----
-  # ---- Header-Card Render ----
+  ### ---- Header-Card Render ----
   output$spieler_card_header <- renderUI({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) return(NULL)
@@ -2713,7 +2545,7 @@ server <- function(input, output, session) {
     )
   })
   
-  # ---- LI-Leistungsdaten Render ----
+  ### ---- LI-Leistungsdaten Render ----
   output$spieler_li_perf <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -2896,7 +2728,7 @@ server <- function(input, output, session) {
       ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
       ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
       "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
-      "Info: Kurz, faktenbasiert zu Rolle/Status; Einsatz 4–6 Wochen; Trainerstimme; Verletzung; Wechsel. ",
+      "Info: Kurz, faktenbasiert zu Rolle/Status; Einsatz 1–2 Wochen; Trainerstimme; Verletzung; Falls Verletzung, Rückkehrzeitpunkt; Wechsel. ",
       "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Aussage mit [1], [2] … belegen. ",
       "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, bevorzugt Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien. ",
       "Meide Social Media.\n\n",
@@ -2975,6 +2807,308 @@ server <- function(input, output, session) {
     })
   })
   
+  ## ---- Transfer-Simulator ----
+  # Reactive DataFrames vorbereiten
+  meine_spieler <- reactive({
+    teams_df %>%
+      filter(Manager == "Dominik") %>%
+      pull(Spieler)
+  })
+  
+  # Aktuelle Marktwerte
+  aktuelle_mw <- reactive({
+    max_datum <- max(ap_df$Datum, na.rm = TRUE)
+    ap_df %>%
+      filter(Datum == max_datum) %>%
+      transmute(Spieler, Marktwert = as.numeric(Marktwert))
+  })
+  
+  # Rohdaten der Angebote
+  angebote_raw <- angebote %>%
+    mutate(Status = ifelse(is.na(Status), "aktiv", Status))
+  
+  angebote_df <- reactive({
+    angebote_raw %>%
+      filter(Status == "aktiv") %>%              # << NEU
+      rename(Angebot = `Angebot (€)`) %>%
+      mutate(
+        Spieler   = trimws(Spieler),
+        Angebot   = as.numeric(gsub("\\.", "", Angebot))
+      ) %>%
+      filter(Spieler %in% meine_spieler()) %>%
+      left_join(aktuelle_mw(), by = "Spieler") %>%
+      mutate(
+        Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
+        Kreditverlust = Marktwert / 4
+      )
+  })
+  
+  team_spieler_df <- reactive({
+    aktuelle_mw() %>%
+      semi_join(teams_df %>% filter(Manager == "Dominik"), by = "Spieler")
+  })
+  
+  # UI‑Inputs befüllen
+  observe({
+    # 1) Spieler‑Liste immer füllen
+    updateSelectInput(
+      session, "spieler_select",
+      choices = sort(unique(tm_df$Spieler))
+    )
+    
+    # 2) Spieler‑Liste immer füllen
+    updateSelectInput(
+      session, "spieler_select2",
+      choices = sort(unique(tm_df$Spieler))
+    )
+    
+    # 3) Angebote‑Checkboxes (Guard für leeres DataFrame)
+    if (nrow(angebote_df()) > 0) {
+      angebot_values <- angebote_df()$Angebot
+      angebot_labels <- paste0(
+        angebote_df()$Spieler,
+        " (", format(angebote_df()$Angebot, big.mark = ".", decimal.mark = ","), " €)"
+      )
+      choices_a <- setNames(angebot_values, angebot_labels)
+    } else {
+      choices_a <- character(0)
+    }
+    updateCheckboxGroupInput(
+      session, "angebote_select",
+      choices = choices_a
+    )
+    
+    # 4) Eigene Team‑Spieler‑Checkboxes (Guard für leeres DataFrame)
+    if (nrow(team_spieler_df()) > 0) {
+      team_values <- team_spieler_df()$Marktwert
+      team_labels <- paste0(
+        team_spieler_df()$Spieler,
+        " (", format(team_spieler_df()$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
+      )
+      choices_t <- setNames(team_values, team_labels)
+    } else {
+      choices_t <- character(0)
+    }
+    updateCheckboxGroupInput(
+      session, "team_select",
+      choices = choices_t
+    )
+  })
+  
+  # 5) Plot rendern
+  output$transfer_simulator_plot <- renderPlot({
+    req(input$spieler_select)
+    
+    # — (1) Mindestgebot parsen —
+    sel        <- tm_df %>% filter(Spieler == input$spieler_select)
+    mindest    <- suppressWarnings(as.numeric(gsub("\\.", "", sel$Mindestgebot[1])))
+    
+    # — (2) Kontostand & (3) Kreditrahmen —
+    kont        <- kontostand_dominik()
+    all_team    <- sum(team_spieler_df()$Marktwert, na.rm = TRUE)
+    init_credit <- all_team / 4
+    
+    # — (4) Selektionen & (5) Erlöse/Verluste —
+    sel_off      <- if (is.null(input$angebote_select)) numeric(0) else as.numeric(input$angebote_select)
+    sel_team     <- if (is.null(input$team_select))   numeric(0) else as.numeric(input$team_select)
+    sum_off      <- sum(sel_off, na.rm = TRUE)
+    sum_team     <- sum(sel_team, na.rm = TRUE)
+    loss_off     <- sum(angebote_df()$Kreditverlust[angebote_df()$Angebot %in% sel_off], na.rm = TRUE)
+    loss_team    <- sum(sel_team, na.rm = TRUE) / 4
+    final_credit <- init_credit - loss_off - loss_team
+    
+    # (6) Namen der verkauften Spieler für Annotation sammeln
+    names_off  <- if (length(sel_off)  > 0) paste(angebote_df() %>% filter(Angebot %in% sel_off)  %>% pull(Spieler), collapse=", ") else ""
+    names_team <- if (length(sel_team) > 0) paste(team_spieler_df() %>% filter(Marktwert %in% sel_team) %>% pull(Spieler), collapse=", ") else ""
+    sold_names <- paste(c(names_off, names_team), collapse = if (names_off != "" & names_team != "") "; " else "")
+    
+    # (7) Zuflüsse zuerst aufs Defizit —
+    deficit   <- max(0, -kont)
+    use_off   <- min(sum_off, deficit)
+    remain_d  <- deficit - use_off
+    use_team  <- min(sum_team, max(0, remain_d))
+    rem_off   <- sum_off  - use_off
+    rem_team  <- sum_team - use_team
+    adj_kont  <- kont + use_off + use_team        # nach Ausgleich
+    rest_def  <- max(0, -adj_kont)                # verbleibendes Defizit (>0)
+    
+    # (8) Segmente bauen —
+    kont_pos <- max(adj_kont, 0) + rem_off + rem_team      # alles oberhalb 0 als Kontostand +
+    kre_pos  <- max(final_credit, 0)                        # Kreditrahmen +
+    seg_levels <- c("Kontostand -","Kontostand +","Kreditrahmen")
+    
+    df_avail_pos <- tibble(
+      x       = "Verfügbar",
+      segment = factor(c("Kreditrahmen", "Kontostand +"), levels = seg_levels),
+      value   = c(kont_pos, kre_pos),
+      label   = c("", "")   # Zahlen/Spielernamen nicht hier; du annotierst separat
+    )
+    
+    df_avail_neg <- tibble(
+      x       = "Verfügbar",
+      segment = factor("Kontostand -", levels = seg_levels),
+      value   = -rest_def,
+      label   = ""          # kein Text
+    )
+    
+    df_mindest <- tibble(type="Mindestgebot", value=mindest)
+    
+    # Label-Positionen
+    df_pos <- df_avail_pos %>%
+      group_by(x) %>% arrange(x, segment) %>%
+      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
+    
+    df_neg <- df_avail_neg %>%
+      group_by(x) %>% arrange(x, value) %>%
+      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
+    
+    df_plot <- bind_rows(df_pos, df_neg)
+    df_plot <- df_plot %>%
+      mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
+    
+    # Kontostand-Label knapp neben y=0 platzieren
+    y_span  <- max(c(df_avail_pos$value[df_avail_pos$x=="Verfügbar"], df_mindest$value), na.rm = TRUE)
+    offset  <- 0.03 * max(1, y_span)
+    
+    # Wert wählen: rem_off > rem_team > adj_kont
+    val <- if (rem_off > 0) rem_off else if (rem_team > 0) rem_team else adj_kont
+    
+    titel_neu <- (adj_kont < 0) || (rem_off > 0) || (rem_team > 0)
+    label_txt <- paste0(if (titel_neu) "Neuer Kontostand: " else "Aktueller Kontostand: ",
+                        format(round(val, 0), big.mark = ".", decimal.mark = ","))
+    
+    show_lab <- list(
+      y   = 0 - offset, 
+      txt = label_txt
+    )
+    
+    kont_df <- if (is.null(show_lab)) {
+      tibble(x=character(0), y=numeric(0), lab=character(0))
+    } else {
+      tibble(x="Verfügbar", y=show_lab$y, lab=show_lab$txt)
+    }
+    
+    # Haken/Kreuz
+    total_avail <- sum(df_avail_pos$value, na.rm = TRUE)
+    ok_label    <- ifelse(total_avail >= mindest, "\u2713", "\u2717")
+    ok_color    <- ifelse(total_avail >= mindest, "green", "red")
+    
+    # (9) Plot —
+    ggplot() +
+      geom_col(data = df_mindest,
+               aes(x = "Mindestgebot", y = value),
+               fill = "grey70", width = 0.6) +
+      geom_col(
+        data = df_plot,
+        aes(x = x, y = value, fill = segment),
+        width = 0.6
+      ) +
+      
+      geom_text(data = df_plot %>% filter(abs(value) > 1e-9, label != ""),
+                aes(x = x, y = ypos, label = label),
+                colour = "black", size = 4) +
+      geom_text(data = kont_df,
+                aes(x = x, y = y, label = lab),
+                fontface = "bold", size = 4.2) +
+      geom_text(data = df_mindest,
+                aes(x = "Mindestgebot", y = value/2,
+                    label = format(value, big.mark = ".", decimal.mark = ",")),
+                colour = "black", size = 4) +
+      geom_hline(yintercept = mindest, linetype = "dashed",
+                 color = "darkred", size = 0.5) +
+      geom_hline(yintercept = 0, linetype = "dashed",
+                 color = "black", size = 0.5) +
+      annotate("text", x = 2, y = max(0,total_avail)*1.05,
+               label = ok_label, size = 8, colour = ok_color) +
+      annotate("text", x = 2, y = max(0,total_avail)*1.15,
+               label = sold_names, size = 4, colour = "black") +
+      scale_fill_manual(
+        values = c(
+          "Kontostand -" = "#fb9a99",  # Paired[2], hellblau
+          "Kontostand +" = "#a6cee3",  # Paired[6], orange
+          "Kreditrahmen" = "#b2df8a"   # Paired[8], hellgrün
+        ),
+        breaks = c("Kontostand +","Kontostand -","Kreditrahmen"),
+        labels = c("Kreditrahmen","Defizit","Kapital")
+      ) +
+      scale_x_discrete(limits = c("Mindestgebot","Verfügbar")) +
+      scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
+      labs(x = NULL, y = "Betrag (€)", fill = NULL) +
+      theme_minimal(base_size = 16)
+    
+  })
+  
+  ## ---- Angebote-Analyse ----
+  
+  output$rel_angebot_vortag <- renderPlot({
+    df <- dat_rel_angebote() %>% filter(!is.na(rel_Vortag))
+    if (!is.null(input$trend_filter) && length(input$trend_filter) > 0)
+      df <- df %>% filter(Trend %in% input$trend_filter)
+    if (!is.null(input$verein_filter) && length(input$verein_filter) > 0)
+      df <- df %>% filter(Verein %in% input$verein_filter)
+    
+    validate(need(nrow(df) > 0, "Keine Daten nach Filter."))
+    
+    m <- mean(df$rel_Vortag, na.rm = TRUE)
+    
+    p <- ggplot(df, aes(x = "Vortag", y = rel_Vortag)) +
+      geom_boxplot(width = 0.2, outlier.shape = NA,
+                   fill = "#ff6b6b", color = "#ff6b6b", alpha = 0.25)
+    
+    if (input$color_by == "Trend") {
+      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Trend), width = 0.22, size = 3.5, alpha = 0.6)
+    } else if (input$color_by == "Verein") {
+      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Verein), width = 0.22, size = 3.5, alpha = 0.6)
+    } else {
+      p <- p + ggbeeswarm::geom_quasirandom(width = 0.22, size = 3.5, alpha = 0.6, color = "#ff6b6b")
+    }
+    
+    p +
+      geom_hline(yintercept = m, linetype = "dashed", color = "#ff6b6b") +
+      annotate("text", x = .5, y = m,
+               label = paste0("Mittelwert ", scales::percent(m, accuracy = 0.1)),
+               vjust = -0.6, color = "#ff6b6b") +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      labs(x = NULL, y = "Angebot vs. Marktwert am Vortag",
+           title = "Verteilung: Angebot relativ zum Marktwert am Vortag") +
+      theme_minimal(base_size = 12)
+  })
+  
+  output$rel_angebot_tag <- renderPlot({
+    df <- dat_rel_angebote() %>% filter(!is.na(rel_am_Tag))
+    if (!is.null(input$trend_filter) && length(input$trend_filter) > 0)
+      df <- df %>% filter(Trend %in% input$trend_filter)
+    if (!is.null(input$verein_filter) && length(input$verein_filter) > 0)
+      df <- df %>% filter(Verein %in% input$verein_filter)
+    
+    validate(need(nrow(df) > 0, "Keine Daten nach Filter."))
+    
+    m <- mean(df$rel_am_Tag, na.rm = TRUE)
+    
+    p <- ggplot(df, aes(x = "Am Tag", y = rel_am_Tag)) +
+      geom_boxplot(width = 0.2, outlier.shape = NA,
+                   fill = "#ff6b6b", color = "#ff6b6b", alpha = 0.25)
+    
+    if (input$color_by == "Trend") {
+      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Trend), width = 0.22, size = 3.5, alpha = 0.6)
+    } else if (input$color_by == "Verein") {
+      p <- p + ggbeeswarm::geom_quasirandom(aes(color = Verein), width = 0.22, size = 3.5, alpha = 0.6)
+    } else {
+      p <- p + ggbeeswarm::geom_quasirandom(width = 0.22, size = 3.5, alpha = 0.6, color = "#ff6b6b")
+    }
+    
+    p +
+      geom_hline(yintercept = m, linetype = "dashed", color = "#ff6b6b") +
+      annotate("text", x = .5, y = m,
+               label = paste0("Mittelwert ", scales::percent(m, accuracy = 0.1)),
+               vjust = -0.6, color = "#ff6b6b") +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      labs(x = NULL, y = "Angebot vs. Marktwert am Angebots-Tag",
+           title = "Verteilung: Angebot relativ zum Marktwert am Angebots-Tag") +
+      theme_minimal(base_size = 12)
+  })
+  
+  
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
     # 1) Reaktive Daten-Vorbereitung
@@ -3013,7 +3147,7 @@ server <- function(input, output, session) {
           is.na(Kaufpreis) ~ "",
           Diff_Kauf > 0    ~ sprintf("<span style='color:#388e3c;'>+%s € seit Kauf</span>",
                                      format(Diff_Kauf, big.mark=".", decimal.mark=",")),
-          Diff_Kauf < 0    ~ sprintf("<span style='color:#e53935;'>–%s € seit Kauf</span>",
+          Diff_Kauf < 0    ~ sprintf("<span style='color:#e53935;'>-%s € seit Kauf</span>",
                                      format(abs(Diff_Kauf), big.mark=".", decimal.mark=",")),
           TRUE             ~ "<span style='color:grey;'>±0 € seit Kauf</span>"
         )
@@ -3200,7 +3334,7 @@ server <- function(input, output, session) {
             is.na(Kaufpreis), "",
             case_when(
               Diff_Kauf > 0 ~ sprintf("<span style='color:#388e3c;'>+%s €</span>", format(Diff_Kauf, big.mark = ".", decimal.mark = ",")),
-              Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>–%s €</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
+              Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>-%s €</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
               TRUE ~ "<span style='color:grey;'>±0 €</span>"
             )
           )
@@ -3854,9 +3988,9 @@ server <- function(input, output, session) {
           is.na(Gewinn) ~ "Kein Verkauf",
           abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
           abs(Gewinn) < 1e5   ~ "Mini-Flip 25–99k",
-          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
-          abs(Gewinn) < 5e5   ~ "Mittel-Flip 250–499k",
-          TRUE                ~ "Mega-Flip ≥500k"
+          abs(Gewinn) < 5e5 ~ "Klein-Flip 100–499k",
+          abs(Gewinn) < 1e6   ~ "Mittel-Flip 500–999k",
+          TRUE                ~ "Mega-Flip ≥1mio"
         ),
         Flip_Ergebnis = case_when(
           is.na(Gewinn) ~ "Noch offen",
@@ -3869,14 +4003,14 @@ server <- function(input, output, session) {
         Flip_Label = factor(Flip_Label, levels = c(
           "Gewinn - Micro-Flip <25k",
           "Gewinn - Mini-Flip 25–99k",
-          "Gewinn - Klein-Flip 100–249k",
-          "Gewinn - Mittel-Flip 250–499k",
-          "Gewinn - Mega-Flip ≥500k",
+          "Gewinn - Klein-Flip 100–499k",
+          "Gewinn - Mittel-Flip 500–999k",
+          "Gewinn - Mega-Flip ≥1mio",
           "Verlust - Micro-Flip <25k",
           "Verlust - Mini-Flip 25–99k",
-          "Verlust - Klein-Flip 100–249k",
-          "Verlust - Mittel-Flip 250–499k",
-          "Verlust - Mega-Flip ≥500k",
+          "Verlust - Klein-Flip 100–499k",
+          "Verlust - Mittel-Flip 500–999k",
+          "Verlust - Mega-Flip ≥1mio",
           "Noch offen - Kein Verkauf"
         ))
       ) %>%
@@ -3887,14 +4021,14 @@ server <- function(input, output, session) {
         values = c(
           "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
           "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
-          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
-          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
-          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
+          "Gewinn - Klein-Flip 100–499k"  = "#388e3c",
+          "Gewinn - Mittel-Flip 500–999k" = "#1b5e20",
+          "Gewinn - Mega-Flip ≥1mio"      = "#004d40",
           "Verlust - Micro-Flip <25k"      = "#ffcdd2",
           "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
-          "Verlust - Klein-Flip 100–249k"  = "#e57373",
-          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
-          "Verlust - Mega-Flip ≥500k"      = "#b71c1c",
+          "Verlust - Klein-Flip 100–499k"  = "#e57373",
+          "Verlust - Mittel-Flip 500–999k" = "#d32f2f",
+          "Verlust - Mega-Flip ≥1mio"      = "#b71c1c",
           "Noch offen - Kein Verkauf"     = "#b0bec5"
         )
       ) +
@@ -3917,9 +4051,9 @@ server <- function(input, output, session) {
         Flip_Kategorie = case_when(
           abs(Gewinn) < 2.5e4 ~ "Micro-Flip <25k",
           abs(Gewinn) < 1e5 ~ "Mini-Flip 25–99k",
-          abs(Gewinn) < 2.5e5 ~ "Klein-Flip 100–249k",
-          abs(Gewinn) < 5e5 ~ "Mittel-Flip 250–499k",
-          abs(Gewinn) >= 5e5 ~ "Mega-Flip ≥500k"
+          abs(Gewinn) < 5e5 ~ "Klein-Flip 100–499k",
+          abs(Gewinn) < 1e6 ~ "Mittel-Flip 500–999k",
+          abs(Gewinn) >= 1e6 ~ "Mega-Flip ≥1mio"
         ),
         Flip_Ergebnis = ifelse(Gewinn >= 0, "Gewinn", "Verlust"),
         Flip_Label = paste(Flip_Ergebnis, Flip_Kategorie, sep = " - ")
@@ -3928,14 +4062,14 @@ server <- function(input, output, session) {
         Flip_Label = factor(Flip_Label, levels = c(
           "Gewinn - Micro-Flip <25k",
           "Gewinn - Mini-Flip 25–99k",
-          "Gewinn - Klein-Flip 100–249k",
-          "Gewinn - Mittel-Flip 250–499k",
-          "Gewinn - Mega-Flip ≥500k",
+          "Gewinn - Klein-Flip 100–499k",
+          "Gewinn - Mittel-Flip 500–999k",
+          "Gewinn - Mega-Flip ≥1mio",
           "Verlust - Micro-Flip <25k",
           "Verlust - Mini-Flip 25–99k",
-          "Verlust - Klein-Flip 100–249k",
-          "Verlust - Mittel-Flip 250–499k",
-          "Verlust - Mega-Flip ≥500k"
+          "Verlust - Klein-Flip 100–499k",
+          "Verlust - Mittel-Flip 500–999k",
+          "Verlust - Mega-Flip ≥1mio"
         ))
       ) %>%
       group_by(Besitzer, Flip_Label) %>%
@@ -3952,14 +4086,14 @@ server <- function(input, output, session) {
         values = c(
           "Gewinn - Micro-Flip <25k"      = "#a5d6a7",
           "Gewinn - Mini-Flip 25–99k"     = "#66bb6a",
-          "Gewinn - Klein-Flip 100–249k"  = "#388e3c",
-          "Gewinn - Mittel-Flip 250–499k" = "#1b5e20",
-          "Gewinn - Mega-Flip ≥500k"      = "#004d40",
+          "Gewinn - Klein-Flip 100–499k"  = "#388e3c",
+          "Gewinn - Mittel-Flip 500–999k" = "#1b5e20",
+          "Gewinn - Mega-Flip ≥1mio"      = "#004d40",
           "Verlust - Micro-Flip <25k"      = "#ffcdd2",
           "Verlust - Mini-Flip 25–99k"     = "#ef9a9a",
-          "Verlust - Klein-Flip 100–249k"  = "#e57373",
-          "Verlust - Mittel-Flip 250–499k" = "#d32f2f",
-          "Verlust - Mega-Flip ≥500k"      = "#b71c1c"
+          "Verlust - Klein-Flip 100–499k"  = "#e57373",
+          "Verlust - Mittel-Flip 500–999k" = "#d32f2f",
+          "Verlust - Mega-Flip ≥1mio"      = "#b71c1c"
         )
       ) +
       theme_minimal(base_size = 14) +
@@ -4014,7 +4148,7 @@ server <- function(input, output, session) {
     plot_df$label <- ifelse(
       plot_df$Diff_Kauf >= 0,
       paste0("+", fmt_eur(round(plot_df$Diff_Kauf, 0)), " €"),
-      paste0("–", fmt_eur(abs(round(plot_df$Diff_Kauf, 0))), " €")
+      paste0("-", fmt_eur(abs(round(plot_df$Diff_Kauf, 0))), " €")
     )
     
     ggplot(plot_df, aes(x = Kaufdatum, y = Diff_Kauf, group = Spieler, fill = pos)) +
@@ -4120,7 +4254,7 @@ server <- function(input, output, session) {
         `Vortag-Diff` = case_when(
           is.na(vortag_diff)        ~ "",
           vortag_diff > 0           ~ sprintf("<span style='color:#388e3c;'>+%s €</span>", format(vortag_diff, big.mark = ".", decimal.mark = ",")),
-          vortag_diff < 0           ~ sprintf("<span style='color:#e53935;'>–%s €</span>", format(abs(vortag_diff), big.mark = ".", decimal.mark = ",")),
+          vortag_diff < 0           ~ sprintf("<span style='color:#e53935;'>-%s €</span>", format(abs(vortag_diff), big.mark = ".", decimal.mark = ",")),
           TRUE                      ~ "<span style='color:grey;'>±0 €</span>"
         )
       ) %>%
@@ -4142,7 +4276,7 @@ server <- function(input, output, session) {
         `Vortag-Diff (% Teamwert)` = case_when(
           is.na(vortag_diff_rel)        ~ "",
           vortag_diff_rel > 0           ~ sprintf("<span style='color:#388e3c;'>+%.2f %%</span>", vortag_diff_rel),
-          vortag_diff_rel < 0           ~ sprintf("<span style='color:#e53935;'>–%.2f %%</span>", abs(vortag_diff_rel)),
+          vortag_diff_rel < 0           ~ sprintf("<span style='color:#e53935;'>-%.2f %%</span>", abs(vortag_diff_rel)),
           TRUE                          ~ "<span style='color:grey;'>±0 %%</span>"
         )
       ) %>%
