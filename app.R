@@ -494,14 +494,6 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
-  #Install ggrepel once
-  observeEvent(input$show_labels, { 
-    req(input$show_labels) 
-    if (isTRUE(input$show_labels)) { 
-      install.packages("ggrepel", repos = "https://cran.rstudio.com") 
-      library(ggrepel) }
-    }, once = TRUE)
-  
   #Save beeswarm position
   pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
   #Update stempel
@@ -3068,6 +3060,10 @@ server <- function(input, output, session) {
     p <- ggplot(df, aes(x = "Vortag", y = rel_Vortag)) +
       geom_boxplot(width = 0.2, outlier.shape = NA,
                    fill = "#ff6b6b", color = "#ff6b6b", alpha = 0.25)
+    
+    if (isTRUE(input$show_labels) && !requireNamespace("ggrepel", quietly = TRUE)) { 
+      install.packages("ggrepel", repos="https://cran.rstudio.com") 
+      library(ggrepel) }
     
     if (input$color_by == "Trend") {
       p <- p + geom_point(aes(color = Trend), position = pos_qr, size = 3.5, alpha = 0.6,
