@@ -495,8 +495,10 @@ ui <- navbarPage(
 server <- function(input, output, session) {
   
   #Install ggrepel once
-  if (isTRUE(input$show_labels) && !requireNamespace("ggrepel", quietly = TRUE)) { 
-    install.packages("ggrepel", repos = "https://cran.rstudio.com") library(ggrepel) }
+  if (isTRUE(input$show_labels)) { 
+    install.packages("ggrepel", repos = "https://cran.rstudio.com") 
+    library(ggrepel) 
+    }
   
   #Save beeswarm position
   pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
