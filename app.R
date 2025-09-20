@@ -496,9 +496,11 @@ server <- function(input, output, session) {
   
   #Install ggrepel once
   observeEvent(input$show_labels, { 
-    req(isTRUE(input$show_labels)) 
-    install.packages("ggrepel", repos = "https://cran.rstudio.com")  
-    library(ggrepel) }, once = TRUE)
+    req(input$show_labels) 
+    if (isTRUE(input$show_labels)) { 
+      install.packages("ggrepel", repos = "https://cran.rstudio.com") 
+      library(ggrepel) }
+    }, once = TRUE)
   
   #Save beeswarm position
   pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
