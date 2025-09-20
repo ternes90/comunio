@@ -3075,19 +3075,19 @@ server <- function(input, output, session) {
       p <- p + geom_point(aes(color = Verein), position = pos_qr, size = 3.5, alpha = 0.6,
                           show.legend = FALSE)
       if (isTRUE(input$show_labels)) {
-        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Verein), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Verein), position = pos_qr, size = 4, max.overlaps = 50, seed = 1, show.legend = FALSE)
       }
     } else if (input$color_by == "Status") {
       p <- p + geom_point(aes(color = Status), position = pos_qr, size = 3.5, alpha = 0.6,
                           show.legend = FALSE)
       if (isTRUE(input$show_labels)) {
-        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Status), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Status), position = pos_qr, size = 4, max.overlaps = 50, seed = 1, show.legend = FALSE)
       }
     } else {
       p <- p + geom_point(position = pos_qr, size = 3.5, alpha = 0.6, color = "#ff6b6b",
                           show.legend = FALSE)
       if (isTRUE(input$show_labels)) {
-        p <- p + ggrepel::geom_text_repel(aes(label = lbl), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, color = "#ff6b6b", show.legend = FALSE)
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl), position = pos_qr, size = 4, max.overlaps = 50, seed = 1, color = "#ff6b6b", show.legend = FALSE)
       }
     }
     
@@ -3099,7 +3099,7 @@ server <- function(input, output, session) {
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       labs(x = NULL, y = "Angebot vs. Marktwert am Vortag",
            title = "Verteilung: Angebot relativ zum Marktwert am Vortag") +
-      theme_minimal(base_size = 12)
+      theme_minimal(base_size = 14)
   })
   
   output$rel_angebot_tag <- renderPlot({
@@ -3125,17 +3125,17 @@ server <- function(input, output, session) {
     } else if (input$color_by == "Verein") {
       p <- p + geom_point(aes(color = Verein), position = pos_qr, size = 3.5, alpha = 0.6)
       if (isTRUE(input$show_labels)) {
-        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Verein), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Verein), position = pos_qr, size = 4, max.overlaps = 50, seed = 1, show.legend = FALSE)
       }
     } else if (input$color_by == "Status") {
       p <- p + geom_point(aes(color = Status), position = pos_qr, size = 3.5, alpha = 0.6)
       if (isTRUE(input$show_labels)) {
-        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Status), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, show.legend = FALSE)
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl, color = Status), position = pos_qr, size = 4, max.overlaps = 50, seed = 1, show.legend = FALSE)
       }
     } else {
       p <- p + geom_point(position = pos_qr, size = 3.5, alpha = 0.6, color = "#ff6b6b")
       if (isTRUE(input$show_labels)) {
-        p <- p + ggrepel::geom_text_repel(aes(label = lbl), position = pos_qr, size = 3, max.overlaps = 50, seed = 1, color = "#ff6b6b", show.legend = FALSE)
+        p <- p + ggrepel::geom_text_repel(aes(label = lbl), position = pos_qr, size = 4, max.overlaps = 50, seed = 1, color = "#ff6b6b", show.legend = FALSE)
       }
     }
     
@@ -3147,7 +3147,7 @@ server <- function(input, output, session) {
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       labs(x = NULL, y = "Angebot vs. Marktwert am Angebots-Tag",
            title = "Verteilung: Angebot relativ zum Marktwert am Angebots-Tag") +
-      theme_minimal(base_size = 12)
+      theme_minimal(base_size = 14)
   })
   
   # ---- KADER-ENTWICKLUNG ----
