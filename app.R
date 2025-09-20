@@ -3061,6 +3061,11 @@ server <- function(input, output, session) {
       geom_boxplot(width = 0.2, outlier.shape = NA,
                    fill = "#ff6b6b", color = "#ff6b6b", alpha = 0.25)
     
+    if (isTRUE(input$show_labels)) {
+      install.packages("ggrepel", repos="https://cran.rstudio.com")
+    library(ggrepel)
+    }
+    
     if (input$color_by == "Trend") {
       p <- p + geom_point(aes(color = Trend), position = pos_qr, size = 3.5, alpha = 0.6,
                           show.legend = FALSE)
