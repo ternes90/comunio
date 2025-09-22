@@ -120,7 +120,43 @@ ui <- navbarPage(
         }
         .spieler-card .list { margin:0; padding-left:16px; }
         .spieler-divider { height:1px; background:#e5e7eb; margin:10px 0 16px 0; }
-      "))
+      ")),
+      
+      # --- Mein Team Info-button ---
+      tags$script(HTML("
+        $(document).off('click.mkKader', '.mk-info-btn')
+                   .on('click.mkKader',  '.mk-info-btn', function(e){
+          e.preventDefault(); e.stopPropagation();
+          var player = $(this).data('player');
+          console.log('[mk-info-btn] player =', player);
+          Shiny.setInputValue('mk_info_player', { name: player, t: Date.now() }, {priority:'event'});
+        });
+      ")),
+      
+      # --- Mein Team Prompt-GPT-button ---
+      tags$script(HTML("
+        (function(){
+          var GPT_URL = 'https://chatgpt.com/g/g-p-683f0c4df880819194f9186282be1c2c-comunio-tipps-pro-player/project';
+        
+          function copySync(txt){
+            var ta=document.createElement('textarea');
+            ta.value=txt; ta.setAttribute('readonly','');
+            ta.style.position='fixed'; ta.style.top='0'; ta.style.left='-9999px';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            var ok=false;
+            try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+            document.body.removeChild(ta);
+            return ok;
+          }
+        
+          $(document).on('click','.mk-gpt-btn',function(){
+            // Prompt frei definierbar in R → im data-attribute mitschicken
+            var prompt = $(this).data('prompt') || '';
+            copySync(prompt);
+            setTimeout(function(){ window.open(GPT_URL,'_blank'); }, 120);
+          });
+        })();
+        "))
     )
   ),
   
@@ -566,6 +602,19 @@ server <- function(input, output, session) {
     }, delay = 0.2)   # 200 ms reicht meist
   })
   
+  # Action Button 3 (Mein Team)
+  observeEvent(input$mk_info_player, {
+    req(input$mk_info_player$name)
+    player <- input$mk_info_player$name
+    
+    updateNavbarPage(session, "main_navbar", selected = "Transfermarkt")
+    updateTabsetPanel(session, "transfermarkt_tabs", selected = "spieler_info")
+    updateRadioButtons(session, "spieler_filter", selected = "Mein Team")
+    
+    later(function() {
+      updateSelectInput(session, "spieler_select2", selected = player)
+    }, 0.2)
+  })
   
   # Spielerlisten für Spiler-Info wählen
   observeEvent(input$spieler_filter, {
@@ -3155,6 +3204,10 @@ server <- function(input, output, session) {
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
+  
+  # Hilfsfunktion für sicheres Escaping in HTML-Attributen
+  safe_attr <- function(x) htmltools::htmlEscape(x, attribute = TRUE)
+  
     # 1) Reaktive Daten-Vorbereitung
   mein_kader_df <- reactive({
     # Basis: alle Spieler von Dominik
@@ -3261,44 +3314,69 @@ server <- function(input, output, session) {
     grouped_sections <- lapply(split(df_pre, df_pre$Position), function(gruppe) {
       pos_name <- unique(gruppe$Position)
       rows <- lapply(seq_len(nrow(gruppe)), function(i) {
-        sp     <- gruppe$Spieler[i]
-        stat   <- gruppe$StatusTag[i]
-        v      <- gruppe$Logo[i]
-        pps    <- gruppe$`Punkte pro Spiel`[i]
-        pl     <- gruppe$`Preis-Leistung`[i]
-        hist   <- gruppe$`Historische Punkteausbeute`[i]
-        mw     <- gruppe$Marktwert_fmt[i]
-        diff   <- gruppe$Diff_fmt[i]
-        diffk  <- gruppe$Diff_Kauf_fmt[i]
+        sp    <- gruppe$Spieler[i]
+        stat  <- gruppe$StatusTag[i]
+        v     <- gruppe$Logo[i]
+        pps   <- gruppe$`Punkte pro Spiel`[i]
+        pl    <- gruppe$`Preis-Leistung`[i]
+        hist  <- gruppe$`Historische Punkteausbeute`[i]
+        mw    <- gruppe$Marktwert_fmt[i]
+        diff  <- gruppe$Diff_fmt[i]
+        diffk <- gruppe$Diff_Kauf_fmt[i]
+        
+        btn <- sprintf(
+          "<button class='btn btn-xs btn-info mk-info-btn' data-player='%s'>i</button>",
+          safe_attr(sp)
+        )
+        
+        # GPT-Button – Prompt direkt mitgeben
+        btn_gpt <- sprintf(
+          "<button class='btn btn-xs btn-success mk-gpt-btn' data-row='%d' data-prompt='%s'>GPT</button>",
+          i,
+          safe_attr(sprintf(
+            "Analysiere den Bundesligaspieler %s (%s).\n\nFragen:\n1) Wie hoch ist seine Wahrscheinlichkeit, am kommenden Wochenende in der Startelf zu stehen?\n2) Falls er verletzt ist: Welche Verletzung liegt vor, wie lange fällt er voraussichtlich aus, wann ist er zurück im Training, wann frühestens im Spieltagskader?\n\nAntwort:\n- Ausführlich und faktenbasiert\n- Gehe auf Einsatzzeiten der letzten Spiele, aktuelle Form, und Trainerstimmen ein\n- Bei Verletzungen: Art der Verletzung, voraussichtliche Ausfallzeit, bestätigte Angaben zum Reha- oder Trainingsstatus\n- Jede Aussage mit Quelle belegen\n- Nur Quellen wie Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, oder seriöse regionale Medien\n- Quellen mit URL und Datum im Format YYYY-MM-DD angeben\n- Keine Social-Media-Posts nutzen\n- Länge: maximal 2 Absätze",
+            sp, gruppe$Verein[i]
+          ))
+          
+          # safe_attr(sprintf(
+          #   "Rolle: Du bist ein Bundesliga-Teamreporter mit Fokus auf offizielle Vereinsmeldungen und Fachmedien.\n\nAnalysiere den Bundesligaspieler %s (%s).\n\nFragen:\n1) Wie hoch ist seine Wahrscheinlichkeit, am kommenden Wochenende in der Startelf zu stehen?\n2) Falls er verletzt ist: Welche Verletzung liegt vor, wie lange fällt er voraussichtlich aus, wann ist er zurück im Training, wann frühestens im Spieltagskader?\n\nAntwort:\n- Ausführlich, faktenbasiert, maximal 2 Absätze\n- Gehe auf Einsatzzeiten der letzten Spiele, aktuelle Form, und Trainerstimmen ein\n- Bei Verletzungen: Art, Dauer, Reha-Stand\n- Jede Aussage mit Quelle belegen\n- Nur Quellen wie Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, regionale Qualitätsmedien\n- Quellen mit URL und Datum im Format YYYY-MM-DD\n- Keine Social-Media-Posts nutzen",
+          #   sp, gruppe$Verein[i]
+          # ))
+          
+        )
+        
         
         sprintf(
           "<tr>
-           <td style='padding:4px;'>%s</td>
-           <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:right;'>%s</td>
-           <td style='padding:4px; text-align:right;'>%s</td>
-           <td style='padding:4px; text-align:right;'>%s</td>
-         </tr>",
-          sp,
-          stat,
-          v,
-          ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark = ",")),
+       <td style='padding:4px;'>%s</td>
+       <td style='padding:4px; text-align:center;'>%s</td> 
+       <td style='padding:4px; text-align:center;'>%s</td>
+       <td style='padding:4px; text-align:center;'>%s</td>
+       <td style='padding:4px; text-align:center;'>%s</td>
+       <td style='padding:4px; text-align:center;'>%s</td>
+       <td style='padding:4px; text-align:center;'>%s</td>
+       <td style='padding:4px; text-align:center;'>%s</td>
+       <td style='padding:4px; text-align:right;'>%s</td>
+       <td style='padding:4px; text-align:right;'>%s</td>
+       <td style='padding:4px; text-align:right;'>%s</td>
+     </tr>",
+          sp, stat, btn, btn_gpt, v,
+          ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark=",")),
           ifelse(is.na(pl),  "-", pl),
           ifelse(is.na(hist), "-", hist),
-          mw,
-          diff,
-          diffk
+          mw, diff, diffk
         )
       })
       
+      
       paste0(
-        sprintf("<tr><th colspan='9' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos_name),
+        sprintf(
+          "<tr><th colspan='11' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>",
+          pos_name
+        ),
         paste(rows, collapse = "\n")
       )
+      
     })
     
     # Gesamte Tabelle zusammenbauen
@@ -3306,6 +3384,8 @@ server <- function(input, output, session) {
       "<table style='width:100%; border-collapse:collapse;'>",
       "<thead><tr>
          <th style='text-align:left;'>Spieler</th>
+         <th style='text-align:center;'> </th>
+         <th style='text-align:center;'> </th>
          <th style='text-align:center;'> </th>
          <th style='text-align:center;'>Verein</th>
          <th style='text-align:center;'>Ø Punkte</th>
