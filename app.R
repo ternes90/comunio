@@ -5,6 +5,7 @@ library(ggbeeswarm)
 library(readxl)
 library(DT)
 library(scales)
+library(later)
 
 # ---- UI ----
 ui <- navbarPage(
@@ -19,113 +20,107 @@ ui <- navbarPage(
       textOutput("last_update", inline = TRUE)
     ),
     
-    # In Deiner UI (z.B. ui.R)
     tags$head(
-      # --- Click‑Event für kapital_uebersicht_table ---
+      # --- Click-Event ---
       tags$script(HTML("
-    $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
-      Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
-    });
-  ")),
+        $(document).on('click', '#kapital_uebersicht_table tbody td', function() {
+          Shiny.setInputValue('kapital_table_cell_clicked', Math.random());
+        });
+      ")),
       
-      # --- Linksbündige Ausrichtung für alle drei Tabellen ---
+      # --- Tabellen linksbündig ---
       tags$style(HTML("
-    /* kreditrahmen_uebersicht_preview, transfer_summary_today, flip_summary_today */
-    #kreditrahmen_uebersicht_preview table.dataTable td,
-    #kreditrahmen_uebersicht_preview table.dataTable th,
-    #transfer_summary_today table.dataTable td,
-    #transfer_summary_today table.dataTable th,
-    #flip_summary_today table.dataTable td,
-    #flip_summary_today table.dataTable th {
-      text-align: left !important;
-    }
-  ")),
-      #Abstand TabPanels oben/unten
+        #kreditrahmen_uebersicht_preview table.dataTable td,
+        #kreditrahmen_uebersicht_preview table.dataTable th,
+        #transfer_summary_today table.dataTable td,
+        #transfer_summary_today table.dataTable th,
+        #flip_summary_today table.dataTable td,
+        #flip_summary_today table.dataTable th {
+          text-align: left !important;
+        }
+      ")),
+      
+      # --- Abstände Tabs ---
       tags$style(HTML("
-    /* Abstand oben für alle Tab-Panes */
-    .tab-content > .tab-pane {
-      margin-top: 20px; margin-bottom: 50px;
-    }
-  ")),
-      # Hellblaue selection
+        .tab-content > .tab-pane { margin-top: 20px; margin-bottom: 50px; }
+      ")),
+      
+      # --- DataTable selection/hover ---
       tags$style(HTML("
-  /* 1) DataTables’ default selected fill deaktivieren */
-  :root {
-    --dt-row-selected: transparent !important;
-  }
-
-  /* 2) Soft-blauen Hintergrund + schwarze Schrift für selektierte Zellen */
-  table.dataTable tbody tr.selected td,
-  table.dataTable tbody td.selected {
-    box-shadow: inset 0 0 0 9999px #D3E5FF !important;
-    color: black !important;
-  }
-  
-  /* 3) Falls Links in der Zelle sind */
-  table.dataTable tbody tr.selected td a,
-  table.dataTable tbody td.selected a {
-    color: black !important;
-  }
-
-  /* 4) Hover-State (auch auf ausgewählten Zeilen) */
-  table.dataTable tbody tr:hover,
-  table.dataTable tbody tr:hover td {
-    background-color: #E8F2FF !important;
-    color: inherit !important;
-  }
-")),
-      tags$head(tags$script(HTML("
-(function(){
-  function copySync(txt){
-    var ta=document.createElement('textarea');
-    ta.value=txt;
-    ta.setAttribute('readonly','');
-    ta.style.position='fixed';
-    ta.style.top='0';
-    ta.style.left='-9999px';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
-    var ok=false;
-    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
-    document.body.removeChild(ta);
-    return ok;
-  }
-  $(document).on('click','#copy_prompt',function(){
-    var el=document.getElementById('gpt_prompt_preview');
-    var txt=el ? (el.textContent || el.innerText || '') : '';
-    var ok=copySync(txt);
-    Shiny.setInputValue('copied_prompt', {ok: ok, len: txt.length, t: Date.now()}, {priority:'event'});
-    setTimeout(function(){ window.open('https://chatgpt.com/g/g-p-683f0c4df880819194f9186282be1c2c-comunio-tipps-pro-player/project','_blank'); }, 120);
-  });
-})();
-"))),
+        :root { --dt-row-selected: transparent !important; }
+        table.dataTable tbody tr.selected td,
+        table.dataTable tbody td.selected {
+          box-shadow: inset 0 0 0 9999px #D3E5FF !important;
+          color: black !important;
+        }
+        table.dataTable tbody tr.selected td a,
+        table.dataTable tbody td.selected a { color: black !important; }
+        table.dataTable tbody tr:hover,
+        table.dataTable tbody tr:hover td {
+          background-color: #E8F2FF !important;
+          color: inherit !important;
+        }
+      ")),
+      
+      # --- Copy-Prompt-Skript ---
+      tags$script(HTML("
+        (function(){
+          function copySync(txt){
+            var ta=document.createElement('textarea');
+            ta.value=txt;
+            ta.setAttribute('readonly','');
+            ta.style.position='fixed'; ta.style.top='0'; ta.style.left='-9999px';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            var ok=false;
+            try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+            document.body.removeChild(ta);
+            return ok;
+          }
+          $(document).on('click','#copy_prompt',function(){
+            var el=document.getElementById('gpt_prompt_preview');
+            var txt=el ? (el.textContent || el.innerText || '') : '';
+            var ok=copySync(txt);
+            Shiny.setInputValue('copied_prompt',
+              {ok: ok, len: txt.length, t: Date.now()},
+              {priority:'event'});
+            setTimeout(function(){
+              window.open('https://chatgpt.com/g/g-p-683f0c4df880819194f9186282be1c2c-comunio-tipps-pro-player/project','_blank');
+            }, 120);
+          });
+        })();
+      ")),
+      
+      # --- GPT-Resultat-Box ---
       tags$style(HTML("
-#gpt_result_pre{
-  white-space: pre-wrap;
-  word-break: break-word;
-   font-family: Calibri, 'Segoe UI', Arial, sans-serif;
-  font-size: 18px;
-  line-height: 1.55;
-  color: #1a1a1a;
-  background: #ffffff;
-  border: 1px solid #e6e6e6;
-  border-radius: 10px;
-  padding: 14px 16px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.04);
-}
-")),
-      tags$head(tags$style(HTML("
-  #gpt_prompt_preview { white-space: pre-wrap; }
-"))),
-      tags$style(HTML("#gpt_result_pre a{word-break: break-all;}")),
+        #gpt_result_pre {
+          white-space: pre-wrap; word-break: break-word;
+          font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+          font-size: 18px; line-height: 1.55; color: #1a1a1a;
+          background: #ffffff; border: 1px solid #e6e6e6;
+          border-radius: 10px; padding: 14px 16px;
+          box-shadow: 0 1px 2px rgba(0,0,0,.04);
+        }
+        #gpt_prompt_preview { white-space: pre-wrap; }
+        #gpt_result_pre a { word-break: break-all; }
+      ")),
+      
+      # --- Spieler-Card ---
       tags$style(HTML("
-    .spieler-card { display:flex; gap:16px; align-items:center; border:1px solid #e5e7eb; border-radius:16px; padding:12px; margin:8px 0 16px 0; }
-    .spieler-card img { border-radius:12px; object-fit:cover; }
-    .spieler-card .meta { flex:1; }
-    .spieler-card .verein { display:flex; align-items:center; gap:8px; font-weight:700; font-size:18px; margin-bottom:6px; }
-    .spieler-card .list { margin:0; padding-left:16px; }
-    .spieler-divider { height:1px; background:#e5e7eb; margin:10px 0 16px 0; }
-  "))
+        .spieler-card {
+          display:flex; gap:16px; align-items:center;
+          border:1px solid #e5e7eb; border-radius:16px;
+          padding:12px; margin:8px 0 16px 0;
+        }
+        .spieler-card img { border-radius:12px; object-fit:cover; }
+        .spieler-card .meta { flex:1; }
+        .spieler-card .verein {
+          display:flex; align-items:center; gap:8px;
+          font-weight:700; font-size:18px; margin-bottom:6px;
+        }
+        .spieler-card .list { margin:0; padding-left:16px; }
+        .spieler-divider { height:1px; background:#e5e7eb; margin:10px 0 16px 0; }
+      "))
     )
   ),
   
@@ -353,7 +348,6 @@ ui <- navbarPage(
            )
   ),
   
-  
   ## ---- Bieterprofile ----
   tabPanel("Bieterprofile",
            tabsetPanel(
@@ -548,19 +542,28 @@ server <- function(input, output, session) {
     req(idx >= 1, idx <= nrow(df))
     player <- df$Spieler[idx]
     
-    # Tab zu Spieler-Info wechseln
+    # Tab wechseln
     updateTabsetPanel(
       session,
       inputId  = "transfermarkt_tabs",
-      selected = "spieler_info"   # value = "spieler_info"
+      selected = "spieler_info"
     )
     
-    # Spieler im SelectInput2 vorwählen
-    updateSelectInput(
+    # Filter zuerst setzen
+    updateRadioButtons(
       session,
-      inputId  = "spieler_select2",
-      selected = player
+      inputId  = "spieler_filter",
+      selected = "Transfermarkt"
     )
+    
+    # Mit kleinem Delay den Spieler wählen
+    later(function() {
+      updateSelectInput(
+        session,
+        inputId  = "spieler_select2",
+        selected = player
+      )
+    }, delay = 0.2)   # 200 ms reicht meist
   })
   
   
@@ -845,14 +848,14 @@ server <- function(input, output, session) {
     "FC Augsburg" = "FC Augsburg.png",
     "FC Bayern München" = "FC Bayern München.png",
     "Hamburger SV" = "Hamburger SV.png",
-    "1.FC Heidenheim" = "Heidenheim.png",
+    "1. FC Heidenheim 1846" = "Heidenheim.png",
     "RB Leipzig" = "Leipzig.png",
     "1. FSV Mainz 05" = "Mainz 05.png",
     "Sport-Club Freiburg" = "SC Freiburg.png",
     "FC St. Pauli" = "St Pauli.png",
     "SV Werder Bremen" = "SV Werder Bremen.png",
     "TSG Hoffenheim" = "TSG Hoffenheim.png",
-    "1.FC Union Berlin" = "Union Berlin.png",
+    "1. FC Union Berlin" = "Union Berlin.png",
     "VfB Stuttgart" = "VfB Stuttgart.png",
     "VfL Wolfsburg" = "VfL Wolfsburg.png"
   )
