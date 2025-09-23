@@ -15,7 +15,9 @@ Alfons;Philippe;Sturm
 Alfons;Saad;Sturm
 Alfons;Kaufmann;Sturm
 Alfons;Martel;Mittelfeld
+Alfons;Fellhauer;Mittelfeld
 Alfons;Nebel;Mittelfeld
+Alfons;Kemlein;Mittelfeld
 Alfons;J. Hofmann;Mittelfeld
 Alfons;Silas;Mittelfeld
 Alfons;Ginter;Abwehr
@@ -45,6 +47,7 @@ Pascal;Can;Mittelfeld
 Pascal;Skhiri;Mittelfeld
 Pascal;Irvine;Mittelfeld
 Pascal;W. Orbán;Abwehr
+Pascal;Svensson;Abwehr
 Pascal;Elvedi;Abwehr
 Pascal;Klostermann;Abwehr
 Pascal;Baumann;Tor
@@ -61,7 +64,6 @@ Andreas;Matsima;Abwehr
 Andreas;L. Vušković;Abwehr
 Andreas;Fischer;Abwehr
 Andreas;Heuer Fernandes;Tor
-Andreas;Zetterer;Tor
 Dominik;Skov Olsen;Sturm
 Dominik;Schimmer;Sturm
 Dominik;Pieringer;Sturm
