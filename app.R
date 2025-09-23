@@ -792,7 +792,8 @@ server <- function(input, output, session) {
       Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
       Gesamtpunkte = GESAMTPUNKTE,
       Preis_Leistung = `PREIS-LEISTUNG`,
-      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`
+      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`,
+      Verletzungsanfälligkeit = Verletzungsanfälligkeit
     )
   
   #Kaufempfehung etc.
@@ -2401,7 +2402,7 @@ server <- function(input, output, session) {
     # 6) Historische Punkte & Details mergen
     df <- df %>%
       left_join(
-        ca_df %>% select(Spieler = SPIELER, `Historische Punkteausbeute` = Historische_Punkteausbeute),
+        ca_df %>% select(Spieler = SPIELER, `Historische Punkteausbeute` = Historische_Punkteausbeute, Verletzungsanfälligkeit),
         by = "Spieler"
       ) %>%
       left_join(
@@ -2471,15 +2472,55 @@ server <- function(input, output, session) {
                  paste0(ifelse(IdealesGebotProzent>0,"+",""),
                         IdealesGebotProzent,"%")),
           ")</span>"
+        ),
+        Maximalgebot = paste0(
+          format(Maximalgebot_num, big.mark=".", decimal.mark=","), " € ",
+          "<button class='btn btn-xs btn-light copy-btn' data-value='",
+          Maximalgebot_num, "' title='Kopieren'>📋</button>",
+          "<br><span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(MaximalgebotProzent),"–",
+                 paste0(ifelse(MaximalgebotProzent>0,"+",""),
+                        MaximalgebotProzent,"%")),
+          ")</span>"
         )
       )
     
+    df <- df %>%
+      mutate(
+        Gebote_minmax = paste0(
+          "<div>",
+          "<div><strong>Min:</strong> ",
+          format(Minimalgebot_num, big.mark=".", decimal.mark=","), " € ",
+          "<button class='btn btn-xs btn-light copy-btn' data-value='", Minimalgebot_num, "' title='Kopieren'>📋</button>",
+          " <span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(MinimalgebotProzent),"–",
+                 paste0(ifelse(MinimalgebotProzent>0,"+",""), MinimalgebotProzent, "%")),
+          ")</span></div>",
+          "<div><strong>Ideal:</strong> ",
+          format(IdealesGebot_num, big.mark=".", decimal.mark=","), " € ",
+          "<button class='btn btn-xs btn-light copy-btn' data-value='", IdealesGebot_num, "' title='Kopieren'>📋</button>",
+          " <span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(IdealesGebotProzent),"–",
+                 paste0(ifelse(IdealesGebotProzent>0,"+",""), IdealesGebotProzent, "%")),
+          ")</span></div>",
+          "<div><strong>Max:</strong> ",
+          format(Maximalgebot_num, big.mark=".", decimal.mark=","), " € ",
+          "<button class='btn btn-xs btn-light copy-btn' data-value='", Maximalgebot_num, "' title='Kopieren'>📋</button>",
+          " <span style='font-size:85%;color:#666;'>(",
+          ifelse(is.na(MaximalgebotProzent),"–",
+                 paste0(ifelse(MaximalgebotProzent>0,"+",""), MaximalgebotProzent, "%")),
+          ")</span></div>",
+          "</div>"
+        )
+      )
+    
+    
     # fehlende Spalten auffüllen
-    needed <- c("Spieler", "StatusTag", "POSITION", "Logo", "PUNKTE", "Punkte pro Spiel","Preis-Leistung",
-                "Historische Punkteausbeute","Marktwert","Zielwert",
-                "Mindestgebot","Minimalgebot","IdealesGebot",
-                "Maximalgebot","Gebote","Empfehlung","Besitzer",
-                "Verbleibende Zeit","Trend MW (3 Tage)", "action2", "action")
+    needed <- c("Spieler","StatusTag","POSITION","Logo","PUNKTE","Punkte pro Spiel","Preis-Leistung", "Verletzungsanfälligkeit",
+                "Historische Punkteausbeute","Marktwert","Zielwert","Mindestgebot", "Gebote_minmax",
+                "Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)","action2","action")
+    
+    
     for (nm in setdiff(needed, names(df))) df[[nm]] <- NA_character_
     sub_df <- df[, needed, drop = FALSE]
     
@@ -2493,11 +2534,13 @@ server <- function(input, output, session) {
     DT::datatable(
       sub_df,
       colnames = c(
-        "Spieler", " ","Position","Verein","Punkte","PPS","Preis-Leistung","Hist.","Marktwert",
-        "Zielwert","Mindestgebot","Minimalgebot","Zuschlagsgebot",
-        "Maximalgebot","Gebote","Empfehlung","Besitzer",
-        "Angebotsende","Trend","Info", "Rechner", ""
-      ),
+        "Spieler"," ","Position","Verein","Punkte","PPS","Preis-Leistung", "<span style='color:red;'>✚</span> Risiko","Hist.","Marktwert",
+        "Zielwert","Mindestgebot","Gebote (Min/Ideal/Max)", "Gebote",
+        "Maximalgebot" = NULL,  # entfällt
+        "Empfehlung","Besitzer",
+        "Angebotsende","Trend","Info","Rechner",""
+      )
+      ,
       escape    = FALSE,
       selection = "none",
       rownames  = FALSE,
