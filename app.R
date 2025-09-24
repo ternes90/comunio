@@ -156,7 +156,13 @@ ui <- navbarPage(
             setTimeout(function(){ window.open(GPT_URL,'_blank'); }, 120);
           });
         })();
-        "))
+        ")),
+      tags$style(HTML("
+        table.dataTable tbody td:first-child {
+          text-align: left !important;
+        }
+      "))
+      
     )
   ),
   
@@ -285,15 +291,33 @@ ui <- navbarPage(
                  inline = TRUE
                ),
                selectInput("spieler_select2", "Spieler:", choices = NULL),
-               uiOutput("spieler_card_header"),
-               
-               tags$div("LI-Leistungsdaten",
-                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
-               div(style = "margin-bottom:20px;width:100%;",
-                   DTOutput("spieler_li_perf", width = "100%")),
+               div(
+                 style = "display:flex; justify-content:space-around; align-items:flex-start; width:100%;",
+                 
+                 div(
+                   style = "flex:1; text-align:left;",
+                   uiOutput("spieler_card_header")
+                 ),
+                 
+                 div(
+                   style = "flex:1; text-align:center;",
+                   tags$div("Liga Insider-Leistungsdaten",
+                            style = "font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
+                   div(style = "margin:0 auto; width:80%;",
+                       DTOutput("spieler_li_perf_summary"))
+                 ),
+                 
+                 div(
+                   style = "flex:1; text-align:center;",
+                   tags$div("Liga Insider-Bilanz",
+                            style = "font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
+                   div(style = "margin:0 auto; width:80%;",
+                       DTOutput("spieler_li_perf_bilanz"))
+                 )
+               ),
                
                tags$div("Marktwertverlauf",
-                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
+                        style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;margin-top:20px;"),
                div(style = "margin-bottom:20px;width:100%;",
                    plotOutput("spieler_info_mw", height = 350, width = "100%")),
                
@@ -2646,94 +2670,121 @@ server <- function(input, output, session) {
   })
   
   ### ---- LI-Leistungsdaten Render ----
-  output$spieler_li_perf <- renderDT({
+  # ---- LI-Leistungsdaten: Summary (Note/Punkte/EQ) ----
+  output$spieler_li_perf_summary <- renderDT({
+    row <- match_li_row()
+    if (is.null(row) || nrow(row) == 0) {
+      return(datatable(data.frame(Hinweis = "Keine LI-Daten gefunden"),
+                       options = list(dom = 't', paging = FALSE)))
+    }
+    
+    keep <- c(
+      "Ø_Note","Punkte_gesamt",
+      "EQ_Gesamt_Quote","EQ_Gesamt_Min_von","EQ_Gesamt_Min_total",
+      "EQ_Startelf_.","EQ_Bank_.","EQ_Verletzt_.",
+      "EQ_Einwechslungen_.","EQ_Ausgewechselt_.","EQ_NichtimKader_."
+    )
+    cols <- intersect(keep, names(row))
+    if (length(cols) == 0) {
+      return(datatable(data.frame(Hinweis = "Keine Summary-Spalten in li_df"),
+                       options = list(dom = 't', paging = FALSE)))
+    }
+    
+    df <- row[, cols, drop = FALSE]
+    
+    map <- c(
+      "Ø_Note"              = "📊 Durchschnittsnote",
+      "Punkte_gesamt"       = "⭐ Gesamtpunkte",
+      "EQ_Gesamt_Quote"     = "📈 Einsatzquote %",
+      "EQ_Gesamt_Min_von"   = "⏱️ Minuten von",
+      "EQ_Gesamt_Min_total" = "⏲️ Minuten gesamt",
+      "EQ_Startelf_."       = "🟢 Startelf %",
+      "EQ_Bank_."           = "🟡 Bank %",
+      "EQ_Verletzt_."       = "❌ Verletzt %",
+      "EQ_Einwechslungen_." = "↪︎ Eingewechselt %",
+      "EQ_Ausgewechselt_."  = "↩︎ Ausgewechselt %",
+      "EQ_NichtimKader_."   = "🚫 Nicht im Kader %"
+    )
+    
+    df <- df %>%
+      select(where(~ !all(is.na(.)))) %>%
+      pivot_longer(everything(), names_to = "Metrik", values_to = "Wert") %>%
+      mutate(Metrik = ifelse(Metrik %in% names(map), map[Metrik], Metrik))
+    
+    datatable(
+      df,                             
+      escape = FALSE, rownames = FALSE,
+      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
+    )
+    
+  })
+  
+  # ---- LI-Leistungsdaten: Bilanz (Gesamt | BL | Pokal) ----
+  output$spieler_li_perf_bilanz <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
       return(datatable(data.frame(Hinweis = "Keine LI-Daten gefunden"), options = list(dom = 't', paging = FALSE)))
     }
     
-    cols_perf <- c(
-      "Ø_Note","Punkte_gesamt",
-      grep("^Bilanz_", names(row), value = TRUE),
-      grep("^EQ_", names(row), value = TRUE)
-    )
-    cols_perf <- intersect(cols_perf, names(row))
-    if (length(cols_perf) == 0) {
-      return(datatable(data.frame(Hinweis = "Keine Leistungs-Spalten in li_df"), options = list(dom = 't', paging = FALSE)))
-    }
+    # alle Bilanz_* Spalten sammeln
+    bcols <- grep("^Bilanz_", names(row), value = TRUE)
     
-    df <- row[, cols_perf, drop = FALSE]
+    df_long <- row %>%
+      select(matches("^Bilanz_")) %>%
+      mutate(across(everything(), ~ na_if(as.character(.), ""))) %>%
+      mutate(across(everything(), ~ suppressWarnings(as.numeric(.)))) %>%
+      pivot_longer(
+        everything(),
+        names_to   = c("Wettbewerb","Metrik"),
+        names_pattern = "^Bilanz_(Gesamt|BL|Pokal)_(.*)$",
+        values_to  = "value",
+        values_drop_na = FALSE
+      ) %>%
+      select(Wettbewerb, Metrik, value)
     
-    # Mapping auf kurze/emojifizierte Labels
-    map <- c(
-      "Ø_Note" = "Ø",
-      "Punkte_gesamt" = "Pts",
-      
-      "Bilanz_Gesamt_Einsätze" = "E G",
-      "Bilanz_BL_Einsätze" = "E BL",
-      "Bilanz_Pokal_Einsätze" = "E Pok",
-      
-      "Bilanz_Gesamt_Tore" = "⚽ G",
-      "Bilanz_BL_Tore" = "⚽ BL",
-      "Bilanz_Pokal_Tore" = "⚽ Pok",
-      
-      "Bilanz_Gesamt_Vorlagen" = "🎯 G",
-      "Bilanz_BL_Vorlagen" = "🎯 BL",
-      "Bilanz_Pokal_Vorlagen" = "🎯 Pok",
-      
-      "Bilanz_Gesamt_Startelf" = "XI G",
-      "Bilanz_BL_Startelf" = "XI BL",
-      "Bilanz_Pokal_Startelf" = "XI Pok",
-      
-      "Bilanz_Gesamt_Einwechslungen" = "↪︎ G",
-      "Bilanz_BL_Einwechslungen" = "↪︎ BL",
-      "Bilanz_Pokal_Einwechslungen" = "↪︎ Pok",
-      
-      "Bilanz_Gesamt_Auswechslungen" = "↩︎ G",
-      "Bilanz_BL_Auswechslungen" = "↩︎ BL",
-      "Bilanz_Pokal_Auswechslungen" = "↩︎ Pok",
-      
-      "Bilanz_Gesamt_Bank" = "Bnk G",
-      "Bilanz_BL_Bank" = "Bnk BL",
-      "Bilanz_Pokal_Bank" = "Bnk Pok",
-      
-      "Bilanz_Gesamt_Nicht_im_Kader" = "NIK G",
-      "Bilanz_BL_Nicht_im_Kader" = "NIK BL",
-      "Bilanz_Pokal_Nicht_im_Kader" = "NIK Pok",
-      
-      "Bilanz_Gesamt_Gelbe" = "🟨 G",
-      "Bilanz_BL_Gelbe" = "🟨 BL",
-      "Bilanz_Pokal_Gelbe" = "🟨 Pok",
-      
-      "Bilanz_Gesamt_Karten_GelbRot" = "🟨🟥 G",
-      "Bilanz_BL_Karten_GelbRot" = "🟨🟥 BL",
-      "Bilanz_Pokal_Karten_GelbRot" = "🟨🟥 Pok",
-      
-      "Bilanz_Gesamt_Karten_Rot" = "🟥 G",
-      "Bilanz_BL_Karten_Rot" = "🟥 BL",
-      "Bilanz_Pokal_Karten_Rot" = "🟥 Pok",
-      
-      "EQ_Gesamt_Quote" = "EQ%",
-      "EQ_Gesamt_Min_von" = "Min v",
-      "EQ_Gesamt_Min_total" = "Min Σ",
-      "EQ_Startelf_." = "XI%",
-      "EQ_Bank_." = "Bnk%",
-      "EQ_Verletzt_." = "Verl%",
-      "EQ_Einwechslungen_." = "↪︎%",
-      "EQ_Ausgewechselt_." = "↩︎%",
-      "EQ_NichtimKader_." = "NIK%"
+    # Reihenfolge + Labels
+    ord <- c("Einsätze","Startelf","Einwechslungen","Auswechslungen","Bank","Nicht_im_Kader",
+             "Tore","Vorlagen","Gelbe","Karten_GelbRot","Karten_Rot")
+    
+    emoji <- c(
+      "Einsätze"="👟", "Startelf"="🟢", "Einwechslungen"="↪︎", "Auswechslungen"="↩︎",
+      "Bank"="🟡", "Nicht_im_Kader"="🚫",
+      "Tore"="⚽", "Vorlagen"="🎯", "Gelbe"="🟨", "Karten_GelbRot"="🟨🟥", "Karten_Rot"="🟥"
     )
     
-    new_names <- names(df)
-    new_names <- ifelse(new_names %in% names(map), unname(map[new_names]), new_names)
-    names(df) <- new_names
+    text <- c(
+      "Einsätze"="Einsätze", "Startelf"="Startelf", "Einwechslungen"="Einwechslungen", "Auswechslungen"="Auswechslungen",
+      "Bank"="Bank", "Nicht_im_Kader"="Nicht im Kader",
+      "Tore"="Tore", "Vorlagen"="Vorlagen", "Gelbe"="Gelbe Karten",
+      "Karten_GelbRot"="Gelb-Rot", "Karten_Rot"="Rote Karten"
+    )
+    
+    df_wide <- df_long %>%
+      mutate(Metrik = factor(Metrik, levels = ord),
+             Wettbewerb = factor(Wettbewerb, levels = c("Gesamt","BL","Pokal"))) %>%
+      complete(Wettbewerb, Metrik) %>%                         # fehlende Kombis ergänzen
+      group_by(Wettbewerb, Metrik) %>%
+      summarise(value = suppressWarnings(as.numeric(first(value))), .groups = "drop") %>%
+      mutate(
+        Metrik_chr = as.character(Metrik),
+        Metrik_lbl = paste0(emoji[Metrik_chr], " ", text[Metrik_chr])
+      ) %>%
+      select(Metrik = Metrik_lbl, Wettbewerb, value) %>%
+      pivot_wider(names_from = Wettbewerb, values_from = value) %>%
+      arrange(match(gsub("^.+? ", "", Metrik), text[ord])) %>%
+      select(Metrik, any_of(c("Gesamt","BL","Pokal")))
+    
+    # leere Spalten entfernen
+    df_wide <- df_wide %>% select(where(~ !all(is.na(.))))
     
     datatable(
-      df,
+      df_wide,                              
       escape = FALSE, rownames = FALSE,
       options = list(dom = 't', scrollX = TRUE, paging = FALSE)
     )
+    
   })
+  
   
   ### ---- MW ----
   output$spieler_info_mw <- renderPlot({
@@ -2781,7 +2832,8 @@ server <- function(input, output, session) {
     
     df <- left %>% left_join(right, by = "SPIELER", suffix = c("", "_TM")) %>% 
       rename(Spieler = SPIELER, PPS = Punkte_pro_Spiel, `Preis/Leistung` = Preis_Leistung, Historie = Historische_Punkteausbeute) %>%
-      select(-any_of(c("POSITION","TEAM","PUNKTE","PUNKTE / SPIEL")))
+      select(-any_of(c("POSITION","TEAM","PUNKTE","PUNKTE / SPIEL"))) %>%
+      select(where(~ !all(is.na(.))))
     
     DT::datatable(
       df,
