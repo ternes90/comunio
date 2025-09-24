@@ -169,6 +169,21 @@ ui <- navbarPage(
   ## ---- Dashboard ----
   tabPanel("Dashboard",
            fluidPage(
+             
+             # --- UI: News-Container mit fixer Höhe (400px) + Scrollbar ---
+             div(
+               style = "margin-bottom:16px; width:100%;",
+               tags$div("News",
+                        style = "text-align:center; font-size:16px; font-weight:bold; color:black; margin-bottom:8px;"),
+               # zentrierte, schmalere Box + zentrierter Inhalt
+               div(
+                 style = "width:60%; height:200px; margin:0 auto; overflow-y:auto; border:1px solid #ddd; border-radius:6px; padding:8px; background:#fafafa; text-align:left;",
+                 # zentriert auch die flex-Zeilen innerhalb des uiOutput
+                 tags$style(HTML("#dashboard_news > div > div { justify-content:left !important; }")),
+                 uiOutput("dashboard_news")
+               )
+             ),
+             
              # Aktuelle Transfers - Zusammenfassung
              div(
                style = "display: flex; justify-content: right; margin-bottom:12px;",
@@ -291,13 +306,24 @@ ui <- navbarPage(
                  inline = TRUE
                ),
                selectInput("spieler_select2", "Spieler:", choices = NULL),
+               
                div(
-                 style = "display:flex; justify-content:space-around; align-items:flex-start; width:100%;",
+                 style = "display:flex; justify-content:space-around; align-items:center; width:100%;",
+                 
+                 div(
+                   style = "flex:1; text-align:left; margin-left:50px;",
+                   uiOutput("spieler_card_header")
+                 ),
                  
                  div(
                    style = "flex:1; text-align:left;",
-                   uiOutput("spieler_card_header")
-                 ),
+                   uiOutput("spieler_news")
+                 )
+               ),
+               
+               
+               div(
+                 style = "display:flex; justify-content:space-around; align-items:flex-start; width:100%;",
                  
                  div(
                    style = "flex:1; text-align:center;",
@@ -1125,6 +1151,88 @@ server <- function(input, output, session) {
   }
   
   # ---- DASHBOARD ----
+  
+  ## ---- News ----
+  
+  # --- SERVER: News-Feed aus li_df (heute bis 7 Tage zurück) ---
+  output$dashboard_news <- renderUI({
+    req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
+    req(!is.null(mein_kader_df()))
+    kad <- mein_kader_df()
+    req("Spieler" %in% names(kad))
+    
+    need <- c("Comunio_Name","News1_Date","News1_URL","News2_Date","News2_URL","News3_Date","News3_URL")
+    if (!all(need %in% names(li_df))) return(div("Keine News verfügbar"))
+    
+    # Nur Kader-Spieler
+    kad_namen <- unique(kad$Spieler)
+    li_sub <- li_df[li_df$Comunio_Name %in% kad_namen, , drop = FALSE]
+    if (nrow(li_sub) == 0) return(div("Keine News verfügbar"))
+    
+    # Zeilenweise interleaven: (News1, News2, News3) je Spieler
+    dates   <- as.vector(t(li_sub[, c("News1_Date","News2_Date","News3_Date")]))
+    urls    <- as.vector(t(li_sub[, c("News1_URL","News2_URL","News3_URL")]))
+    spieler <- rep(li_sub$Comunio_Name, each = 3)
+    
+    news <- data.frame(
+      Spieler = spieler,
+      date    = trimws(dates),
+      url     = trimws(urls),
+      stringsAsFactors = FALSE
+    )
+    news <- news[!is.na(news$url) & nzchar(news$url), , drop = FALSE]
+    if (nrow(news) == 0) return(div("Keine News verfügbar"))
+    
+    # Datum robust normalisieren + parsen
+    ds <- trimws(news$date)
+    ds <- gsub("[\u2013\u2014]", "-", ds)
+    ds <- gsub("\\s*-\\s*-\\s*", " - ", ds, perl = TRUE)
+    ds <- gsub("\\s*-\\s*", " - ", ds, perl = TRUE)
+    ds <- gsub("\\s+", " ", ds)
+    suppressWarnings({
+      dt1 <- as.POSIXct(ds, format = "%d.%m.%Y - %H:%M", tz = "Europe/Berlin")
+      dt2 <- as.POSIXct(ds, format = "%d.%m.%Y %H:%M",   tz = "Europe/Berlin")
+      dt3 <- as.POSIXct(ds, format = "%d.%m.%Y",         tz = "Europe/Berlin")
+    })
+    dt <- dt1; idx <- is.na(dt); dt[idx] <- dt2[idx]; idx <- is.na(dt); dt[idx] <- dt3[idx]
+    news$dt <- dt
+    news$d  <- as.Date(news$dt, tz = "Europe/Berlin")
+    
+    # Zeitraum 7 Tage
+    today <- as.Date(Sys.time(), tz = "Europe/Berlin")
+    news <- news[!is.na(news$d) & news$d >= (today - 7) & news$d <= today, , drop = FALSE]
+    if (nrow(news) == 0) return(div("Keine News der letzten 7 Tage"))
+    
+    # Sortieren, dedupe, limit
+    news <- news[order(news$dt, decreasing = TRUE, na.last = TRUE), ]
+    news <- news[!duplicated(news$url), , drop = FALSE]
+    if (nrow(news) > 40L) news <- news[seq_len(40L), , drop = FALSE]
+    
+    rel_label <- function(d) {
+      if (is.na(d)) return("")
+      diff <- as.integer(today - d)
+      if (diff == 0) return("Heute")
+      if (diff == 1) return("Gestern")
+      paste0("vor ", diff, " Tagen")
+    }
+    rel_style <- function(lbl) if (identical(lbl, "Heute")) "color:#0a7a20;font-weight:600;" else "color:#000;"
+    
+    items <- lapply(seq_len(nrow(news)), function(i) {
+      lbl <- rel_label(news$d[i])
+      tags$div(
+        style = "display:flex; align-items:center; gap:10px; margin:4px 0; width:100%;",
+        tags$span(news$Spieler[i], style = "min-width:180px; font-weight:600;"),
+        tags$span(lbl, style = paste0("min-width:90px; ", rel_style(lbl))),
+        tags$span(if (!is.na(news$dt[i])) format(news$dt[i], "%d.%m.%Y %H:%M") else news$date[i],
+                  style = "min-width:150px;"),
+        tags$a(href = news$url[i], target = "_blank", rel = "noopener noreferrer",
+               style = "text-decoration:none; overflow-wrap:anywhere;", news$url[i])
+      )
+    })
+    
+    tags$div(style = "display:flex; flex-direction:column; gap:2px; width:100%;", items)
+  })
+  
   
   ## ---- Transferaktivitäten ----
   output$transfer_summary_today <- DT::renderDT({
@@ -2669,8 +2777,72 @@ server <- function(input, output, session) {
     )
   })
   
-  ### ---- LI-Leistungsdaten Render ----
-  # ---- LI-Leistungsdaten: Summary (Note/Punkte/EQ) ----
+  ## ---- LI-News ----
+  output$spieler_news <- renderUI({
+    li_row <- match_li_row()
+    if (is.null(li_row) || !is.data.frame(li_row) || nrow(li_row) == 0) return(div("Keine LI-News"))
+    
+    need <- c("News1_Date","News1_URL","News2_Date","News2_URL","News3_Date","News3_URL")
+    if (!all(need %in% names(li_row))) return(div("Keine LI-News"))
+    
+    news <- data.frame(
+      date = trimws(c(li_row$News1_Date, li_row$News2_Date, li_row$News3_Date)),
+      url  = trimws(c(li_row$News1_URL,  li_row$News2_URL,  li_row$News3_URL)),
+      stringsAsFactors = FALSE
+    )
+    news <- news[!is.na(news$url) & nzchar(news$url), , drop = FALSE]
+    if (nrow(news) == 0) return(div("Keine LI-News"))
+    
+    # ---- Datum robust normalisieren + parsen ----
+    ds <- trimws(news$date)
+    ds <- gsub("[\u2013\u2014]", "-", ds)                    # en/em dash -> "-"
+    ds <- gsub("\\s*-\\s*-\\s*", " - ", ds, perl = TRUE)     # " - - " -> " - "
+    ds <- gsub("\\s*-\\s*", " - ", ds, perl = TRUE)          # alle "-"-Varianten vereinheitlichen
+    ds <- gsub("\\s+", " ", ds)                              # Mehrfachspaces reduzieren
+    
+    suppressWarnings({
+      dt1 <- as.POSIXct(ds, format = "%d.%m.%Y - %H:%M", tz = "Europe/Berlin")
+      dt2 <- as.POSIXct(ds, format = "%d.%m.%Y %H:%M",   tz = "Europe/Berlin")
+      dt3 <- as.POSIXct(ds, format = "%d.%m.%Y",         tz = "Europe/Berlin")
+    })
+    dt <- dt1; idx <- is.na(dt); dt[idx] <- dt2[idx]; idx <- is.na(dt); dt[idx] <- dt3[idx]
+    news$dt <- dt
+    news$d  <- as.Date(news$dt, tz = "Europe/Berlin")
+    
+    news <- news[order(news$dt, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
+    
+    today <- as.Date(Sys.time(), tz = "Europe/Berlin")
+    rel_label <- function(d) {
+      if (is.na(d)) return("")
+      diff <- as.integer(today - d)
+      if (diff == 0) return("Heute")
+      if (diff == 1) return("Gestern")
+      paste0("vor ", diff, " Tagen")
+    }
+    rel_style <- function(lbl) if (identical(lbl, "Heute")) "color:#0a7a20;font-weight:600;" else "color:#000;"
+    
+    items <- lapply(seq_len(nrow(news)), function(i) {
+      lbl <- rel_label(news$d[i])
+      tags$div(
+        style = "display:flex; align-items:flex-start; gap:10px; margin:8px 0;",
+        tags$img(src = "icons/news.png", width = "80", height = "60", alt = "News"),
+        tags$div(
+          tags$div(lbl, style = paste0("font-size:13px; margin-bottom:2px;", rel_style(lbl))),
+          tags$div(
+            style = "display:flex; align-items:center; gap:8px;",
+            tags$span(if (!is.na(news$dt[i])) format(news$dt[i], "%d.%m.%Y %H:%M") else news$date[i]),
+            tags$a(href = news$url[i], target = "_blank", rel = "noopener noreferrer",
+                   style = "text-decoration:none; overflow-wrap:anywhere;", news$url[i])
+          )
+        )
+      )
+    })
+    
+    tagList(tags$div(items))
+  })
+  
+  ## ---- LI-Leistungsdaten Render ----
+  ### ---- LI-Leistungsdaten: Summary (Note/Punkte/EQ) ----
   output$spieler_li_perf_summary <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -2719,7 +2891,7 @@ server <- function(input, output, session) {
     
   })
   
-  # ---- LI-Leistungsdaten: Bilanz (Gesamt | BL | Pokal) ----
+  ### ---- LI-Leistungsdaten: Bilanz (Gesamt | BL | Pokal) ----
   output$spieler_li_perf_bilanz <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -2786,7 +2958,7 @@ server <- function(input, output, session) {
   })
   
   
-  ### ---- MW ----
+  ## ---- MW ----
   output$spieler_info_mw <- renderPlot({
     req(input$spieler_select2, mw_all, ap_df)
     
@@ -2823,7 +2995,7 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16)
   })
   
-  ### ---- Leistungsdaten ----
+  ## ---- Leistungsdaten ----
   output$spieler_info_raw <- DT::renderDT({
     req(input$spieler_select2)
     
@@ -2842,7 +3014,7 @@ server <- function(input, output, session) {
     )
   })
   
-  ### ---- GPT ----
+  ## ---- GPT ----
   ### ---- Helpers ----
   get_verein <- function(sp) {
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
