@@ -9,7 +9,7 @@ library(later)
 
 # ---- UI ----
 ui <- navbarPage(
-  "Comunio Analyse",
+  "Comunio Analyse", 
   id = "main_navbar",
   
   #Pushaktualisierung
@@ -177,25 +177,38 @@ ui <- navbarPage(
                         style = "text-align:center; font-size:16px; font-weight:bold; color:black; margin-bottom:8px;"),
                # zentrierte, schmalere Box + zentrierter Inhalt
                div(
-                 style = "width:60%; height:200px; margin:0 auto; overflow-y:auto; border:1px solid #ddd; border-radius:6px; padding:8px; background:#fafafa; text-align:left;",
+                 style = "width:100%; height:100px; margin:0 auto; overflow-y:auto; border:1px solid #ddd; border-radius:6px; padding:8px; background:#fafafa; text-align:left;",
                  # zentriert auch die flex-Zeilen innerhalb des uiOutput
-                 tags$style(HTML("#dashboard_news > div > div { justify-content:left !important; }")),
+                 tags$style(HTML("#dashboard_news > div > div { justify-content:center !important; }")),
                  uiOutput("dashboard_news")
                )
              ),
              
              # Aktuelle Transfers - Zusammenfassung
              div(
-               style = "display: flex; justify-content: right; margin-bottom:12px;",
-               selectInput("flip_day", label = NULL,
-                           choices = c("Heute", "Gestern"),
-                           selected = "Heute", width = "120px")
-             ),
+               style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; width:100%;",
+               
+               # Platzhalter links
+               div(style = "width:120px;"),
+               
+               # Überschrift exakt mittig
+               div(
+                 style = "flex:1; text-align:center;",
+                 tags$div("Aktuelle Transfers", 
+                          style = "font-size:16px; font-weight:bold; color:black;")
+               ),
+               
+               # Auswahlfeld rechts
+               div(
+                 style = "width:120px;",
+                 selectInput("flip_day", label = NULL,
+                             choices = c("Heute", "Gestern"),
+                             selected = "Heute", width = "120px")
+               )
+             )
+             ,
+             
              div(
-               style = "margin-top: 20px; display: flex; flex-direction: column; align-items: center;",
-               tags$div("Aktuelle Transfers", 
-                        style = "text-align: center; font-size: 16px; font-weight: bold; color: black; margin-bottom: 10px;"),
-
                div(
                  style = "margin-bottom:20px; width: 100%;",
                  DTOutput("transfer_summary_today", width = "100%")
@@ -236,8 +249,6 @@ ui <- navbarPage(
              )
            )
   ),
-  
-  
   
   ## ---- Marktwert-Entwicklung ----
   tabPanel("Marktwert-Entwicklung",
@@ -3135,33 +3146,33 @@ server <- function(input, output, session) {
   # Reactive DataFrames vorbereiten
   meine_spieler <- reactive({
     teams_df %>%
-      filter(Manager == "Dominik") %>%
-      pull(Spieler)
+      dplyr::filter(Manager == "Dominik") %>%
+      dplyr::pull(Spieler)
   })
   
   # Aktuelle Marktwerte
   aktuelle_mw <- reactive({
     max_datum <- max(ap_df$Datum, na.rm = TRUE)
     ap_df %>%
-      filter(Datum == max_datum) %>%
-      transmute(Spieler, Marktwert = as.numeric(Marktwert))
+      dplyr::filter(Datum == max_datum) %>%
+      dplyr::transmute(Spieler, Marktwert = as.numeric(Marktwert))
   })
   
   # Rohdaten der Angebote
   angebote_raw <- angebote %>%
-    mutate(Status = ifelse(is.na(Status), "aktiv", Status))
+    dplyr::mutate(Status = ifelse(is.na(Status), "aktiv", Status))
   
   angebote_df <- reactive({
     angebote_raw %>%
-      filter(Status == "aktiv") %>%              # << NEU
-      rename(Angebot = `Angebot (€)`) %>%
-      mutate(
-        Spieler   = trimws(Spieler),
-        Angebot   = as.numeric(gsub("\\.", "", Angebot))
+      dplyr::filter(Status == "aktiv") %>%
+      dplyr::rename(Angebot = `Angebot (€)`) %>%
+      dplyr::mutate(
+        Spieler = trimws(Spieler),
+        Angebot = as.numeric(gsub("\\.", "", Angebot))
       ) %>%
-      filter(Spieler %in% meine_spieler()) %>%
-      left_join(aktuelle_mw(), by = "Spieler") %>%
-      mutate(
+      dplyr::filter(Spieler %in% meine_spieler()) %>%
+      dplyr::left_join(aktuelle_mw(), by = "Spieler") %>%
+      dplyr::mutate(
         Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
         Kreditverlust = Marktwert / 4
       )
@@ -3169,54 +3180,48 @@ server <- function(input, output, session) {
   
   team_spieler_df <- reactive({
     aktuelle_mw() %>%
-      semi_join(teams_df %>% filter(Manager == "Dominik"), by = "Spieler")
+      dplyr::semi_join(teams_df %>% dplyr::filter(Manager == "Dominik"), by = "Spieler")
   })
   
-  # UI‑Inputs befüllen
+  # UI-Inputs befüllen
   observe({
-    # 1) Spieler‑Liste immer füllen
+    # 1) Spieler-Liste
     updateSelectInput(
       session, "spieler_select",
       choices = sort(unique(tm_df$Spieler))
     )
     
-    # 2) Spieler‑Liste immer füllen
+    # 2) Zweite Spieler-Liste
     updateSelectInput(
       session, "spieler_select2",
       choices = sort(unique(tm_df$Spieler))
     )
     
-    # 3) Angebote‑Checkboxes (Guard für leeres DataFrame)
+    # 3) Angebote-Checkboxes (eindeutige IDs)
     if (nrow(angebote_df()) > 0) {
-      angebot_values <- angebote_df()$Angebot
       angebot_labels <- paste0(
         angebote_df()$Spieler,
-        " (", format(angebote_df()$Angebot, big.mark = ".", decimal.mark = ","), " €)"
+        " (", format(angebote_df()$Angebot, big.mark = ".", decimal.mark = ","), " €)"
       )
-      choices_a <- setNames(angebot_values, angebot_labels)
+      angebot_ids <- paste0("A", seq_len(nrow(angebote_df())))
+      choices_a <- setNames(angebot_ids, angebot_labels)
     } else {
       choices_a <- character(0)
     }
-    updateCheckboxGroupInput(
-      session, "angebote_select",
-      choices = choices_a
-    )
+    updateCheckboxGroupInput(session, "angebote_select", choices = choices_a)
     
-    # 4) Eigene Team‑Spieler‑Checkboxes (Guard für leeres DataFrame)
+    # 4) Eigene Team-Spieler-Checkboxes (eindeutige IDs)
     if (nrow(team_spieler_df()) > 0) {
-      team_values <- team_spieler_df()$Marktwert
       team_labels <- paste0(
         team_spieler_df()$Spieler,
-        " (", format(team_spieler_df()$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
+        " (", format(team_spieler_df()$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
       )
-      choices_t <- setNames(team_values, team_labels)
+      team_ids <- paste0("T", seq_len(nrow(team_spieler_df())))
+      choices_t <- setNames(team_ids, team_labels)
     } else {
       choices_t <- character(0)
     }
-    updateCheckboxGroupInput(
-      session, "team_select",
-      choices = choices_t
-    )
+    updateCheckboxGroupInput(session, "team_select", choices = choices_t)
   })
   
   # 5) Plot rendern
@@ -3224,8 +3229,8 @@ server <- function(input, output, session) {
     req(input$spieler_select)
     
     # — (1) Mindestgebot parsen —
-    sel        <- tm_df %>% filter(Spieler == input$spieler_select)
-    mindest    <- suppressWarnings(as.numeric(gsub("\\.", "", sel$Mindestgebot[1])))
+    sel     <- tm_df %>% dplyr::filter(Spieler == input$spieler_select)
+    mindest <- suppressWarnings(as.numeric(gsub("\\.", "", sel$Mindestgebot[1])))
     
     # — (2) Kontostand & (3) Kreditrahmen —
     kont        <- kontostand_dominik()
@@ -3233,134 +3238,165 @@ server <- function(input, output, session) {
     init_credit <- all_team / 4
     
     # — (4) Selektionen & (5) Erlöse/Verluste —
-    sel_off      <- if (is.null(input$angebote_select)) numeric(0) else as.numeric(input$angebote_select)
-    sel_team     <- if (is.null(input$team_select))   numeric(0) else as.numeric(input$team_select)
-    sum_off      <- sum(sel_off, na.rm = TRUE)
-    sum_team     <- sum(sel_team, na.rm = TRUE)
-    loss_off     <- sum(angebote_df()$Kreditverlust[angebote_df()$Angebot %in% sel_off], na.rm = TRUE)
-    loss_team    <- sum(sel_team, na.rm = TRUE) / 4
+    a_df <- angebote_df()
+    t_df <- team_spieler_df()
+    
+    angebot_ids        <- if (nrow(a_df) > 0) paste0("A", seq_len(nrow(a_df))) else character(0)
+    angebot_map        <- setNames(a_df$Angebot, angebot_ids)
+    angebot_kredit_map <- setNames(a_df$Kreditverlust, angebot_ids)
+    angebot_name_map   <- setNames(a_df$Spieler, angebot_ids)
+    
+    team_ids      <- if (nrow(t_df) > 0) paste0("T", seq_len(nrow(t_df))) else character(0)
+    team_mw_map   <- setNames(t_df$Marktwert, team_ids)
+    team_name_map <- setNames(t_df$Spieler, team_ids)
+    
+    sel_off_ids  <- if (is.null(input$angebote_select)) character(0) else input$angebote_select
+    sel_team_ids <- if (is.null(input$team_select))     character(0) else input$team_select
+    
+    sel_off  <- sum(unname(angebot_map[sel_off_ids]), na.rm = TRUE)
+    sel_team <- sum(unname(team_mw_map[sel_team_ids]), na.rm = TRUE)
+    
+    loss_off  <- sum(unname(angebot_kredit_map[sel_off_ids]), na.rm = TRUE)
+    loss_team <- sel_team / 4
     final_credit <- init_credit - loss_off - loss_team
     
-    # (6) Namen der verkauften Spieler für Annotation sammeln
-    names_off  <- if (length(sel_off)  > 0) paste(angebote_df() %>% filter(Angebot %in% sel_off)  %>% pull(Spieler), collapse=", ") else ""
-    names_team <- if (length(sel_team) > 0) paste(team_spieler_df() %>% filter(Marktwert %in% sel_team) %>% pull(Spieler), collapse=", ") else ""
-    sold_names <- paste(c(names_off, names_team), collapse = if (names_off != "" & names_team != "") "; " else "")
+    names_off  <- paste(unname(angebot_name_map[sel_off_ids]), collapse = ", ")
+    names_team <- paste(unname(team_name_map[sel_team_ids]), collapse = ", ")
+    sold_names <- paste(c(names_off, names_team)[c(nchar(names_off) > 0, nchar(names_team) > 0)],
+                        collapse = "; ")
     
-    # (7) Zuflüsse zuerst aufs Defizit —
-    deficit   <- max(0, -kont)
-    use_off   <- min(sum_off, deficit)
-    remain_d  <- deficit - use_off
-    use_team  <- min(sum_team, max(0, remain_d))
-    rem_off   <- sum_off  - use_off
-    rem_team  <- sum_team - use_team
-    adj_kont  <- kont + use_off + use_team        # nach Ausgleich
-    rest_def  <- max(0, -adj_kont)                # verbleibendes Defizit (>0)
+    # (6) Zuflüsse zuerst aufs Defizit —
+    deficit  <- max(0, -kont)
+    use_off  <- min(sel_off, deficit)
+    remain_d <- deficit - use_off
+    use_team <- min(sel_team, max(0, remain_d))
     
-    # (8) Segmente bauen —
-    kont_pos <- max(adj_kont, 0) + rem_off + rem_team      # alles oberhalb 0 als Kontostand +
-    kre_pos  <- max(final_credit, 0)                        # Kreditrahmen +
-    seg_levels <- c("Kontostand -","Kontostand +","Kreditrahmen")
+    rem_off  <- sel_off  - use_off   # Überschuss ins Guthaben
+    rem_team <- sel_team - use_team
     
-    df_avail_pos <- tibble(
+    adj_kont        <- kont + use_off + use_team      # nach Defizitdeckung
+    new_kontostand  <- adj_kont + rem_off + rem_team  # tatsächlicher neuer Kontostand
+    
+    # (7) Segmente —
+    kont_pos <- max(new_kontostand, 0)        # positiver Kontostand
+    kre_pos  <- max(final_credit, 0)          # Kreditrahmen (Kapital)
+    neg_pos  <- -max(0, -new_kontostand)      # Defizit (<0, sonst 0)
+    
+    seg_levels <- c("Kontostand -","Kreditrahmen","Kontostand +")
+    
+    df_avail_pos <- tibble::tibble(
       x       = "Verfügbar",
-      segment = factor(c("Kreditrahmen", "Kontostand +"), levels = seg_levels),
+      segment = factor(c("Kontostand +","Kreditrahmen"), levels = seg_levels),
       value   = c(kont_pos, kre_pos),
-      label   = c("", "")   # Zahlen/Spielernamen nicht hier; du annotierst separat
+      label   = c("", "")
     )
     
-    df_avail_neg <- tibble(
+    df_avail_neg <- tibble::tibble(
       x       = "Verfügbar",
       segment = factor("Kontostand -", levels = seg_levels),
-      value   = -rest_def,
-      label   = ""          # kein Text
+      value   = neg_pos,
+      label   = ""
     )
     
-    df_mindest <- tibble(type="Mindestgebot", value=mindest)
+    df_mindest <- tibble::tibble(type = "Mindestgebot", value = mindest)
     
     # Label-Positionen
     df_pos <- df_avail_pos %>%
-      group_by(x) %>% arrange(x, segment) %>%
-      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
+      dplyr::group_by(x) %>% dplyr::arrange(x, segment) %>%
+      dplyr::mutate(ypos = cumsum(value) - value/2) %>%
+      dplyr::ungroup()
     
     df_neg <- df_avail_neg %>%
-      group_by(x) %>% arrange(x, value) %>%
-      mutate(ypos = cumsum(value) - value/2) %>% ungroup()
+      dplyr::group_by(x) %>% dplyr::arrange(x, value) %>%
+      dplyr::mutate(ypos = cumsum(value) - value/2) %>%
+      dplyr::ungroup()
     
-    df_plot <- bind_rows(df_pos, df_neg)
-    df_plot <- df_plot %>%
-      mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
+    df_plot <- dplyr::bind_rows(df_pos, df_neg) %>%
+      dplyr::mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
     
-    # Kontostand-Label knapp neben y=0 platzieren
-    y_span  <- max(c(df_avail_pos$value[df_avail_pos$x=="Verfügbar"], df_mindest$value), na.rm = TRUE)
-    offset  <- 0.03 * max(1, y_span)
+    # Kontostand-Label knapp neben y=0
+    y_span <- max(c(df_avail_pos$value[df_avail_pos$x == "Verfügbar"], df_mindest$value), na.rm = TRUE)
+    offset <- 0.03 * max(1, y_span)
     
-    # Wert wählen: rem_off > rem_team > adj_kont
-    val <- if (rem_off > 0) rem_off else if (rem_team > 0) rem_team else adj_kont
-    
-    titel_neu <- (adj_kont < 0) || (rem_off > 0) || (rem_team > 0)
+    titel_neu <- (new_kontostand != kont)
     label_txt <- paste0(if (titel_neu) "Neuer Kontostand: " else "Aktueller Kontostand: ",
-                        format(round(val, 0), big.mark = ".", decimal.mark = ","))
+                        format(round(new_kontostand, 0), big.mark = ".", decimal.mark = ","))
     
-    show_lab <- list(
-      y   = 0 - offset, 
-      txt = label_txt
-    )
+    kont_df <- tibble::tibble(x = "Verfügbar", y = 0 - offset, lab = label_txt)
     
-    kont_df <- if (is.null(show_lab)) {
-      tibble(x=character(0), y=numeric(0), lab=character(0))
-    } else {
-      tibble(x="Verfügbar", y=show_lab$y, lab=show_lab$txt)
-    }
+    # Haken
+    total_avail <- max(new_kontostand, 0) + max(final_credit, 0)
+    ok1 <- total_avail >= mindest                  # Gesamt reicht
+    ok2 <- new_kontostand >= mindest               # Kontostand allein reicht
+    y_checks <- max(0, total_avail) * 1.05
     
-    # Haken/Kreuz
-    total_avail <- sum(df_avail_pos$value, na.rm = TRUE)
-    ok_label    <- ifelse(total_avail >= mindest, "\u2713", "\u2717")
-    ok_color    <- ifelse(total_avail >= mindest, "green", "red")
-    
-    # (9) Plot —
-    ggplot() +
-      geom_col(data = df_mindest,
-               aes(x = "Mindestgebot", y = value),
-               fill = "grey70", width = 0.6) +
-      geom_col(
+    # (8) Plot —
+    ggplot2::ggplot() +
+      ggplot2::geom_col(
+        data = df_mindest,
+        ggplot2::aes(x = "Mindestgebot", y = value),
+        fill = "grey70", width = 0.6
+      ) +
+      ggplot2::geom_col(
         data = df_plot,
-        aes(x = x, y = value, fill = segment),
+        ggplot2::aes(x = x, y = value, fill = segment),
         width = 0.6
       ) +
-      
-      geom_text(data = df_plot %>% filter(abs(value) > 1e-9, label != ""),
-                aes(x = x, y = ypos, label = label),
-                colour = "black", size = 4) +
-      geom_text(data = kont_df,
-                aes(x = x, y = y, label = lab),
-                fontface = "bold", size = 4.2) +
-      geom_text(data = df_mindest,
-                aes(x = "Mindestgebot", y = value/2,
-                    label = format(value, big.mark = ".", decimal.mark = ",")),
-                colour = "black", size = 4) +
-      geom_hline(yintercept = mindest, linetype = "dashed",
-                 color = "darkred", size = 0.5) +
-      geom_hline(yintercept = 0, linetype = "dashed",
-                 color = "black", size = 0.5) +
-      annotate("text", x = 2, y = max(0,total_avail)*1.05,
-               label = ok_label, size = 8, colour = ok_color) +
-      annotate("text", x = 2, y = max(0,total_avail)*1.15,
-               label = sold_names, size = 4, colour = "black") +
-      scale_fill_manual(
-        values = c(
-          "Kontostand -" = "#fb9a99",  # Paired[2], hellblau
-          "Kontostand +" = "#a6cee3",  # Paired[6], orange
-          "Kreditrahmen" = "#b2df8a"   # Paired[8], hellgrün
-        ),
-        breaks = c("Kontostand +","Kontostand -","Kreditrahmen"),
-        labels = c("Kreditrahmen","Defizit","Kapital")
+      ggplot2::geom_text(
+        data = df_plot %>% dplyr::filter(abs(value) > 1e-9, label != ""),
+        ggplot2::aes(x = x, y = ypos, label = label),
+        colour = "black", size = 4
       ) +
-      scale_x_discrete(limits = c("Mindestgebot","Verfügbar")) +
-      scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
-      labs(x = NULL, y = "Betrag (€)", fill = NULL) +
-      theme_minimal(base_size = 16)
-    
+      ggplot2::geom_text(
+        data = kont_df,
+        ggplot2::aes(x = x, y = y, label = lab),
+        fontface = "bold", size = 4.2
+      ) +
+      ggplot2::geom_text(
+        data = df_mindest,
+        ggplot2::aes(x = "Mindestgebot", y = value/2,
+                     label = format(value, big.mark = ".", decimal.mark = ",")),
+        colour = "black", size = 4
+      ) +
+      ggplot2::geom_hline(yintercept = mindest, linetype = "dashed",
+                          color = "darkred", size = 0.5) +
+      ggplot2::geom_hline(yintercept = 0, linetype = "dashed",
+                          color = "black", size = 0.5) +
+      # Zwei Häkchen nebeneinander (beide bei x="Verfügbar", horizontal genudged)
+      ggplot2::geom_text(
+        data = data.frame(x = "Verfügbar", y = y_checks,
+                          lab = if (ok1) "\u2713" else "\u2717",
+                          col = if (ok1) "green" else "red"),
+        ggplot2::aes(x = x, y = y, label = lab),
+        colour = if (ok1) "green" else "red", size = 8,
+        position = ggplot2::position_nudge(x = -0.15)
+      ) +
+      ggplot2::geom_text(
+        data = data.frame(x = "Verfügbar", y = y_checks,
+                          lab = if (ok2) "\u2713" else "\u2717",
+                          col = if (ok2) "green" else "red"),
+        ggplot2::aes(x = x, y = y, label = lab),
+        colour = if (ok2) "green" else "red", size = 8,
+        position = ggplot2::position_nudge(x =  0.15)
+      ) +
+      ggplot2::annotate("text", x = 2, y = max(0, total_avail) * 1.15,
+                        label = sold_names, size = 4, colour = "black") +
+      ggplot2::scale_fill_manual(
+        values = c(
+          "Kontostand -" = "#fb9a99",
+          "Kontostand +" = "#b2df8a",
+          "Kreditrahmen" = "#a6cee3"
+        ),
+        breaks = c("Kontostand -","Kontostand +","Kreditrahmen"),
+        labels = c("Defizit","Kapital","Kreditrahmen")
+      ) +
+      ggplot2::scale_x_discrete(limits = c("Mindestgebot","Verfügbar")) +
+      ggplot2::scale_y_continuous(labels = scales::label_comma(big.mark=".", decimal.mark=",")) +
+      ggplot2::labs(x = NULL, y = "Betrag (€)", fill = NULL) +
+      ggplot2::theme_minimal(base_size = 16)
   })
+  
+
   
   ## ---- Angebote-Analyse ----
   
