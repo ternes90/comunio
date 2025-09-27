@@ -4016,12 +4016,14 @@ server <- function(input, output, session) {
         .groups = "drop"
       )
     
-    p <- ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter,
-                                       text = paste0(
-                                         "Bieter: ", Bieter, "\n",
-                                         "MW-Klasse: ", MW_Klasse, "\n",
-                                         "Abweichung: ", round(Diff_Prozent,1), " %"
-                                       ))) +
+    p <- ggplot(plotdata_beeswarm, aes(
+      x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter,
+      text = paste0(
+        "Spieler: ", Spieler, "\n",
+        "Bieter: ", Bieter, "\n",
+        "MW-Klasse: ", MW_Klasse, "\n",
+        "Abweichung: ", round(Diff_Prozent, 1), " %"
+      ))) +
       geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
       geom_beeswarm(data = subset(plotdata_beeswarm, n_pts > 1), cex = 2, size = 2.5, alpha = 0.8, priority = "random") +
       geom_point(data = subset(plotdata_beeswarm, n_pts == 1), size = 2.5, alpha = 0.8, shape = 21) +
