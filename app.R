@@ -6,7 +6,7 @@ library(readxl)
 library(DT)
 library(scales)
 library(later)
-install.packages("plotly", repos="https://cran.rstudio.com")
+#install.packages("plotly", repos="https://cran.rstudio.com")
 library(plotly)
 
 # ---- UI ----
