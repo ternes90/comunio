@@ -6,6 +6,8 @@ library(readxl)
 library(DT)
 library(scales)
 library(later)
+install.packages("plotly", repos="https://cran.rstudio.com")
+library(plotly)
 
 # ---- UI ----
 ui <- navbarPage(
@@ -170,16 +172,42 @@ ui <- navbarPage(
   tabPanel("Dashboard",
            fluidPage(
              
-             # --- UI: News-Container mit fixer Höhe (400px) + Scrollbar ---
              div(
                style = "margin-bottom:16px; width:100%;",
                tags$div("News",
                         style = "text-align:center; font-size:16px; font-weight:bold; color:black; margin-bottom:8px;"),
-               # zentrierte, schmalere Box + zentrierter Inhalt
                div(
-                 style = "width:100%; height:100px; margin:0 auto; overflow-y:auto; border:1px solid #ddd; border-radius:6px; padding:8px; background:#fafafa; text-align:left;",
-                 # zentriert auch die flex-Zeilen innerhalb des uiOutput
-                 tags$style(HTML("#dashboard_news > div > div { justify-content:center !important; }")),
+                 style = paste(
+                   "width:92%; max-width:720px; height:160px; margin:0 auto;",
+                   "overflow-y:auto; border:1px solid #ddd; border-radius:6px; padding:8px;",
+                   "background:#fafafa; text-align:left;"
+                 ),
+                 # überschreibt das alte Centering und setzt Row-Layout
+                 tags$style(HTML("
+                    #dashboard_news { 
+                      display:flex; 
+                      flex-direction:column; 
+                      gap:2px; 
+                      align-items:stretch; 
+                      padding-left:20px;   /* Abstand vom linken Rand */
+                    }
+                    #dashboard_news .news-row { 
+                      display:flex; 
+                      align-items:flex-start; 
+                      gap:10px; 
+                      margin:4px 0; 
+                      width:100%; 
+                    }
+                    #dashboard_news .col-spieler { min-width:180px; font-weight:600; }
+                    #dashboard_news .col-rel    { min-width:90px; }
+                    #dashboard_news .col-dt     { min-width:150px; }
+                    #dashboard_news a.news-link { text-decoration:none; }
+                    /* Mobiler Feinschliff */
+                    @media (max-width: 600px) {
+                      #dashboard_news .col-spieler { min-width:140px; }
+                      #dashboard_news .col-dt      { min-width:130px; }
+                    }
+                  ")),
                  uiOutput("dashboard_news")
                )
              ),
@@ -473,7 +501,7 @@ ui <- navbarPage(
                ),
                
                div(style = "width: 90%; margin: 0 auto;",
-                   plotOutput("mwclassplot", height = 700)
+                   plotlyOutput("mwclassplot", height = 700)
                )
                
              ),
@@ -1165,7 +1193,6 @@ server <- function(input, output, session) {
   
   ## ---- News ----
   
-  # --- SERVER: News-Feed aus li_df (heute bis 7 Tage zurück) ---
   output$dashboard_news <- renderUI({
     req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
     req(!is.null(mein_kader_df()))
@@ -1175,26 +1202,18 @@ server <- function(input, output, session) {
     need <- c("Comunio_Name","News1_Date","News1_URL","News2_Date","News2_URL","News3_Date","News3_URL")
     if (!all(need %in% names(li_df))) return(div("Keine News verfügbar"))
     
-    # Nur Kader-Spieler
     kad_namen <- unique(kad$Spieler)
     li_sub <- li_df[li_df$Comunio_Name %in% kad_namen, , drop = FALSE]
     if (nrow(li_sub) == 0) return(div("Keine News verfügbar"))
     
-    # Zeilenweise interleaven: (News1, News2, News3) je Spieler
     dates   <- as.vector(t(li_sub[, c("News1_Date","News2_Date","News3_Date")]))
     urls    <- as.vector(t(li_sub[, c("News1_URL","News2_URL","News3_URL")]))
     spieler <- rep(li_sub$Comunio_Name, each = 3)
     
-    news <- data.frame(
-      Spieler = spieler,
-      date    = trimws(dates),
-      url     = trimws(urls),
-      stringsAsFactors = FALSE
-    )
+    news <- data.frame(Spieler = spieler, date = trimws(dates), url = trimws(urls), stringsAsFactors = FALSE)
     news <- news[!is.na(news$url) & nzchar(news$url), , drop = FALSE]
     if (nrow(news) == 0) return(div("Keine News verfügbar"))
     
-    # Datum robust normalisieren + parsen
     ds <- trimws(news$date)
     ds <- gsub("[\u2013\u2014]", "-", ds)
     ds <- gsub("\\s*-\\s*-\\s*", " - ", ds, perl = TRUE)
@@ -1209,12 +1228,10 @@ server <- function(input, output, session) {
     news$dt <- dt
     news$d  <- as.Date(news$dt, tz = "Europe/Berlin")
     
-    # Zeitraum 7 Tage
     today <- as.Date(Sys.time(), tz = "Europe/Berlin")
     news <- news[!is.na(news$d) & news$d >= (today - 7) & news$d <= today, , drop = FALSE]
     if (nrow(news) == 0) return(div("Keine News der letzten 7 Tage"))
     
-    # Sortieren, dedupe, limit
     news <- news[order(news$dt, decreasing = TRUE, na.last = TRUE), ]
     news <- news[!duplicated(news$url), , drop = FALSE]
     if (nrow(news) > 40L) news <- news[seq_len(40L), , drop = FALSE]
@@ -1231,19 +1248,19 @@ server <- function(input, output, session) {
     items <- lapply(seq_len(nrow(news)), function(i) {
       lbl <- rel_label(news$d[i])
       tags$div(
-        style = "display:flex; align-items:center; gap:10px; margin:4px 0; width:100%;",
-        tags$span(news$Spieler[i], style = "min-width:180px; font-weight:600;"),
-        tags$span(lbl, style = paste0("min-width:90px; ", rel_style(lbl))),
+        class = "news-row",
+        tags$span(news$Spieler[i], class = "col-spieler"),
+        tags$span(lbl, class = "col-rel", style = rel_style(lbl)),
         tags$span(if (!is.na(news$dt[i])) format(news$dt[i], "%d.%m.%Y %H:%M") else news$date[i],
-                  style = "min-width:150px;"),
+                  class = "col-dt"),
+        # kurzer Emoji-Link, voller URL im Hover
         tags$a(href = news$url[i], target = "_blank", rel = "noopener noreferrer",
-               style = "text-decoration:none; overflow-wrap:anywhere;", news$url[i])
+               class = "news-link", title = news$url[i], "🔗 Zur News")
       )
     })
     
-    tags$div(style = "display:flex; flex-direction:column; gap:2px; width:100%;", items)
+    tags$div(items)
   })
-  
   
   ## ---- Transferaktivitäten ----
   output$transfer_summary_today <- DT::renderDT({
@@ -3951,7 +3968,7 @@ server <- function(input, output, session) {
   })
 
   ## ---- MW-Klassen Boxplot+Beeswarm ----
-  output$mwclassplot <- renderPlot({
+  output$mwclassplot <- renderPlotly({
     data <- gebotsprofil_mwclass_filtered()
     req(nrow(data) > 0)
     
@@ -3960,23 +3977,19 @@ server <- function(input, output, session) {
       mutate(MW_Klasse = factor(MW_Klasse, levels = c("<0.5 Mio","0.5–1 Mio","1–2.5 Mio","2.5–5 Mio","5–10 Mio",">10 Mio"))) %>%
       filter(Diff_Prozent <= 50)
     
-    # Für robustes beeswarm: Gruppengröße pro Facet
     plotdata_beeswarm <- plotdata %>%
       group_by(Bieter, MW_Klasse) %>%
       mutate(n_pts = n()) %>%
       ungroup()
     
-    # Mittelwerte
     means <- plotdata %>%
       group_by(Bieter, MW_Klasse) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
-    # Mittelwert je MW-Klasse über alle Bieter
     means_klasse <- plotdata %>%
       group_by(MW_Klasse) %>%
       summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
-    # Anzahl Gebote über dem Mittelwert je MW-Klasse
     plotdata_ueber <- plotdata %>%
       left_join(means_klasse, by = "MW_Klasse") %>%
       group_by(MW_Klasse) %>%
@@ -3986,94 +3999,46 @@ server <- function(input, output, session) {
         .groups = "drop"
       )
     
-    ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
+    p <- ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter,
+                                       text = paste0(
+                                         "Bieter: ", Bieter, "\n",
+                                         "MW-Klasse: ", MW_Klasse, "\n",
+                                         "Abweichung: ", round(Diff_Prozent,1), " %"
+                                       ))) +
       geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
-      
-      # Beeswarm nur für Gruppen mit mehr als 1 Punkt
-      geom_beeswarm(
-        data = subset(plotdata_beeswarm, n_pts > 1),
-        cex = 2, size = 2.5, alpha = 0.8, priority = "random"
-      ) +
-      
-      # Einzelne Punkte (1 Wert pro Gruppe)
-      geom_point(
-        data = subset(plotdata_beeswarm, n_pts == 1),
-        size = 2.5, alpha = 0.8, shape = 21
-      ) +
-      
-      # Mittelwert-Linie
-      geom_segment(
-        data = means,
-        aes(x = as.numeric(factor(Bieter)) - 0.4, 
-            xend = as.numeric(factor(Bieter)) + 0.4, 
-            y = Mean, 
-            yend = Mean),
-        color = "grey30",
-        linetype = "dashed",
-        linewidth = 0.8,
-        inherit.aes = FALSE,
-        na.rm = TRUE
-      ) +
-      
-      # Mittelwert-Wert als Text
-      geom_text(
-        data = means,
-        aes(x = as.numeric(factor(Bieter)), y = Mean, 
-            label = round(Mean, 1)),
-        color = "black",
-        fontface = "bold",
-        size = 3.5,
-        vjust = -0.7,
-        inherit.aes = FALSE
-      ) +
-      
-      # -- Mittelwert-Linie je MW-Klasse --
-      geom_hline(
-        data = means_klasse,
-        aes(yintercept = Mean),
-        color = "#d62728",
-        linewidth = 1.2,
-        linetype = "solid",
-        na.rm = TRUE
-      ) +
-      # Mittelwert-Wert je MW-Klasse als Text
-      geom_text(
-        data = means_klasse,
-        aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
-        hjust = 1.1,
-        vjust = -0.7,
-        color = "#d62728",
-        fontface = "bold",
-        size = 3.5,
-        inherit.aes = FALSE
-      ) +
-      # Hinzufügen von n über MW 
-      geom_text(
-        data = plotdata_ueber,
-        aes(x = -Inf, y = Inf, label = paste0(pct_ueber, "% (n=", n_total, ")")),
-        hjust = -0.1, vjust = 1.2,
-        color = "#333",
-        fontface = "bold",
-        size = 4,
-        inherit.aes = FALSE
-      ) +
-      
+      geom_beeswarm(data = subset(plotdata_beeswarm, n_pts > 1), cex = 2, size = 2.5, alpha = 0.8, priority = "random") +
+      geom_point(data = subset(plotdata_beeswarm, n_pts == 1), size = 2.5, alpha = 0.8, shape = 21) +
+      geom_segment(data = means,
+                   aes(x = as.numeric(factor(Bieter)) - 0.4,
+                       xend = as.numeric(factor(Bieter)) + 0.4,
+                       y = Mean, yend = Mean),
+                   color = "grey30", linetype = "dashed", linewidth = 0.8,
+                   inherit.aes = FALSE, na.rm = TRUE) +
+      geom_text(data = means,
+                aes(x = as.numeric(factor(Bieter)), y = Mean, label = round(Mean, 1)),
+                color = "black", fontface = "bold", size = 3.5, vjust = -0.7, inherit.aes = FALSE) +
+      geom_hline(data = means_klasse, aes(yintercept = Mean),
+                 color = "#d62728", linewidth = 1.2, linetype = "solid", na.rm = TRUE) +
+      geom_text(data = means_klasse,
+                aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
+                hjust = 1.1, vjust = -0.7, color = "#d62728", fontface = "bold", size = 3.5, inherit.aes = FALSE) +
+      geom_text(data = plotdata_ueber,
+                aes(x = -Inf, y = Inf, label = paste0(pct_ueber, "% (n=", n_total, ")")),
+                hjust = -0.1, vjust = 1.2, color = "#333", fontface = "bold", size = 4, inherit.aes = FALSE) +
       facet_grid(. ~ MW_Klasse, scales = "free_y") +
-      
-      labs(
-        title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
-        x = "Bieter",
-        y = "Abweichung vom MW Vortag (%)"
-      ) +
+      labs(title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
+           x = "Bieter", y = "Abweichung vom MW Vortag (%)") +
       scale_color_brewer(palette = "Paired") +
       scale_fill_brewer(palette = "Paired") +
       theme_minimal(base_size = 13) +
-      theme(
-        legend.position = "none",
-        strip.text = element_text(face = "bold", size = 16),
-        axis.text.x = element_text(angle = 30, hjust = 1)
-      )
+      theme(legend.position = "none",
+            strip.text = element_text(face = "bold", size = 16),
+            axis.text.x = element_text(angle = 30, hjust = 1))
+    
+    ggplotly(p, tooltip = "text") %>%
+      layout(hovermode = "closest")
   })
+  
   
   ## ---- Gebotsverhalten über die Zeit ----
   
