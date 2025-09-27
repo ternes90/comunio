@@ -1,13 +1,30 @@
-library(shiny)
-library(tidyverse)
-library(lubridate)
-library(ggbeeswarm)
-library(readxl)
-library(DT)
-library(scales)
-library(later)
-#install.packages("plotly", repos="https://cran.rstudio.com")
-library(plotly)
+# ---- Helper: Server-Erkennung (Posit Connect / Shiny Server) ----
+on_server <- function() {
+  nzchar(Sys.getenv("RSC_VERSION")) || nzchar(Sys.getenv("SHINY_SERVER_VERSION"))
+}
+
+# ---- Pakete laden; plotly nur auf Server installieren ----
+suppressPackageStartupMessages({
+  library(shiny)
+  library(tidyverse)
+  library(lubridate)
+  library(ggbeeswarm)
+  library(readxl)
+  library(DT)
+  library(scales)
+  library(later)
+})
+
+if (on_server()) {
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    install.packages("plotly", repos = "https://cran.rstudio.com")
+  }
+  library(plotly)
+} else {
+  # lokal nur laden, nicht installieren
+  if (requireNamespace("plotly", quietly = TRUE)) library(plotly)
+}
+
 
 # ---- UI ----
 ui <- navbarPage(
