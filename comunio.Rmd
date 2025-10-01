@@ -1,0 +1,508 @@
+---
+title: "Comunio Analyse (Rmd-Version)"
+output: html_document
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(ggbeeswarm)
+library(readxl)
+library(DT)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+
+# Parameter
+```{r Parameter}
+
+# Simulation der Inputs aus Shiny, z.B. Checkboxen & Selects
+show_overlay <- FALSE
+show_sommerpause <- TRUE
+show_sommerpause_21 <- TRUE
+show_table <- TRUE
+flip_player_select <- NULL  # z.B. "Dominik"
+
+```
+
+# Daten einlesen und vorbereiten
+
+```{r Daten einlesen und vorbereiten}
+
+# Sommerpause Daten
+sommerpause_df <- readr::read_csv("MW_Sommerpause_2024.csv") %>%
+  mutate(
+    Datum = as.Date(x),
+    Datum = as.Date(format(Datum, "2025-%m-%d")),  
+  ) %>%
+  filter(Datum >= as.Date("2025-06-03")) %>%
+  arrange(Datum) %>%
+  mutate(
+    MW_startwert = y[Datum == as.Date("2025-06-03")][1],
+    MW_rel_normiert = y / MW_startwert
+  )
+
+sommerpause_21_df <- readr::read_csv("MW_Sommerpause_2021.csv") %>%
+  mutate(
+    Datum = as.Date(x),
+    Datum = as.Date(format(Datum, "2025-%m-%d")),
+  ) %>%
+  filter(Datum >= as.Date("2025-06-03")) %>%
+  arrange(Datum) %>%
+  mutate(
+    MW_startwert = y[Datum == as.Date("2025-06-03")][1],
+    MW_rel_normiert = y / MW_startwert
+  )
+
+# Nickname-Mapping
+nickname_mapping <- c(
+  "Alfon" = "Alfons",
+  "Nico_2510" = "Nico",
+  "HenzgenT" = "Thomas",
+  "Hosche" = "Christoph",
+  "Crunch" = "Christian",
+  "Dr. Bier" = "Dominik",
+  "Calli" = "Pascal",
+  "Computer" = "Computer"
+)
+
+# Transfers und Transfermarkt laden
+# transfers <- readxl::read_excel("TRANSFERS_all.xlsx") %>%
+#   mutate(Datum = as.Date(Datum)) %>%
+#   mutate(Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot))
+
+transfers <- read.csv("TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
+  mutate(
+    Datum = as.Date(Datum, format = "%d.%m.%Y"),
+    Hoechstgebot = as.numeric(Hoechstgebot),
+    Zweitgebot = as.numeric(Zweitgebot),
+    Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)
+  )
+
+# transfermarkt <- readxl::read_excel("TM_all.xlsx") %>%
+  mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
+
+transfermarkt <- readr::read_csv2("TRANSFERMARKT.csv") %>%
+  mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
+
+
+# Besitzhistorie bauen
+wechsel <- transfers %>%
+  arrange(Spieler, Datum) %>%
+  select(Spieler, Datum, Hoechstbietender) %>%
+  rename(Besitzer = Hoechstbietender)
+
+besitz <- list()
+for (spieler in unique(wechsel$Spieler)) {
+  sub <- wechsel %>% filter(Spieler == spieler) %>% arrange(Datum)
+  for (i in 1:nrow(sub)) {
+    startdatum <- sub$Datum[i]
+    enddatum <- if (i < nrow(sub)) sub$Datum[i + 1] - 1 else as.Date("2100-01-01")
+    besitz[[length(besitz) + 1]] <- data.frame(
+      Spieler = spieler,
+      Besitzer = sub$Besitzer[i],
+      Startdatum = startdatum,
+      Enddatum = enddatum
+    )
+  }
+}
+
+besitz_df <- bind_rows(besitz)
+
+tm <- transfermarkt %>%
+  mutate(
+    TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"),
+    Besitzer_eff = nickname_mapping[Besitzer]
+  )
+
+tm_besitz <- tm %>%
+  left_join(besitz_df, by = "Spieler") %>%
+  filter(TM_Stand >= Startdatum, TM_Stand <= Enddatum)
+
+mw_evolution <- tm_besitz %>%
+  group_by(Spieler, Besitzer_eff) %>%
+  arrange(TM_Stand) %>%
+  mutate(MW_rel = Marktwert / first(Marktwert)) %>%
+  ungroup() %>%
+  select(TM_Stand, Spieler, Besitzer = Besitzer_eff, Marktwert, MW_rel)
+
+
+```
+
+# Funktion
+
+```{r Funktion}
+
+get_MW_vortag <- function(spieler, datum, transfermarkt) {
+  tm <- transfermarkt %>%
+    filter(Spieler == spieler, TM_Stand <= (datum - days(1))) %>%
+    arrange(desc(TM_Stand)) %>%
+    slice(1)
+  if (nrow(tm) == 1) tm$Marktwert else NA
+}
+
+```
+
+# Gebotsprofil berechnen
+
+```{r Gebotsprofil berechnen}
+
+gebotsprofil <- lapply(1:nrow(transfers), function(i) {
+  zeile <- transfers[i, ]
+  mw_vortag <- get_MW_vortag(zeile$Spieler, zeile$Datum, transfermarkt)
+  res <- data.frame(
+    Datum = zeile$Datum,
+    Spieler = zeile$Spieler,
+    Bieter = zeile$Hoechstbietender,
+    Gebot = zeile$Hoechstgebot,
+    MW_vortag = mw_vortag,
+    Diff_Abs = zeile$Hoechstgebot - mw_vortag,
+    Diff_Prozent = round(100 * (zeile$Hoechstgebot - mw_vortag) / mw_vortag, 1),
+    Typ = "Hoechstgebot"
+  )
+  if (!is.na(zeile$Zweitgebot) & !is.na(zeile$Zweitbietender)) {
+    res2 <- data.frame(
+      Datum = zeile$Datum,
+      Spieler = zeile$Spieler,
+      Bieter = zeile$Zweitbietender,
+      Gebot = zeile$Zweitgebot,
+      MW_vortag = mw_vortag,
+      Diff_Abs = zeile$Zweitgebot - mw_vortag,
+      Diff_Prozent = round(100 * (zeile$Zweitgebot - mw_vortag) / mw_vortag, 1),
+      Typ = "Zweitgebot"
+    )
+    res <- rbind(res, res2)
+  }
+  res
+}) %>% bind_rows()
+
+# Filter echte Spieler, MW_vortag gültig
+gebotsprofil_clean <- gebotsprofil %>%
+  filter(Bieter != "Computer" & !is.na(MW_vortag))
+
+# MW-Klassen vergeben
+gebotsprofil_mwclass <- gebotsprofil_clean %>%
+  mutate(
+    MW_Klasse = case_when(
+      MW_vortag < 0.5e6 ~ "<0.5 Mio",
+      MW_vortag < 1e6 ~ "0.5–1 Mio",
+      MW_vortag < 2.5e6 ~ "1–2.5 Mio",
+      MW_vortag < 5e6 ~ "2.5–5 Mio",
+      MW_vortag < 10e6 ~ "5–10 Mio",
+      MW_vortag >= 10e6 ~ ">10 Mio",
+      TRUE ~ "unbekannt"
+    )
+  )
+
+```
+
+# Plots
+## Gebotsabweichungen MW-Klassen
+
+```{r Gebotsabweichungen MW-Klassen}
+
+library(ggbeeswarm)
+
+plotdata <- gebotsprofil_mwclass %>%
+  filter(!is.na(Diff_Prozent)) %>%
+  mutate(
+    MW_Klasse = factor(MW_Klasse, levels = c(
+      "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio", "2.5–5 Mio", "5–10 Mio", ">10 Mio"
+    ))
+  )
+
+plotdata_beeswarm <- plotdata %>%
+  group_by(Bieter, MW_Klasse) %>%
+  mutate(n_pts = n()) %>%
+  ungroup()
+
+means <- plotdata %>%
+  group_by(Bieter, MW_Klasse) %>%
+  summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+
+means_klasse <- plotdata %>%
+  group_by(MW_Klasse) %>%
+  summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+
+ggplot(plotdata_beeswarm, aes(x = Bieter, y = Diff_Prozent, color = Bieter, fill = Bieter)) +
+  geom_boxplot(width = 0.6, outlier.shape = NA, alpha = 0.25, position = position_dodge(width = 0.7)) +
+  geom_beeswarm(
+    data = subset(plotdata_beeswarm, n_pts > 1),
+    cex = 2, size = 2.5, alpha = 0.8, priority = "random"
+  ) +
+  geom_point(
+    data = subset(plotdata_beeswarm, n_pts == 1),
+    size = 2.5, alpha = 0.8, shape = 21
+  ) +
+  geom_segment(
+    data = means,
+    aes(x = as.numeric(factor(Bieter)) - 0.4, 
+        xend = as.numeric(factor(Bieter)) + 0.4, 
+        y = Mean, 
+        yend = Mean),
+    color = "grey30",
+    linetype = "dashed",
+    linewidth = 0.8,
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = means,
+    aes(x = as.numeric(factor(Bieter)), y = Mean, 
+        label = round(Mean, 1)),
+    color = "black",
+    fontface = "bold",
+    size = 3.5,
+    vjust = -0.7,
+    inherit.aes = FALSE
+  ) +
+  geom_hline(
+    data = means_klasse,
+    aes(yintercept = Mean),
+    color = "#d62728",
+    linewidth = 1.2,
+    linetype = "solid",
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = means_klasse,
+    aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
+    hjust = 1.1,
+    vjust = -0.7,
+    color = "#d62728",
+    fontface = "bold",
+    size = 3.5,
+    inherit.aes = FALSE
+  ) +
+  facet_grid(. ~ MW_Klasse, scales = "free_y") +
+  labs(
+    title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
+    x = "Bieter",
+    y = "Abweichung vom MW Vortag (%)"
+  ) +
+  scale_color_brewer(palette = "Paired") +
+  scale_fill_brewer(palette = "Paired") +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 30, hjust = 1)
+  )
+
+
+```
+
+## Gebotsabweichungen je Konkurrent
+
+```{r Gebotsabweichungen je Konkurrent}
+
+plotdata <- gebotsprofil_clean %>%
+  filter(!is.na(Diff_Prozent))
+
+mean_total <- plotdata %>%
+  group_by(Bieter) %>%
+  summarise(Mean_total = mean(Diff_Prozent), .groups = "drop")
+
+medians <- plotdata %>%
+  group_by(Bieter, Typ) %>%
+  summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+
+ggplot(plotdata, aes(x = Typ, y = Diff_Prozent, color = Typ)) +
+  geom_boxplot(aes(fill = Typ), width = 0.5, outlier.shape = NA, alpha = 0.25) +
+  geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8) +
+  geom_hline(
+    data = mean_total,
+    aes(yintercept = Mean_total),
+    linetype = "dashed", color = "grey80", linewidth = 0.9,
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = mean_total,
+    aes(x = 0.5, y = Mean_total, label = round(Mean_total, 1)),
+    color = "#9b2226",
+    fontface = "bold",
+    size = 4,
+    vjust = -0.7,
+    inherit.aes = FALSE
+  ) +
+  geom_text(
+    data = medians,
+    aes(x = Typ, y = Mean, label = round(Mean, 1)),
+    color = "black",
+    nudge_x = 0.5,
+    fontface = "bold",
+    size = 3.5,
+    inherit.aes = FALSE
+  ) +
+  facet_wrap(~ Bieter, ncol = 3, scales = "free_y") +
+  labs(
+    title = "Gebotsabweichungen je Konkurrent",
+    x = "",
+    y = "Abweichung vom MW Vortag (%)"
+  ) +
+  scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+  scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold")
+  )
+
+```
+
+## MW-Klassen Zusammenfassung
+
+```{r MW-Klassen Zusammenfassung}
+
+if (show_table) {
+  mwclass_summary <- gebotsprofil_mwclass %>%
+    mutate(
+      MW_Klasse = factor(
+        MW_Klasse,
+        levels = c(
+          "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio",
+          "2.5–5 Mio", "5–10 Mio", ">10 Mio"
+        ),
+        ordered = TRUE
+      )
+    ) %>%
+    group_by(Bieter, MW_Klasse) %>%
+    summarise(
+      Anzahl_gesamt = n(),
+      Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+      Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+      Durchschnitt_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), 1),
+      Min = min(Diff_Prozent, na.rm = TRUE),
+      Max = max(Diff_Prozent, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    arrange(Bieter, MW_Klasse)
+  
+  DT::datatable(mwclass_summary)
+} else {
+  dat <- gebotsprofil_clean %>%
+    group_by(Bieter) %>%
+    summarise(
+      Anzahl_gesamt = n(),
+      Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
+      Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+      O_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), digits = 1),
+      Min = min(Diff_Prozent, na.rm = TRUE),
+      Max = max(Diff_Prozent, na.rm = TRUE),
+      Eintraege = paste0(Spieler, ": ", Diff_Prozent, "% (", Typ, " am ", format(Datum, "%d.%m.%Y"), ")", collapse = "; ")
+    )
+  DT::datatable(dat)
+}
+
+```
+
+## Marktwertentwicklung
+
+```{r Marktwertentwicklung, fig.height=8, fig.width=12}
+
+# Basis-Datensatz mit Typ für Legendenzwecke
+plotdata_base <- plotdata %>%
+  mutate(Typ = "Durchschnitt")
+
+p <- ggplot() +
+  # Ribbon als Fill mit Typ
+  geom_ribbon(
+    data = plotdata_base,
+    aes(x = Datum, ymin = MW_mean - MW_sd, ymax = MW_mean + MW_sd, fill = "± 1 SD"),
+    alpha = 0.4
+  ) +
+  # Linie Durchschnitt mit Farbe
+  geom_line(
+    data = plotdata_base,
+    aes(x = TM_Stand, y = MW_mean, color = "Durchschnitt"),
+    linewidth = 1.1
+  ) +
+  # Punkte Durchschnitt mit Farbe
+  geom_point(
+    data = plotdata_base,
+    aes(x = TM_Stand, y = MW_mean, color = "Durchschnitt"),
+    size = 1.5, alpha = 0.7
+  ) +
+  geom_vline(
+    xintercept = as.Date("2025-08-22"),
+    linetype = "dotted",
+    color = "darkred",
+    size = 1.5
+  ) +
+  labs(
+    title = "Durchschnittliche (normierte) Marktwertentwicklung aller TM-Spieler",
+    subtitle = "Relativ zum ersten dokumentierten MW je Spieler · Schattierung = ±1 SD",
+    x = "Datum",
+    y = "MW relativ zum Startwert",
+    color = "Linientyp",
+    fill = ""
+  ) +
+  theme_minimal(base_size = 14)
+
+# Overlay: Spielerlinien (optional)
+if (show_overlay) {
+  p <- p +
+    geom_line(
+      data = mw_evolution %>% filter(Besitzer != "Computer"),
+      aes(x = TM_Stand, y = MW_rel, group = interaction(Spieler, Besitzer), color = Besitzer),
+      alpha = 0.8, linewidth = 0.8
+    ) +
+    scale_color_brewer(palette = "Paired")
+} else {
+  # Falls kein Overlay, definiere manuell Farben für Durchschnitt
+  p <- p +
+    scale_color_manual(values = c("Durchschnitt" = "#005c99"))
+}
+
+# Sommerpause 2024 (rot) mit Fill-Mapping für Legende
+if (show_sommerpause) {
+  p <- p +
+    geom_line(
+      data = sommerpause_df,
+      aes(x = Datum, y = MW_rel_normiert, color = "Sommerpause 2024"),
+      linewidth = 1.3,
+      linetype = "dashed"
+    )
+}
+
+# Sommerpause 2021 (orange)
+if (show_sommerpause_21) {
+  p <- p +
+    geom_line(
+      data = sommerpause_21_df,
+      aes(x = Datum, y = MW_rel_normiert, color = "Sommerpause 2021"),
+      linewidth = 1.3,
+      linetype = "dashed"
+    )
+}
+
+# Wenn Overlay aktiv: scale_color_brewer() schon gesetzt und automatisch Legendeneinträge
+# Wenn kein Overlay: manuelle Farben und Legende:
+
+if (!show_overlay) {
+  p <- p +
+    scale_color_manual(values = c(
+      "Durchschnitt" = "#005c99",
+      "Sommerpause 2024" = "red",
+      "Sommerpause 2021" = "orange"
+    ))
+} else {
+  # Overlay + Sommerpausen Farben ergänzen
+  p <- p +
+    scale_color_manual(
+      values = c(
+        brewer.pal(8, "Paired"),
+        "Sommerpause 2024" = "red",
+        "Sommerpause 2021" = "orange"
+      ),
+      breaks = c(levels(factor(mw_evolution$Besitzer)), "Sommerpause 2024", "Sommerpause 2021")
+    )
+}
+
+print(p)
+
+```
+
+
+

@@ -1,0 +1,56 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.Rproj
+AnyDeskPortable/
+venv/
+archiv/
+marktwertverlauf/
+scrape_all_hist_MW/
+# RStudio-Dateien
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+# Windows/Batch-Dateien
+*.bat
+# Virtuelle Umgebung
+venv/
+# Python-typisch
+*.py
+__pycache__/
+*.py[cod]
+*.pyo
+*.log
+*.tmp
+*.sqlite3
+*.db
+# VS Code & Jupyter
+.vscode/
+.ipynb_checkpoints/
+# Sonstiges
+.DS_Store
+*.bak
+results_gpt-4o-mini.csv
+deep_research_players_with_clubs.R
+!gpt_player.py
+token.json
+credentials.json
+data/TRANSFER_NEWS.csv
+data/TRANSFER_NEWS_state.csvtoken.json
+token.json
+credentials.json
+token.json
+credentials.json
+NUL
+desktop.ini
+token.json
+token.json
+credentials.json
+NUL
+desktop.ini
+token.json
+credentials.json
+NUL
+desktop.ini
