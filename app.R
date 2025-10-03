@@ -7,9 +7,12 @@ library(DT)
 library(scales)
 library(later)
 library(plotly)
-if (!requireNamespace("plotly", quietly = TRUE)) {
-  install.packages("plotly", repos = "https://cran.rstudio.com")
+if (Sys.getenv("RSTUDIO_PRODUCT") == "connect") {
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    install.packages("plotly", repos = "https://cran.rstudio.com")
+  }
 }
+
 
 
 
