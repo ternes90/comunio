@@ -1173,8 +1173,8 @@ server <- function(input, output, session) {
       arrange(Bieter, MW_Klasse)
   })
   
-  # ---- FUNKTIONEN ----
-  ## ---- Funktion MW vom Vortag suchen ----
+  ## ---- FUNKTIONEN ----
+  ### ---- Funktion MW vom Vortag suchen ----
   get_MW_vortag <- function(spieler, datum, transfermarkt) {
     tm <- transfermarkt %>%
       filter(Spieler == spieler, TM_Stand <= (datum - days(1))) %>%
@@ -1183,7 +1183,7 @@ server <- function(input, output, session) {
     if (nrow(tm) == 1) tm$Marktwert else NA
   }
   
-  ## ---- MW-Klasse bestimmen ----
+  ### ---- MW-Klasse bestimmen ----
   get_mw_klasse <- function(mw) {
     if (mw < 5e5) {
       "<0.5 Mio"
@@ -1200,7 +1200,7 @@ server <- function(input, output, session) {
     }
   }
   
-  ## ---- Hilfsfunktion, um pro Zeile einen Shiny-Button zu erzeugen ----
+  ### ---- Hilfsfunktion, um pro Zeile einen Shiny-Button zu erzeugen ----
   shinyButton <- function(id, label = "→") {
     sprintf(
       '<button class="btn btn-xs btn-primary" onclick="Shiny.setInputValue(\'transfer_row\', %s, {priority: \'event\'})">%s</button>',
@@ -1208,7 +1208,7 @@ server <- function(input, output, session) {
     )
   }
   
-  ## ---- Render UIs ----
+  ### ---- Render UIs ----
   output$manager_select_ui <- renderUI({
     # Besitzer ohne "Computer"
     mgrs <- setdiff(unique(transfers$Besitzer), "Computer")
@@ -1220,13 +1220,94 @@ server <- function(input, output, session) {
     )
   })
   
-  # ---- Helper function für LI-Mapping ----
+  ### ---- Helper function für LI-Mapping ----
   norm_key <- function(x) {
     x <- enc2utf8(as.character(x))
     x <- tolower(trimws(x))
     x <- chartr("ß", "ss", x)
     x
   }
+  
+  ### ---- Helper function für GPT ----
+  ## Helpers 
+  get_verein <- function(sp) {
+    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
+    sel  <- norm(sp)
+    
+    if (exists("ap_df", inherits=TRUE) && is.data.frame(ap_df) && nrow(ap_df) > 0) {
+      tmp <- ap_df %>%
+        mutate(.k = norm(Spieler), Datum = as.Date(Datum)) %>%
+        filter(.k == sel)
+      if (nrow(tmp) > 0) {
+        today <- Sys.Date()
+        row <- tmp %>% filter(Datum == today) %>% slice_tail(n=1)
+        if (nrow(row) == 0) row <- tmp %>% arrange(desc(Datum)) %>% slice_head(n=1)
+        ve <- as.character(row$Verein[1])
+        if (nzchar(ve)) return(ve)
+      }
+    }
+    
+    src <- if (exists("ca2_df", inherits=TRUE)) ca2_df
+    else if (exists("ca_df2", inherits=TRUE)) ca_df2
+    else if (exists("ca_df",  inherits=TRUE)) ca_df
+    else NULL
+    if (is.null(src) || !is.data.frame(src) || nrow(src) == 0) return("")
+    tmp2 <- src %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel)
+    if (nrow(tmp2) == 0) return("")
+    col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else return("")
+    v <- as.character(tmp2[[col]][1]); ifelse(is.na(v), "", v)
+  }
+  
+  build_prompt <- function(sp, ve) {
+    today <- format(Sys.Date(), "%Y-%m-%d")
+    paste0(
+      "Gib GENAU dieses Format zurück:\n",
+      "Spieler\nVerein\n\n",
+      ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
+      ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
+      "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
+      "Info: Kurz, faktenbasiert zu Rolle/Status; Einsatz 1–2 Wochen; Trainerstimme; Verletzung; Falls Verletzung, Rückkehrzeitpunkt; Wechsel. ",
+      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Aussage mit [1], [2] … belegen. ",
+      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, bevorzugt Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien. ",
+      "Meide Social Media.\n\n",
+      "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
+      "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
+      "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
+      "Suchfenster: primär letzte 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
+      "Stand: ", today, ". Antworte NUR in diesem Format."
+    )
+  }
+  
+  make_links <- function(x){
+    # 1) Markdown-Links -> HTML
+    x <- gsub("\\[([^\\]]+)\\]\\((https?://[^)\\s]+)\\)",
+              "<a href='\\2' target='_blank'>\\1</a>", x, perl=TRUE)
+    
+    # 2) Nackte URLs -> HTML (breiter Zeichensatz, ohne bereits verlinkte)
+    pat <- "(?<!href=['\"])\\bhttps?://[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+"
+    m <- gregexpr(pat, x, perl=TRUE)
+    regmatches(x, m) <- lapply(regmatches(x, m), function(urls){
+      vapply(urls, function(u){
+        # evtl. angehängte Satzzeichen am Ende abschneiden
+        u2 <- sub("[)\\]\\},.?!:;]+$", "", u)
+        sprintf("<a href='%s' target='_blank'>%s</a>", u2, u2)
+      }, character(1))
+    })
+    x
+  }
+  
+  ### ---- Helper function für Alle Teams Rechner ----
+  
+  safe_id <- function(x) gsub("[^A-Za-z0-9]+", "_", x)
+  cb_id   <- function(manager, spieler) paste0("sel__", safe_id(manager), "__", safe_id(spieler))
+  
+  mw_aktuell_rx <- reactive({
+    gesamt_mw_roh %>%
+      group_by(Spieler) %>%
+      filter(Datum == max(Datum, na.rm = TRUE)) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
+  })
+  
   
   # ---- DASHBOARD ----
   
@@ -2284,7 +2365,7 @@ server <- function(input, output, session) {
   
   # ---- TRANSFERMARKT ----
   
-  ## ---- INFO: Durchschnittliche Gebote pro Wochentag ----
+  ## ---- Gebote pro Wochentag ----
   
   # 1) avg_bids_wd als Reactive (einmalig im Server)
   avg_bids_wd <- reactive({
@@ -2775,7 +2856,7 @@ server <- function(input, output, session) {
       ),
       options = list(
         dom        = "t",
-        ordering   = FALSE,
+        ordering   = TRUE,
         pageLength = 20,
         columnDefs = list(
           list(className = 'dt-left',  targets = 0:1),
@@ -2844,7 +2925,7 @@ server <- function(input, output, session) {
     )
   })
   
-  ## ---- LI-News ----
+  ### ---- LI-News ----
   output$spieler_news <- renderUI({
     li_row <- match_li_row()
     if (is.null(li_row) || !is.data.frame(li_row) || nrow(li_row) == 0) return(div("Keine LI-News"))
@@ -2860,7 +2941,7 @@ server <- function(input, output, session) {
     news <- news[!is.na(news$url) & nzchar(news$url), , drop = FALSE]
     if (nrow(news) == 0) return(div("Keine LI-News"))
     
-    # ---- Datum robust normalisieren + parsen ----
+    ### ---- Datum robust normalisieren + parsen ----
     ds <- trimws(news$date)
     ds <- gsub("[\u2013\u2014]", "-", ds)                    # en/em dash -> "-"
     ds <- gsub("\\s*-\\s*-\\s*", " - ", ds, perl = TRUE)     # " - - " -> " - "
@@ -2908,8 +2989,8 @@ server <- function(input, output, session) {
     tagList(tags$div(items))
   })
   
-  ## ---- LI-Leistungsdaten Render ----
-  ### ---- LI-Leistungsdaten: Summary (Note/Punkte/EQ) ----
+
+  # -LI-Leistungsdaten: Summary (Note/Punkte/EQ)
   output$spieler_li_perf_summary <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -2958,7 +3039,7 @@ server <- function(input, output, session) {
     
   })
   
-  ### ---- LI-Leistungsdaten: Bilanz (Gesamt | BL | Pokal) ----
+  # LI-Leistungsdaten: Bilanz (Gesamt | BL | Pokal) 
   output$spieler_li_perf_bilanz <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -3025,8 +3106,7 @@ server <- function(input, output, session) {
   })
   
   
-  ## ---- MW ----
-  ## ---- MW ----
+  # MW
   output$spieler_info_mw <- renderPlotly({
     req(input$spieler_select2, mw_all, ap_df)
     
@@ -3064,7 +3144,7 @@ server <- function(input, output, session) {
     ggplotly(p, tooltip = c("Datum", "Marktwert"))
   })
   
-  ## ---- Leistungsdaten ----
+  # Leistungsdaten 
   output$spieler_info_raw <- DT::renderDT({
     req(input$spieler_select2)
     
@@ -3083,75 +3163,7 @@ server <- function(input, output, session) {
     )
   })
   
-  ## ---- GPT ----
-  ### ---- Helpers ----
-  get_verein <- function(sp) {
-    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
-    sel  <- norm(sp)
-    
-    if (exists("ap_df", inherits=TRUE) && is.data.frame(ap_df) && nrow(ap_df) > 0) {
-      tmp <- ap_df %>%
-        mutate(.k = norm(Spieler), Datum = as.Date(Datum)) %>%
-        filter(.k == sel)
-      if (nrow(tmp) > 0) {
-        today <- Sys.Date()
-        row <- tmp %>% filter(Datum == today) %>% slice_tail(n=1)
-        if (nrow(row) == 0) row <- tmp %>% arrange(desc(Datum)) %>% slice_head(n=1)
-        ve <- as.character(row$Verein[1])
-        if (nzchar(ve)) return(ve)
-      }
-    }
-    
-    src <- if (exists("ca2_df", inherits=TRUE)) ca2_df
-    else if (exists("ca_df2", inherits=TRUE)) ca_df2
-    else if (exists("ca_df",  inherits=TRUE)) ca_df
-    else NULL
-    if (is.null(src) || !is.data.frame(src) || nrow(src) == 0) return("")
-    tmp2 <- src %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel)
-    if (nrow(tmp2) == 0) return("")
-    col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else return("")
-    v <- as.character(tmp2[[col]][1]); ifelse(is.na(v), "", v)
-  }
-  
-  build_prompt <- function(sp, ve) {
-    today <- format(Sys.Date(), "%Y-%m-%d")
-    paste0(
-      "Gib GENAU dieses Format zurück:\n",
-      "Spieler\nVerein\n\n",
-      ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
-      ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
-      "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
-      "Info: Kurz, faktenbasiert zu Rolle/Status; Einsatz 1–2 Wochen; Trainerstimme; Verletzung; Falls Verletzung, Rückkehrzeitpunkt; Wechsel. ",
-      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Aussage mit [1], [2] … belegen. ",
-      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, bevorzugt Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien. ",
-      "Meide Social Media.\n\n",
-      "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
-      "Suchfenster: primär letzte 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
-      "Stand: ", today, ". Antworte NUR in diesem Format."
-    )
-  }
-  
-  make_links <- function(x){
-    # 1) Markdown-Links -> HTML
-    x <- gsub("\\[([^\\]]+)\\]\\((https?://[^)\\s]+)\\)",
-              "<a href='\\2' target='_blank'>\\1</a>", x, perl=TRUE)
-    
-    # 2) Nackte URLs -> HTML (breiter Zeichensatz, ohne bereits verlinkte)
-    pat <- "(?<!href=['\"])\\bhttps?://[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+"
-    m <- gregexpr(pat, x, perl=TRUE)
-    regmatches(x, m) <- lapply(regmatches(x, m), function(urls){
-      vapply(urls, function(u){
-        # evtl. angehängte Satzzeichen am Ende abschneiden
-        u2 <- sub("[)\\]\\},.?!:;]+$", "", u)
-        sprintf("<a href='%s' target='_blank'>%s</a>", u2, u2)
-      }, character(1))
-    })
-    x
-  }
-  
-  ### ---- Prompt zentral bauen ----
+  # Prompt zentral bauen
   gpt_prompt <- reactive({
     req(input$spieler_select2)
     sp <- input$spieler_select2
@@ -3161,7 +3173,7 @@ server <- function(input, output, session) {
   
   output$gpt_prompt_preview <- renderText(gpt_prompt())
   
-  ### ---- GPT-Call und Prompt-Copy ----
+  # GPT-Call und Prompt-Copy
   observeEvent(input$gpt_run, {
     req(input$spieler_select2)
     load_id <- showNotification("🔍 Spieler-Research läuft …", type="message", duration=NULL, closeButton=FALSE)
@@ -3790,15 +3802,28 @@ server <- function(input, output, session) {
   
   
   ## ---- Alle Kader ----
-  output$kader_uebersicht_ui <- renderUI({
+  
+  output$sum_selected_mw <- renderUI({
+    df_vals <- teams_df %>%
+      left_join(mw_aktuell_rx(), by = "Spieler") %>%
+      transmute(id = cb_id(Manager, Spieler),
+                mw = as.numeric(Marktwert_aktuell))
     
+    sel <- vapply(df_vals$id, function(id) isTRUE(input[[id]]), logical(1))
+    total <- sum(df_vals$mw[sel], na.rm = TRUE)
+    
+    HTML(sprintf(
+      "<div style='font-weight:bold; font-size:16px; margin:10px 0;'>
+       Ausgewählte MW-Summe: %s €
+     </div>",
+      format(total, big.mark = ".", decimal.mark = ",")
+    ))
+  })
+  
+  output$kader_uebersicht_ui <- renderUI({
     manager_list <- sort(unique(teams_df$Manager))
     
-    # === MW/Transferdaten vorbereiten ===
-    mw_aktuell <- gesamt_mw_roh %>%
-      group_by(Spieler) %>%
-      filter(Datum == max(Datum, na.rm = TRUE)) %>%
-      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
+    mw_aktuell <- mw_aktuell_rx()
     
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
@@ -3806,7 +3831,6 @@ server <- function(input, output, session) {
       slice(1) %>%
       select(Spieler, Hoechstbietender, Kaufpreis = Hoechstgebot)
     
-    # Vortag-MW-Diff (wie bei Mein Kader)
     mw_diff <- gesamt_mw_roh %>%
       group_by(Spieler) %>%
       arrange(desc(Datum)) %>%
@@ -3825,16 +3849,14 @@ server <- function(input, output, session) {
       ) %>%
       select(Spieler, Marktwert_fmt, Diff_fmt)
     
-    # Funktion zur Erstellung der Kader-Tabelle pro Manager
     create_kader_table <- function(manager_name) {
       df <- teams_df %>% filter(Manager == manager_name)
-      df$Position <- factor(df$Position, levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"), ordered = TRUE)
+      df$Position <- factor(df$Position, levels = c("Tor","Abwehr","Mittelfeld","Sturm"), ordered = TRUE)
       df <- df %>% arrange(Position, Spieler)
       
-      # Join MW, Diff und Kaufpreis-Diff
       df_pre <- df %>%
         left_join(mw_aktuell, by = "Spieler") %>%
-        left_join(mw_diff, by = "Spieler") %>%
+        left_join(mw_diff,    by = "Spieler") %>%
         left_join(kaufpreise %>% filter(Hoechstbietender == manager_name), by = "Spieler") %>%
         mutate(
           Diff_Kauf = ifelse(is.na(Kaufpreis), NA, Marktwert_aktuell - Kaufpreis),
@@ -3848,66 +3870,72 @@ server <- function(input, output, session) {
           )
         )
       
-      rows <- c()
-      current_pos <- NULL
-      for(i in seq_len(nrow(df_pre))) {
-        pos <- as.character(df_pre$Position[i])
+      rows <- c(); current_pos <- NULL
+      for (i in seq_len(nrow(df_pre))) {
+        pos     <- as.character(df_pre$Position[i])
         spieler <- df_pre$Spieler[i]
-        mw <- df_pre$Marktwert_fmt[i]
-        diff <- df_pre$Diff_fmt[i]
-        diffk <- df_pre$Diff_Kauf_fmt[i]
-        if(is.null(current_pos) || pos != current_pos) {
-          rows <- c(rows, sprintf("<tr><th colspan='4' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos))
+        mw      <- df_pre$Marktwert_fmt[i]
+        diff    <- df_pre$Diff_fmt[i]
+        diffk   <- df_pre$Diff_Kauf_fmt[i]
+        cid     <- cb_id(manager_name, spieler)
+        
+        if (is.null(current_pos) || pos != current_pos) {
+          rows <- c(rows, sprintf(
+            "<tr style='background:#eee; line-height:2;'>
+             <th colspan='5' style='text-align:left; padding:0 2px;'>%s</th>
+           </tr>", pos))
           current_pos <- pos
         }
-        rows <- c(
-          rows,
-          sprintf(
-            "<tr>
-            <td style='padding-left:15px;'>%s</td>
-            <td style='text-align:right;'>%s</td>
-            <td style='text-align:right;'>%s</td>
-            <td style='text-align:right;'>%s</td>
-          </tr>",
-            spieler, mw, diff, diffk
-          )
+        
+        cb_html <- as.character(
+          checkboxInput(inputId = cid, label = NULL, value = FALSE, width = "auto") %>%
+            tagAppendAttributes(style = "margin:0; padding:0; height:14px; vertical-align:middle; position:relative; top:-10px;")
         )
+        
+        
+        rows <- c(rows, sprintf(
+          "<tr style='line-height:2;'>
+           <td style='text-align:center; width:28px; padding:0; line-height:2;'>%s</td>
+           <td style='padding:0 0 0 6px; line-height:1;'>%s</td>
+           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+         </tr>",
+          cb_html, spieler, mw, diff, diffk
+        ))
       }
       
       table_html <- paste0(
-        "<table style='border-collapse: collapse; width: 100%; margin-bottom: 20px;'>",
+        "<table style='border-collapse:collapse; width:100%; margin-bottom:12px; font-size:13px; line-height:2;'>",
         "<thead>
-        <tr>
-          <th style='text-align:left;'>Spieler</th>
-          <th style='text-align:right;'>MW</th>
-          <th style='text-align:right;'>Vortag-MW-Diff</th>
-          <th style='text-align:right;'>Kauf-Diff</th>
-        </tr>
-      </thead><tbody>",
+         <tr style='line-height:2;'>
+           <th style='text-align:center; padding:0;'>Auswahl</th>
+           <th style='text-align:left; padding:0;'>Spieler</th>
+           <th style='text-align:right; padding:0;'>MW</th>
+           <th style='text-align:right; padding:0;'>Vortag-MW-Diff</th>
+           <th style='text-align:right; padding:0;'>Kauf-Diff</th>
+         </tr>
+       </thead><tbody>",
         paste(rows, collapse = "\n"),
         "</tbody></table>"
       )
       
       tagList(
-        tags$h4(manager_name, style = "margin-top: 0; margin-bottom: 5px;"),
+        tags$h4(manager_name, style = "margin-top:0; margin-bottom:4px;"),
         HTML(table_html)
       )
     }
     
-    # Tabellen für alle Manager erstellen
     tables_ui <- lapply(manager_list, create_kader_table)
-    # Gruppen von jeweils 4 Tabellen in flex-containern (Reihen)
-    rows_ui <- split(tables_ui, ceiling(seq_along(tables_ui) / 4))
-    # Jede Gruppe als flex-row mit 4 Spalten nebeneinander
+    rows_ui   <- split(tables_ui, ceiling(seq_along(tables_ui) / 4))
+    
     tagList(
+      uiOutput("sum_selected_mw"),
       lapply(rows_ui, function(row_tables) {
         tags$div(
-          style = "display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 30px;",
+          style = "display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:18px;",
           lapply(row_tables, function(tab) {
-            tags$div(
-              style = "flex: 1 1 22%; box-sizing: border-box;",
-              tab
-            )
+            tags$div(style = "flex:1 1 22%; box-sizing:border-box;", tab)
           })
         )
       })
