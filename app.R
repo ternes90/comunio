@@ -6,6 +6,7 @@ library(readxl)
 library(DT)
 library(scales)
 library(later)
+library(plotly)
 if (!requireNamespace("plotly", quietly = TRUE)) {
   install.packages("plotly", repos = "https://cran.rstudio.com")
 }
@@ -410,7 +411,7 @@ ui <- navbarPage(
                tags$div("Marktwertverlauf",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;margin-top:20px;"),
                div(style = "margin-bottom:20px;width:100%;",
-                   plotOutput("spieler_info_mw", height = 350, width = "100%")),
+                   plotlyOutput("spieler_info_mw", height = 350, width = "100%")),
                
                tags$div("Leistungsdaten",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
@@ -3024,7 +3025,8 @@ server <- function(input, output, session) {
   
   
   ## ---- MW ----
-  output$spieler_info_mw <- renderPlot({
+  ## ---- MW ----
+  output$spieler_info_mw <- renderPlotly({
     req(input$spieler_select2, mw_all, ap_df)
     
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
@@ -3044,20 +3046,21 @@ server <- function(input, output, session) {
     
     df <- bind_rows(hist, daily) %>%
       filter(K == sel) %>%
-      arrange(Datum, src) %>%         # hist zuerst, daily danach
+      arrange(Datum, src) %>%
       group_by(Datum) %>% slice_tail(n = 1) %>% ungroup()
     
     req(nrow(df) > 0)
     x_min <- as.Date("2024-06-01")
     x_max <- max(df$Datum, na.rm = TRUE)
     
-    ggplot(df, aes(x = Datum, y = Marktwert)) +
+    p <- ggplot(df, aes(x = Datum, y = Marktwert)) +
       geom_line() +
       geom_point(size = 1) +
       scale_x_date(limits = c(x_min, x_max)) +
-      labs(title = "",
-           x = NULL, y = "Marktwert (€)") +
+      labs(title = "", x = NULL, y = "Marktwert (€)") +
       theme_minimal(base_size = 16)
+    
+    ggplotly(p, tooltip = c("Datum", "Marktwert"))
   })
   
   ## ---- Leistungsdaten ----
