@@ -6,14 +6,18 @@ library(readxl)
 library(DT)
 library(scales)
 library(later)
-# nur auf Posit Connect installieren
-if (identical(Sys.getenv("RSTUDIO_CONNECT"), "1")) {
-  if (!requireNamespace("plotly", quietly = TRUE)) {
-    install.packages("plotly", repos = "https://cran.rstudio.com")
-  }
-  library(plotly)
+# nur auf Posit Connect installieren, sonst nur laden
+options(repos = c(CRAN = Sys.getenv("RSPM", "https://packagemanager.posit.co/cran/latest")))
+
+is_connect <- identical(Sys.getenv("RSTUDIO_CONNECT"), "1") ||
+  nzchar(Sys.getenv("CONNECT_VERSION")) ||
+  nzchar(Sys.getenv("RSC_VERSION"))
+
+if (is_connect && !requireNamespace("plotly", quietly = TRUE)) {
+  install.packages("plotly")
 }
 library(plotly)
+
 
 
 
