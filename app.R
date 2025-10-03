@@ -6,12 +6,15 @@ library(readxl)
 library(DT)
 library(scales)
 library(later)
-if (Sys.getenv("RSTUDIO_PRODUCT") == "connect") {
-  install.packages("plotly", repos = "https://cran.rstudio.com")
+if (identical(Sys.getenv("RSTUDIO_CONNECT"), "1")) {
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    install.packages("plotly", repos = "https://cran.rstudio.com")
+  }
   library(plotly)
 } else {
   library(plotly)
 }
+
 
 
 
