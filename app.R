@@ -18,10 +18,6 @@ suppressPackageStartupMessages(library(plotly))
 
 
 
-
-
-
-
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse", 
@@ -536,12 +532,8 @@ ui <- navbarPage(
                plotOutput("beeswarm", height = 700)
                ),
                
-               div(style = "text-align:center; margin-bottom:15px; margin-top:20px;",
-                   actionButton("toggle_plotly", "Interaktiv aktivieren")
-               ),
-               
-               div(style = "width: 90%; margin: 0 auto;",
-                   uiOutput("mwclass_container")
+               div(style = "width: 90%; margin: 0 auto; margin-top:20px;",
+                   plotlyOutput("mwclassplot", height = "700px")
                )
                
              ),
@@ -4098,12 +4090,12 @@ server <- function(input, output, session) {
       # Punktewolke
       geom_beeswarm(
         data = subset(plotdata_beeswarm, n_pts > 1),
-        cex = 2, size = 3, alpha = 0.8, priority = "random"
+        cex = 2, size = 2, alpha = 0.8, priority = "random"
       ) +
       # Einzelpunkte
       geom_point(
         data = subset(plotdata_beeswarm, n_pts == 1),
-        size = 3, alpha = 0.8, shape = 21
+        size = 2, alpha = 0.8, shape = 21
       ) +
       # Ø-Wert je Bieter beschriften
       geom_text(
@@ -4145,40 +4137,10 @@ server <- function(input, output, session) {
   })
   
   
-  # Container-Umschaltung
-  output$mwclass_container <- renderUI({
-    if (plotly_on()) {
-      plotlyOutput("mwclassplot", height = 700)
-    } else {
-      plotOutput("mwclassplot_static", height = 700)
-    }
-  })
-  
-  # Statischer Plot immer verfügbar
-  output$mwclassplot_static <- renderPlot({
+  # einziges Rendering
+  output$mwclassplot <- renderPlotly({
     p <- mwclass_plot_obj()
-    print(p)
-  })
-  
-  # Button: Plotly aktivieren, ggf. installieren und laden, dann Renderer setzen
-  observeEvent(input$toggle_plotly, {
-    if (!plotly_on()) {
-      # aktivieren
-      if (!requireNamespace("plotly", quietly = TRUE)) {
-        install.packages("plotly", repos = "https://cran.rstudio.com")
-      }
-      library(plotly)
-      plotly_on(TRUE)
-      updateActionButton(session, "toggle_plotly", label = "Zurück zu statischem Plot")
-      output$mwclassplot <- renderPlotly({
-        p <- mwclass_plot_obj()
-        ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
-      })
-    } else {
-      # deaktivieren
-      plotly_on(FALSE)
-      updateActionButton(session, "toggle_plotly", label = "Interaktiv aktivieren (Plotly)")
-    }
+    ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
   })
   
   ## ---- Gebotsverhalten über die Zeit ----
