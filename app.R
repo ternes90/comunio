@@ -6,6 +6,11 @@ library(readxl)
 library(DT)
 library(scales)
 library(later)
+if (!requireNamespace("plotly", quietly = TRUE)) {
+  install.packages("plotly", repos = "https://cran.rstudio.com")
+}
+
+
 
 # ---- UI ----
 ui <- navbarPage(
