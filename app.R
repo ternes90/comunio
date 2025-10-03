@@ -11,6 +11,7 @@ if (identical(Sys.getenv("RSTUDIO_CONNECT"), "1")) {
   if (!requireNamespace("plotly", quietly = TRUE)) {
     install.packages("plotly", repos = "https://cran.rstudio.com")
   }
+  library(plotly)
 }
 library(plotly)
 
