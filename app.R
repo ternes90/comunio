@@ -18,10 +18,6 @@ suppressPackageStartupMessages(library(plotly))
 
 
 
-
-
-
-
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse", 
@@ -536,12 +532,8 @@ ui <- navbarPage(
                plotOutput("beeswarm", height = 700)
                ),
                
-               div(style = "text-align:center; margin-bottom:15px; margin-top:20px;",
-                   actionButton("toggle_plotly", "Interaktiv aktivieren")
-               ),
-               
-               div(style = "width: 90%; margin: 0 auto;",
-                   uiOutput("mwclass_container")
+               div(style = "width: 90%; margin: 0 auto; margin-top:20px;",
+                   plotlyOutput("mwclassplot", height = "700px")
                )
                
              ),
@@ -4092,93 +4084,64 @@ server <- function(input, output, session) {
       geom_crossbar(
         data = means,
         aes(x = Bieter, y = Mean, ymin = Mean, ymax = Mean),
-        width = 0.7, linetype = "dashed", color = "grey30", linewidth = 0.6,
+        width = 0.7, linetype = "dotted", color = "grey40", linewidth = 0.2,
         inherit.aes = FALSE
       ) +
+    
       # Punktewolke
       geom_beeswarm(
         data = subset(plotdata_beeswarm, n_pts > 1),
-        cex = 2, size = 3, alpha = 0.8, priority = "random"
+        cex = 2, size = 2, alpha = 0.8, priority = "random"
       ) +
       # Einzelpunkte
       geom_point(
         data = subset(plotdata_beeswarm, n_pts == 1),
-        size = 3, alpha = 0.8, shape = 21
+        size = 2, alpha = 0.8, shape = 21
       ) +
       # Ø-Wert je Bieter beschriften
       geom_text(
         data = means,
         aes(x = Bieter, y = Mean, label = round(Mean, 1)),
-        color = "black", fontface = "bold", size = 6, vjust = -0.7,
+        color = "black", fontface = "bold", size = 4, vjust = -0.7,
         inherit.aes = FALSE
       ) +
       # Ø je MW-Klasse
       geom_hline(
         data = means_klasse, aes(yintercept = Mean),
-        color = "#d62728", linewidth = 1.2, linetype = "solid"
+        color = "#d62728", linewidth = 0.5, linetype = "solid"
       ) +
       geom_text(
         data = means_klasse,
-        aes(x = Inf, y = Mean, label = paste0("Ø ", round(Mean, 1), " %")),
-        hjust = 1.1, vjust = -0.7, color = "#d62728", fontface = "bold", size = 6,
+        aes(x = 1.5, y = Mean+20, label = paste0("Ø ", round(Mean, 1), " %")),
+        color = "#d62728", fontface = "bold", size = 4,
         inherit.aes = FALSE
       ) +
       geom_text(
         data = plotdata_ueber,
-        aes(x = -Inf, y = Inf, label = paste0(pct_ueber, "% (n=", n_total, ")")),
-        hjust = -0.1, vjust = 1.2, color = "#333", fontface = "bold", size = 6,
+        aes(x = 2.5, y = 50, label = paste0(pct_ueber, "% (n=", n_total, ")")),
+        color = "#333", fontface = "bold", size = 4,
         inherit.aes = FALSE
       ) +
       facet_grid(. ~ MW_Klasse, scales = "free_y") +
       labs(
-        title = "Gebotsabweichungen je Konkurrent und MW-Klasse",
+        title = "",
         x = "Bieter", y = "Abweichung vom MW Vortag (%)"
       ) +
       scale_color_brewer(palette = "Paired") +
       scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 16) +
+      theme_minimal(base_size = 14) +
       theme(
         legend.position = "none",
         strip.text = element_text(face = "bold", size = 16),
         axis.text.x = element_text(angle = 30, hjust = 1)
-      )
+      ) 
   })
   
   
-  # Container-Umschaltung
-  output$mwclass_container <- renderUI({
-    if (plotly_on()) {
-      plotlyOutput("mwclassplot", height = 700)
-    } else {
-      plotOutput("mwclassplot_static", height = 700)
-    }
-  })
-  
-  # Statischer Plot immer verfügbar
-  output$mwclassplot_static <- renderPlot({
+  # einziges Rendering
+  output$mwclassplot <- renderPlotly({
     p <- mwclass_plot_obj()
-    print(p)
-  })
-  
-  # Button: Plotly aktivieren, ggf. installieren und laden, dann Renderer setzen
-  observeEvent(input$toggle_plotly, {
-    if (!plotly_on()) {
-      # aktivieren
-      if (!requireNamespace("plotly", quietly = TRUE)) {
-        install.packages("plotly", repos = "https://cran.rstudio.com")
-      }
-      library(plotly)
-      plotly_on(TRUE)
-      updateActionButton(session, "toggle_plotly", label = "Zurück zu statischem Plot")
-      output$mwclassplot <- renderPlotly({
-        p <- mwclass_plot_obj()
-        ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
-      })
-    } else {
-      # deaktivieren
-      plotly_on(FALSE)
-      updateActionButton(session, "toggle_plotly", label = "Interaktiv aktivieren (Plotly)")
-    }
+    ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
   })
   
   ## ---- Gebotsverhalten über die Zeit ----
