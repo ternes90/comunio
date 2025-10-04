@@ -3813,8 +3813,8 @@ server <- function(input, output, session) {
     total <- sum(df_vals$mw[sel], na.rm = TRUE)
     
     HTML(sprintf(
-      "<div style='font-weight:bold; font-size:16px; margin:10px 0;'>
-       Ausgewählte MW-Summe: %s €
+      "<div style='font-weight:bold; text-align:center; font-size:16px; margin:10px 0;'>
+       MW-Summe: %s €
      </div>",
       format(total, big.mark = ".", decimal.mark = ",")
     ))
@@ -3839,11 +3839,11 @@ server <- function(input, output, session) {
       slice(1) %>%
       ungroup() %>%
       mutate(
-        Marktwert_fmt = ifelse(is.na(Marktwert), "-", paste0(format(Marktwert, big.mark = ".", decimal.mark = ","), " €")),
+        Marktwert_fmt = ifelse(is.na(Marktwert), "-", paste0(format(Marktwert, big.mark = ".", decimal.mark = ","), "")),
         Diff_fmt = case_when(
           is.na(Diff) ~ "",
-          Diff > 0 ~ sprintf("<span style='color:#81c784;'>▲ %s €</span>", format(Diff, big.mark = ".", decimal.mark = ",")),
-          Diff < 0 ~ sprintf("<span style='color:#e57373;'>▼ %s €</span>", format(abs(Diff), big.mark = ".", decimal.mark = ",")),
+          Diff > 0 ~ sprintf("<span style='color:#81c784;'>▲ %s</span>", format(Diff, big.mark = ".", decimal.mark = ",")),
+          Diff < 0 ~ sprintf("<span style='color:#e57373;'>▼ %s</span>", format(abs(Diff), big.mark = ".", decimal.mark = ",")),
           TRUE ~ "<span style='color:grey;'>–</span>"
         )
       ) %>%
@@ -3863,8 +3863,8 @@ server <- function(input, output, session) {
           Diff_Kauf_fmt = ifelse(
             is.na(Kaufpreis), "",
             case_when(
-              Diff_Kauf > 0 ~ sprintf("<span style='color:#388e3c;'>+%s €</span>", format(Diff_Kauf, big.mark = ".", decimal.mark = ",")),
-              Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>-%s €</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
+              Diff_Kauf > 0 ~ sprintf("<span style='color:#388e3c;'>+%s</span>", format(Diff_Kauf, big.mark = ".", decimal.mark = ",")),
+              Diff_Kauf < 0 ~ sprintf("<span style='color:#e53935;'>-%s</span>", format(abs(Diff_Kauf), big.mark = ".", decimal.mark = ",")),
               TRUE ~ "<span style='color:grey;'>±0 €</span>"
             )
           )
@@ -3889,36 +3889,39 @@ server <- function(input, output, session) {
         
         cb_html <- as.character(
           checkboxInput(inputId = cid, label = NULL, value = FALSE, width = "auto") %>%
-            tagAppendAttributes(style = "margin:0; padding:0; height:14px; vertical-align:middle; position:relative; top:-10px;")
+            tagAppendAttributes(style = "margin-left:5px; padding:0; height:10px; vertical-align:middle; position:relative; top:-5px;")
         )
+        
         
         
         rows <- c(rows, sprintf(
           "<tr style='line-height:2;'>
-           <td style='text-align:center; width:28px; padding:0; line-height:2;'>%s</td>
-           <td style='padding:0 0 0 6px; line-height:1;'>%s</td>
-           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
-           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
-           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
-         </tr>",
-          cb_html, spieler, mw, diff, diffk
+             <td style='padding:0 0 0 6px; line-height:1;'>%s</td>
+             <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+             <td style='text-align:center; width:10px; padding:0; line-height:2;'>%s</td>
+             <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+             <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+           </tr>",
+          spieler, mw, cb_html, diff, diffk
         ))
+        
       }
       
       table_html <- paste0(
         "<table style='border-collapse:collapse; width:100%; margin-bottom:12px; font-size:13px; line-height:2;'>",
         "<thead>
          <tr style='line-height:2;'>
-           <th style='text-align:center; padding:0;'>Auswahl</th>
-           <th style='text-align:left; padding:0;'>Spieler</th>
-           <th style='text-align:right; padding:0;'>MW</th>
-           <th style='text-align:right; padding:0;'>Vortag-MW-Diff</th>
-           <th style='text-align:right; padding:0;'>Kauf-Diff</th>
+            <th style='text-align:left; padding:0;'>Spieler</th>
+            <th style='text-align:right; padding:0;'>MW (€)</th>
+            <th style='text-align:center; padding:0; width:10px;'> </th>
+            <th style='text-align:right; padding:0;'>Δ Vortag (€)</th>
+            <th style='text-align:right; padding:0;'>Δ Kauf (€)</th>
          </tr>
        </thead><tbody>",
         paste(rows, collapse = "\n"),
         "</tbody></table>"
       )
+      
       
       tagList(
         tags$h4(manager_name, style = "margin-top:0; margin-bottom:4px;"),
