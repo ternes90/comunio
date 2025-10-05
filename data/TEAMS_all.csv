@@ -1,7 +1,7 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
-Thomas;Demirović;Sturm
 Thomas;Amoura;Sturm
+Thomas;Demirović;Sturm
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Stage;Mittelfeld
 Thomas;Grimaldo;Abwehr
@@ -12,15 +12,14 @@ Thomas;Markgraf;Abwehr
 Thomas;Nicolas;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
+Alfons;Philippe;Sturm
 Alfons;Matanović;Sturm
 Alfons;Kaufmann;Sturm
-Alfons;Philippe;Sturm
 Alfons;Diomande;Sturm
 Alfons;Wind;Sturm
 Alfons;Herrmann;Sturm
 Alfons;Remberg;Mittelfeld
 Alfons;Martel;Mittelfeld
-Alfons;Burger;Mittelfeld
 Alfons;Nebel;Mittelfeld
 Alfons;J. Hofmann;Mittelfeld
 Alfons;Kübler;Abwehr
@@ -31,14 +30,14 @@ Alfons;Nsoki;Abwehr
 Alfons;Gulácsi;Tor
 Christoph;Nusa;Sturm
 Christoph;Ilić;Sturm
-Christoph;Amiri;Mittelfeld
 Christoph;Baumgartner;Mittelfeld
+Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
 Christoph;Kohr;Abwehr
 Christoph;Mainka;Abwehr
+Christoph;Upamecano;Abwehr
 Christoph;Lukeba;Abwehr
 Christoph;Giannoulis;Abwehr
-Christoph;Upamecano;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Mittelfeld
@@ -57,8 +56,8 @@ Andreas;Tiago Tomás;Sturm
 Andreas;Dompé;Sturm
 Andreas;Hollerbach;Sturm
 Andreas;Terrier;Sturm
-Andreas;Stöger;Mittelfeld
 Andreas;Schmid;Mittelfeld
+Andreas;Stöger;Mittelfeld
 Andreas;Svanberg;Mittelfeld
 Andreas;Bensebaini;Abwehr
 Andreas;L. Vušković;Abwehr
@@ -69,12 +68,12 @@ Dominik;Essende;Sturm
 Dominik;Pieringer;Sturm
 Dominik;Sano;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
-Dominik;Bischof;Mittelfeld
 Dominik;Lynen;Mittelfeld
+Dominik;Bischof;Mittelfeld
 Dominik;Beck;Mittelfeld
 Dominik;Chabot;Abwehr
-Dominik;Mwene;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
+Dominik;Mwene;Abwehr
 Dominik;Makengo;Abwehr
 Dominik;Hajdari;Abwehr
 Dominik;Amenda;Abwehr
@@ -88,7 +87,6 @@ Nico;Glatzel;Sturm
 Nico;Sabitzer;Mittelfeld
 Nico;Andrich;Mittelfeld
 Nico;Trimmel;Abwehr
-Nico;Saliakas;Abwehr
 Nico;Muheim;Abwehr
 Nico;Doekhi;Abwehr
 Nico;Zentner;Tor
