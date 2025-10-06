@@ -3810,20 +3810,44 @@ server <- function(input, output, session) {
                 mw = as.numeric(Marktwert_aktuell))
     
     sel <- vapply(df_vals$id, function(id) isTRUE(input[[id]]), logical(1))
-    total <- sum(df_vals$mw[sel], na.rm = TRUE)
+    total_mw <- sum(df_vals$mw[sel], na.rm = TRUE)
+    
+    # NEU: Kontostand je Manager
+    konten <- kapital_df_reactive() %>%
+      select(Manager, Kontostand = Aktuelles_Kapital) %>%
+      mutate(Kontostand = as.numeric(Kontostand)) %>%
+      as.data.frame()
+    
+    sel_manager <- if (is.null(input$saldo_manager)) "Keiner" else input$saldo_manager
+    add_saldo <- if (!is.null(sel_manager) && sel_manager != "Keiner") {
+      val <- konten$Kontostand[konten$Manager == sel_manager]
+      ifelse(length(val) == 1 && !is.na(val), val, 0)
+    } else 0
+    
+    total <- total_mw + add_saldo
     
     HTML(sprintf(
       "<div style='font-weight:bold; text-align:center; font-size:16px; margin:10px 0;'>
-       MW-Summe: %s €
-     </div>",
+     MW-Summe%s: %s €
+   </div>",
+      if (add_saldo != 0) paste0(" (+ Kontostand ", sel_manager, ")") else "",
       format(total, big.mark = ".", decimal.mark = ",")
     ))
   })
   
+  
   output$kader_uebersicht_ui <- renderUI({
     manager_list <- sort(unique(teams_df$Manager))
-    
     mw_aktuell <- mw_aktuell_rx()
+    
+    # NEU: Auswahl, wessen Kontostand eingerechnet wird
+    saldo_ctrl <- radioButtons(
+      inputId = "saldo_manager",
+      label = "Kontostand einrechnen für:",
+      choices = c("Keiner", manager_list),
+      selected = "Keiner",
+      inline = TRUE
+    )
     
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
@@ -3892,36 +3916,32 @@ server <- function(input, output, session) {
             tagAppendAttributes(style = "margin-left:5px; padding:0; height:10px; vertical-align:middle; position:relative; top:-5px;")
         )
         
-        
-        
         rows <- c(rows, sprintf(
           "<tr style='line-height:2;'>
-             <td style='padding:0 0 0 6px; line-height:1;'>%s</td>
-             <td style='text-align:right; padding:0; line-height:1;'>%s</td>
-             <td style='text-align:center; width:10px; padding:0; line-height:2;'>%s</td>
-             <td style='text-align:right; padding:0; line-height:1;'>%s</td>
-             <td style='text-align:right; padding:0; line-height:1;'>%s</td>
-           </tr>",
+           <td style='padding:0 0 0 6px; line-height:1;'>%s</td>
+           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+           <td style='text-align:center; width:10px; padding:0; line-height:2;'>%s</td>
+           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+           <td style='text-align:right; padding:0; line-height:1;'>%s</td>
+         </tr>",
           spieler, mw, cb_html, diff, diffk
         ))
-        
       }
       
       table_html <- paste0(
         "<table style='border-collapse:collapse; width:100%; margin-bottom:12px; font-size:13px; line-height:2;'>",
         "<thead>
-         <tr style='line-height:2;'>
-            <th style='text-align:left; padding:0;'>Spieler</th>
-            <th style='text-align:right; padding:0;'>MW (€)</th>
-            <th style='text-align:center; padding:0; width:10px;'> </th>
-            <th style='text-align:right; padding:0;'>Δ Vortag (€)</th>
-            <th style='text-align:right; padding:0;'>Δ Kauf (€)</th>
-         </tr>
-       </thead><tbody>",
+       <tr style='line-height:2;'>
+          <th style='text-align:left; padding:0;'>Spieler</th>
+          <th style='text-align:right; padding:0;'>MW (€)</th>
+          <th style='text-align:center; padding:0; width:10px;'> </th>
+          <th style='text-align:right; padding:0;'>Δ Vortag (€)</th>
+          <th style='text-align:right; padding:0;'>Δ Kauf (€)</th>
+       </tr>
+     </thead><tbody>",
         paste(rows, collapse = "\n"),
         "</tbody></table>"
       )
-      
       
       tagList(
         tags$h4(manager_name, style = "margin-top:0; margin-bottom:4px;"),
@@ -3933,6 +3953,7 @@ server <- function(input, output, session) {
     rows_ui   <- split(tables_ui, ceiling(seq_along(tables_ui) / 4))
     
     tagList(
+      saldo_ctrl,                  # NEU
       uiOutput("sum_selected_mw"),
       lapply(rows_ui, function(row_tables) {
         tags$div(
@@ -3944,6 +3965,7 @@ server <- function(input, output, session) {
       })
     )
   })
+  
   
   
   ## ---- Kaderwert-Entwicklung ----
