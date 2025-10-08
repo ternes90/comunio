@@ -416,7 +416,7 @@ ui <- navbarPage(
                tags$div("Marktwertverlauf",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;margin-top:20px;"),
                div(style = "margin-bottom:20px;width:100%;",
-                   plotlyOutput("spieler_info_mw", height = 350, width = "100%")),
+                   plotlyOutput("spieler_info_mw", height = 800, width = "100%")),
                
                tags$div("Leistungsdaten",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
@@ -3106,11 +3106,15 @@ server <- function(input, output, session) {
   })
   
   
-  # MW
+  
   output$spieler_info_mw <- renderPlotly({
+    #### ---- MW ----
     req(input$spieler_select2, mw_all, ap_df)
     
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
+    fmt_eur <- function(x) ifelse(is.na(x), "-", paste0(format(round(x), big.mark=".", decimal.mark=","), " €"))
+    pct <- function(x) ifelse(is.na(x), "-", sprintf("%.1f%%", 100*x))
+    
     sel  <- norm(input$spieler_select2)
     
     hist <- mw_all %>%
@@ -3134,15 +3138,78 @@ server <- function(input, output, session) {
     x_min <- as.Date("2024-06-01")
     x_max <- max(df$Datum, na.rm = TRUE)
     
+    # Kennzahlen
+    mw_mean   <- mean(df$Marktwert, na.rm = TRUE)
+    mw_median <- median(df$Marktwert, na.rm = TRUE)
+    mw_max    <- max(df$Marktwert, na.rm = TRUE)
+    mw_min    <- min(df$Marktwert, na.rm = TRUE)
+    mw_curr   <- df$Marktwert[which.max(df$Datum)]
+    
+    # Comunio-MW-Potenziale
+    pot_vs_max    <- if (is.finite(mw_max) && mw_max > 0) mw_curr / mw_max else NA_real_
+    pot_vs_median <- if (is.finite(mw_median) && mw_median > 0) mw_curr / mw_median else NA_real_
+    pot_vs_mean   <- if (is.finite(mw_mean) && mw_mean > 0) mw_curr / mw_mean else NA_real_
+    
+    diff_max_abs <- mw_curr - mw_max
+    diff_med_abs <- mw_curr - mw_median
+    diff_mean_abs<- mw_curr - mw_mean
+    
+    # Linien für Legende
+    lines_df <- data.frame(
+      y = c(mw_mean, mw_median, mw_max, mw_min),
+      what = factor(c("Mean","Median","Hoch","Tief"),
+                    levels = c("Mean","Median","Hoch","Tief")),
+      lty = c("longdash","dotted","solid","solid")
+    )
+    
     p <- ggplot(df, aes(x = Datum, y = Marktwert)) +
       geom_line() +
       geom_point(size = 1) +
+      geom_hline(
+        data = lines_df,
+        aes(yintercept = y, color = what, linetype = I(lty)),  # I() fixiert, kein Mapping
+        linewidth = 0.6
+      ) +
       scale_x_date(limits = c(x_min, x_max)) +
-      labs(title = "", x = NULL, y = "Marktwert (€)") +
+      labs(title = NULL, x = NULL, y = "Marktwert (€)", color = NULL) +
       theme_minimal(base_size = 16)
     
-    ggplotly(p, tooltip = c("Datum", "Marktwert"))
+    
+    gp <- ggplotly(p, tooltip = c("Datum", "Marktwert"))
+    
+    ann <- list(
+      list(
+        text = paste0(
+          "<b>Aktuell:</b> ", fmt_eur(mw_curr),
+          " · <b>Mittel:</b> ", fmt_eur(mw_mean),
+          " · <b>Median:</b> ", fmt_eur(mw_median),
+          " · <b>Hoch:</b> ", fmt_eur(mw_max)
+        ),
+        x = 0, y = 1.10, xref = "paper", yref = "paper",
+        showarrow = FALSE, align = "left",
+        font = list(size = 18)
+      ),
+      list(
+        text = paste0(
+          "<b>Potenzial vs. Hoch:</b> ", pct(pot_vs_max),
+          " (Δ ", fmt_eur(diff_max_abs), ") · ",
+          "<b>Median:</b> ", pct(pot_vs_median),
+          " (Δ ", fmt_eur(diff_med_abs), ") · ",
+          "<b>Mittel:</b> ", pct(pot_vs_mean),
+          " (Δ ", fmt_eur(diff_mean_abs), ")"
+        ),
+        x = 0, y = 1.05, xref = "paper", yref = "paper",
+        showarrow = FALSE, align = "left",
+        font = list(size = 16)
+      )
+    )
+    
+    gp %>% layout(margin = list(t = 70), annotations = ann)
+    
+    
   })
+  
+  
   
   # Leistungsdaten 
   output$spieler_info_raw <- DT::renderDT({
@@ -3739,6 +3806,7 @@ server <- function(input, output, session) {
           "<button class='btn btn-xs btn-info mk-info-btn' data-player='%s'>i</button>",
           safe_attr(sp)
         )
+        
         btn_gpt <- sprintf(
           "<button class='btn btn-xs btn-success mk-gpt-btn' data-row='%d' data-prompt='%s'>GPT</button>",
           i,
@@ -3747,6 +3815,51 @@ server <- function(input, output, session) {
             sp, gruppe$Verein[i]
           ))
         )
+        
+        # tm_date lokal bestimmen
+        tm_date <- format(Sys.Date(), "%Y-%m-%d")
+        # MW-Kennzahlen aus ap_df (Comunio-Historie)
+        mw_vals <- suppressWarnings(as.numeric(ap_df$Marktwert[ap_df$Spieler == sp]))
+        mw_mean   <- ifelse(length(mw_vals) > 0, round(mean(mw_vals, na.rm = TRUE)), NA)
+        mw_median <- ifelse(length(mw_vals) > 0, round(median(mw_vals, na.rm = TRUE)), NA)
+        mw_max    <- ifelse(length(mw_vals) > 0, round(max(mw_vals, na.rm = TRUE)), NA)
+        mw_min    <- ifelse(length(mw_vals) > 0, round(min(mw_vals, na.rm = TRUE)), NA)
+        
+        btn_gpt <- sprintf(
+          "<button class='btn btn-xs btn-success mk-gpt-btn' data-row='%d' data-prompt='%s'>GPT</button>",
+          i,
+          safe_attr(sprintf(
+            paste0(
+              "Aufgabe: Analysiere den Bundesligaspieler %s (%s).\n",
+              "Heutiges Datum: %s.\n",
+              "Shiny-Kontextdaten (nur als Zusatz): ",
+              "Comunio_Marktwert=%s EUR; Diff_seit_Kauf=%s EUR; Ø_Punkte_pro_Spiel=%s; Preis-Leistung=%s; Historische_Punkteausbeute=%s; Status=%s; Verletzungsanfälligkeit=%s.\n",
+              "MW-Kennzahlen (Comunio-Historie): Mittelwert=%s EUR; Median=%s EUR; Hoch=%s EUR; Tief=%s EUR.\n\n",
+              "Interpretationsregel: MW_max repräsentiert das bisher erreichte Comunio-Höchstpotenzial dieses Spielers. Beurteile MW-Potenzial immer relativ dazu.\n\n",
+              "Liefere GENAU diese Abschnitte:\n",
+              "- Status jetzt:\n",
+              "- Einsatz 1–2 Wochen:\n",
+              "- Trainerstimme:\n",
+              "- Verletzung / Rückkehr:\n",
+              "- MW-Potenzial (Comunio):\n",
+              "- Aufstellungsempfehlung:\n",
+              "- Gegneranalyse nächster Spieltag:\n",
+              "- Quellen (YYYY-MM-DD):"
+            ),
+            sp,
+            gruppe$Verein[i],
+            format(Sys.Date(), "%Y-%m-%d"),
+            as.character(suppressWarnings(as.numeric(gruppe$Marktwert_aktuell[i]))),
+            as.character(suppressWarnings(as.numeric(gruppe$Diff_Kauf[i]))),
+            as.character(suppressWarnings(as.numeric(gruppe$`Punkte pro Spiel`[i]))),
+            as.character(suppressWarnings(as.numeric(gruppe$`Preis-Leistung`[i]))),
+            as.character(suppressWarnings(as.numeric(gruppe$`Historische Punkteausbeute`[i]))),
+            as.character(ifelse(is.na(gruppe$StatusText[i]), "NA", gruppe$StatusText[i])),
+            as.character(ifelse(is.na(gruppe$Verletzungsanfälligkeit[i]), "NA", gruppe$Verletzungsanfälligkeit[i])),
+            mw_mean, mw_median, mw_max, mw_min
+          ))
+        )
+        
         
         sprintf(
           "<tr>
