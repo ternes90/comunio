@@ -1476,7 +1476,7 @@ server <- function(input, output, session) {
     if (nrow(df) < 3) return(NULL)
     
     last_day <- max(df$Datum, na.rm = TRUE)
-    win_days <- 7L
+    win_days <- 14L
     df_short <- df[df$Datum >= (last_day - win_days), , drop = FALSE]
     if (nrow(df_short) < 3) df_short <- tail(df[order(df$Datum), ], 3)
     
@@ -1544,7 +1544,7 @@ server <- function(input, output, session) {
       )
   })
   
-  
+  ## ---- Flip-Preview ----
   output$flip_preview <- renderPlot({
     req(input$main_navbar == "Dashboard")
     df <- flip_data() %>%
@@ -3723,11 +3723,11 @@ server <- function(input, output, session) {
         Diff_Kauf = Marktwert_aktuell - Kaufpreis,
         Diff_Kauf_fmt = case_when(
           is.na(Kaufpreis) ~ "",
-          Diff_Kauf > 0    ~ sprintf("<span style='color:#388e3c;'>+%s € seit Kauf</span>",
+          Diff_Kauf > 0    ~ sprintf("<span style='color:#388e3c;'>+%s €</span>",
                                      format(Diff_Kauf, big.mark=".", decimal.mark=",")),
-          Diff_Kauf < 0    ~ sprintf("<span style='color:#e53935;'>-%s € seit Kauf</span>",
+          Diff_Kauf < 0    ~ sprintf("<span style='color:#e53935;'>-%s €</span>",
                                      format(abs(Diff_Kauf), big.mark=".", decimal.mark=",")),
-          TRUE             ~ "<span style='color:grey;'>±0 € seit Kauf</span>"
+          TRUE             ~ "<span style='color:grey;'>±0 €</span>"
         )
       ) %>%
       # Tages-Diff + aktuelle MW-Formatierung
@@ -3818,46 +3818,46 @@ server <- function(input, output, session) {
         
         # tm_date lokal bestimmen
         tm_date <- format(Sys.Date(), "%Y-%m-%d")
-        # MW-Kennzahlen aus ap_df (Comunio-Historie)
-        mw_vals <- suppressWarnings(as.numeric(ap_df$Marktwert[ap_df$Spieler == sp]))
-        mw_mean   <- ifelse(length(mw_vals) > 0, round(mean(mw_vals, na.rm = TRUE)), NA)
-        mw_median <- ifelse(length(mw_vals) > 0, round(median(mw_vals, na.rm = TRUE)), NA)
-        mw_max    <- ifelse(length(mw_vals) > 0, round(max(mw_vals, na.rm = TRUE)), NA)
-        mw_min    <- ifelse(length(mw_vals) > 0, round(min(mw_vals, na.rm = TRUE)), NA)
+        
+        mask <- ap_df$Spieler == sp
+        mw_vec <- suppressWarnings(as.numeric(ap_df$Marktwert[mask]))
+        dt_vec <- as.Date(ap_df$Datum[mask])
+        
+        mw_mean   <- ifelse(length(mw_vec) > 0, round(mean(mw_vec, na.rm = TRUE)), NA)
+        mw_median <- ifelse(length(mw_vec) > 0, round(median(mw_vec, na.rm = TRUE)), NA)
+        mw_max    <- ifelse(length(mw_vec) > 0, round(max(mw_vec, na.rm = TRUE)), NA)
+        mw_min    <- ifelse(length(mw_vec) > 0, round(min(mw_vec, na.rm = TRUE)), NA)
+        
+        if (length(dt_vec) > 0 && any(!is.na(dt_vec))) {
+          idx_curr <- which.max(dt_vec)
+          mw_curr  <- suppressWarnings(as.numeric(ap_df$Marktwert[mask][idx_curr]))
+        } else {
+          mw_curr <- NA
+        }
+        
+        prompt_str <- paste0(
+          "Aufgabe: Analysiere den Bundesligaspieler ", sp, " (", gruppe$Verein[i], ").\n",
+          "Heutiges Datum (Europe/Berlin): ", tm_date, ". Nutze NUR Inhalte der letzten 30 Tage; ältere als 'älter' kennzeichnen. Zeitbezüge strikt relativ zu diesem Datum.\n",
+          "Quellen: Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, LigaInsider, Comunio-Magazin, seriöse Regionalmedien. Keine Social Media/Foren. Jede Aussage mit [1], [2] … belegen; jüngste Quelle gewinnt. Unklares als 'Unklar'.\n",
+          "Bestimme den nächsten Bundesligaspieltag inkl. Gegner, Datum, Ort aus offizieller Quelle.\n\n",
+          "Comunio-Marktwertdaten (nur Zusatz, keine Quelle): Aktuell=", mw_curr,
+          "; Mittel=", mw_mean, "; Median=", mw_median, "; Hoch=", mw_max, "; Tief=", mw_min, ".\n",
+          "Beurteile das MW-Potenzial relativ zu MW_max.\n\n",
+          "Liefere GENAU diese Abschnitte:\n",
+          "- Status jetzt:\n",
+          "- Einsatz 1–2 Wochen:\n",
+          "- Trainerstimme:\n",
+          "- Verletzung / Rückkehr:\n",
+          "- MW-Potenzial (Comunio):\n",
+          "- Aufstellungsempfehlung:\n",
+          "- Gegneranalyse nächster Spieltag:\n",
+          "- Quellen (YYYY-MM-DD):"
+        )
         
         btn_gpt <- sprintf(
           "<button class='btn btn-xs btn-success mk-gpt-btn' data-row='%d' data-prompt='%s'>GPT</button>",
           i,
-          safe_attr(sprintf(
-            paste0(
-              "Aufgabe: Analysiere den Bundesligaspieler %s (%s).\n",
-              "Heutiges Datum: %s.\n",
-              "Shiny-Kontextdaten (nur als Zusatz): ",
-              "Comunio_Marktwert=%s EUR; Diff_seit_Kauf=%s EUR; Ø_Punkte_pro_Spiel=%s; Preis-Leistung=%s; Historische_Punkteausbeute=%s; Status=%s; Verletzungsanfälligkeit=%s.\n",
-              "MW-Kennzahlen (Comunio-Historie): Mittelwert=%s EUR; Median=%s EUR; Hoch=%s EUR; Tief=%s EUR.\n\n",
-              "Interpretationsregel: MW_max repräsentiert das bisher erreichte Comunio-Höchstpotenzial dieses Spielers. Beurteile MW-Potenzial immer relativ dazu.\n\n",
-              "Liefere GENAU diese Abschnitte:\n",
-              "- Status jetzt:\n",
-              "- Einsatz 1–2 Wochen:\n",
-              "- Trainerstimme:\n",
-              "- Verletzung / Rückkehr:\n",
-              "- MW-Potenzial (Comunio):\n",
-              "- Aufstellungsempfehlung:\n",
-              "- Gegneranalyse nächster Spieltag:\n",
-              "- Quellen (YYYY-MM-DD):"
-            ),
-            sp,
-            gruppe$Verein[i],
-            format(Sys.Date(), "%Y-%m-%d"),
-            as.character(suppressWarnings(as.numeric(gruppe$Marktwert_aktuell[i]))),
-            as.character(suppressWarnings(as.numeric(gruppe$Diff_Kauf[i]))),
-            as.character(suppressWarnings(as.numeric(gruppe$`Punkte pro Spiel`[i]))),
-            as.character(suppressWarnings(as.numeric(gruppe$`Preis-Leistung`[i]))),
-            as.character(suppressWarnings(as.numeric(gruppe$`Historische Punkteausbeute`[i]))),
-            as.character(ifelse(is.na(gruppe$StatusText[i]), "NA", gruppe$StatusText[i])),
-            as.character(ifelse(is.na(gruppe$Verletzungsanfälligkeit[i]), "NA", gruppe$Verletzungsanfälligkeit[i])),
-            mw_mean, mw_median, mw_max, mw_min
-          ))
+          safe_attr(prompt_str)
         )
         
         
@@ -3865,22 +3865,23 @@ server <- function(input, output, session) {
           "<tr>
            <td style='padding:4px; text-align:center; width:36px; white-space:nowrap;'>%s</td>
            <td style='padding:4px;'>%s</td>
-           <td style='padding:4px; text-align:center;'>%s</td> 
+           <td style='padding:4px; text-align:left;'>%s</td> 
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:right;'>%s</td>
-           <td style='padding:4px; text-align:right;'>%s</td>
+           <td style='padding:4px; text-align:center;'>%s</td>
+           <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:right;'>%s</td>
          </tr>",
-          trend3, sp, stat, btn, btn_gpt, v,
+          trend3, v, sp, stat, diff, diffk,
           ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark=",")),
+          btn, btn_gpt,
           ifelse(is.na(pl),  "-", pl),
           ifelse(is.na(hist), "-", hist),
-          mw, diff, diffk
+          mw
         )
       })
       
@@ -3894,17 +3895,17 @@ server <- function(input, output, session) {
       "<table style='width:100%; border-collapse:collapse;'>",
       "<thead><tr>
        <th style='text-align:center;'> </th>
+       <th style='text-align:center;'> </th>
        <th style='text-align:left;'>Spieler</th>
        <th style='text-align:center;'> </th>
+       <th style='text-align:center;'>Δ-Vortag</th>
+       <th style='text-align:center;'>Δ-Kauf</th>
+       <th style='text-align:center;'>PPS</th>
        <th style='text-align:center;'> </th>
        <th style='text-align:center;'> </th>
-       <th style='text-align:center;'>Verein</th>
-       <th style='text-align:center;'>Ø Punkte</th>
        <th style='text-align:center;'>Preis-Leistung</th>
-       <th style='text-align:center;'>Historische Punkteausbeute</th>
+       <th style='text-align:center;'>Hist. Punkteausbeute</th>
        <th style='text-align:right;'>MW</th>
-       <th style='text-align:right;'>Vortag-MW-Diff</th>
-       <th style='text-align:right;'>Kauf-Diff</th>
      </tr></thead>",
       paste(grouped_sections, collapse = "\n"),
       "</tbody></table>"
