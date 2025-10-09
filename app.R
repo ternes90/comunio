@@ -1964,7 +1964,7 @@ server <- function(input, output, session) {
         size = 4
       ) +
       scale_color_brewer(palette = "Paired") +
-      coord_cartesian(ylim = c(0.6, 1.2)) +
+      coord_cartesian(ylim = c(0.6, 1.4)) +
       theme_minimal(base_size = 14) +
       scale_x_date(date_labels = "%b %y")   
   })
