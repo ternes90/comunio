@@ -637,13 +637,28 @@ ui <- navbarPage(
   ## ---- Kapitalübersicht ----
   tabPanel("Kapitalübersicht",
            fluidPage(
-             DTOutput("kapital_uebersicht_table"),
-             div(
-               style = "margin-bottom:15px; margin-top:40px;",
-               plotOutput("kapital_gewinn_plot", height = "360px")
+             tabsetPanel(
+               id = "kapital_tabs", type = "tabs",
+               
+               tabPanel("Übersicht & Gewinn",
+                        DTOutput("kapital_uebersicht_table"),
+                        div(style = "margin-bottom:15px; margin-top:40px;",
+                            plotOutput("kapital_gewinn_plot", height = "360px"))
+               ),
+               
+               tabPanel("Verlauf & Analysen",
+                        div(style = "margin-bottom:15px; margin-top:40px;",
+                            plotOutput("kapital_verlauf_plot", height = "420px")),
+                        div(style = "margin-bottom:15px; margin-top:40px;",
+                            plotOutput("kapital_wochentag_plot", height = "420px")),
+                        div(style = "margin-top:20px;",
+                            DTOutput("kapital_minus_table"))
+               )
              )
            )
   )
+  
+
   
 )
 
@@ -5106,7 +5121,7 @@ server <- function(input, output, session) {
     })
   })
   
-  # Kapitalübersicht-Tabelle
+  ### ---- kapital_df_reactive ----
   kapital_df_reactive <- reactive({
     dat <- data_all()
     transfers <- dat$transfers
@@ -5178,6 +5193,111 @@ server <- function(input, output, session) {
     df
   })
   
+  ### ---- kapital_ts_reactive ----
+  kapital_ts_reactive <- reactive({
+    dat <- data_all()
+    transfers <- dat$transfers
+    alle_manager <- names(startkapital_fix)
+    
+    stopifnot(all(c("Datum","Manager","Gesamtpunkte","letzte Punkte") %in% names(st_df)))
+    st_df <- st_df %>% mutate(Datum = as.Date(Datum))
+    dates <- sort(unique(st_df$Datum))
+    req(length(dates) > 0)
+    d0 <- min(dates)
+    
+    base <- expand.grid(Datum = dates, Manager = alle_manager, KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE)
+    
+    # Transfers als Cash-Deltas
+    xfers_buy <- transfers %>%
+      transmute(Datum = as.Date(Datum), Manager = Hoechstbietender, delta = -as.numeric(Hoechstgebot)) %>%
+      filter(!is.na(Datum), !is.na(Manager))
+    xfers_sell <- transfers %>%
+      transmute(Datum = as.Date(Datum), Manager = Besitzer,       delta =  as.numeric(Hoechstgebot)) %>%
+      filter(!is.na(Datum), !is.na(Manager))
+    xfers <- bind_rows(xfers_buy, xfers_sell)
+    
+    # optionale transactions
+    tx_raw <-
+      if (exists("transactions") && is.data.frame(transactions) && all(c("Manager","Transaction_Summe") %in% names(transactions))) {
+        if ("Datum" %in% names(transactions)) {
+          transactions %>% mutate(Datum = as.Date(Datum)) %>% transmute(Manager, Datum, delta_tx = as.numeric(Transaction_Summe))
+        } else {
+          transactions %>% mutate(Datum = d0) %>% transmute(Manager, Datum, delta_tx = as.numeric(Transaction_Summe))
+        }
+      } else {
+        tibble(Manager = character(), Datum = as.Date(character()), delta_tx = numeric())
+      }
+    
+    # Punkte-Bonus pro Tag (nur counted)
+    punkte_tag <- st_df %>%
+      group_by(Manager) %>%
+      arrange(Datum, .by_group = TRUE) %>%
+      mutate(gp_prev = lag(Gesamtpunkte, default = 0),
+             counted = (`letzte Punkte` >= 0) & (Gesamtpunkte - gp_prev == `letzte Punkte`),
+             bonus = if_else(counted, as.numeric(`letzte Punkte`) * 10000, 0)) %>%
+      ungroup() %>%
+      group_by(Manager, Datum) %>%
+      summarise(bonus = sum(bonus, na.rm = TRUE), .groups = "drop")
+    
+    # Offsets vor d0
+    pre_xfers <- xfers %>%
+      filter(Datum < d0) %>%
+      group_by(Manager) %>%
+      summarise(pre_delta = sum(delta, na.rm = TRUE), .groups = "drop")
+    
+    pre_tx <- tx_raw %>%
+      filter(Datum < d0) %>%
+      group_by(Manager) %>%
+      summarise(pre_tx = sum(delta_tx, na.rm = TRUE), .groups = "drop")
+    
+    pre_bonus <- punkte_tag %>%
+      filter(Datum < d0) %>%
+      group_by(Manager) %>%
+      summarise(pre_bonus = sum(bonus, na.rm = TRUE), .groups = "drop")
+    
+    offsets <- tibble(Manager = alle_manager) %>%
+      left_join(pre_xfers,  by = "Manager") %>%
+      left_join(pre_tx,     by = "Manager") %>%
+      left_join(pre_bonus,  by = "Manager") %>%
+      mutate(across(c(pre_delta, pre_tx, pre_bonus), ~replace_na(., 0)),
+             Startkapital = startkapital_fix[Manager],
+             offset0 = Startkapital + pre_delta + pre_tx + pre_bonus) %>%
+      select(Manager, offset0)
+    
+    # Deltas ab d0
+    xfers_d <- xfers %>%
+      filter(Datum >= d0) %>%
+      group_by(Manager, Datum) %>%
+      summarise(delta = sum(delta, na.rm = TRUE), .groups = "drop")
+    
+    tx_d <- tx_raw %>%
+      filter(Datum >= d0) %>%
+      group_by(Manager, Datum) %>%
+      summarise(delta_tx = sum(delta_tx, na.rm = TRUE), .groups = "drop")
+    
+    bonus_d <- punkte_tag %>%
+      filter(Datum >= d0)
+    
+    ts <- base %>%
+      left_join(xfers_d, by = c("Manager","Datum")) %>%
+      left_join(tx_d,     by = c("Manager","Datum")) %>%
+      left_join(bonus_d,  by = c("Manager","Datum")) %>%
+      mutate(delta = replace_na(delta, 0),
+             delta_tx = replace_na(delta_tx, 0),
+             bonus = replace_na(bonus, 0)) %>%
+      left_join(offsets,  by = "Manager") %>%
+      arrange(Manager, Datum) %>%
+      group_by(Manager) %>%
+      mutate(kum = cumsum(delta + delta_tx + bonus),
+             Kontostand = offset0 + kum) %>%
+      ungroup()
+    
+    # NEU: nur ab 22.08.2025
+    ts %>% filter(Datum >= as.Date("2025-08-22"))
+  })
+  
+  
+  ## ---- Haupt-Tabelle ----
   output$kapital_uebersicht_table <- renderDT({
     kapital_df <- kapital_df_reactive()
     rownames(kapital_df) <- NULL
@@ -5233,7 +5353,7 @@ server <- function(input, output, session) {
   
   ## ---- Absolute Gewinne ----
   
-  # ---- Flip-Saldo je Manager (Gewinne + Verluste) ----
+  ### ---- Flip-Saldo je Manager (Gewinne + Verluste) ----
   flip_gewinne_df <- reactive({
     req(flip_data())
     flip_data() %>%
@@ -5244,7 +5364,7 @@ server <- function(input, output, session) {
       rename(Manager = Besitzer)
   })
   
-  # ---- Gesamtsumme pro Manager: Flip + Transaktionen + Punkte-Bonus ----
+  ### ---- Gesamtsumme pro Manager: Flip + Transaktionen + Punkte-Bonus ----
   kapital_summe_df <- reactive({
     kdf <- kapital_df_reactive() %>%
       select(Manager, Transaction_Summe, Punkte_Bonus)
@@ -5261,7 +5381,7 @@ server <- function(input, output, session) {
       )
   })
   
-  # ---- Einfacher Balkenplot: Gesamtsumme, sortiert absteigend, Farben nach Manager (Paired), Textgröße 16 ----
+  ### ---- Gesamtsumme ----
   output$kapital_gewinn_plot <- renderPlot({
     df <- kapital_summe_df()
     req(nrow(df) > 0)
@@ -5273,8 +5393,8 @@ server <- function(input, output, session) {
              Manager_fill= factor(Manager, levels = sort(unique(Manager))))
     
     # Achsenlimits berechnen
-    y_min <- min(df$Gesamt, na.rm = TRUE) - 1e6
-    y_max <- max(df$Gesamt, na.rm = TRUE) + 1e6
+    y_min <- min(df$Gesamt, na.rm = TRUE) - 3e6
+    y_max <- max(df$Gesamt, na.rm = TRUE) + 3e6
     
     ggplot(df, aes(x = Manager_x, y = Gesamt, fill = Manager_fill)) +
       geom_col() +
@@ -5292,11 +5412,107 @@ server <- function(input, output, session) {
       scale_fill_brewer(palette = "Paired") +
       theme_minimal(base_size = 16) +
       theme(
-        plot.title = element_text(face = "bold"),
         axis.text.x = element_text(angle = 35, hjust = 1),
         legend.position = "none"
       )
   })
+  
+  ## ---- Über die Zeit ----
+  output$kapital_verlauf_plot <- renderPlot({
+    ts <- kapital_ts_reactive()
+    req(nrow(ts) > 0)
+    
+    ggplot(ts, aes(x = Datum, y = Kontostand, group = Manager)) +
+      geom_col(aes(fill = Kontostand > 0), width = 0.5, alpha = 0.5) + 
+      geom_line(aes(color = Manager), linewidth = 1.5) +              
+      geom_hline(yintercept = 0, linetype = "dashed", color = "darkred", linewidth = 0.4) +
+      facet_wrap(~ Manager, scales = "free_y") +
+      scale_fill_manual(values = c("FALSE" = "red", "TRUE" = "palegreen1"), guide = "none") +
+      scale_color_brewer(palette = "Paired") +
+      labs(x = NULL, y = "Kontostand (€)", color = NULL) +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".", decimal.mark = ",")) +
+      theme_minimal(base_size = 14) +
+      theme(
+        legend.position = "none",
+        panel.grid.minor = element_blank()
+      )
+  })
+  
+
+  
+  ## ---- Zeit im Minus ----
+  output$kapital_minus_table <- DT::renderDT({
+    ts <- kapital_ts_reactive()
+    req(nrow(ts) > 0)
+    
+    stats <- ts %>%
+      arrange(Manager, Datum) %>%
+      group_by(Manager) %>%
+      mutate(is_minus = Kontostand < 0,
+             start_run = is_minus & (is.na(lag(is_minus)) | !lag(is_minus))) %>%
+      summarise(
+        Tage_total     = n(),
+        Tage_im_Minus  = sum(is_minus, na.rm = TRUE),
+        Anteil_Minus   = if_else(Tage_total > 0, 100 * Tage_im_Minus / Tage_total, 0),
+        Episoden_Minus = sum(start_run, na.rm = TRUE),
+        Tiefstes_Minus = if_else(any(is_minus, na.rm = TRUE),
+                                 min(Kontostand[is_minus], na.rm = TRUE),
+                                 0),
+        .groups = "drop"
+      ) %>%
+      mutate(Anteil_Minus = round(Anteil_Minus, 1)) %>%
+      select(
+        Manager,
+        `Anteil Zeit im Minus (%)` = Anteil_Minus,
+        `Tage im Minus` = Tage_im_Minus,
+        `Episoden im Minus` = Episoden_Minus,
+        `Tiefstes Minus (€)` = Tiefstes_Minus
+      ) %>%
+      as.data.frame()
+    
+    DT::datatable(
+      stats,
+      rownames = FALSE,
+      options = list(paging = FALSE, autoWidth = TRUE, dom = 't')
+    ) %>%
+      formatCurrency(
+        columns = c("Tiefstes Minus (€)"),
+        currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
+      )
+  })
+  
+  ## ---- Ø-Kontostand je Wochentag ----
+  output$kapital_wochentag_plot <- renderPlot({
+    ts <- kapital_ts_reactive()
+    req(nrow(ts) > 0)
+    
+    wdays <- c("Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag")
+    
+    df <- ts %>%
+      mutate(Wochentag = factor(weekdays(Datum), levels = wdays, ordered = TRUE)) %>%
+      group_by(Manager, Wochentag) %>%
+      summarise(
+        mean = mean(Kontostand, na.rm = TRUE),
+        sd   = sd(Kontostand, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    ggplot(df, aes(x = Wochentag, y = mean, fill = Manager)) +
+      geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+      geom_errorbar(
+        aes(ymin = mean - sd, ymax = mean + sd),
+        position = position_dodge(width = 0.8),
+        width = 0.3,
+        linewidth = 0.4
+      ) +
+      scale_fill_brewer(palette = "Paired") +
+      labs(x = NULL, y = "Ø Kontostand ± SD (€)", fill = NULL) +
+      scale_y_continuous(labels = function(x) format(x, big.mark = ".", decimal.mark = ",")) +
+      theme_minimal(base_size = 14) +
+      theme(panel.grid.minor = element_blank())
+  })
+  
+  
   
   
 }
