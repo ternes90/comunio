@@ -1,5 +1,6 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
+Thomas;Uzun;Sturm
 Thomas;Amoura;Sturm
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Stage;Mittelfeld
@@ -65,6 +66,7 @@ Andreas;Heuer Fernandes;Tor
 Dominik;Pieringer;Sturm
 Dominik;Kimmich;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
+Dominik;Seiwald;Mittelfeld
 Dominik;Bischof;Mittelfeld
 Dominik;Beck;Mittelfeld
 Dominik;Chabot;Abwehr
@@ -74,9 +76,11 @@ Dominik;Henrichs;Abwehr
 Dominik;Mets;Abwehr
 Dominik;Belocian;Abwehr
 Dominik;Kobel;Tor
+Dominik;Backhaus;Tor
 Nico;Olise;Sturm
 Nico;Höler;Sturm
 Nico;Glatzel;Sturm
+Nico;Ngankam;Sturm
 Nico;Sabitzer;Mittelfeld
 Nico;Andrich;Mittelfeld
 Nico;Trimmel;Abwehr
