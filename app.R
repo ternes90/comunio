@@ -1528,8 +1528,8 @@ server <- function(input, output, session) {
         `Verfügbares Kapital` = Verfügbares_Kapital
       ) %>%
       mutate(across(c(Teamwert, Kontostand, `Verfügbares Kapital`), as.numeric)) %>%
-      mutate(`Hypothetischer Teamwert` = Teamwert + Kontostand) %>%
-      select(Manager, Teamwert, Kontostand, `Hypothetischer Teamwert`, `Verfügbares Kapital`) %>%
+      mutate(`Teamwertpotenzial` = Teamwert + Kontostand) %>%
+      select(Manager, Teamwert, Kontostand, `Teamwertpotenzial`, `Verfügbares Kapital`) %>%
       as.data.frame()
     
     idx_vk <- which(names(kapital_df) == "Verfügbares Kapital") - 1L
@@ -1547,7 +1547,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       formatCurrency(
-        columns = c("Teamwert", "Kontostand", "Hypothetischer Teamwert", "Verfügbares Kapital"),
+        columns = c("Teamwert", "Kontostand", "Teamwertpotenzial", "Verfügbares Kapital"),
         currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       ) %>%
       formatStyle(
@@ -4599,7 +4599,8 @@ server <- function(input, output, session) {
           label = format(round(Gesamtgewinn, 0), big.mark = ".", decimal.mark = ",", scientific = FALSE),
           hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)
         ),
-        position = position_dodge(width = 1)
+        position = position_dodge(width = 1),
+        size = 8
       ) +
       scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
       coord_flip(ylim = c(lim_min, lim_max)) +
