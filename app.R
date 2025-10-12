@@ -537,11 +537,9 @@ ui <- navbarPage(
                )
                
              ),
-             tabPanel("Zeit-Trend", plotOutput("trendplot", height = 700)),
-             tabPanel("Gebots-Frequenz",
-                      plotOutput("gebote_pro_tag", height = 350),
-                      plotOutput("gebote_pro_tag_linie", height = 350)
-             ),
+             tabPanel("Zeit-Trend",
+                      plotOutput("trendplot", height = 700),
+                      plotOutput("gebote_pro_tag", height = 350)),
              tabPanel("Gebots-peaks",
                       plotOutput("aktive_tage_plot",       height = 350),
                       plotOutput("peak_days_heatmap",      height = 350),
@@ -649,8 +647,6 @@ ui <- navbarPage(
                tabPanel("Verlauf & Analysen",
                         div(style = "margin-bottom:15px; margin-top:40px;",
                             plotOutput("kapital_verlauf_plot", height = "420px")),
-                        div(style = "margin-bottom:15px; margin-top:40px;",
-                            plotOutput("kapital_wochentag_plot", height = "420px")),
                         div(style = "margin-top:20px;",
                             DTOutput("kapital_minus_table"))
                )
@@ -1532,14 +1528,16 @@ server <- function(input, output, session) {
         `Verfügbares Kapital` = Verfügbares_Kapital
       ) %>%
       mutate(across(c(Teamwert, Kontostand, `Verfügbares Kapital`), as.numeric)) %>%
+      mutate(`Hypothetischer Teamwert` = Teamwert + Kontostand) %>%
+      select(Manager, Teamwert, Kontostand, `Hypothetischer Teamwert`, `Verfügbares Kapital`) %>%
       as.data.frame()
     
-    idx_vk <- which(names(kapital_df) == "Verfügbares Kapital") - 1L  # 0-basiert
+    idx_vk <- which(names(kapital_df) == "Verfügbares Kapital") - 1L
     
     DT::datatable(
       kapital_df,
       rownames = FALSE,
-      colnames = c("Manager","Teamwert (€)","Kontostand (€)","Verfügbares Kapital (€)"),
+      colnames = c("Manager","Teamwert (€)","Kontostand (€)","Teamwertpotenzial (€)","Verfügbares Kapital (€)"),
       escape = FALSE,
       options = list(
         paging = FALSE,
@@ -1549,7 +1547,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       formatCurrency(
-        columns = c("Teamwert", "Kontostand", "Verfügbares Kapital"),
+        columns = c("Teamwert", "Kontostand", "Hypothetischer Teamwert", "Verfügbares Kapital"),
         currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       ) %>%
       formatStyle(
@@ -1558,6 +1556,7 @@ server <- function(input, output, session) {
         fontWeight = styleInterval(0, c('bold', NA))
       )
   })
+  
   
   ## ---- Flip-Preview ----
   output$flip_preview <- renderPlot({
@@ -3970,13 +3969,17 @@ server <- function(input, output, session) {
     mw_aktuell <- mw_aktuell_rx()
     
     # NEU: Auswahl, wessen Kontostand eingerechnet wird
-    saldo_ctrl <- radioButtons(
-      inputId = "saldo_manager",
-      label = "Kontostand einrechnen für:",
-      choices = c("Keiner", manager_list),
-      selected = "Keiner",
-      inline = TRUE
+    saldo_ctrl <- div(
+      style = "text-align:center; margin-bottom:10px;",
+      radioButtons(
+        inputId = "saldo_manager",
+        label = "Kalkulation für:",
+        choices = c("Keiner", manager_list),
+        selected = "Keiner",
+        inline = TRUE
+      )
     )
+    
     
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
@@ -4364,26 +4367,6 @@ server <- function(input, output, session) {
         fill = "Bieter"
       ) +
       scale_fill_brewer(palette = "Paired") +
-      theme_minimal(base_size = 14) +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1))
-  })
-  
-  ## ---- Linienplot: Gebote je Konkurrent über Zeit ----
-  output$gebote_pro_tag_linie <- renderPlot({
-    df <- gebotsprofil_clean() %>%
-      group_by(Datum, Bieter) %>%
-      summarise(Anzahl_Gebote = n(), .groups = "drop")
-    
-    ggplot(df, aes(x = Datum, y = Anzahl_Gebote, color = Bieter)) +
-      geom_line(size = 1.2, na.rm = TRUE  ) +
-      geom_point(size = 2, alpha = 0.8) +
-      scale_color_brewer(palette = "Paired") +
-      labs(
-        title = "Gebote pro Tag je Konkurrent (Linienplot)",
-        x = "Datum",
-        y = "Gebote pro Tag",
-        color = "Bieter"
-      ) +
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
   })
@@ -5480,39 +5463,6 @@ server <- function(input, output, session) {
         currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       )
   })
-  
-  ## ---- Ø-Kontostand je Wochentag ----
-  output$kapital_wochentag_plot <- renderPlot({
-    ts <- kapital_ts_reactive()
-    req(nrow(ts) > 0)
-    
-    wdays <- c("Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag")
-    
-    df <- ts %>%
-      mutate(Wochentag = factor(weekdays(Datum), levels = wdays, ordered = TRUE)) %>%
-      group_by(Manager, Wochentag) %>%
-      summarise(
-        mean = mean(Kontostand, na.rm = TRUE),
-        sd   = sd(Kontostand, na.rm = TRUE),
-        .groups = "drop"
-      )
-    
-    ggplot(df, aes(x = Wochentag, y = mean, fill = Manager)) +
-      geom_col(position = position_dodge(width = 0.8), width = 0.7) +
-      geom_errorbar(
-        aes(ymin = mean - sd, ymax = mean + sd),
-        position = position_dodge(width = 0.8),
-        width = 0.3,
-        linewidth = 0.4
-      ) +
-      scale_fill_brewer(palette = "Paired") +
-      labs(x = NULL, y = "Ø Kontostand ± SD (€)", fill = NULL) +
-      scale_y_continuous(labels = function(x) format(x, big.mark = ".", decimal.mark = ",")) +
-      theme_minimal(base_size = 14) +
-      theme(panel.grid.minor = element_blank())
-  })
-  
-  
   
   
 }
