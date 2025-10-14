@@ -15,6 +15,15 @@ if (is_connect && !requireNamespace("plotly", quietly = TRUE)) {
   install.packages("plotly", repos = "https://cran.rstudio.com")
 }
 suppressPackageStartupMessages(library(plotly))
+# Installiere nur auf Posit Connect/Cloud, sonst nur laden
+is_connect <- dir.exists("/opt/connect") ||
+  identical(Sys.info()[["user"]], "connect") ||
+  startsWith(normalizePath(getwd(), winslash = "/"), "/cloud/")
+
+if (is_connect && !requireNamespace("slider", quietly = TRUE)) {
+  install.packages("slider", repos = "https://cran.rstudio.com")
+}
+suppressPackageStartupMessages(library(slider))
 
 
 
@@ -298,14 +307,16 @@ ui <- navbarPage(
              <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
              <span style='color:orange; font-weight:bold;'>▍</span> Saison 2021/22 &nbsp;&nbsp;
              <span style='color:red; font-weight:bold;'>▍</span> Saison 2024/25" )
-           
-             # Für Sommerpause auskommentieren
-             # <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;  
-             # <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021")
+                        
+                        # Für Sommerpause auskommentieren
+                        # <span style='color:red; font-weight:bold;'>▍</span> Sommerpause 2024 &nbsp;&nbsp;  
+                        # <span style='color:orange; font-weight:bold;'>▍</span> Sommerpause 2021")
                       ),
                       plotOutput("mw_evolution", height = 600),
                       br(),
-                      plotOutput("mw_daily_change", height = 300)
+                      plotOutput("mw_daily_change", height = 300),
+                      br(),
+                      plotOutput("mw_multi_forecast_plot", height = 360)
              ),
              tabPanel(title = "Käufe und Verkäufe", value = "mw_events_tab",
                       fluidRow(column(4, uiOutput("manager_select_ui"))),
@@ -330,7 +341,36 @@ ui <- navbarPage(
                         ),
                         mainPanel(plotOutput("historical_seasons_plot_selected", height = 600))
                       )
+             ),
+             tabPanel(title = "MW-Analyse", value = "mw_analyse",
+                      fluidRow(
+                        column(
+                          width = 6,
+                          plotOutput("mw_weekday_effect_plot", height = 300)
+                        ),
+                        column(
+                          width = 6,
+                          plotOutput("mw_acf_plot", height = 300)
+                        )
+                      ),
+                      fluidRow(
+                        column(
+                          width = 6,
+                          plotOutput("mw_predict_plot", height = 420)
+                        ),
+                        column(
+                          width = 6,
+                          plotOutput("mw_vola_momentum_plot", height = 280)
+                        )
+                      ),
+                      fluidRow(
+                        column(
+                          width = 12,
+                          plotOutput("mw_spieltag_effect_plot", height = 320)
+                        )
+                      )
              )
+             
            )
   )
   ,
@@ -1528,8 +1568,8 @@ server <- function(input, output, session) {
         `Verfügbares Kapital` = Verfügbares_Kapital
       ) %>%
       mutate(across(c(Teamwert, Kontostand, `Verfügbares Kapital`), as.numeric)) %>%
-      mutate(`Hypothetischer Teamwert` = Teamwert + Kontostand) %>%
-      select(Manager, Teamwert, Kontostand, `Hypothetischer Teamwert`, `Verfügbares Kapital`) %>%
+      mutate(`Teamwertpotenzial` = Teamwert + Kontostand) %>%
+      select(Manager, Teamwert, Kontostand, `Teamwertpotenzial`, `Verfügbares Kapital`) %>%
       as.data.frame()
     
     idx_vk <- which(names(kapital_df) == "Verfügbares Kapital") - 1L
@@ -1547,7 +1587,7 @@ server <- function(input, output, session) {
       )
     ) %>%
       formatCurrency(
-        columns = c("Teamwert", "Kontostand", "Hypothetischer Teamwert", "Verfügbares Kapital"),
+        columns = c("Teamwert", "Kontostand", "Teamwertpotenzial", "Verfügbares Kapital"),
         currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       ) %>%
       formatStyle(
@@ -1786,6 +1826,187 @@ server <- function(input, output, session) {
         ylim = c(min(change_df$pct_change)*1.1, max(change_df$pct_change)*1.1)
       )
   })
+  
+  ## ---- Prediction MW ----
+  
+  # ---- Mehrstufige Kombi-Prognose: nächste 4 Tage ----
+  output$mw_multi_forecast_plot <- renderPlot({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs %in% c("mw_verlauf","mw_analyse"))
+    
+    # Basis: heutige Tagesrenditen
+    df0 <- change_df_reactive() %>% mutate(Datum = as.Date(Datum))
+    
+    # Vorjahresprofil (2024-25) aus deinem sp-Datensatz
+    sp_all <- tryCatch(post_sommerpause_data(), error = function(e) NULL)
+    prev_change <- NULL
+    if (!is.null(sp_all)) {
+      prev <- sp_all %>%
+        filter(Saison == "2024-25") %>%
+        arrange(Datum) %>%
+        transmute(pct_prev = 100 * (MW_rel_normiert/lag(MW_rel_normiert) - 1))
+      prev_change <- prev$pct_prev
+    }
+    if (is.null(prev_change) || length(prev_change) < 10) {
+      # Fallback: ohne Vorjahresfeature
+      prev_change <- rep(0, nrow(df0) + 8)
+    }
+    
+    # Spieltage 2025 (ISO, ';')
+    sp_csv <- tryCatch(read.csv("data/spielplan_TM_2025.csv", sep=";", header=TRUE, stringsAsFactors=FALSE),
+                       error=function(e) NULL)
+    rel_levels <- c(-2,-1,0,1,2,"none")
+    rel_map <- NULL
+    if (!is.null(sp_csv) && "Datum" %in% names(sp_csv)) {
+      sp_dates <- as.Date(trimws(sp_csv$Datum))
+      rel_map <- expand.grid(Datum = sp_dates, rel = -2:2, KEEP.OUT.ATTRS = FALSE,
+                             stringsAsFactors = FALSE) %>%
+        mutate(Datum = as.Date(Datum) + rel) %>% distinct()
+    } else {
+      rel_map <- tibble(Datum = as.Date(character()), rel = integer())
+    }
+    
+    # Trainingsfeatures
+    tr <- df0 %>%
+      arrange(Datum) %>%
+      mutate(
+        lag1 = lag(pct_change),
+        lag2 = lag(pct_change, 2),
+        wd   = factor(as.integer(format(Datum, "%u")), levels = 1:7,
+                      labels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
+        mom7 = slider::slide_dbl(pct_change, mean, na.rm = TRUE, .before = 6, .complete = TRUE),
+        vola7= slider::slide_dbl(pct_change, sd,   na.rm = TRUE, .before = 6, .complete = TRUE),
+        idx  = row_number(),
+        prev = prev_change[pmin(idx, length(prev_change))]
+      ) %>%
+      left_join(rel_map, by = "Datum") %>%
+      mutate(rel = ifelse(is.na(rel), "none", as.character(rel)),
+             rel = factor(rel, levels = rel_levels)) %>%
+      filter(is.finite(pct_change), is.finite(lag1), is.finite(lag2))
+    
+    if (nrow(tr) < 30) return(invisible(NULL))
+    
+    # Modelle: Regression (E[∆]) + Logit (P(∆>0))
+    m_mean <- lm(pct_change ~ lag1 + lag2 + wd + rel + mom7 + vola7 + prev,
+                 data = tr, na.action = na.exclude)
+    m_prob <- glm(I(pct_change > 0) ~ lag1 + lag2 + wd + rel + mom7 + vola7 + prev,
+                  data = tr, family = binomial(), na.action = na.exclude)
+    
+    # Startwerte
+    last_row   <- tail(tr, 1)
+    last_date  <- last_row$Datum
+    last_lag1  <- tail(df0$pct_change, 1)
+    last_lag2  <- tail(df0$pct_change, 2)[1]
+    next_dates <- seq(last_date + 1, by = 1, length.out = 4)
+    
+    # Konstant halten: letzte mom7/vola7
+    mom7_last  <- tail(tr$mom7[is.finite(tr$mom7)], 1)
+    vola7_last <- tail(tr$vola7[is.finite(tr$vola7)], 1)
+    if (!is.finite(mom7_last))  mom7_last  <- 0
+    if (!is.finite(vola7_last)) vola7_last <- 0
+    
+    # Helper: rel zum Spieltag
+    rel_get <- function(d) {
+      if (nrow(rel_map) == 0) return("none")
+      r <- rel_map$rel[match(d, rel_map$Datum)]
+      ifelse(is.na(r), "none", as.character(r))
+    }
+    
+    # Vorhersage rekursiv für 4 Tage
+    out <- vector("list", 4)
+    lag1_now <- last_lag1
+    lag2_now <- last_lag2
+    for (k in 1:4) {
+      d  <- next_dates[k]
+      wd <- factor(as.integer(format(d, "%u")), levels = 1:7,
+                   labels = levels(tr$wd))
+      relk <- factor(rel_get(d), levels = rel_levels)
+      
+      idxk <- nrow(df0) + k
+      prevk <- prev_change[pmin(idxk, length(prev_change))]
+      
+      newd <- data.frame(
+        lag1 = lag1_now,
+        lag2 = lag2_now,
+        wd   = wd,
+        rel  = relk,
+        mom7 = mom7_last,
+        vola7= vola7_last,
+        prev = prevk
+      )
+      
+      # Erwartungswert + PI
+      pred_mean <- as.data.frame(predict(m_mean, newdata = newd, interval = "prediction"))
+      # Wahrscheinlichkeit
+      p_up <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
+      
+      out[[k]] <- data.frame(
+        Datum = d,
+        Wochentag = as.character(wd),
+        P_up = p_up,
+        E_delta = pred_mean$fit,
+        lwr = pred_mean$lwr,
+        upr = pred_mean$upr
+      )
+      
+      # Lags für nächsten Schritt aktualisieren
+      lag2_now <- lag1_now
+      lag1_now <- pred_mean$fit
+    }
+    pred_df <- do.call(rbind, out) %>%
+      arrange(Datum) %>%
+      mutate(
+        Wochentag = factor(Wochentag, levels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
+        label_raw = paste0(as.character(Wochentag), " ", format(Datum, "%d.%m.")),
+        combo_lbl = sprintf("%.0f%% → %+.2f%%", 100 * P_up, E_delta)
+      )
+    pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
+    
+    # MW-Pfad aus letztem MW_gesamt hochrechnen
+    mw_last <- tail(gesamt_mw_df$MW_gesamt[order(gesamt_mw_df$Datum)], 1)
+    mw_path <- Reduce(function(x, r) x * (1 + r/100),
+                      pred_df$E_delta, init = mw_last, accumulate = TRUE)[-1]
+    path_df <- data.frame(Datum = pred_df$Datum, MW_hat = mw_path, label = pred_df$label)
+    
+    # Plot: oben Balken P_up + Text, Punkte/PI für E_delta; unten MW-Pfad
+    p1 <- ggplot(pred_df, aes(x = label)) +
+      geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
+      geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
+      geom_text(aes(y = pmin(1, P_up + 0.06), label = combo_lbl),
+                size = 3.6, fontface = "bold") +
+      geom_point(aes(y = scales::rescale(E_delta, to = c(0,1))), size = 0) +
+      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
+      labs(title = "Kombinierte Prognose (nächste 4 Tage)",
+           x = NULL, y = "P(∆ > 0)") +
+      theme_minimal(base_size = 13)
+    
+    p2 <- ggplot(path_df, aes(x = label, y = MW_hat, group = 1)) +
+      geom_line(linewidth = 0.9) + geom_point(size = 2) +
+      labs(x = NULL, y = "prognostizierter Marktwert") +
+      theme_minimal(base_size = 13)
+    
+    # Zwei Reihen ohne Zusatzpakete: mit patchwork-ähnlicher Base-Grid vermeiden → einfach vertikal per cowplot vermeiden.
+    # Minimal: übereinander mit base R layout in ggplot geht nicht. Lösung: ein kombiniertes Panel per facet? Wir zeichnen beide Achsen getrennt:
+    # -> einfache Lösung: nur ein Panel mit P_up + E_delta (PI dünn, grau) und darunter sekundärer MW-Pfad als Annotation.
+    
+    # Einpanel-Variante mit E_delta und PI:
+    ggplot(pred_df, aes(x = label)) +
+      geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
+      geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
+      geom_text(aes(y = pmin(1, P_up + 0.06), label = combo_lbl),
+                size = 3.6, fontface = "bold") +
+      geom_point(aes(y = scales::rescale(E_delta, to = c(0.05, 0.95))), size = 2, color = "black") +
+      geom_errorbar(aes(ymin = scales::rescale(lwr, to = c(0.05, 0.95)),
+                        ymax = scales::rescale(upr, to = c(0.05, 0.95))),
+                    width = 0.15, linewidth = 0.3, linetype = "dashed", color = "grey50") +
+      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
+      labs(title = "Kombinierte Prognose (nächste 4 Tage)",
+           subtitle = paste0("MW jetzt ~ ", scales::comma(mw_last), " → in 4 Tagen ~ ",
+                             scales::comma(tail(path_df$MW_hat,1))),
+           x = NULL, y = "P(∆ > 0)  |  Punkte/Fehlerbalken zeigen E[∆] skaliert") +
+      theme_minimal(base_size = 13)
+  })
+  
   
   
   ## ---- MW-events ----
@@ -2376,6 +2597,199 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16) +
       theme(legend.position = "bottom")
   })
+  
+  ### ---- MW-Analyse ----
+  
+  # Helper auf Basis deines change_df, jetzt für "mw_verlauf" UND "mw_analyse" nutzbar
+  change_df_reactive <- reactive({
+    req(input$main_navbar == "Marktwert-Entwicklung",
+        input$mw_tabs %in% c("mw_verlauf","mw_analyse"))
+    clean_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      arrange(Datum)
+    
+    df <- clean_df %>%
+      mutate(
+        MW_vortag  = lag(MW_gesamt),
+        abs_change = MW_gesamt - MW_vortag,
+        pct_change = 100 * abs_change / MW_vortag
+      ) %>%
+      filter(is.finite(pct_change))
+    
+    req(nrow(df) > 0)
+    df
+  })
+  
+  # 1) Wochentagseffekt (ohne Locale-Probleme)
+  output$mw_weekday_effect_plot <- renderPlot({
+    df <- change_df_reactive() %>%
+      mutate(
+        wd_num   = as.integer(format(Datum, "%u")),                # 1=Mo ... 7=So
+        wochentag = factor(c("Mo","Di","Mi","Do","Fr","Sa","So")[wd_num],
+                           levels = c("Mo","Di","Mi","Do","Fr","Sa","So"), ordered = TRUE)
+      )
+    
+    sum_df <- df %>%
+      group_by(wochentag) %>%
+      summarise(mean_change = mean(pct_change, na.rm = TRUE), .groups = "drop")
+    
+    ggplot(sum_df, aes(x = wochentag, y = mean_change, fill = mean_change >= 0)) +
+      geom_col(width = 0.7) +
+      geom_hline(yintercept = 0, linewidth = 0.4) +
+      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
+      labs(title = "Wochentagseffekt", x = NULL, y = "Ø Tagesänderung (%)") +
+      theme_minimal(base_size = 14)
+  })
+  
+  # 2) Autokorrelation Lags 1–5
+  output$mw_acf_plot <- renderPlot({
+    df <- change_df_reactive()
+    a <- acf(df$pct_change, lag.max = 5, plot = FALSE)
+    keep <- which(a$lag > 0 & a$lag <= 5)
+    if (length(keep) == 0) return(invisible(NULL))
+    
+    acf_df <- data.frame(
+      lag = as.integer(a$lag[keep] * 1),
+      acf = as.numeric(a$acf[keep])
+    )
+    
+    ggplot(acf_df, aes(x = factor(lag), y = acf)) +
+      geom_col(width = 0.6) +
+      geom_hline(yintercept = 0, linewidth = 0.4) +
+      labs(title = "Autokorrelation der Tagesrenditen", x = "Lag (Tage)", y = "ACF") +
+      theme_minimal(base_size = 14)
+  })
+  
+  # 3) Richtungswechsel (7T rolling)
+  output$mw_predict_plot <- renderPlot({
+    df <- change_df_reactive() %>%
+      mutate(
+        lag1 = lag(pct_change),
+        wd   = factor(as.integer(format(Datum, "%u")),
+                      levels = 1:7,
+                      labels = c("Mo","Di","Mi","Do","Fr","Sa","So"))
+      ) %>%
+      filter(is.finite(pct_change), is.finite(lag1))
+    if (nrow(df) < 30) return(invisible(NULL))
+    
+    m_prob <- glm(I(pct_change > 0) ~ lag1 + wd, data = df, family = binomial())
+    m_mean <- lm(pct_change ~ lag1 + wd, data = df)
+    
+    last_date   <- max(df$Datum)
+    last_change <- tail(df$pct_change, 1)
+    next_dates  <- seq(last_date + 1, by = 1, length.out = 2)
+    next_wd     <- factor(as.integer(format(next_dates, "%u")),
+                          levels = 1:7,
+                          labels = levels(df$wd))
+    
+    # Rekursiv: t+1 mit lag1=last_change, t+2 mit lag1=yhat_{t+1}
+    res <- vector("list", 2)
+    lag1_now <- last_change
+    for (k in 1:2) {
+      newd <- data.frame(lag1 = lag1_now,
+                         wd   = factor(next_wd[k], levels = levels(df$wd)))
+      p_up_k   <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
+      yhat_k   <- as.data.frame(predict(m_mean, newdata = newd, interval = "prediction"))
+      res[[k]] <- data.frame(
+        Datum = next_dates[k],
+        Wochentag = as.character(next_wd[k]),
+        P_up = p_up_k,
+        E_delta = yhat_k$fit,
+        lwr = yhat_k$lwr,
+        upr = yhat_k$upr
+      )
+      lag1_now <- yhat_k$fit
+    }
+    pred_df <- do.call(rbind, res) %>%
+      arrange(Datum) %>%
+      mutate(
+        Wochentag = factor(Wochentag,
+                           levels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
+        label_raw = paste0(as.character(Wochentag), " ", format(Datum, "%d.%m.")),
+        combo_lbl = sprintf("%.0f%% → %+.2f%%", 100 * P_up, E_delta)
+      )
+    pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
+    
+    ggplot(pred_df, aes(x = label)) +
+      geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
+      geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
+      geom_text(aes(y = P_up + 0.05, label = combo_lbl),
+                size = 3.8, fontface = "bold") +
+      geom_point(aes(y = E_delta), size = 2, color = "black") +
+      geom_errorbar(aes(ymin = lwr, ymax = upr),
+                    width = 0.15, linewidth = 0.4,
+                    linetype = "dashed", color = "grey50") +
+      geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
+      scale_fill_manual(values = c(`TRUE` = "darkgreen", `FALSE` = "red"), guide = "none") +
+      coord_cartesian(ylim = c(0, max(pred_df$P_up) + 0.15)) +
+      labs(title = "Vorhersage nächster 2 Tage",
+           x = NULL,
+           y = "Wahrscheinlichkeit / erwartete ∆ (%)") +
+      theme_minimal(base_size = 13)
+    
+  })
+  
+  # 4) Volatilität & Momentum (gemeinsam)
+  output$mw_vola_momentum_plot <- renderPlot({
+    df <- change_df_reactive() %>%
+      mutate(
+        roll_mean_7 = slider::slide_dbl(pct_change, mean, na.rm = TRUE, .before = 6, .complete = TRUE),
+        roll_sd_7   = slider::slide_dbl(pct_change, sd,   na.rm = TRUE, .before = 6, .complete = TRUE)
+      )
+    
+    ggplot(df, aes(x = Datum)) +
+      geom_line(aes(y = roll_sd_7), linewidth = 0.7) +
+      geom_line(aes(y = roll_mean_7 * 3), linewidth = 0.7, linetype = "dashed") +
+      labs(title = "Volatilität (SD7) & Momentum (Mean7 ×3)", x = NULL, y = "SD7  |  Mean7 skaliert") +
+      theme_minimal(base_size = 14)
+  })
+  
+  # 5) Spieltagseffekt (±2 Tage)
+  output$mw_spieltag_effect_plot <- renderPlot({
+    df <- change_df_reactive() %>%
+      mutate(Datum = as.Date(Datum))  # sicherstellen: Date-Klasse
+    
+    # CSV robust einlesen (Semikolon, ISO-Format)
+    sp <- tryCatch(read.csv("data/spielplan_TM_2025.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE),
+                   error = function(e) NULL)
+    if (is.null(sp) || !"Datum" %in% names(sp)) return(invisible(NULL))
+    
+    # BOM/Spaces entfernen und Datum casten
+    names(sp) <- trimws(sub("^\ufeff", "", names(sp)))
+    sp <- sp %>%
+      mutate(Datum = as.Date(trimws(Datum))) %>%   # "YYYY-MM-DD" → as.Date() ohne format
+      filter(!is.na(Datum)) %>%
+      distinct(Datum) %>%
+      arrange(Datum)
+    
+    if (nrow(sp) == 0) return(invisible(NULL))
+    
+    # Exakte ±2-Tage-Gitter um jeden Spieltag und Join auf df$Datum
+    rel_map <- expand.grid(Datum = sp$Datum, rel = -2:2, KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE) %>%
+      mutate(Datum = as.Date(Datum) + rel) %>%
+      distinct()
+    
+    rel_df <- df %>%
+      select(Datum, pct_change) %>%
+      inner_join(rel_map, by = "Datum") %>%
+      group_by(rel) %>%
+      summarise(mean_change = mean(pct_change, na.rm = TRUE),
+                n_days = n(), .groups = "drop") %>%
+      arrange(rel)
+    
+    validate(need(nrow(rel_df) > 0, "Keine Daten im ±2-Tage-Fenster gefunden. Prüfe, ob df$Datum und CSV-Daten dieselben Kalendertage abdecken."))
+    
+    ggplot(rel_df, aes(x = rel, y = mean_change, fill = mean_change >= 0)) +
+      geom_col(width = 0.6) +
+      geom_text(aes(label = paste0(round(mean_change, 2), "%\n(n=", n_days, ")")),
+                vjust = ifelse(rel_df$mean_change >= 0, -0.4, 1.2), size = 3.5) +
+      geom_hline(yintercept = 0, linewidth = 0.4) +
+      scale_x_continuous(breaks = -2:2) +
+      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
+      labs(title = "Spieltagseffekt (Ø ∆ um Spieltage, ±2 Tage)", x = "Tage relativ zum Spieltag", y = "Ø Tagesänderung (%)") +
+      theme_minimal(base_size = 14)
+  })
+  
   
   # ---- TRANSFERMARKT ----
   
@@ -3691,44 +4105,57 @@ server <- function(input, output, session) {
       slice(1) %>%
       select(Spieler, Kaufpreis = Hoechstgebot)
     
-    # --- 3-Tage-Trend berechnen (MW1 = jüngster Tag) ---
+    # --- 3-Pfeil-Trend über die letzten 4 Tage (MW1=ältester, MW4=jüngster) ---
     dates_vec <- gesamt_mw_roh %>%
       distinct(Datum) %>%
       pull(Datum) %>%
+      as.Date() %>%
       na.omit() %>%
-      sort(decreasing = TRUE)
+      sort(increasing = TRUE)
     
-    if (length(dates_vec) >= 3) {
-      last_dates <- dates_vec[1:3]
-      names(last_dates) <- c("MW1","MW2","MW3")
-      mw_list <- lapply(names(last_dates), function(nm) {
-        gesamt_mw_roh %>%
-          filter(Datum == last_dates[[nm]]) %>%
-          select(Spieler, !!nm := Marktwert)
-      })
-    } else {
-      mw_list <- list()
-    }
-    
-    df_pre <- df0 %>%
-      left_join(mw_aktuell, by = "Spieler")
-    
-    if (length(mw_list) > 0) {
-      df_pre <- Reduce(function(x, y) left_join(x, y, by = "Spieler"),
-                       c(list(df_pre), mw_list)) %>%
+    if (length(dates_vec) >= 2) {
+      last_dates <- tail(dates_vec, 4)
+      # Labels in zeitlich aufsteigender Reihenfolge, damit m1->m2, m2->m3, m3->m4 passt
+      nm <- paste0("MW", seq_along(last_dates))              # MW1..MWk
+      names(last_dates) <- nm
+      
+      mw_wide <- gesamt_mw_roh %>%
+        filter(Datum %in% last_dates) %>%
+        mutate(tag = names(last_dates)[match(Datum, last_dates)]) %>%
+        select(Spieler, tag, Marktwert) %>%
+        distinct(Spieler, tag, .keep_all = TRUE) %>%
+        tidyr::pivot_wider(names_from = tag, values_from = Marktwert)
+      
+      arrow_for <- function(a, b) {
+        if (is.na(a) || is.na(b)) return("")
+        if (b > a) return("<span style='color:#388e3c;font-weight:bold;'>▲</span>")
+        if (b < a) return("<span style='color:#e53935;font-weight:bold;'>▼</span>")
+        return("<span style='color:#757575;font-weight:bold;'>▬</span>")
+      }
+      
+      df_pre <- df0 %>%
+        left_join(mw_aktuell, by = "Spieler") %>%
+        left_join(mw_wide,    by = "Spieler") %>%
         mutate(
-          Trend3 = mapply(function(m1, m2, m3) {
-            if (any(is.na(c(m1, m2, m3)))) return("–")
-            if (m3 < m2 && m2 < m1)      "<span style='color:#388e3c;font-weight:bold;'>▲▲</span>"
-            else if (m3 > m2 && m2 > m1) "<span style='color:#e53935;font-weight:bold;'>▼▼</span>"
-            else if (m3 < m1)            "<span style='color:#388e3c;font-weight:bold;'>▲</span>"
-            else if (m3 > m1)            "<span style='color:#e53935;font-weight:bold;'>▼</span>"
-            else                         "–"
-          }, MW1, MW2, MW3, SIMPLIFY = TRUE)
+          Trend3 = {
+            # baue Pfeile von alt->neu: (MW1->MW2), (MW2->MW3), (MW3->MW4)
+            a1 <- if ("MW1" %in% names(.)) .$MW1 else NA_real_
+            a2 <- if ("MW2" %in% names(.)) .$MW2 else NA_real_
+            a3 <- if ("MW3" %in% names(.)) .$MW3 else NA_real_
+            a4 <- if ("MW4" %in% names(.)) .$MW4 else NA_real_
+            
+            paste0(
+              mapply(arrow_for, a1, a2),
+              mapply(arrow_for, a2, a3),
+              mapply(arrow_for, a3, a4)
+            )
+          }
         ) %>%
-        select(-any_of(c("MW1","MW2","MW3")))
+        select(-any_of(c("MW1","MW2","MW3","MW4")))
     } else {
-      df_pre$Trend3 <- "–"
+      df_pre <- df0 %>%
+        left_join(mw_aktuell, by = "Spieler") %>%
+        mutate(Trend3 = "–")
     }
     
     df_pre <- df_pre %>%
@@ -3878,9 +4305,9 @@ server <- function(input, output, session) {
         sprintf(
           "<tr>
            <td style='padding:4px; text-align:center; width:36px; white-space:nowrap;'>%s</td>
-           <td style='padding:4px;'>%s</td>
+           <td style='padding:4px; text-align:left;'>%s</td>
            <td style='padding:4px; text-align:left;'>%s</td> 
-           <td style='padding:4px; text-align:center;'>%s</td>
+           <td style='padding:4px; text-align:left;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
@@ -3890,7 +4317,7 @@ server <- function(input, output, session) {
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:right;'>%s</td>
          </tr>",
-          trend3, v, sp, stat, diff, diffk,
+          v,sp,stat,trend3,diff,diffk,
           ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark=",")),
           btn, btn_gpt,
           ifelse(is.na(pl),  "-", pl),
@@ -3900,7 +4327,7 @@ server <- function(input, output, session) {
       })
       
       paste0(
-        sprintf("<tr><th colspan='12' style='text-align:left; background:#eee; padding:4px;'>%s</th></tr>", pos_name),
+        sprintf("<tr><th colspan='12' style='text-align:left; background:#eee; padding:6px 0 4px 20px;'>%s</th></tr>", pos_name),
         paste(rows, collapse = "\n")
       )
     })
@@ -3909,9 +4336,9 @@ server <- function(input, output, session) {
       "<table style='width:100%; border-collapse:collapse;'>",
       "<thead><tr>
        <th style='text-align:center;'> </th>
-       <th style='text-align:center;'> </th>
        <th style='text-align:left;'>Spieler</th>
-       <th style='text-align:center;'> </th>
+       <th style='text-align:left;'>Status</th>
+       <th style='text-align:left;'>Trend</th>
        <th style='text-align:center;'>Δ-Vortag</th>
        <th style='text-align:center;'>Δ-Kauf</th>
        <th style='text-align:center;'>PPS</th>
@@ -4599,7 +5026,8 @@ server <- function(input, output, session) {
           label = format(round(Gesamtgewinn, 0), big.mark = ".", decimal.mark = ",", scientific = FALSE),
           hjust = ifelse(Gesamtgewinn > 0, -0.1, 1.1)
         ),
-        position = position_dodge(width = 1)
+        position = position_dodge(width = 1),
+        size = 8
       ) +
       scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
       coord_flip(ylim = c(lim_min, lim_max)) +
