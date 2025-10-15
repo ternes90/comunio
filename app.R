@@ -314,14 +314,12 @@ ui <- navbarPage(
                       ),
                       plotOutput("mw_evolution", height = 600),
                       br(),
-                      plotOutput("mw_daily_change", height = 300),
-                      br(),
-                      plotOutput("mw_multi_forecast_plot", height = 360)
+                      plotOutput("mw_daily_change", height = 300)
              ),
              tabPanel(title = "Käufe und Verkäufe", value = "mw_events_tab",
                       fluidRow(column(4, uiOutput("manager_select_ui"))),
                       br(),
-                      plotOutput("mw_events", height = 600)
+                      plotlyOutput("mw_events", height = 600)
              ),
              tabPanel(title = "MW-Verlauf 24/25 (MW-Klassen)", value = "mw_klassen",
                       plotOutput("mw_plot"),
@@ -345,30 +343,34 @@ ui <- navbarPage(
              tabPanel(title = "MW-Analyse", value = "mw_analyse",
                       fluidRow(
                         column(
-                          width = 6,
-                          plotOutput("mw_weekday_effect_plot", height = 300)
-                        ),
-                        column(
-                          width = 6,
-                          plotOutput("mw_acf_plot", height = 300)
-                        )
-                      ),
-                      fluidRow(
-                        column(
-                          width = 6,
-                          plotOutput("mw_predict_plot", height = 420)
-                        ),
-                        column(
-                          width = 6,
-                          plotOutput("mw_vola_momentum_plot", height = 280)
+                          width = 12,
+                          div(
+                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
+                          plotOutput("mw_weekday_effect_plot", height = "420px", width = "80%")
+                          )
                         )
                       ),
                       fluidRow(
                         column(
                           width = 12,
-                          plotOutput("mw_spieltag_effect_plot", height = 320)
+                          div(
+                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
+                            plotOutput("mw_predict_plot", height = "420px", width = "50%")
+                          )
+                        )
+                      ),
+                      # direkt darunter einfügen
+                      fluidRow(
+                        column(
+                          width = 12,
+                          div(
+                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
+                            plotOutput("mw_pred_vs_actual_plot", height = "420px", width = "60%")
+                          )
                         )
                       )
+                      
+                      
              )
              
            )
@@ -723,7 +725,7 @@ server <- function(input, output, session) {
     dominiks_kapital <- kapital_df %>% filter(Manager == "Dominik")
     
     if (nrow(dominiks_kapital) == 1) {
-      verfuegbares_kapital_dominik(dominiks_kapital$Verfügbares_Kapital)
+      verfuegbares_kapital_dominik(dominiks_kapital$Verfügbares_Kapital) 
       kontostand_dominik(dominiks_kapital$Aktuelles_Kapital)
     }
   })
@@ -889,6 +891,21 @@ server <- function(input, output, session) {
   # ---- Daten / df / list / functions ----
   
   ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
+  
+  sp_tm <- read.csv(
+    "data/spielplan_TM_2025.csv",
+    sep = ";", header = TRUE, stringsAsFactors = FALSE,
+    fileEncoding = "UTF-8", check.names = FALSE, na.strings = c("", "NA")
+  ) %>%
+    transmute(
+      Spieltag = as.integer(Spieltag),
+      Datum    = as.Date(Datum),
+      Heim     = trimws(enc2utf8(Heim)),
+      Gast     = trimws(enc2utf8(Gast))
+    ) %>%
+    distinct() %>%
+    arrange(Spieltag, Datum, Heim, Gast)
+  
   
   teams_df <- read.csv2("data/TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
   
@@ -1224,6 +1241,7 @@ server <- function(input, output, session) {
       arrange(Bieter, MW_Klasse)
   })
   
+
   ## ---- FUNKTIONEN ----
   ### ---- Funktion MW vom Vortag suchen ----
   get_MW_vortag <- function(spieler, datum, transfermarkt) {
@@ -1523,6 +1541,10 @@ server <- function(input, output, session) {
   
   ## ---- Marktwerttrend ----
   output$mw_zeitachse_preview <- renderPlot({
+    # Vorhersage optional holen
+    pred <- tryCatch(mw_pred(), error = function(e) NULL)
+    info <- if (!is.null(pred)) pred$info_txt else NULL
+    
     df <- subset(gesamt_mw_df, !is.na(Datum))
     if (nrow(df) < 3) return(NULL)
     
@@ -1530,8 +1552,6 @@ server <- function(input, output, session) {
     win_days <- 14L
     df_short <- df[df$Datum >= (last_day - win_days), , drop = FALSE]
     if (nrow(df_short) < 3) df_short <- tail(df[order(df$Datum), ], 3)
-    
-    # NAs in y entfernen
     df_short <- df_short[!is.na(df_short$MW_rel_normiert), , drop = FALSE]
     if (nrow(df_short) < 2) return(NULL)
     
@@ -1540,23 +1560,24 @@ server <- function(input, output, session) {
     x1 <- trend_vals$Datum[3]; y1 <- trend_vals$MW_rel_normiert[3]
     col_seg <- if (y1 > y0) "darkgreen" else "red"
     
-    ggplot(df_short, aes(Datum, MW_rel_normiert)) +
+    p <- ggplot(df_short, aes(Datum, MW_rel_normiert)) +
       geom_line(linewidth = 1.1, color = "darkgrey", na.rm = TRUE) +
-      # Ein-Zeilen-Daten für Segment
       geom_segment(
-        data = data.frame(x0 = x0, y0 = y0, x1 = x1, y1 = y1),
-        aes(x = x0, y = y0, xend = x1, yend = y1),
-        arrow = arrow(length = unit(0.35, "cm"), type = "closed"),
+        data = data.frame(x0=x0,y0=y0,x1=x1,y1=y1),
+        aes(x=x0,y=y0,xend=x1,yend=y1),
+        arrow = arrow(length = unit(0.35,"cm"), type = "closed"),
         color = col_seg, linewidth = 1.4, inherit.aes = FALSE
       ) +
-      scale_x_date(limits = c(last_day - win_days, last_day),
-                   date_labels = "%d.%m.") +
-      # explizite Zahlformatierung vermeidet prettyNum-Warnung
-      scale_y_continuous(labels = scales::label_number(big_mark = ".", decimal_mark = ",")) +
+      scale_x_date(limits = c(last_day - win_days, last_day), date_labels = "%d.%m.") +
+      scale_y_continuous(labels = scales::label_number(big_mark=".", decimal_mark=",")) +
       labs(x = NULL, y = "relativer MW") +
       theme_minimal(base_size = 16) +
       theme(legend.position = "none")
+    
+    if (!is.null(info) && nzchar(info)) p <- p + labs(subtitle = info)
+    p
   })
+  
   
   ## ---- Kontostände ----
   output$kreditrahmen_uebersicht_preview <- DT::renderDT({
@@ -1606,8 +1627,9 @@ server <- function(input, output, session) {
       summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
     req(nrow(df) > 0)
     
-    abs_max <- max(abs(df$Gesamtgewinn), na.rm = TRUE)
-    lim_min <- -abs_max - 1e5
+    abs_max <- max(df$Gesamtgewinn, na.rm = TRUE)
+    abs_min <- min(df$Gesamtgewinn, na.rm = TRUE)
+    lim_min <-  abs_min - 1e5
     lim_max <-  abs_max + 1e5
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
@@ -1661,135 +1683,103 @@ server <- function(input, output, session) {
     req(input$main_navbar == "Marktwert-Entwicklung",
         input$mw_tabs      == "mw_verlauf")
     
-    sp <- post_sommerpause_data() 
-    # sp <- sommerpause_data() #Sommerpause
+    sp <- post_sommerpause_data()
     
-    # 1) Saubere Daten (ohne NA) und sortiert
     clean_df <- gesamt_mw_df %>%
       filter(!is.na(Datum)) %>%
       arrange(Datum)
     
-    # 2) Indices für 5-Tage-Fenster (letztes Fenster darf kürzer sein)
     n   <- nrow(clean_df)
     idx <- seq(1, n, by = 5)
     
-    # 3) Arrow-Dataframe zusammenbauen
     arrow_df <- tibble(
       x0 = clean_df$Datum[idx],
       y0 = clean_df$MW_rel_normiert[idx],
       x1 = clean_df$Datum[pmin(idx + 5, n)],
       y1 = clean_df$MW_rel_normiert[pmin(idx + 5, n)]
-    ) %>%
+    ) %>% mutate(color = ifelse(y1 > y0, "darkgreen", "red"))
+    
+    # Spieltags-Boxen (nur bis 21.12.2025)
+    cutoff <- as.Date("2025-12-21")
+    
+    sp_rects <- sp_tm %>%
+      mutate(Datum = as.Date(Datum)) %>%
+      filter(Datum <= cutoff) %>%           # NEU: nur bis 21.12.2025
+      group_by(Spieltag) %>%
+      summarise(
+        xmin = min(Datum),
+        xmax = max(Datum),
+        .groups = "drop"
+      ) %>%
       mutate(
-        color = ifelse(y1 > y0, "darkgreen", "red")
+        xmin = xmin - 0.5,
+        xmax = xmax + 0.5
       )
     
     
     ggplot() +
-      # Linien für MW-Verläufe
+      # Boxen unterlegen
+      geom_rect(
+        data = sp_rects,
+        aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+        fill = "grey50", alpha = 0.08, color = NA, inherit.aes = FALSE
+      ) +
+      
       geom_line(
         data = gesamt_mw_df %>%
           transmute(Datum, Wert = MW_rel_normiert, Typ = "Gesamtmarktwert"),
         aes(x = Datum, y = Wert, color = Typ),
-        linewidth = 1.2,
-        na.rm     = TRUE
+        linewidth = 1.2, na.rm = TRUE
       ) +
       geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
-                 color = "darkred", linewidth = 1.5) +
-      annotate(
-        "text",
-        x = as.Date("2025-08-22"),
-        y = 0.65,  # ggf. anpassen je nach Plot-Skalierung
-        label = "Saisonstart",
-        color = "darkred",
-        angle = 90,
-        vjust = -0.5,
-        fontface = "bold",
-        size = 4
-      ) +
+                 color = "darkred", linewidth = 1) +
+      annotate("text", x = as.Date("2025-08-22"), y = 0.8,
+               label = "Saisonstart", color = "darkred", angle = 90,
+               fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-09-07"), linetype = "dotted",
-                 color = "darkgreen", linewidth = 1.5) +
-      annotate(
-        "text",
-        x = as.Date("2025-09-07"),
-        y = 0.75,  # ggf. anpassen je nach Plot-Skalierung
-        label = "Kippunkt 1 (19/22/23) 07.09.25",
-        color = "darkgreen",
-        angle = 90,
-        vjust = -0.5,
-        fontface = "bold",
-        size = 4
-      ) +
+                 color = "darkgreen", linewidth = 1) +
+      annotate("text", x = as.Date("2025-09-07"), y = 0.875,
+               label = "Kippunkt 1 (19/22/23) 07.09.25", color = "darkgreen",
+               angle = 90, fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-10-07"), linetype = "dotted",
-                 color = "orange", linewidth = 1.5) +
-      annotate(
-        "text",
-        x = as.Date("2025-10-07"),
-        y = 0.8,  # ggf. anpassen je nach Plot-Skalierung
-        label = "Kippunkt 2 (18/21) 07.10.25",
-        color = "orange",
-        angle = 90,
-        vjust = -0.5,
-        fontface = "bold",
-        size = 4
-      ) +
+                 color = "orange", linewidth = 1) +
+      annotate("text", x = as.Date("2025-10-07"), y = 0.9,
+               label = "Kippunkt 2 (18/21) 07.10.25", color = "orange",
+               angle = 90, fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-12-24"), linetype = "dotted",
                  color = "red", size = 1.5) +
-      annotate(
-        "text",
-        x = as.Date("2025-12-24"),
-        y = 0.95,  # ggf. anpassen je nach Plot-Skalierung
-        label = "Kippunkt 3 (13/14/19/24) 24.12.25",
-        color = "red",
-        angle = 90,
-        vjust = -0.5,
-        fontface = "bold",
-        size = 4
-      ) +
-      geom_segment(
-        data        = arrow_df,
-        aes(x = x0, y = y0, xend = x1, yend = y1),
-        arrow       = arrow(length = unit(0.3, "cm"), type = "closed"),
-        color       = arrow_df$color,
-        linewidth = 1.2,
-        inherit.aes = FALSE
-      ) +
+      annotate("text", x = as.Date("2025-12-24"), y = 0.95,
+               label = "Kippunkt 3 (13/14/19/24) 24.12.25", color = "red",
+               angle = 90, vjust = 0.15, fontface = "bold", size = 5) +
       
-      coord_cartesian(ylim = c(0.5, 1.6)) +
+      geom_segment(
+        data = arrow_df,
+        aes(x = x0, y = y0, xend = x1, yend = y1),
+        arrow = arrow(length = unit(0.3, "cm"), type = "closed"),
+        color = arrow_df$color, linewidth = 1.2, inherit.aes = FALSE
+      ) +
+      coord_cartesian(ylim = c(0.75, 1.5)) +
       labs(
         title = "Marktwertentwicklung (relativ zum Startwert)",
-        x = "Datum",
-        y = "Relativer Marktwert",
-        color = "Linientyp"
+        x = "Datum", y = "Relativer Marktwert", color = "Linientyp"
       ) +
-      scale_color_manual(values = c(
-        "Gesamtmarktwert" = "darkgrey"
-      )) +
+      scale_color_manual(values = c("Gesamtmarktwert" = "darkgrey")) +
       theme_minimal(base_size = 16) +
       theme(legend.position = "none") +
-      # --- hier kommen die beiden Sommerpause‑Linien aus sp ---
+      
       geom_line(
-        #data = filter(sp, Saison == "Sommerpause_2024"), #Sommerpause
         data = filter(sp, Saison == "2024-25"),
         aes(x = Datum, y = MW_rel_normiert),
-        color    = "red",
-        linetype = "dashed",
-        linewidth= 1.3,
-        na.rm     = TRUE
+        color = "red", linetype = "dashed", linewidth = 1.3, na.rm = TRUE
       ) +
       geom_line(
-        #data = filter(sp, Saison == "Sommerpause_2021"), #Sommerpause
         data = filter(sp, Saison == "2021-22"),
         aes(x = Datum, y = MW_rel_normiert),
-        color    = "orange",
-        linetype = "dashed",
-        linewidth= 1.3,
-        na.rm     = TRUE
+        color = "orange", linetype = "dashed", linewidth = 1.3, na.rm = TRUE
       )
-    
   })
   
-  ## ---- Tägliche ME-Änderung-Verlauf ----
+  ## ---- Tägliche MW-Änderung ----
   output$mw_daily_change <- renderPlot({
     req(input$main_navbar == "Marktwert-Entwicklung",
         input$mw_tabs      == "mw_verlauf")
@@ -1827,298 +1817,108 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Prediction MW ----
-  
-  # ---- Mehrstufige Kombi-Prognose: nächste 4 Tage ----
-  output$mw_multi_forecast_plot <- renderPlot({
-    req(input$main_navbar == "Marktwert-Entwicklung",
-        input$mw_tabs %in% c("mw_verlauf","mw_analyse"))
-    
-    # Basis: heutige Tagesrenditen
-    df0 <- change_df_reactive() %>% mutate(Datum = as.Date(Datum))
-    
-    # Vorjahresprofil (2024-25) aus deinem sp-Datensatz
-    sp_all <- tryCatch(post_sommerpause_data(), error = function(e) NULL)
-    prev_change <- NULL
-    if (!is.null(sp_all)) {
-      prev <- sp_all %>%
-        filter(Saison == "2024-25") %>%
-        arrange(Datum) %>%
-        transmute(pct_prev = 100 * (MW_rel_normiert/lag(MW_rel_normiert) - 1))
-      prev_change <- prev$pct_prev
-    }
-    if (is.null(prev_change) || length(prev_change) < 10) {
-      # Fallback: ohne Vorjahresfeature
-      prev_change <- rep(0, nrow(df0) + 8)
-    }
-    
-    # Spieltage 2025 (ISO, ';')
-    sp_csv <- tryCatch(read.csv("data/spielplan_TM_2025.csv", sep=";", header=TRUE, stringsAsFactors=FALSE),
-                       error=function(e) NULL)
-    rel_levels <- c(-2,-1,0,1,2,"none")
-    rel_map <- NULL
-    if (!is.null(sp_csv) && "Datum" %in% names(sp_csv)) {
-      sp_dates <- as.Date(trimws(sp_csv$Datum))
-      rel_map <- expand.grid(Datum = sp_dates, rel = -2:2, KEEP.OUT.ATTRS = FALSE,
-                             stringsAsFactors = FALSE) %>%
-        mutate(Datum = as.Date(Datum) + rel) %>% distinct()
-    } else {
-      rel_map <- tibble(Datum = as.Date(character()), rel = integer())
-    }
-    
-    # Trainingsfeatures
-    tr <- df0 %>%
-      arrange(Datum) %>%
-      mutate(
-        lag1 = lag(pct_change),
-        lag2 = lag(pct_change, 2),
-        wd   = factor(as.integer(format(Datum, "%u")), levels = 1:7,
-                      labels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
-        mom7 = slider::slide_dbl(pct_change, mean, na.rm = TRUE, .before = 6, .complete = TRUE),
-        vola7= slider::slide_dbl(pct_change, sd,   na.rm = TRUE, .before = 6, .complete = TRUE),
-        idx  = row_number(),
-        prev = prev_change[pmin(idx, length(prev_change))]
-      ) %>%
-      left_join(rel_map, by = "Datum") %>%
-      mutate(rel = ifelse(is.na(rel), "none", as.character(rel)),
-             rel = factor(rel, levels = rel_levels)) %>%
-      filter(is.finite(pct_change), is.finite(lag1), is.finite(lag2))
-    
-    if (nrow(tr) < 30) return(invisible(NULL))
-    
-    # Modelle: Regression (E[∆]) + Logit (P(∆>0))
-    m_mean <- lm(pct_change ~ lag1 + lag2 + wd + rel + mom7 + vola7 + prev,
-                 data = tr, na.action = na.exclude)
-    m_prob <- glm(I(pct_change > 0) ~ lag1 + lag2 + wd + rel + mom7 + vola7 + prev,
-                  data = tr, family = binomial(), na.action = na.exclude)
-    
-    # Startwerte
-    last_row   <- tail(tr, 1)
-    last_date  <- last_row$Datum
-    last_lag1  <- tail(df0$pct_change, 1)
-    last_lag2  <- tail(df0$pct_change, 2)[1]
-    next_dates <- seq(last_date + 1, by = 1, length.out = 4)
-    
-    # Konstant halten: letzte mom7/vola7
-    mom7_last  <- tail(tr$mom7[is.finite(tr$mom7)], 1)
-    vola7_last <- tail(tr$vola7[is.finite(tr$vola7)], 1)
-    if (!is.finite(mom7_last))  mom7_last  <- 0
-    if (!is.finite(vola7_last)) vola7_last <- 0
-    
-    # Helper: rel zum Spieltag
-    rel_get <- function(d) {
-      if (nrow(rel_map) == 0) return("none")
-      r <- rel_map$rel[match(d, rel_map$Datum)]
-      ifelse(is.na(r), "none", as.character(r))
-    }
-    
-    # Vorhersage rekursiv für 4 Tage
-    out <- vector("list", 4)
-    lag1_now <- last_lag1
-    lag2_now <- last_lag2
-    for (k in 1:4) {
-      d  <- next_dates[k]
-      wd <- factor(as.integer(format(d, "%u")), levels = 1:7,
-                   labels = levels(tr$wd))
-      relk <- factor(rel_get(d), levels = rel_levels)
-      
-      idxk <- nrow(df0) + k
-      prevk <- prev_change[pmin(idxk, length(prev_change))]
-      
-      newd <- data.frame(
-        lag1 = lag1_now,
-        lag2 = lag2_now,
-        wd   = wd,
-        rel  = relk,
-        mom7 = mom7_last,
-        vola7= vola7_last,
-        prev = prevk
-      )
-      
-      # Erwartungswert + PI
-      pred_mean <- as.data.frame(predict(m_mean, newdata = newd, interval = "prediction"))
-      # Wahrscheinlichkeit
-      p_up <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
-      
-      out[[k]] <- data.frame(
-        Datum = d,
-        Wochentag = as.character(wd),
-        P_up = p_up,
-        E_delta = pred_mean$fit,
-        lwr = pred_mean$lwr,
-        upr = pred_mean$upr
-      )
-      
-      # Lags für nächsten Schritt aktualisieren
-      lag2_now <- lag1_now
-      lag1_now <- pred_mean$fit
-    }
-    pred_df <- do.call(rbind, out) %>%
-      arrange(Datum) %>%
-      mutate(
-        Wochentag = factor(Wochentag, levels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
-        label_raw = paste0(as.character(Wochentag), " ", format(Datum, "%d.%m.")),
-        combo_lbl = sprintf("%.0f%% → %+.2f%%", 100 * P_up, E_delta)
-      )
-    pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
-    
-    # MW-Pfad aus letztem MW_gesamt hochrechnen
-    mw_last <- tail(gesamt_mw_df$MW_gesamt[order(gesamt_mw_df$Datum)], 1)
-    mw_path <- Reduce(function(x, r) x * (1 + r/100),
-                      pred_df$E_delta, init = mw_last, accumulate = TRUE)[-1]
-    path_df <- data.frame(Datum = pred_df$Datum, MW_hat = mw_path, label = pred_df$label)
-    
-    # Plot: oben Balken P_up + Text, Punkte/PI für E_delta; unten MW-Pfad
-    p1 <- ggplot(pred_df, aes(x = label)) +
-      geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
-      geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
-      geom_text(aes(y = pmin(1, P_up + 0.06), label = combo_lbl),
-                size = 3.6, fontface = "bold") +
-      geom_point(aes(y = scales::rescale(E_delta, to = c(0,1))), size = 0) +
-      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
-      labs(title = "Kombinierte Prognose (nächste 4 Tage)",
-           x = NULL, y = "P(∆ > 0)") +
-      theme_minimal(base_size = 13)
-    
-    p2 <- ggplot(path_df, aes(x = label, y = MW_hat, group = 1)) +
-      geom_line(linewidth = 0.9) + geom_point(size = 2) +
-      labs(x = NULL, y = "prognostizierter Marktwert") +
-      theme_minimal(base_size = 13)
-    
-    # Zwei Reihen ohne Zusatzpakete: mit patchwork-ähnlicher Base-Grid vermeiden → einfach vertikal per cowplot vermeiden.
-    # Minimal: übereinander mit base R layout in ggplot geht nicht. Lösung: ein kombiniertes Panel per facet? Wir zeichnen beide Achsen getrennt:
-    # -> einfache Lösung: nur ein Panel mit P_up + E_delta (PI dünn, grau) und darunter sekundärer MW-Pfad als Annotation.
-    
-    # Einpanel-Variante mit E_delta und PI:
-    ggplot(pred_df, aes(x = label)) +
-      geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
-      geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
-      geom_text(aes(y = pmin(1, P_up + 0.06), label = combo_lbl),
-                size = 3.6, fontface = "bold") +
-      geom_point(aes(y = scales::rescale(E_delta, to = c(0.05, 0.95))), size = 2, color = "black") +
-      geom_errorbar(aes(ymin = scales::rescale(lwr, to = c(0.05, 0.95)),
-                        ymax = scales::rescale(upr, to = c(0.05, 0.95))),
-                    width = 0.15, linewidth = 0.3, linetype = "dashed", color = "grey50") +
-      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
-      labs(title = "Kombinierte Prognose (nächste 4 Tage)",
-           subtitle = paste0("MW jetzt ~ ", scales::comma(mw_last), " → in 4 Tagen ~ ",
-                             scales::comma(tail(path_df$MW_hat,1))),
-           x = NULL, y = "P(∆ > 0)  |  Punkte/Fehlerbalken zeigen E[∆] skaliert") +
-      theme_minimal(base_size = 13)
-  })
-  
-  
   
   ## ---- MW-events ----
-  output$mw_events <- renderPlot({
+  output$mw_events <- plotly::renderPlotly({
     req(input$main_navbar == "Marktwert-Entwicklung",
-        input$mw_tabs      == "mw_events_tab")
-    req(input$manager_select)
+        input$mw_tabs == "mw_events_tab",
+        input$manager_select, gesamt_mw_df)
     
-    # 1) Gesamtmarktwert-Daten
+    # MW absolut + normiert
     clean_df <- gesamt_mw_df %>%
-      filter(!is.na(Datum)) %>%
-      arrange(Datum)
+      dplyr::filter(!is.na(Datum)) %>%
+      dplyr::transmute(Datum = as.Date(Datum),
+                       MW_gesamt = as.numeric(MW_gesamt)) %>%
+      dplyr::arrange(Datum)
+    validate(need(nrow(clean_df) > 1, "Keine MW-Zeitreihe."))
+    base_mw <- clean_df$MW_gesamt[1]
+    clean_df$MW_norm <- clean_df$MW_gesamt / base_mw
     
-    y_min <- min(clean_df$MW_rel_normiert, na.rm = TRUE)
-    y_max <- max(clean_df$MW_rel_normiert, na.rm = TRUE)
+    # Flip-Daten (nur Verkäufe des gewählten Managers)
+    fd <- flip_data(); validate(need(!is.null(fd), "Keine Flip-Daten."))
+    sells <- fd %>%
+      dplyr::filter(Besitzer == input$manager_select, !is.na(Verkaufsdatum)) %>%
+      dplyr::mutate(
+        Verkaufsdatum = as.Date(Verkaufsdatum),
+        Einkaufsdatum = as.Date(Einkaufsdatum),
+        Gewinn        = as.numeric(Gewinn),
+        Einkaufspreis = as.numeric(Einkaufspreis),
+        Verkaufspreis = as.numeric(Verkaufspreis)
+      )
+    validate(need(nrow(sells) > 0, "Keine passenden Verkäufe gefunden."))
     
-    # 2) Transfer-Historie aufbereiten
-    tr <- transfers %>%
-      mutate(Datum = as.Date(Datum, "%d.%m.%Y")) %>%
-      arrange(Datum) %>%
-      group_by(Spieler) %>%
-      ungroup()
+    # Farben
+    sells$col <- ifelse(sells$Gewinn >= 0, "darkgreen", "red")
     
-    # 3a) Buy-Events: Manager ist Höchstbietender
-    buys <- tr %>%
-      filter(Hoechstbietender == input$manager_select) %>%
-      mutate(type = "buy")
+    # Tooltip-Text (wird NICHT als Label gezeichnet)
+    fmt_eur <- function(x) format(round(x,0), big.mark=".", decimal.mark=",", trim=TRUE)
+    sells$hover_text <- sprintf(
+      "%s<br>Verkauf: %s · Gewinn: %s €<br>Kauf: %s · %s €<br>Verkaufspreis: %s €",
+      sells$Spieler,
+      format(sells$Verkaufsdatum, "%d.%m.%Y"),
+      fmt_eur(sells$Gewinn),
+      format(sells$Einkaufsdatum, "%d.%m.%Y"),
+      fmt_eur(sells$Einkaufspreis),
+      fmt_eur(sells$Verkaufspreis)
+    )
     
-    # 3b) Sell-Events: Manager war Vorbesitzer und Computer kauft
-    sells <- tr %>%
-      filter(Besitzer == input$manager_select, Hoechstbietender == "Computer") %>%
-      mutate(type = "sell")
+    p <- plotly::plot_ly()
     
-    # 3c) Zusammentragen
-    events <- bind_rows(buys, sells)
-    req(nrow(events) > 0)
+    # Linie: MW normiert (linke Achse)
+    p <- p %>% plotly::add_lines(
+      data = clean_df, x = ~Datum, y = ~MW_norm, name = "MW normiert",
+      hovertemplate = "%{x|%d.%m.%Y}<br>MW normiert: %{y:.3f}<extra></extra>",
+      yaxis = "y"
+    )
     
-    # 4) Y-Offsets pro Tag berechnen, damit Punkte nicht überlappen
-    events <- events %>%
-      arrange(Datum) %>%
-      group_by(Datum) %>%
-      mutate(
-        n     = n(),
-        idx   = row_number(),
-        y_dot = 1.2 + (idx - (n + 1) / 2) * 0.05
-      ) %>%
-      ungroup()
+    ## Aufteilen nach Vorzeichen
+    sells_pos <- sells %>% dplyr::filter(Gewinn > 0)
+    sells_neg <- sells %>% dplyr::filter(Gewinn < 0)
     
-    # 5) Zeichnen
-    ggplot() +
-      # a) Gesamt-Marktwert
-      geom_line(
-        data      = clean_df,
-        aes(x = Datum, y = MW_rel_normiert),
-        color     = "darkgrey",
-        size      = 1.2,
-        na.rm     = TRUE
-      ) +
-      # b) Vertikale Linien für buy/sell
-      geom_vline(
-        data = events,
-        aes(xintercept = as.numeric(Datum), color = type),
-        size = 0.1
-      ) +
-      # c) Punkte auf den y_dot-Positionen
-      geom_point(
-        data = events,
-        aes(x = Datum, y = y_dot, color = type),
-        size = 3
-      ) +
-      # d) Spielernamen daneben
-      geom_text(
-        data     = events,
-        aes(x = Datum, y = y_dot, label = Spieler, color = type),
-        position = position_jitter(width  = 0,
-                                   height = 0.21),
-        size     = 4
-      ) +
-      # e) Farben festlegen, Legende ausblenden
-      scale_color_manual(
-        values = c(buy = "darkgreen", sell = "red"),
-        guide  = FALSE
-      ) +
-      # f) Saisonstart-Linie & Label
-      geom_vline(
-        xintercept = as.Date("2025-08-22"),
-        linetype   = "dotted",
-        color      = "darkred",
-        size       = 1.5
-      ) +
-      annotate(
-        "text",
-        x     = as.Date("2025-08-22"),
-        y     = 1.25,
-        label = "Saisonstart",
-        angle = 90,
-        vjust = -0.5,
-        fontface= "bold",
-        size   = 4,
-        color  = "darkred"
-      ) +
-      # g) Limits & Theme
-      coord_cartesian(ylim = c(0.5, 1.6)) +
-      labs(
-        x = "Datum",
-        y = "Relativer Marktwert"
-      ) +
-      theme_minimal(base_size = 16) +
-      theme(legend.position = "none")
+    # POSITIV
+    p <- p %>% plotly::add_bars(
+      data = sells_pos,
+      x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
+      split = ~Spieler,
+      name = "Gewinn",
+      marker = list(color = "rgba(0,128,0,0.95)",
+                    line = list(width = 1, color = "black")),
+      hovertext = ~hover_text,    # <-- statt text/hovertemplate
+      hoverinfo = "text",
+      showlegend = FALSE
+    )
+    
+    # NEGATIV
+    p <- p %>% plotly::add_bars(
+      data = sells_neg,
+      x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
+      split = ~Spieler,
+      name = "Verlust",
+      marker = list(color = "rgba(200,0,0,0.95)",
+                    line = list(width = 1, color = "black")),
+      hovertext = ~hover_text,    # <-- statt text/hovertemplate
+      hoverinfo = "text",
+      showlegend = FALSE
+    )
+    
+    
+    # Layout: relative statt stack
+    p <- p %>% plotly::layout(
+      barmode = "relative",   # <-- trennt pos/neg sauber
+      bargap = 0.35,
+      bargroupgap = 0.25,
+      xaxis = list(title = "", type = "date"),
+      yaxis  = list(title = "MW normiert (Start = 1)", rangemode = "tozero"),
+      yaxis2 = list(title = "Gewinn (€)", overlaying = "y", side = "right",
+                    tickformat = ",.0f", zeroline = TRUE),
+      showlegend = FALSE,
+      margin = list(l = 60, r = 70, t = 40, b = 40)
+    )
+    
+    
+    p
   })
   
-
   ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
   data <- reactive({
     df <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
@@ -2598,27 +2398,22 @@ server <- function(input, output, session) {
       theme(legend.position = "bottom")
   })
   
-  ### ---- MW-Analyse ----
+  ## ---- MW-Analyse ----
   
   # Helper auf Basis deines change_df, jetzt für "mw_verlauf" UND "mw_analyse" nutzbar
   change_df_reactive <- reactive({
-    req(input$main_navbar == "Marktwert-Entwicklung",
-        input$mw_tabs %in% c("mw_verlauf","mw_analyse"))
-    clean_df <- gesamt_mw_df %>%
-      filter(!is.na(Datum)) %>%
-      arrange(Datum)
-    
+    # req(input$main_navbar == "Marktwert-Entwicklung",
+    #     input$mw_tabs %in% c("mw_verlauf","mw_analyse"))  # <- AUS
+    clean_df <- gesamt_mw_df %>% filter(!is.na(Datum)) %>% arrange(Datum)
     df <- clean_df %>%
-      mutate(
-        MW_vortag  = lag(MW_gesamt),
-        abs_change = MW_gesamt - MW_vortag,
-        pct_change = 100 * abs_change / MW_vortag
-      ) %>%
+      mutate(MW_vortag = lag(MW_gesamt),
+             abs_change = MW_gesamt - MW_vortag,
+             pct_change = 100 * abs_change / MW_vortag) %>%
       filter(is.finite(pct_change))
-    
     req(nrow(df) > 0)
     df
   })
+  
   
   # 1) Wochentagseffekt (ohne Locale-Probleme)
   output$mw_weekday_effect_plot <- renderPlot({
@@ -2638,39 +2433,22 @@ server <- function(input, output, session) {
       geom_hline(yintercept = 0, linewidth = 0.4) +
       scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
       labs(title = "Wochentagseffekt", x = NULL, y = "Ø Tagesänderung (%)") +
-      theme_minimal(base_size = 14)
+      theme_minimal(base_size = 16)
   })
   
-  # 2) Autokorrelation Lags 1–5
-  output$mw_acf_plot <- renderPlot({
-    df <- change_df_reactive()
-    a <- acf(df$pct_change, lag.max = 5, plot = FALSE)
-    keep <- which(a$lag > 0 & a$lag <= 5)
-    if (length(keep) == 0) return(invisible(NULL))
-    
-    acf_df <- data.frame(
-      lag = as.integer(a$lag[keep] * 1),
-      acf = as.numeric(a$acf[keep])
-    )
-    
-    ggplot(acf_df, aes(x = factor(lag), y = acf)) +
-      geom_col(width = 0.6) +
-      geom_hline(yintercept = 0, linewidth = 0.4) +
-      labs(title = "Autokorrelation der Tagesrenditen", x = "Lag (Tage)", y = "ACF") +
-      theme_minimal(base_size = 14)
-  })
-  
-  # 3) Richtungswechsel (7T rolling)
-  output$mw_predict_plot <- renderPlot({
-    df <- change_df_reactive() %>%
-      mutate(
-        lag1 = lag(pct_change),
-        wd   = factor(as.integer(format(Datum, "%u")),
-                      levels = 1:7,
-                      labels = c("Mo","Di","Mi","Do","Fr","Sa","So"))
-      ) %>%
+  # 2) 2-Tages Vorhersage 
+  mw_pred <- reactive({
+    clean_df <- gesamt_mw_df %>% filter(!is.na(Datum)) %>% arrange(Datum)
+    df <- clean_df %>%
+      mutate(MW_vortag = lag(MW_gesamt),
+             abs_change = MW_gesamt - MW_vortag,
+             pct_change = 100 * abs_change / MW_vortag,
+             Datum = as.Date(Datum),
+             lag1  = lag(pct_change),
+             wd    = factor(as.integer(format(Datum, "%u")),
+                            levels = 1:7, labels = c("Mo","Di","Mi","Do","Fr","Sa","So"))) %>%
       filter(is.finite(pct_change), is.finite(lag1))
-    if (nrow(df) < 30) return(invisible(NULL))
+    if (nrow(df) < 30) return(NULL)
     
     m_prob <- glm(I(pct_change > 0) ~ lag1 + wd, data = df, family = binomial())
     m_mean <- lm(pct_change ~ lag1 + wd, data = df)
@@ -2679,115 +2457,149 @@ server <- function(input, output, session) {
     last_change <- tail(df$pct_change, 1)
     next_dates  <- seq(last_date + 1, by = 1, length.out = 2)
     next_wd     <- factor(as.integer(format(next_dates, "%u")),
-                          levels = 1:7,
-                          labels = levels(df$wd))
+                          levels = 1:7, labels = levels(df$wd))
     
-    # Rekursiv: t+1 mit lag1=last_change, t+2 mit lag1=yhat_{t+1}
     res <- vector("list", 2)
     lag1_now <- last_change
     for (k in 1:2) {
-      newd <- data.frame(lag1 = lag1_now,
-                         wd   = factor(next_wd[k], levels = levels(df$wd)))
-      p_up_k   <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
-      yhat_k   <- as.data.frame(predict(m_mean, newdata = newd, interval = "prediction"))
+      newd <- data.frame(lag1 = lag1_now, wd = factor(next_wd[k], levels = levels(df$wd)))
+      p_up_k <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
+      yhat_k <- as.data.frame(predict(m_mean, newdata = newd, interval = "prediction"))
       res[[k]] <- data.frame(
-        Datum = next_dates[k],
+        Datum = as.Date(next_dates[k]),
         Wochentag = as.character(next_wd[k]),
         P_up = p_up_k,
-        E_delta = yhat_k$fit,
-        lwr = yhat_k$lwr,
-        upr = yhat_k$upr
+        E_delta = yhat_k$fit, lwr = yhat_k$lwr, upr = yhat_k$upr
       )
       lag1_now <- yhat_k$fit
     }
+    
     pred_df <- do.call(rbind, res) %>%
       arrange(Datum) %>%
       mutate(
-        Wochentag = factor(Wochentag,
-                           levels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
+        Wochentag = factor(Wochentag, levels = c("Mo","Di","Mi","Do","Fr","Sa","So")),
         label_raw = paste0(as.character(Wochentag), " ", format(Datum, "%d.%m.")),
         combo_lbl = sprintf("%.0f%% → %+.2f%%", 100 * P_up, E_delta)
       )
+    info_txt <- paste0(
+      pred_df$label_raw, ": P↑ ", sprintf("%d%%", round(100*pred_df$P_up)),
+      ", Δ ", sprintf("%+.2f%%", pred_df$E_delta)
+    )
+    list(pred_df = pred_df, info_txt = paste(info_txt, collapse = "\n"))
+  })
+  
+  # ---- Plot
+  output$mw_predict_plot <- renderPlot({
+    mp <- mw_pred()
+    if (is.null(mp)) return(invisible(NULL))
+    pred_df <- mp$pred_df
     pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
     
     ggplot(pred_df, aes(x = label)) +
       geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
       geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
-      geom_text(aes(y = P_up + 0.05, label = combo_lbl),
-                size = 3.8, fontface = "bold") +
+      geom_text(aes(y = P_up + 0.05, label = combo_lbl), size = 5, fontface = "bold") +
       geom_point(aes(y = E_delta), size = 2, color = "black") +
-      geom_errorbar(aes(ymin = lwr, ymax = upr),
-                    width = 0.15, linewidth = 0.4,
+      geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.15, linewidth = 0.4,
                     linetype = "dashed", color = "grey50") +
       geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
       scale_fill_manual(values = c(`TRUE` = "darkgreen", `FALSE` = "red"), guide = "none") +
       coord_cartesian(ylim = c(0, max(pred_df$P_up) + 0.15)) +
-      labs(title = "Vorhersage nächster 2 Tage",
-           x = NULL,
-           y = "Wahrscheinlichkeit / erwartete ∆ (%)") +
-      theme_minimal(base_size = 13)
-    
+      labs(title = "2 Tages-Vorhersage", x = NULL, y = "Wahrscheinlichkeit / erwartete ∆ (%)") +
+      theme_minimal(base_size = 16)
   })
   
-  # 4) Volatilität & Momentum (gemeinsam)
-  output$mw_vola_momentum_plot <- renderPlot({
-    df <- change_df_reactive() %>%
-      mutate(
-        roll_mean_7 = slider::slide_dbl(pct_change, mean, na.rm = TRUE, .before = 6, .complete = TRUE),
-        roll_sd_7   = slider::slide_dbl(pct_change, sd,   na.rm = TRUE, .before = 6, .complete = TRUE)
+  # ---- Guards für tägliches Speichern 
+  # 1. Täglicher Tick (einmal pro Minute prüfen)
+  today_tick <- reactive({
+    invalidateLater(60 * 1000)
+    as.Date(Sys.time())
+  })
+  
+  # 2. Einmal täglich speichern (append, ohne Duplikate pro Tag)
+  observeEvent(today_tick(), {
+    pred <- mw_pred()
+    if (is.null(pred)) return()
+    
+    dir.create("data", showWarnings = FALSE, recursive = TRUE)
+    path <- file.path("data", "mw_pred.csv")
+    
+    new <- pred$pred_df
+    new$run_date <- as.character(today_tick())
+    new <- new[, c("run_date","Datum","Wochentag","P_up","E_delta","lwr","upr")]
+    
+    if (file.exists(path)) {
+      old <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
+      if (!is.null(old) && "run_date" %in% names(old) && any(old$run_date == new$run_date[1])) {
+        return(invisible(NULL))  # heute schon gespeichert
+      }
+      out <- if (is.null(old)) new else dplyr::bind_rows(old, new)
+    } else {
+      out <- new
+    }
+    
+    utils::write.csv(out, path, row.names = FALSE)
+    message("mw_pred gespeichert: ", path)
+  }, ignoreInit = FALSE)
+  
+  # 3) Vorhersagen-Check
+  output$mw_pred_vs_actual_plot <- renderPlot({
+    path <- file.path("data","mw_pred.csv")
+    validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
+    
+    # Vorhersage-Historie laden
+    pred <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
+    validate(need(!is.null(pred), "Vorhersage-Datei ist nicht lesbar."))
+    
+    # Typen
+    pred$run_date <- as.Date(pred$run_date)
+    pred$Datum    <- as.Date(pred$Datum)
+    
+    # Tatsächliche Tagesänderungen aus gesamt_mw_df berechnen
+    act <- gesamt_mw_df %>%
+      dplyr::filter(!is.na(Datum)) %>%
+      dplyr::arrange(Datum) %>%
+      dplyr::mutate(
+        MW_vortag  = dplyr::lag(MW_gesamt),
+        abs_change = MW_gesamt - MW_vortag,
+        pct_change = 100 * abs_change / MW_vortag
+      ) %>%
+      dplyr::filter(is.finite(pct_change)) %>%
+      dplyr::select(Datum, actual_delta = pct_change)
+    
+    # Nur für letzten verfügbaren Markttag vergleichen
+    last_actual_day <- max(act$Datum, na.rm = TRUE)
+    
+    cmp <- pred %>%
+      dplyr::inner_join(act, by = "Datum") %>%
+      dplyr::filter(
+        Datum == last_actual_day,
+        run_date %in% c(Datum - 1L, Datum - 2L)
+      ) %>%
+      dplyr::mutate(
+        horizon = ifelse(run_date == Datum - 1L, "T-1→Heute", "T-2→Heute")
       )
     
-    ggplot(df, aes(x = Datum)) +
-      geom_line(aes(y = roll_sd_7), linewidth = 0.7) +
-      geom_line(aes(y = roll_mean_7 * 3), linewidth = 0.7, linetype = "dashed") +
-      labs(title = "Volatilität (SD7) & Momentum (Mean7 ×3)", x = NULL, y = "SD7  |  Mean7 skaliert") +
-      theme_minimal(base_size = 14)
-  })
-  
-  # 5) Spieltagseffekt (±2 Tage)
-  output$mw_spieltag_effect_plot <- renderPlot({
-    df <- change_df_reactive() %>%
-      mutate(Datum = as.Date(Datum))  # sicherstellen: Date-Klasse
+    validate(need(nrow(cmp) > 0, "Noch keine passenden Vorhersagen für den letzten Markttag."))
     
-    # CSV robust einlesen (Semikolon, ISO-Format)
-    sp <- tryCatch(read.csv("data/spielplan_TM_2025.csv", sep = ";", header = TRUE, stringsAsFactors = FALSE),
-                   error = function(e) NULL)
-    if (is.null(sp) || !"Datum" %in% names(sp)) return(invisible(NULL))
-    
-    # BOM/Spaces entfernen und Datum casten
-    names(sp) <- trimws(sub("^\ufeff", "", names(sp)))
-    sp <- sp %>%
-      mutate(Datum = as.Date(trimws(Datum))) %>%   # "YYYY-MM-DD" → as.Date() ohne format
-      filter(!is.na(Datum)) %>%
-      distinct(Datum) %>%
-      arrange(Datum)
-    
-    if (nrow(sp) == 0) return(invisible(NULL))
-    
-    # Exakte ±2-Tage-Gitter um jeden Spieltag und Join auf df$Datum
-    rel_map <- expand.grid(Datum = sp$Datum, rel = -2:2, KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE) %>%
-      mutate(Datum = as.Date(Datum) + rel) %>%
-      distinct()
-    
-    rel_df <- df %>%
-      select(Datum, pct_change) %>%
-      inner_join(rel_map, by = "Datum") %>%
-      group_by(rel) %>%
-      summarise(mean_change = mean(pct_change, na.rm = TRUE),
-                n_days = n(), .groups = "drop") %>%
-      arrange(rel)
-    
-    validate(need(nrow(rel_df) > 0, "Keine Daten im ±2-Tage-Fenster gefunden. Prüfe, ob df$Datum und CSV-Daten dieselben Kalendertage abdecken."))
-    
-    ggplot(rel_df, aes(x = rel, y = mean_change, fill = mean_change >= 0)) +
-      geom_col(width = 0.6) +
-      geom_text(aes(label = paste0(round(mean_change, 2), "%\n(n=", n_days, ")")),
-                vjust = ifelse(rel_df$mean_change >= 0, -0.4, 1.2), size = 3.5) +
-      geom_hline(yintercept = 0, linewidth = 0.4) +
-      scale_x_continuous(breaks = -2:2) +
-      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
-      labs(title = "Spieltagseffekt (Ø ∆ um Spieltage, ±2 Tage)", x = "Tage relativ zum Spieltag", y = "Ø Tagesänderung (%)") +
-      theme_minimal(base_size = 14)
+    # Plot
+    ggplot(cmp, aes(x = factor(horizon, levels = c("T-2→Heute","T-1→Heute")))) +
+      # Prognose mit Intervall
+      geom_point(aes(y = E_delta), size = 3) +
+      geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.15, linewidth = 0.4, linetype = "dashed") +
+      # Ist-Wert
+      geom_point(aes(y = actual_delta), shape = 17, size = 3) +
+      geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
+      labs(
+        title    = paste0("Prediction vs. Ist (", format(last_actual_day, "%d.%m.%Y"), ")"),
+        x = NULL, y = "Δ Marktwert (%)",
+        subtitle = paste(
+          sprintf("T-1: P↑ %.0f%%", 100*cmp$P_up[cmp$horizon=="T-1→Heute"]),
+          sprintf("T-2: P↑ %.0f%%", 100*cmp$P_up[cmp$horizon=="T-2→Heute"]),
+          sep = "   "
+        )
+      ) +
+      theme_minimal(base_size = 16)
   })
   
   
@@ -5015,8 +4827,9 @@ server <- function(input, output, session) {
       group_by(Besitzer) %>%
       summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
     
-    abs_max <- max(abs(df$Gesamtgewinn), na.rm = TRUE)
-    lim_min <- -abs_max - 1e6
+    abs_max <- max(df$Gesamtgewinn, na.rm = TRUE)
+    abs_min <- min(df$Gesamtgewinn, na.rm = TRUE)
+    lim_min <-  abs_min - 1e6
     lim_max <-  abs_max + 1e6
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
@@ -5029,7 +4842,7 @@ server <- function(input, output, session) {
         position = position_dodge(width = 1),
         size = 8
       ) +
-      scale_fill_manual(values = c("TRUE" = "#2b9348", "FALSE" = "#d00000")) +
+      scale_fill_manual(values = c("TRUE" = "#66cdaa", "FALSE" = "#ff6f61")) +
       coord_flip(ylim = c(lim_min, lim_max)) +
       theme_minimal() +
       theme(
