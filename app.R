@@ -646,7 +646,7 @@ ui <- navbarPage(
                         ),
                         div(style = "margin-top:30px;"),   # Abstand eingefügt
                         fluidRow(
-                          column(12, plotOutput("kaufdiff_zeitlinien", height = "1500px"))
+                          column(12, plotlyOutput("kaufdiff_zeitlinien", height = "1500px"))
                         )
                       )
              ),
@@ -1819,7 +1819,7 @@ server <- function(input, output, session) {
   
   
   ## ---- MW-events ----
-  output$mw_events <- plotly::renderPlotly({
+  output$mw_events <- renderPlotly({
     req(input$main_navbar == "Marktwert-Entwicklung",
         input$mw_tabs == "mw_events_tab",
         input$manager_select, gesamt_mw_df)
@@ -1862,10 +1862,10 @@ server <- function(input, output, session) {
       fmt_eur(sells$Verkaufspreis)
     )
     
-    p <- plotly::plot_ly()
+    p <- plot_ly()
     
     # Linie: MW normiert (linke Achse)
-    p <- p %>% plotly::add_lines(
+    p <- p %>% add_lines(
       data = clean_df, x = ~Datum, y = ~MW_norm, name = "MW normiert",
       hovertemplate = "%{x|%d.%m.%Y}<br>MW normiert: %{y:.3f}<extra></extra>",
       yaxis = "y"
@@ -1876,7 +1876,7 @@ server <- function(input, output, session) {
     sells_neg <- sells %>% dplyr::filter(Gewinn < 0)
     
     # POSITIV
-    p <- p %>% plotly::add_bars(
+    p <- p %>% add_bars(
       data = sells_pos,
       x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
       split = ~Spieler,
@@ -1889,7 +1889,7 @@ server <- function(input, output, session) {
     )
     
     # NEGATIV
-    p <- p %>% plotly::add_bars(
+    p <- p %>% add_bars(
       data = sells_neg,
       x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
       split = ~Spieler,
@@ -1903,7 +1903,7 @@ server <- function(input, output, session) {
     
     
     # Layout: relative statt stack
-    p <- p %>% plotly::layout(
+    p <- p %>% layout(
       barmode = "relative",   # <-- trennt pos/neg sauber
       bargap = 0.35,
       bargroupgap = 0.25,
@@ -4945,7 +4945,7 @@ server <- function(input, output, session) {
   })
   
   
-  ## ---- FLIP-Kumuliert je Flip-Art ----
+  ## ---- Flip kumuliert je Flip-Art ----
   output$flip_cumcat <- renderPlot({
     req(nrow(flip_data()) > 0)
     flip_data() %>%
@@ -5001,87 +5001,6 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1),
             legend.position = "none")
-  })
-  
-  ## ---- Zeitbalken-Fip
-  ### ---- Kauf-Diff Zeitlinien je Manager (Balken am Kaufdatum) ----
-  output$kaufdiff_zeitlinien <- renderPlot({
-    req(teams_df, gesamt_mw_roh, transfers)
-    
-    manager_list <- sort(unique(teams_df$Manager))
-    
-    # Marktwert aktuell je Spieler
-    mw_aktuell <- gesamt_mw_roh %>%
-      group_by(Spieler) %>%
-      filter(Datum == max(Datum, na.rm = TRUE)) %>%
-      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
-    
-    # letzter Kauf je (Spieler, Manager) inkl. Kaufdatum
-    kaufpreise <- transfers %>%
-      group_by(Spieler, Hoechstbietender) %>%
-      arrange(desc(Datum)) %>%
-      slice(1) %>%
-      transmute(
-        Spieler,
-        Manager = Hoechstbietender,
-        Kaufdatum = as.Date(Datum),
-        Kaufpreis = as.numeric(Hoechstgebot)
-      )
-    
-    # Plot-Daten: aktueller MW + letzter Kauf pro Manager-Kader
-    plot_df <- teams_df %>%
-      select(Manager, Spieler) %>%
-      left_join(mw_aktuell, by = "Spieler") %>%
-      left_join(kaufpreise, by = c("Manager", "Spieler")) %>%
-      mutate(
-        Diff_Kauf = ifelse(is.na(Kaufpreis), NA_real_, Marktwert_aktuell - Kaufpreis),
-        pos = Diff_Kauf >= 0
-      ) %>%
-      filter(!is.na(Kaufpreis), !is.na(Diff_Kauf)) %>%
-      mutate(
-        Manager = factor(Manager, levels = manager_list),
-        Kaufdatum = as.Date(Kaufdatum)
-      )
-    
-    req(nrow(plot_df) > 0)
-    
-    # Format-Helfer
-    fmt_eur <- function(x) format(x, big.mark = ".", decimal.mark = ",")
-    plot_df$label <- ifelse(
-      plot_df$Diff_Kauf >= 0,
-      paste0("+", fmt_eur(round(plot_df$Diff_Kauf, 0)), " €"),
-      paste0("-", fmt_eur(abs(round(plot_df$Diff_Kauf, 0))), " €")
-    )
-    
-    ggplot(plot_df, aes(x = Kaufdatum, y = Diff_Kauf, group = Spieler, fill = pos)) +
-      # Balken am Kaufdatum, nach Spieler leicht gedodged, damit Überlagerung reduziert wird
-      geom_col(width = 12, position = position_dodge2(width = 12, preserve = "single"), show.legend = FALSE) +
-      # Null-Linie
-      geom_hline(yintercept = 0, linewidth = 0.3, color = "grey60") +
-      # Punkt am Baseline exakt am Kaufdatum
-      geom_point(aes(y = 0), size = 1.8, alpha = 0.9,
-                 position = position_dodge2(width = 12, preserve = "single")) +
-      # Wert-Label ober-/unterhalb des Balkens
-      geom_text(
-        aes(label = label, vjust = ifelse(Diff_Kauf >= 0, -0.2, 1.2)),
-        size = 3.5,
-        position = position_dodge2(width = 12, preserve = "single")
-      ) +
-      scale_fill_manual(values = c(`TRUE` = "#388e3c", `FALSE` = "#e53935")) +
-      facet_grid(Manager ~ ., scales = "free_y", switch = "y") +
-      scale_y_continuous(
-        labels = function(x) paste0(fmt_eur(x), " €"),
-        expand = expansion(mult = c(0.05, 0.15))
-      ) +
-      scale_x_date(date_breaks = "1 week", date_labels = "%d.%m.") +
-      scale_fill_manual(values = c(`TRUE` = "#388e3c", `FALSE` = "#e53935"), guide = "none") +
-      labs(x = "", y = "") +
-      theme_minimal(base_size = 14) +
-      theme(
-        strip.placement = "outside",
-        strip.text.y.left = element_text(face = "bold", size = 12),
-        panel.grid.minor = element_blank()
-      )
   })
   
   ## ---- Hypothetischer Kader-Fip ----
@@ -5205,6 +5124,121 @@ server <- function(input, output, session) {
     )
     
   })
+  
+  ## ---- Zeitbalken-Flip ----
+  output$kaufdiff_zeitlinien <- renderPlotly({
+    req(teams_df, gesamt_mw_roh, transfers)
+    
+    manager_list <- sort(unique(teams_df$Manager))
+    
+    # Marktwert aktuell je Spieler
+    mw_aktuell <- gesamt_mw_roh %>%
+      mutate(
+        # ISO zuerst, sonst deutsch; letzter Fallback base
+        Datum    = coalesce(ymd(Datum), dmy(Datum), suppressWarnings(as.Date(Datum))),
+        Marktwert = as.numeric(Marktwert)
+      ) %>%
+      group_by(Spieler) %>%
+      filter(Datum == max(Datum, na.rm = TRUE)) %>%
+      summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
+    
+    # letzter Kauf je (Spieler, Manager)
+    kaufpreise <- transfers %>%
+      mutate(
+        # deutsch zuerst, sonst ISO
+        Datum = coalesce(dmy(Datum), ymd(Datum), suppressWarnings(as.Date(Datum))),
+        # falls "1.234.567" vorkommt:
+        Hoechstgebot = as.numeric(gsub("\\.", "", as.character(Hoechstgebot)))
+      ) %>%
+      group_by(Spieler, Hoechstbietender) %>%
+      slice_max(order_by = Datum, n = 1, with_ties = FALSE) %>%
+      ungroup() %>%
+      transmute(
+        Spieler,
+        Manager   = Hoechstbietender,
+        Kaufdatum = as.Date(Datum),
+        Kaufpreis = Hoechstgebot
+      )
+    
+    # Plot-Daten
+    plot_df <- teams_df %>%
+      select(Manager, Spieler) %>%
+      left_join(mw_aktuell, by = "Spieler") %>%
+      left_join(kaufpreise, by = c("Manager","Spieler")) %>%
+      mutate(
+        Diff_Kauf = ifelse(is.na(Kaufpreis), NA_real_, Marktwert_aktuell - Kaufpreis),
+        pos       = Diff_Kauf >= 0
+      ) %>%
+      filter(!is.na(Kaufpreis), !is.na(Diff_Kauf), !is.na(Kaufdatum)) %>%
+      mutate(Manager = factor(Manager, levels = manager_list))
+    
+    req(nrow(plot_df) > 0)
+    
+    # Achsenbegrenzung +30 Tage
+    x_min <- min(plot_df$Kaufdatum, na.rm = TRUE)
+    x_max <- max(plot_df$Kaufdatum, na.rm = TRUE) + days(30)
+    
+    # Tooltip
+    fmt_eur <- function(x) format(round(x, 0), big.mark = ".", decimal.mark = ",")
+    plot_df <- plot_df %>%
+      mutate(
+        Kaufdatum_fmt = format(Kaufdatum, "%d.%m.%Y"),
+        Diff_lbl      = ifelse(Diff_Kauf >= 0,
+                               paste0("+", fmt_eur(Diff_Kauf), " €"),
+                               paste0("-", fmt_eur(abs(Diff_Kauf)), " €")),
+        tooltip = paste0(
+          "Spieler: ", Spieler,
+          "<br>Manager: ", Manager,
+          "<br>Kaufdatum: ", Kaufdatum_fmt,
+          "<br>Kaufpreis: ", fmt_eur(Kaufpreis), " €",
+          "<br>MW aktuell: ", fmt_eur(Marktwert_aktuell), " €",
+          "<br>Diff: ", Diff_lbl
+        )
+      )
+    
+    p <- ggplot(plot_df, aes(x = Kaufdatum, y = Diff_Kauf, group = Spieler, fill = pos)) +
+      geom_col(aes(text = tooltip),
+               width = 12,
+               position = position_dodge2(width = 12, preserve = "single"),
+               show.legend = FALSE) +
+      geom_hline(yintercept = 0, linewidth = 0.5, color = "grey60", linetype = "dashed") +
+      geom_point(aes(y = 0, text = tooltip),
+                 size = 1.8, alpha = 0.9,
+                 position = position_dodge2(width = 12, preserve = "single")) +
+      scale_fill_manual(values = c(`TRUE` = "#388e3c", `FALSE` = "#e53935"), guide = "none") +
+      facet_grid(Manager ~ ., scales = "fixed", switch = "y") +
+      scale_y_continuous(
+        labels = scales::label_number(scale_cut = scales::cut_short_scale()),
+        expand = expansion(mult = c(0.05, 0.15))
+      ) +
+    
+      scale_x_date(limits = c(x_min, x_max),
+                   date_breaks = "1 week", date_labels = "%d.%m.",
+                   expand = expansion(mult = c(0, 0))) +
+      labs(x = "", y = "") +
+      theme_minimal(base_size = 16) +
+      theme(
+        strip.placement   = "outside",
+        strip.text.y.left = element_text(face = "bold", size = 16),
+        panel.grid.minor  = element_blank(),
+        panel.grid.major  = element_blank()
+      )
+    
+    p <- p +
+      theme(
+        panel.spacing.y     = unit(0.8, "lines"),
+        panel.border        = element_rect(colour = "#c7c7c7", fill = NA, linewidth = 0.6),
+        strip.background.y  = element_rect(fill = "#f2f2f2", colour = "#c7c7c7")
+      )
+    
+    
+    ggplotly(p, tooltip = "text") %>%
+      layout(showlegend = FALSE,
+             hoverlabel = list(align = "left"))
+    
+  })
+  
+  
   
   ## ---- Flip-Historie je Spieler ----
   output$flip_player_table <- renderDT({
