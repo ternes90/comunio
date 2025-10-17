@@ -316,11 +316,6 @@ ui <- navbarPage(
                       br(),
                       plotOutput("mw_daily_change", height = 300)
              ),
-             tabPanel(title = "Käufe und Verkäufe", value = "mw_events_tab",
-                      fluidRow(column(4, uiOutput("manager_select_ui"))),
-                      br(),
-                      plotlyOutput("mw_events", height = 600)
-             ),
              tabPanel(title = "MW-Verlauf 24/25 (MW-Klassen)", value = "mw_klassen",
                       plotOutput("mw_plot"),
                       plotOutput("mw_plot_now")
@@ -542,6 +537,8 @@ ui <- navbarPage(
              ),
              tabPanel(
                "Kaderwert-Plot",
+               checkboxInput("smooth_mgr_curves", "Verlauf glätten (Trend je Manager)", FALSE),
+               
                plotOutput("kaderwert_plot", height = 600)
              )
            )
@@ -651,8 +648,15 @@ ui <- navbarPage(
                       )
              ),
              
-             # TAB 4: Historie
-             tabPanel("Historie",
+             # TAB 4: Flip-Historie
+             tabPanel(title = "Flip-Historie", value = "mw_events_tab",
+                      fluidRow(column(4, uiOutput("manager_select_ui"))),
+                      br(),
+                      plotlyOutput("mw_events", height = 600)
+             ),
+             
+             # TAB 5: Historie
+             tabPanel("Historie (Tabelle)",
                       fluidPage(
                         fluidRow(
                           column(2,
@@ -808,8 +812,8 @@ server <- function(input, output, session) {
       
     } else if (sel == "Mein Team") {
       choices <- teams_df %>%
-        dplyr::filter(Manager == "Dominik") %>%
-        dplyr::pull(Spieler) %>%
+        filter(Manager == "Dominik") %>%
+        pull(Spieler) %>%
         sort()
       updateSelectInput(session, "spieler_select2", choices = choices)
       
@@ -819,14 +823,14 @@ server <- function(input, output, session) {
         sep = ";", na.strings = c("", "NA"),
         stringsAsFactors = FALSE, fileEncoding = "UTF-8"
       ) %>%
-        dplyr::mutate(
+        mutate(
           Datum = as.Date(Datum, format = "%d.%m.%Y"),
           Marktwert = as.numeric(Marktwert)
         )
       
       choices <- ap_df %>%
-        dplyr::filter(Datum == Sys.Date()) %>%
-        dplyr::pull(Spieler) %>%
+        filter(Datum == Sys.Date()) %>%
+        pull(Spieler) %>%
         sort()
       updateSelectInput(session, "spieler_select2", choices = choices)
     }
@@ -1747,7 +1751,7 @@ server <- function(input, output, session) {
                label = "Kippunkt 2 (18/21) 07.10.25", color = "orange",
                angle = 90, fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-12-24"), linetype = "dotted",
-                 color = "red", size = 1.5) +
+                 color = "red", linewidth = 1.5) +
       annotate("text", x = as.Date("2025-12-24"), y = 0.95,
                label = "Kippunkt 3 (13/14/19/24) 24.12.25", color = "red",
                angle = 90, vjust = 0.15, fontface = "bold", size = 5) +
@@ -1815,108 +1819,6 @@ server <- function(input, output, session) {
         xlim = c(min(change_df$Datum), as.Date("2026-01-01")),   # schneidet ohne Rows zu droppen
         ylim = c(min(change_df$pct_change)*1.1, max(change_df$pct_change)*1.1)
       )
-  })
-  
-  
-  ## ---- MW-events ----
-  output$mw_events <- renderPlotly({
-    req(input$main_navbar == "Marktwert-Entwicklung",
-        input$mw_tabs == "mw_events_tab",
-        input$manager_select, gesamt_mw_df)
-    
-    # MW absolut + normiert
-    clean_df <- gesamt_mw_df %>%
-      dplyr::filter(!is.na(Datum)) %>%
-      dplyr::transmute(Datum = as.Date(Datum),
-                       MW_gesamt = as.numeric(MW_gesamt)) %>%
-      dplyr::arrange(Datum)
-    validate(need(nrow(clean_df) > 1, "Keine MW-Zeitreihe."))
-    base_mw <- clean_df$MW_gesamt[1]
-    clean_df$MW_norm <- clean_df$MW_gesamt / base_mw
-    
-    # Flip-Daten (nur Verkäufe des gewählten Managers)
-    fd <- flip_data(); validate(need(!is.null(fd), "Keine Flip-Daten."))
-    sells <- fd %>%
-      dplyr::filter(Besitzer == input$manager_select, !is.na(Verkaufsdatum)) %>%
-      dplyr::mutate(
-        Verkaufsdatum = as.Date(Verkaufsdatum),
-        Einkaufsdatum = as.Date(Einkaufsdatum),
-        Gewinn        = as.numeric(Gewinn),
-        Einkaufspreis = as.numeric(Einkaufspreis),
-        Verkaufspreis = as.numeric(Verkaufspreis)
-      )
-    validate(need(nrow(sells) > 0, "Keine passenden Verkäufe gefunden."))
-    
-    # Farben
-    sells$col <- ifelse(sells$Gewinn >= 0, "darkgreen", "red")
-    
-    # Tooltip-Text (wird NICHT als Label gezeichnet)
-    fmt_eur <- function(x) format(round(x,0), big.mark=".", decimal.mark=",", trim=TRUE)
-    sells$hover_text <- sprintf(
-      "%s<br>Verkauf: %s · Gewinn: %s €<br>Kauf: %s · %s €<br>Verkaufspreis: %s €",
-      sells$Spieler,
-      format(sells$Verkaufsdatum, "%d.%m.%Y"),
-      fmt_eur(sells$Gewinn),
-      format(sells$Einkaufsdatum, "%d.%m.%Y"),
-      fmt_eur(sells$Einkaufspreis),
-      fmt_eur(sells$Verkaufspreis)
-    )
-    
-    p <- plot_ly()
-    
-    # Linie: MW normiert (linke Achse)
-    p <- p %>% add_lines(
-      data = clean_df, x = ~Datum, y = ~MW_norm, name = "MW normiert",
-      hovertemplate = "%{x|%d.%m.%Y}<br>MW normiert: %{y:.3f}<extra></extra>",
-      yaxis = "y"
-    )
-    
-    ## Aufteilen nach Vorzeichen
-    sells_pos <- sells %>% dplyr::filter(Gewinn > 0)
-    sells_neg <- sells %>% dplyr::filter(Gewinn < 0)
-    
-    # POSITIV
-    p <- p %>% add_bars(
-      data = sells_pos,
-      x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
-      split = ~Spieler,
-      name = "Gewinn",
-      marker = list(color = "rgba(0,128,0,0.95)",
-                    line = list(width = 1, color = "black")),
-      hovertext = ~hover_text,    # <-- statt text/hovertemplate
-      hoverinfo = "text",
-      showlegend = FALSE
-    )
-    
-    # NEGATIV
-    p <- p %>% add_bars(
-      data = sells_neg,
-      x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
-      split = ~Spieler,
-      name = "Verlust",
-      marker = list(color = "rgba(200,0,0,0.95)",
-                    line = list(width = 1, color = "black")),
-      hovertext = ~hover_text,    # <-- statt text/hovertemplate
-      hoverinfo = "text",
-      showlegend = FALSE
-    )
-    
-    
-    # Layout: relative statt stack
-    p <- p %>% layout(
-      barmode = "relative",   # <-- trennt pos/neg sauber
-      bargap = 0.35,
-      bargroupgap = 0.25,
-      xaxis = list(title = "", type = "date"),
-      yaxis  = list(title = "MW normiert (Start = 1)", rangemode = "tozero"),
-      yaxis2 = list(title = "Gewinn (€)", overlaying = "y", side = "right",
-                    tickformat = ",.0f", zeroline = TRUE),
-      showlegend = FALSE,
-      margin = list(l = 60, r = 70, t = 40, b = 40)
-    )
-    
-    
-    p
   })
   
   ## ---- Hist. Marktwert-Entwicklung ab 01.06.2024 (je Klasse) ----
@@ -2509,13 +2411,13 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16)
   })
   
-  # ---- Guards für tägliches Speichern 
+  # # ---- Guards für tägliches Speichern 
   # 1. Täglicher Tick (einmal pro Minute prüfen)
   today_tick <- reactive({
     invalidateLater(60 * 1000)
     as.Date(Sys.time())
   })
-  
+
   # 2. Einmal täglich speichern (append, ohne Duplikate pro Tag)
   observeEvent(today_tick(), {
     pred <- mw_pred()
@@ -2528,68 +2430,82 @@ server <- function(input, output, session) {
     new$run_date <- as.character(today_tick())
     new <- new[, c("run_date","Datum","Wochentag","P_up","E_delta","lwr","upr")]
     
+    ## NEU: konsistente Typen
+    new$Datum     <- as.Date(new$Datum)
+    new$Wochentag <- as.character(new$Wochentag)
+    
     if (file.exists(path)) {
       old <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
       if (!is.null(old) && "run_date" %in% names(old) && any(old$run_date == new$run_date[1])) {
-        return(invisible(NULL))  # heute schon gespeichert
+        return(invisible(NULL))
       }
-      out <- if (is.null(old)) new else dplyr::bind_rows(old, new)
+      if (!is.null(old)) {
+        old$Datum     <- as.Date(old$Datum)
+        old$Wochentag <- as.character(old$Wochentag)
+      }
+      out <- if (is.null(old)) new else bind_rows(old, new)
     } else {
       out <- new
     }
     
     utils::write.csv(out, path, row.names = FALSE)
     message("mw_pred gespeichert: ", path)
-  }, ignoreInit = FALSE)
+  })
   
+
   # 3) Vorhersagen-Check
   output$mw_pred_vs_actual_plot <- renderPlot({
     path <- file.path("data","mw_pred.csv")
     validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
-    
+
     # Vorhersage-Historie laden
     pred <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
     validate(need(!is.null(pred), "Vorhersage-Datei ist nicht lesbar."))
-    
+
     # Typen
     pred$run_date <- as.Date(pred$run_date)
     pred$Datum    <- as.Date(pred$Datum)
-    
+
     # Tatsächliche Tagesänderungen aus gesamt_mw_df berechnen
     act <- gesamt_mw_df %>%
-      dplyr::filter(!is.na(Datum)) %>%
-      dplyr::arrange(Datum) %>%
-      dplyr::mutate(
-        MW_vortag  = dplyr::lag(MW_gesamt),
+      filter(!is.na(Datum)) %>%
+      arrange(Datum) %>%
+      mutate(
+        MW_vortag  = lag(MW_gesamt),
         abs_change = MW_gesamt - MW_vortag,
         pct_change = 100 * abs_change / MW_vortag
       ) %>%
-      dplyr::filter(is.finite(pct_change)) %>%
-      dplyr::select(Datum, actual_delta = pct_change)
-    
+      filter(is.finite(pct_change)) %>%
+      select(Datum, actual_delta = pct_change)
+
     # Nur für letzten verfügbaren Markttag vergleichen
     last_actual_day <- max(act$Datum, na.rm = TRUE)
-    
+
     cmp <- pred %>%
-      dplyr::inner_join(act, by = "Datum") %>%
-      dplyr::filter(
+      inner_join(act, by = "Datum") %>%
+      filter(
         Datum == last_actual_day,
         run_date %in% c(Datum - 1L, Datum - 2L)
       ) %>%
-      dplyr::mutate(
+      mutate(
         horizon = ifelse(run_date == Datum - 1L, "T-1→Heute", "T-2→Heute")
       )
-    
+
     validate(need(nrow(cmp) > 0, "Noch keine passenden Vorhersagen für den letzten Markttag."))
-    
+
     # Plot
     ggplot(cmp, aes(x = factor(horizon, levels = c("T-2→Heute","T-1→Heute")))) +
-      # Prognose mit Intervall
-      geom_point(aes(y = E_delta), size = 3) +
-      geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.15, linewidth = 0.4, linetype = "dashed") +
-      # Ist-Wert
-      geom_point(aes(y = actual_delta), shape = 17, size = 3) +
+      # Prognose (Kreis)
+      geom_point(aes(y = E_delta, color = "Vorhersage"), size = 3) +
+      geom_errorbar(aes(ymin = lwr, ymax = upr, color = "Vorhersage"),
+                    width = 0.15, linewidth = 0.4, linetype = "dashed") +
+      # Ist-Wert (Dreieck)
+      geom_point(aes(y = actual_delta, color = "Ist-Wert"), shape = 17, size = 3) +
       geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
+      scale_color_manual(
+        name = NULL,
+        values = c("Vorhersage" = "steelblue", "Ist-Wert" = "black")
+      ) +
       labs(
         title    = paste0("Prediction vs. Ist (", format(last_actual_day, "%d.%m.%Y"), ")"),
         x = NULL, y = "Δ Marktwert (%)",
@@ -2599,7 +2515,9 @@ server <- function(input, output, session) {
           sep = "   "
         )
       ) +
-      theme_minimal(base_size = 16)
+      theme_minimal(base_size = 16) +
+      theme(legend.position = "top")
+    
   })
   
   
@@ -3523,33 +3441,33 @@ server <- function(input, output, session) {
   # Reactive DataFrames vorbereiten
   meine_spieler <- reactive({
     teams_df %>%
-      dplyr::filter(Manager == "Dominik") %>%
-      dplyr::pull(Spieler)
+      filter(Manager == "Dominik") %>%
+      pull(Spieler)
   })
   
   # Aktuelle Marktwerte
   aktuelle_mw <- reactive({
     max_datum <- max(ap_df$Datum, na.rm = TRUE)
     ap_df %>%
-      dplyr::filter(Datum == max_datum) %>%
-      dplyr::transmute(Spieler, Marktwert = as.numeric(Marktwert))
+      filter(Datum == max_datum) %>%
+      transmute(Spieler, Marktwert = as.numeric(Marktwert))
   })
   
   # Rohdaten der Angebote
   angebote_raw <- angebote %>%
-    dplyr::mutate(Status = ifelse(is.na(Status), "aktiv", Status))
+    mutate(Status = ifelse(is.na(Status), "aktiv", Status))
   
   angebote_df <- reactive({
     angebote_raw %>%
-      dplyr::filter(Status == "aktiv") %>%
-      dplyr::rename(Angebot = `Angebot (€)`) %>%
-      dplyr::mutate(
+      filter(Status == "aktiv") %>%
+      rename(Angebot = `Angebot (€)`) %>%
+      mutate(
         Spieler = trimws(Spieler),
         Angebot = as.numeric(gsub("\\.", "", Angebot))
       ) %>%
-      dplyr::filter(Spieler %in% meine_spieler()) %>%
-      dplyr::left_join(aktuelle_mw(), by = "Spieler") %>%
-      dplyr::mutate(
+      filter(Spieler %in% meine_spieler()) %>%
+      left_join(aktuelle_mw(), by = "Spieler") %>%
+      mutate(
         Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
         Kreditverlust = Marktwert / 4
       )
@@ -3557,7 +3475,7 @@ server <- function(input, output, session) {
   
   team_spieler_df <- reactive({
     aktuelle_mw() %>%
-      dplyr::semi_join(teams_df %>% dplyr::filter(Manager == "Dominik"), by = "Spieler")
+      semi_join(teams_df %>% filter(Manager == "Dominik"), by = "Spieler")
   })
   
   # UI-Inputs befüllen
@@ -3606,7 +3524,7 @@ server <- function(input, output, session) {
     req(input$spieler_select)
     
     # — (1) Mindestgebot parsen —
-    sel     <- tm_df %>% dplyr::filter(Spieler == input$spieler_select)
+    sel     <- tm_df %>% filter(Spieler == input$spieler_select)
     mindest <- suppressWarnings(as.numeric(gsub("\\.", "", sel$Mindestgebot[1])))
     
     # — (2) Kontostand & (3) Kreditrahmen —
@@ -3679,17 +3597,17 @@ server <- function(input, output, session) {
     
     # Label-Positionen
     df_pos <- df_avail_pos %>%
-      dplyr::group_by(x) %>% dplyr::arrange(x, segment) %>%
-      dplyr::mutate(ypos = cumsum(value) - value/2) %>%
-      dplyr::ungroup()
+      group_by(x) %>% arrange(x, segment) %>%
+      mutate(ypos = cumsum(value) - value/2) %>%
+      ungroup()
     
     df_neg <- df_avail_neg %>%
-      dplyr::group_by(x) %>% dplyr::arrange(x, value) %>%
-      dplyr::mutate(ypos = cumsum(value) - value/2) %>%
-      dplyr::ungroup()
+      group_by(x) %>% arrange(x, value) %>%
+      mutate(ypos = cumsum(value) - value/2) %>%
+      ungroup()
     
-    df_plot <- dplyr::bind_rows(df_pos, df_neg) %>%
-      dplyr::mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
+    df_plot <- bind_rows(df_pos, df_neg) %>%
+      mutate(stack_order = as.integer(factor(segment, levels = seg_levels)))
     
     # Kontostand-Label knapp neben y=0
     y_span <- max(c(df_avail_pos$value[df_avail_pos$x == "Verfügbar"], df_mindest$value), na.rm = TRUE)
@@ -3720,7 +3638,7 @@ server <- function(input, output, session) {
         width = 0.6
       ) +
       ggplot2::geom_text(
-        data = df_plot %>% dplyr::filter(abs(value) > 1e-9, label != ""),
+        data = df_plot %>% filter(abs(value) > 1e-9, label != ""),
         ggplot2::aes(x = x, y = ypos, label = label),
         colour = "black", size = 4
       ) +
@@ -4011,6 +3929,28 @@ server <- function(input, output, session) {
         "Historische Punkteausbeute" = Historische_Punkteausbeute
       )
     
+    # --- LI: Einsatzquote + Startelf-Prozent (kompakt "E/S11") ---
+    df_pre <- df_pre %>%
+      left_join(
+        li_df %>%
+          select(Comunio_Name,
+                 any_of(c("EQ_Gesamt_Quote","EQ_Startelf_."))) %>%
+          mutate(
+            EQ_Gesamt_Quote = suppressWarnings(as.numeric(EQ_Gesamt_Quote)),
+            `EQ_Startelf_.` = suppressWarnings(as.numeric(`EQ_Startelf_.`))
+          ),
+        by = c("Spieler" = "Comunio_Name")
+      ) %>%
+      mutate(
+        Einsatz_S11_fmt = case_when(
+          is.na(EQ_Gesamt_Quote) & is.na(`EQ_Startelf_.`) ~ "-",
+          TRUE ~ sprintf("%s/%s&nbsp;%%",
+                         ifelse(is.na(EQ_Gesamt_Quote), "-", as.character(round(EQ_Gesamt_Quote))),
+                         ifelse(is.na(`EQ_Startelf_.`),   "-", as.character(round(`EQ_Startelf_.`))))
+        )
+      )
+    
+    
     # StatusIcons
     df_pre <- df_pre %>%
       left_join(status_latest, by = "Spieler") %>%
@@ -4048,6 +3988,7 @@ server <- function(input, output, session) {
         stat  <- gruppe$StatusTag[i]
         v     <- gruppe$Logo[i]
         pps   <- gruppe$`Punkte pro Spiel`[i]
+        es11  <- gruppe$Einsatz_S11_fmt[i]
         pl    <- gruppe$`Preis-Leistung`[i]
         hist  <- gruppe$`Historische Punkteausbeute`[i]
         mw    <- gruppe$Marktwert_fmt[i]
@@ -4127,19 +4068,21 @@ server <- function(input, output, session) {
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
+           <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:right;'>%s</td>
          </tr>",
           v,sp,stat,trend3,diff,diffk,
+          mw, 
           ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark=",")),
+          es11,
           btn, btn_gpt,
           ifelse(is.na(pl),  "-", pl),
-          ifelse(is.na(hist), "-", hist),
-          mw
+          ifelse(is.na(hist), "-", hist)
         )
       })
       
       paste0(
-        sprintf("<tr><th colspan='12' style='text-align:left; background:#eee; padding:6px 0 4px 20px;'>%s</th></tr>", pos_name),
+        sprintf("<tr><th colspan='13' style='text-align:left; background:#eee; padding:6px 0 4px 20px;'>%s</th></tr>", pos_name),
         paste(rows, collapse = "\n")
       )
     })
@@ -4153,12 +4096,13 @@ server <- function(input, output, session) {
        <th style='text-align:left;'>Trend</th>
        <th style='text-align:center;'>Δ-Vortag</th>
        <th style='text-align:center;'>Δ-Kauf</th>
+       <th style='text-align:center;'>MW</th>
        <th style='text-align:center;'>PPS</th>
+       <th style='text-align:center;'>E/S11&nbsp;%</th>
        <th style='text-align:center;'> </th>
        <th style='text-align:center;'> </th>
        <th style='text-align:center;'>Preis-Leistung</th>
        <th style='text-align:center;'>Hist. Punkteausbeute</th>
-       <th style='text-align:right;'>MW</th>
      </tr></thead>",
       paste(grouped_sections, collapse = "\n"),
       "</tbody></table>"
@@ -4364,12 +4308,28 @@ server <- function(input, output, session) {
     bind_rows(st_df, manuelle_standings)
   })
   
-  output$kaderwert_plot <- renderPlot({
-    df <- standings_history_df() 
+  standings_history_df <- reactive({
+    df <- bind_rows(st_df, manuelle_standings) %>%
+      mutate(Datum = as.Date(Datum))
     
-    ggplot(df, aes(x = Datum, y = Teamwert, color = Manager)) +
-      geom_line(linewidth = 1.2) +
-      geom_point(size = 2, alpha = 0.7) +
+    if (isTRUE(input$smooth_mgr_curves)) {
+      df <- df %>% filter(lubridate::wday(Datum, week_start = 1) == 5)  # Freitag
+    }
+    df
+  })
+  
+  output$kaderwert_plot <- renderPlot({
+    df <- standings_history_df()
+    
+    p <- ggplot(df, aes(x = Datum, y = Teamwert, color = Manager))
+    
+    if (isTRUE(input$smooth_mgr_curves)) {
+      p <- p + geom_smooth(se = FALSE, method = "loess", span = 0.5, linewidth = 1.4)
+    } else {
+      p <- p + geom_line(linewidth = 1.2) + geom_point(size = 2, alpha = 0.7)
+    }
+    
+    p +
       scale_color_brewer(palette = "Paired") +
       labs(
         title = "Kaderwert-Entwicklung",
@@ -4380,6 +4340,7 @@ server <- function(input, output, session) {
       ) +
       theme_minimal(base_size = 16)
   })
+  
   
   # ---- BIETERPROFILE ----
   ## ---- MW-Klassen Zeitstrahl für Boxplot+Beeswarm ----
@@ -4829,8 +4790,8 @@ server <- function(input, output, session) {
     
     abs_max <- max(df$Gesamtgewinn, na.rm = TRUE)
     abs_min <- min(df$Gesamtgewinn, na.rm = TRUE)
-    lim_min <-  abs_min - 1e6
-    lim_max <-  abs_max + 1e6
+    lim_min <-  abs_min - 2e6
+    lim_max <-  abs_max + 2e6
     
     ggplot(df, aes(x = reorder(Besitzer, Gesamtgewinn), y = Gesamtgewinn, fill = Gesamtgewinn > 0)) +
       geom_col(show.legend = FALSE) +
@@ -5209,7 +5170,7 @@ server <- function(input, output, session) {
       facet_grid(Manager ~ ., scales = "fixed", switch = "y") +
       scale_y_continuous(
         labels = scales::label_number(scale_cut = scales::cut_short_scale()),
-        expand = expansion(mult = c(0.05, 0.15))
+        expand = expansion(mult = c(0.01, 0.01))
       ) +
     
       scale_x_date(limits = c(x_min, x_max),
@@ -5239,6 +5200,104 @@ server <- function(input, output, session) {
   })
   
   
+  ## ---- Flip-Historie: MW-events ----
+  output$mw_events <- renderPlotly({
+    req(input$manager_select, gesamt_mw_df)
+    
+    # MW absolut + normiert
+    clean_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      transmute(Datum = as.Date(Datum),
+                       MW_gesamt = as.numeric(MW_gesamt)) %>%
+      arrange(Datum)
+    validate(need(nrow(clean_df) > 1, "Keine MW-Zeitreihe."))
+    base_mw <- clean_df$MW_gesamt[1]
+    clean_df$MW_norm <- clean_df$MW_gesamt / base_mw
+    
+    # Flip-Daten (nur Verkäufe des gewählten Managers)
+    fd <- flip_data(); validate(need(!is.null(fd), "Keine Flip-Daten."))
+    sells <- fd %>%
+      filter(Besitzer == input$manager_select, !is.na(Verkaufsdatum)) %>%
+      mutate(
+        Verkaufsdatum = as.Date(Verkaufsdatum),
+        Einkaufsdatum = as.Date(Einkaufsdatum),
+        Gewinn        = as.numeric(Gewinn),
+        Einkaufspreis = as.numeric(Einkaufspreis),
+        Verkaufspreis = as.numeric(Verkaufspreis)
+      )
+    validate(need(nrow(sells) > 0, "Keine passenden Verkäufe gefunden."))
+    
+    # Farben
+    sells$col <- ifelse(sells$Gewinn >= 0, "darkgreen", "red")
+    
+    # Tooltip-Text (wird NICHT als Label gezeichnet)
+    fmt_eur <- function(x) format(round(x,0), big.mark=".", decimal.mark=",", trim=TRUE)
+    sells$hover_text <- sprintf(
+      "%s<br>Verkauf: %s · Gewinn: %s €<br>Kauf: %s · %s €<br>Verkaufspreis: %s €",
+      sells$Spieler,
+      format(sells$Verkaufsdatum, "%d.%m.%Y"),
+      fmt_eur(sells$Gewinn),
+      format(sells$Einkaufsdatum, "%d.%m.%Y"),
+      fmt_eur(sells$Einkaufspreis),
+      fmt_eur(sells$Verkaufspreis)
+    )
+    
+    p <- plot_ly()
+    
+    # Linie: MW normiert (linke Achse)
+    p <- p %>% add_lines(
+      data = clean_df, x = ~Datum, y = ~MW_norm, name = "MW normiert",
+      hovertemplate = "%{x|%d.%m.%Y}<br>MW normiert: %{y:.3f}<extra></extra>",
+      yaxis = "y"
+    )
+    
+    ## Aufteilen nach Vorzeichen
+    sells_pos <- sells %>% filter(Gewinn > 0)
+    sells_neg <- sells %>% filter(Gewinn < 0)
+    
+    # POSITIV
+    p <- p %>% add_bars(
+      data = sells_pos,
+      x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
+      split = ~Spieler,
+      name = "Gewinn",
+      marker = list(color = "rgba(0,128,0,0.95)",
+                    line = list(width = 1, color = "black")),
+      hovertext = ~hover_text,    # <-- statt text/hovertemplate
+      hoverinfo = "text",
+      showlegend = FALSE
+    )
+    
+    # NEGATIV
+    p <- p %>% add_bars(
+      data = sells_neg,
+      x = ~Verkaufsdatum, y = ~Gewinn, yaxis = "y2",
+      split = ~Spieler,
+      name = "Verlust",
+      marker = list(color = "rgba(200,0,0,0.95)",
+                    line = list(width = 1, color = "black")),
+      hovertext = ~hover_text,    # <-- statt text/hovertemplate
+      hoverinfo = "text",
+      showlegend = FALSE
+    )
+    
+    
+    # Layout: relative statt stack
+    p <- p %>% layout(
+      barmode = "relative",   # <-- trennt pos/neg sauber
+      bargap = 0.35,
+      bargroupgap = 0.25,
+      xaxis = list(title = "", type = "date"),
+      yaxis  = list(title = "MW normiert (Start = 1)", rangemode = "tozero"),
+      yaxis2 = list(title = "Gewinn (€)", overlaying = "y", side = "right",
+                    tickformat = ",.0f", zeroline = TRUE),
+      showlegend = FALSE,
+      margin = list(l = 60, r = 70, t = 40, b = 40)
+    )
+    
+    
+    p
+  })
   
   ## ---- Flip-Historie je Spieler ----
   output$flip_player_table <- renderDT({
