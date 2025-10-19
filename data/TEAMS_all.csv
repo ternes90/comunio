@@ -13,6 +13,7 @@ Thomas;Hajdari;Abwehr
 Thomas;Nicolas;Tor
 Alfons;Sinani;Sturm
 Alfons;Philippe;Sturm
+Alfons;Ache;Sturm
 Alfons;Zivzivadze;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Remberg;Mittelfeld
@@ -22,6 +23,7 @@ Alfons;Ginter;Abwehr
 Alfons;Hübers;Abwehr
 Alfons;Querfeld;Abwehr
 Alfons;Hanche-Olsen;Abwehr
+Alfons;Pyrka;Abwehr
 Alfons;Mikelbrencis;Abwehr
 Alfons;Vasilj;Tor
 Christoph;Scherhant;Sturm
@@ -30,6 +32,7 @@ Christoph;Ilić;Sturm
 Christoph;Baumgartner;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
+Christoph;Damar;Mittelfeld
 Christoph;Kohr;Abwehr
 Christoph;Mainka;Abwehr
 Christoph;Upamecano;Abwehr
@@ -65,13 +68,11 @@ Dominik;Pieringer;Sturm
 Dominik;Kimmich;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
 Dominik;Seiwald;Mittelfeld
-Dominik;Ouédraogo;Mittelfeld
 Dominik;Y. Engelhardt;Mittelfeld
 Dominik;Bischof;Mittelfeld
 Dominik;Beck;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
-Dominik;M. Wolf;Abwehr
 Dominik;Mets;Abwehr
 Dominik;Belocian;Abwehr
 Dominik;Kobel;Tor
