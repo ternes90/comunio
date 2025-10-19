@@ -1,8 +1,8 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Uzun;Sturm
-Thomas;Amoura;Sturm
 Thomas;Ansah;Sturm
+Thomas;Amoura;Sturm
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Stage;Mittelfeld
 Thomas;Højlund;Mittelfeld
@@ -11,13 +11,14 @@ Thomas;Wahl;Abwehr
 Thomas;Oppie;Abwehr
 Thomas;Hajdari;Abwehr
 Thomas;Nicolas;Tor
+Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
 Alfons;Philippe;Sturm
 Alfons;Ache;Sturm
 Alfons;Zivzivadze;Sturm
 Alfons;Grifo;Mittelfeld
-Alfons;Remberg;Mittelfeld
 Alfons;Martel;Mittelfeld
+Alfons;Remberg;Mittelfeld
 Alfons;Nebel;Mittelfeld
 Alfons;Ginter;Abwehr
 Alfons;Hübers;Abwehr
@@ -34,9 +35,8 @@ Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
 Christoph;Damar;Mittelfeld
 Christoph;Mainka;Abwehr
-Christoph;Upamecano;Abwehr
 Christoph;Lukeba;Abwehr
-Christoph;Saliakas;Abwehr
+Christoph;Upamecano;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Mittelfeld
@@ -52,11 +52,11 @@ Pascal;Klostermann;Abwehr
 Pascal;Baumann;Tor
 Pascal;L. Philipp;Tor
 Andreas;Tiago Tomás;Sturm
-Andreas;Rômulo;Sturm
 Andreas;Dompé;Sturm
+Andreas;Rômulo;Sturm
 Andreas;Hollerbach;Sturm
-Andreas;Reitz;Mittelfeld
 Andreas;Schmid;Mittelfeld
+Andreas;Reitz;Mittelfeld
 Andreas;Bensebaini;Abwehr
 Andreas;L. Vušković;Abwehr
 Andreas;Matsima;Abwehr
@@ -65,8 +65,8 @@ Andreas;Heuer Fernandes;Tor
 Dominik;Bebou;Sturm
 Dominik;Pieringer;Sturm
 Dominik;Kimmich;Mittelfeld
-Dominik;Jóhannesson;Mittelfeld
 Dominik;Seiwald;Mittelfeld
+Dominik;Jóhannesson;Mittelfeld
 Dominik;Y. Engelhardt;Mittelfeld
 Dominik;Bischof;Mittelfeld
 Dominik;Beck;Mittelfeld
@@ -82,14 +82,14 @@ Nico;Ngankam;Sturm
 Nico;Sabitzer;Mittelfeld
 Nico;Fujita;Mittelfeld
 Nico;Andrich;Mittelfeld
-Nico;Trimmel;Abwehr
-Nico;Muheim;Abwehr
 Nico;Doekhi;Abwehr
+Nico;Muheim;Abwehr
+Nico;Trimmel;Abwehr
 Nico;Zentner;Tor
 Christian;Pereira Lage;Sturm
 Christian;Chaïbi;Mittelfeld
-Christian;Vini Souza;Mittelfeld
 Christian;Khedira;Mittelfeld
+Christian;Vini Souza;Mittelfeld
 Christian;Rexhbeçaj;Mittelfeld
 Christian;Jeong;Mittelfeld
 Christian;Schöppner;Mittelfeld
