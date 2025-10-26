@@ -354,13 +354,21 @@ ui <- navbarPage(
                           )
                         )
                       ),
-                      # direkt darunter einfügen
                       fluidRow(
                         column(
                           width = 12,
                           div(
                             style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
                             plotOutput("mw_pred_vs_actual_plot", height = "420px", width = "60%")
+                          )
+                        )
+                      ),
+                      fluidRow(
+                        column(
+                          width = 12,
+                          div(
+                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
+                            plotOutput("mw_pred_ts_plot", height = "420px", width = "80%")
                           )
                         )
                       )
@@ -575,6 +583,24 @@ ui <- navbarPage(
                    plotlyOutput("mwclassplot", height = "700px")
                )
                
+             ),
+             tabPanel("Manager-Query",
+                      div(style = "width: 90%; margin: 10px auto;",
+                          fluidRow(
+                            column(4,
+                                   selectInput("seg_manager", "Manager / Bieter:", choices = NULL, width = "100%")
+                            ),
+                            column(4,
+                                   numericInput("seg_mw", "Ziel-Marktwert (€):", value = 1e6, min = 0, step = 50000, width = "100%")
+                            ),
+                            column(4,
+                                   numericInput("seg_tol", "Toleranz (± %):", value = 20, min = 0, max = 100, step = 5, width = "100%")
+                            )
+                          )
+                      ),
+                      div(style = "width: 90%; margin: 0 auto; margin-top:10px;",
+                          plotlyOutput("manager_segment_plot", height = "700px")
+                      )
              ),
              tabPanel("Zeit-Trend",
                       plotOutput("trendplot", height = 700),
@@ -892,6 +918,17 @@ server <- function(input, output, session) {
     }
   })
   
+  # Bieterprofil query 
+  observeEvent(gebotsprofil_mwclass_filtered(), ignoreInit = FALSE, {
+    gp <- gebotsprofil_mwclass_filtered()
+    req(nrow(gp) > 0)
+    updateSelectInput(
+      getDefaultReactiveDomain(), "seg_manager",
+      choices = sort(unique(gp$Bieter)),
+      selected = if (length(unique(gp$Bieter))) sort(unique(gp$Bieter))[1] else NULL
+    )
+  })
+  
   # ---- Daten / df / list / functions ----
   
   ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
@@ -936,12 +973,17 @@ server <- function(input, output, session) {
   
   # Platzierungen auf Basis der gleichen Quelle
   patzierungen_df <- transactions_base %>%
-    filter(str_detect(Begründung, "^Bonus")) %>%
+    # nur echte Platzierungsboni, Cupunio o.ä. raus
+    filter(str_detect(
+      Begründung,
+      "^Bonus:\\s*\\d+\\s*\\.?\\s*(Platz)?\\b"
+    )) %>%
     mutate(Platzierung = as.integer(str_extract(Begründung, "\\d+"))) %>%
     filter(!is.na(Platzierung), Platzierung >= 1, Platzierung <= 8) %>%
     count(Manager, Platzierung, name = "Anzahl") %>%
     complete(Manager, Platzierung = 1:8, fill = list(Anzahl = 0)) %>%
     arrange(Manager, Platzierung)
+  
   
   transfermarkt <- read_csv2("data/TRANSFERMARKT.csv",
                              locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
@@ -2338,42 +2380,194 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16)
   })
   
-  # 2) 2-Tages Vorhersage 
+  # ===== Optionen =====
+  options(
+    # Vorsaison-Blend (separat, wirkt auf den finalen Mittelpunkt von E_delta)
+    mw_ref_use    = TRUE,          # TRUE/FALSE
+    mw_ref_season = "2021-22",     # "2021-22" oder "2024-25"
+    mw_ref_weight = 0.5,           # 0..1
+    
+    # Gewichte des Basismixes (normieren sich intern auf 1)
+    mw_w_perm = 0.6,               # Anteil Teilmodell: lag1 + lag2
+    mw_w_wd   = 0.3,               # Anteil Teilmodell: Wochentag
+    mw_w_lag7 = 0.1                # Anteil Teilmodell: lag7
+  )
+  
+  # ===== 2) 2-Tages Vorhersage  + Ensemble + Saison-Analog-Boost (3-Tage-Trend, optional) =====
   mw_pred <- reactive({
     clean_df <- gesamt_mw_df %>% filter(!is.na(Datum)) %>% arrange(Datum)
     df <- clean_df %>%
-      mutate(MW_vortag = lag(MW_gesamt),
-             abs_change = MW_gesamt - MW_vortag,
-             pct_change = 100 * abs_change / MW_vortag,
-             Datum = as.Date(Datum),
-             lag1  = lag(pct_change),
-             wd    = factor(as.integer(format(Datum, "%u")),
-                            levels = 1:7, labels = c("Mo","Di","Mi","Do","Fr","Sa","So"))) %>%
+      mutate(
+        MW_vortag  = lag(MW_gesamt),
+        abs_change = MW_gesamt - MW_vortag,
+        pct_change = 100 * abs_change / MW_vortag,
+        Datum      = as.Date(Datum),
+        lag1       = lag(pct_change),
+        lag2       = lag(pct_change, 2),
+        lag7       = lag(pct_change, 7),
+        wd         = factor(as.integer(format(Datum, "%u")),
+                            levels = 1:7, labels = c("Mo","Di","Mi","Do","Fr","Sa","So"))
+      ) %>%
       filter(is.finite(pct_change), is.finite(lag1))
     if (nrow(df) < 30) return(NULL)
     
-    m_prob <- glm(I(pct_change > 0) ~ lag1 + wd, data = df, family = binomial())
-    m_mean <- lm(pct_change ~ lag1 + wd, data = df)
+    last_date <- max(df$Datum)
+    train_len <- 30
+    train_df  <- df %>% filter(Datum >= last_date - train_len)
     
-    last_date   <- max(df$Datum)
-    last_change <- tail(df$pct_change, 1)
-    next_dates  <- seq(last_date + 1, by = 1, length.out = 2)
-    next_wd     <- factor(as.integer(format(next_dates, "%u")),
-                          levels = 1:7, labels = levels(df$wd))
+    # Winsorizing
+    q <- quantile(train_df$pct_change, probs = c(0.05, 0.95), na.rm = TRUE)
+    clamp <- function(x, lo, hi) pmin(pmax(x, lo), hi)
+    train_df <- train_df %>%
+      mutate(
+        pct_w = clamp(pct_change, q[1], q[2]),
+        lag1  = clamp(lag1,      q[1], q[2]),
+        lag2  = clamp(lag2,      q[1], q[2]),
+        lag7  = clamp(lag7,      q[1], q[2])
+      )
+    
+    # Zeitgewichte (Half-Life ~9 Tage)
+    half_life <- 9
+    w <- 0.5 ^ (as.numeric(last_date - train_df$Datum) / half_life)
+    
+    # --- Gewichte für Basismix aus Optionen ---
+    w_perm <- as.numeric(getOption("mw_w_perm", 0.6))
+    w_wd   <- as.numeric(getOption("mw_w_wd",   0.3))
+    w_lag7 <- as.numeric(getOption("mw_w_lag7", 0.1))
+    wsum   <- sum(w_perm, w_wd, w_lag7, na.rm = TRUE)
+    if (!is.finite(wsum) || wsum <= 0) { w_perm <- 1; w_wd <- 0; w_lag7 <- 0; wsum <- 1 }
+    a_perm <- w_perm/wsum; a_wd <- w_wd/wsum; a_lag7 <- w_lag7/wsum
+    
+    # --- Modelle ---
+    # Richtung (volle Spezifikation)
+    m_prob <- glm(I(pct_w > 0) ~ lag1 + lag2 + lag7 + wd,
+                  data = train_df, family = quasibinomial(), weights = w)
+    
+    # Drei Teilmodelle für Größenprognose
+    m_perm <- lm(pct_w ~ lag1 + lag2, data = train_df, weights = w)
+    m_wd   <- lm(pct_w ~ wd,          data = train_df, weights = w)
+    m_l7   <- lm(pct_w ~ lag7,        data = train_df, weights = w)
+    
+    safe_sigma <- function(mod){
+      s <- tryCatch(summary(mod)$sigma, error = function(e) NA_real_)
+      if (!is.finite(s)) sd(residuals(mod), na.rm = TRUE) else s
+    }
+    sig_perm <- safe_sigma(m_perm)
+    sig_wd   <- safe_sigma(m_wd)
+    sig_l7   <- safe_sigma(m_l7)
+    crit     <- qnorm(0.975)
+    
+    # Vorwärtsinitialisierung
+    last_row   <- tail(df, 1)
+    lag1_now   <- clamp(last_row$pct_change, q[1], q[2])
+    lag2_now   <- clamp(last_row$lag1,       q[1], q[2])
+    lag7_const <- clamp(last_row$lag7,       q[1], q[2])
+    
+    next_dates <- seq(last_date + 1, by = 1, length.out = 2)
+    next_wd    <- factor(as.integer(format(next_dates, "%u")),
+                         levels = 1:7, labels = levels(df$wd))
     
     res <- vector("list", 2)
-    lag1_now <- last_change
     for (k in 1:2) {
-      newd <- data.frame(lag1 = lag1_now, wd = factor(next_wd[k], levels = levels(df$wd)))
+      newd <- data.frame(lag1 = lag1_now, lag2 = lag2_now, lag7 = lag7_const,
+                         wd = factor(next_wd[k], levels = levels(df$wd)))
+      
+      # Richtung
       p_up_k <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
-      yhat_k <- as.data.frame(predict(m_mean, newdata = newd, interval = "prediction"))
+      
+      # Teilvorhersagen + Unsicherheiten
+      prP <- predict(m_perm, newdata = newd, se.fit = TRUE); fitP <- as.numeric(prP$fit); seP <- as.numeric(prP$se.fit); seP[!is.finite(seP)] <- 0
+      prW <- predict(m_wd,   newdata = newd, se.fit = TRUE); fitW <- as.numeric(prW$fit); seW <- as.numeric(prW$se.fit); seW[!is.finite(seW)] <- 0
+      prL <- predict(m_l7,   newdata = newd, se.fit = TRUE); fitL <- as.numeric(prL$fit); seL <- as.numeric(prL$se.fit); seL[!is.finite(seL)] <- 0
+      
+      # Ensemble-Mittelpunkt
+      y_base <- a_perm*fitP + a_wd*fitW + a_lag7*fitL
+      
+      # Ensemble-Varianz-Approx
+      var_predP <- seP^2 + sig_perm^2
+      var_predW <- seW^2 + sig_wd^2
+      var_predL <- seL^2 + sig_l7^2
+      var_mix   <- (a_perm^2)*var_predP + (a_wd^2)*var_predW + (a_lag7^2)*var_predL
+      se_mix    <- sqrt(pmax(0, var_mix))
+      
+      yhat <- y_base
+      lwr  <- y_base - crit*se_mix
+      upr  <- y_base + crit*se_mix
+      
+      # ---- Saison-Analog-Boost (3-Tage-Trend, optional via options) ----
+      ref_use    <- isTRUE(getOption("mw_ref_use", FALSE))
+      ref_season <- as.character(getOption("mw_ref_season", NA))
+      ref_weight <- as.numeric(getOption("mw_ref_weight", 0.35))
+      ref_weight <- ifelse(is.finite(ref_weight), pmin(1, pmax(0, ref_weight)), 0.35)
+      
+      if (ref_use && !is.na(ref_season)) {
+        curr_start <- min(df$Datum, na.rm = TRUE)
+        ref_start  <- if (grepl("2021", ref_season)) as.Date("2021-06-01") else
+          if (grepl("2024", ref_season)) as.Date("2024-06-01") else NA
+        
+        get_sp_safe <- function(){
+          out <- NULL
+          if (exists("post_sommerpause_data", mode = "function"))
+            out <- tryCatch(post_sommerpause_data(), error = function(e) NULL)
+          if (is.null(out) && exists("sp", inherits = TRUE))
+            out <- tryCatch(get("sp", inherits = TRUE), error = function(e) NULL)
+          out
+        }
+        sp_all <- get_sp_safe()
+        
+        if (!is.na(ref_start) && !is.null(sp_all)) {
+          sp_ref <- sp_all %>%
+            filter(Saison == ref_season) %>%
+            mutate(Datum = as.Date(Datum)) %>%
+            arrange(Datum) %>%
+            mutate(idx = as.integer(Datum - ref_start))
+          
+          if (nrow(sp_ref) > 10) {
+            ref_val <- function(ix) with(sp_ref, approx(x = idx, y = MW_rel_normiert,
+                                                        xout = ix, rule = 2, ties = "ordered")$y)
+            idx_k <- as.integer(next_dates[k] - curr_start)
+            v_t   <- ref_val(idx_k)
+            v_tm3 <- ref_val(idx_k - 3)
+            
+            if (is.finite(v_t) && is.finite(v_tm3) && v_tm3 > 0) {
+              delta3_ref <- 100 * (v_t / v_tm3 - 1)
+              
+              vol_curr <- df %>%
+                mutate(delta3 = 100 * (MW_gesamt / lag(MW_gesamt, 3) - 1)) %>%
+                filter(Datum > last_date - 60, is.finite(delta3)) %>%
+                summarise(s = sd(delta3, na.rm = TRUE)) %>% pull(s)
+              
+              vol_prev <- sp_ref %>%
+                mutate(prev3 = lag(MW_rel_normiert, 3),
+                       delta3 = 100 * (MW_rel_normiert / prev3 - 1)) %>%
+                summarise(s = sd(delta3, na.rm = TRUE)) %>% pull(s)
+              
+              scale_fac <- if (is.finite(vol_curr) && is.finite(vol_prev) && vol_prev > 0)
+                pmin(2.0, pmax(0.5, vol_curr / vol_prev)) else 1.0
+              
+              analog_adj <- delta3_ref * scale_fac
+              if (is.finite(analog_adj)) {
+                width <- abs(upr - yhat)
+                yhat  <- (1 - ref_weight)*yhat + ref_weight*analog_adj
+                lwr   <- yhat - width
+                upr   <- yhat + width
+              }
+            }
+          }
+        }
+      }
+      # ---- Ende Analog-Boost ----
+      
       res[[k]] <- data.frame(
-        Datum = as.Date(next_dates[k]),
+        Datum     = as.Date(next_dates[k]),
         Wochentag = as.character(next_wd[k]),
-        P_up = p_up_k,
-        E_delta = yhat_k$fit, lwr = yhat_k$lwr, upr = yhat_k$upr
+        P_up      = p_up_k,
+        E_delta   = yhat, lwr = lwr, upr = upr
       )
-      lag1_now <- yhat_k$fit
+      
+      # Lags für T+2
+      lag2_now <- lag1_now
+      lag1_now <- clamp(yhat, q[1], q[2])
     }
     
     pred_df <- do.call(rbind, res) %>%
@@ -2383,12 +2577,16 @@ server <- function(input, output, session) {
         label_raw = paste0(as.character(Wochentag), " ", format(Datum, "%d.%m.")),
         combo_lbl = sprintf("%.0f%% → %+.2f%%", 100 * P_up, E_delta)
       )
+    
     info_txt <- paste0(
       pred_df$label_raw, ": P↑ ", sprintf("%d%%", round(100*pred_df$P_up)),
       ", Δ ", sprintf("%+.2f%%", pred_df$E_delta)
     )
+    
     list(pred_df = pred_df, info_txt = paste(info_txt, collapse = "\n"))
   })
+  
+  
   
   # ---- Plot
   output$mw_predict_plot <- renderPlot({
@@ -2396,6 +2594,19 @@ server <- function(input, output, session) {
     if (is.null(mp)) return(invisible(NULL))
     pred_df <- mp$pred_df
     pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
+    
+    # --- dynamische Y-Limits: Platz für negative E_delta + obere Ränder ---
+    y_min <- suppressWarnings(min(0, pred_df$lwr, pred_df$E_delta, na.rm = TRUE))
+    y_max <- suppressWarnings(max(pred_df$P_up, pred_df$upr, na.rm = TRUE))
+    y_min <- if (is.finite(y_min)) y_min - 0.05 else 0
+    y_max <- if (is.finite(y_max)) y_max + 0.15 else 1
+    
+    # --- Analog-Hinweis (optional via options) ---
+    ref_use <- isTRUE(getOption("mw_ref_use", FALSE))
+    ref_sea <- as.character(getOption("mw_ref_season", NA))
+    ref_wgt <- getOption("mw_ref_weight", 0.35)
+    sub_txt <- if (ref_use && is.finite(ref_wgt) && !is.na(ref_sea))
+      sprintf("Analog-Boost: %s, Gewicht %.0f%%", ref_sea, 100*max(0,min(1,ref_wgt))) else NULL
     
     ggplot(pred_df, aes(x = label)) +
       geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
@@ -2406,10 +2617,12 @@ server <- function(input, output, session) {
                     linetype = "dashed", color = "grey50") +
       geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
       scale_fill_manual(values = c(`TRUE` = "darkgreen", `FALSE` = "red"), guide = "none") +
-      coord_cartesian(ylim = c(0, max(pred_df$P_up) + 0.15)) +
-      labs(title = "2 Tages-Vorhersage", x = NULL, y = "Wahrscheinlichkeit / erwartete ∆ (%)") +
+      coord_cartesian(ylim = c(y_min, y_max)) +
+      labs(title = "2 Tages-Vorhersage", subtitle = sub_txt,
+           x = NULL, y = "Wahrscheinlichkeit / erwartete ∆ (%)") +
       theme_minimal(base_size = 16)
   })
+  
   
   # # ---- Guards für tägliches Speichern 
   # 1. Täglicher Tick (einmal pro Minute prüfen)
@@ -2418,8 +2631,11 @@ server <- function(input, output, session) {
     as.Date(Sys.time())
   })
 
-  # 2. Einmal täglich speichern (append, ohne Duplikate pro Tag)
+  # 2. Einmal täglich speichern (nur nach 06:15 Europe/Berlin)
   observeEvent(today_tick(), {
+    now <- as.POSIXct(Sys.time(), tz = "Europe/Berlin")
+    if (format(now, "%H%M") < "0615") return(invisible(NULL))  # vor 06:15 nichts speichern
+    
     pred <- mw_pred()
     if (is.null(pred)) return()
     
@@ -2427,10 +2643,9 @@ server <- function(input, output, session) {
     path <- file.path("data", "mw_pred.csv")
     
     new <- pred$pred_df
-    new$run_date <- as.character(today_tick())
+    new$run_date <- as.character(as.Date(now))
     new <- new[, c("run_date","Datum","Wochentag","P_up","E_delta","lwr","upr")]
     
-    ## NEU: konsistente Typen
     new$Datum     <- as.Date(new$Datum)
     new$Wochentag <- as.character(new$Wochentag)
     
@@ -2451,6 +2666,7 @@ server <- function(input, output, session) {
     utils::write.csv(out, path, row.names = FALSE)
     message("mw_pred gespeichert: ", path)
   })
+  
   
 
   # 3) Vorhersagen-Check
@@ -2518,6 +2734,99 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16) +
       theme(legend.position = "top")
     
+  })
+  
+  # 4) Zeitreihe: T-1/T-2 Prognosen + Ist-Verlauf, nur für Tage mit Predictions
+  output$mw_pred_ts_plot <- renderPlot({
+    path <- file.path("data", "mw_pred.csv")
+    validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
+    
+    pred <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
+    validate(need(!is.null(pred), "Vorhersage-Datei ist nicht lesbar."))
+    
+    pred$run_date <- as.Date(pred$run_date)
+    pred$Datum    <- as.Date(pred$Datum)
+    
+    ts_df <- pred %>%
+      mutate(
+        horizon = case_when(
+          run_date == Datum - 1L ~ "T-1→Heute",
+          run_date == Datum - 2L ~ "T-2→Heute",
+          TRUE ~ NA_character_
+        )
+      ) %>%
+      filter(!is.na(horizon)) %>%
+      select(Datum, horizon, E_delta) %>%
+      group_by(Datum, horizon) %>%
+      summarise(E_delta = mean(E_delta, na.rm = TRUE), .groups = "drop") %>%
+      arrange(Datum)
+    
+    validate(need(nrow(ts_df) > 0, "Keine passenden Horizonte in mw_pred.csv."))
+    
+    act_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      transmute(Datum = as.Date(Datum),
+                MW_gesamt = as.numeric(MW_gesamt)) %>%
+      arrange(Datum) %>%
+      mutate(
+        MW_vortag    = lag(MW_gesamt),
+        actual_delta = 100 * (MW_gesamt - MW_vortag) / MW_vortag
+      ) %>%
+      filter(is.finite(actual_delta)) %>%
+      select(Datum, actual_delta)
+    
+    pred_dates <- sort(unique(ts_df$Datum))
+    act_df <- act_df %>% filter(Datum %in% pred_dates)
+    
+    # --- Gütemaße je Horizon ---
+    eps <- 1e-9
+    sign0 <- function(x) ifelse(abs(x) < eps, 0, ifelse(x > 0, 1, -1))
+    
+    cmp <- ts_df %>%
+      inner_join(act_df, by = "Datum") %>%
+      mutate(
+        abs_err = abs(E_delta - actual_delta),
+        sign_ok = sign0(E_delta) == sign0(actual_delta)
+      )
+    
+    met <- cmp %>%
+      group_by(horizon) %>%
+      summarise(
+        mae = mean(abs_err, na.rm = TRUE),
+        acc = mean(sign_ok, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    acc_t1 <- met$acc[met$horizon == "T-1→Heute"]; mae_t1 <- met$mae[met$horizon == "T-1→Heute"]
+    acc_t2 <- met$acc[met$horizon == "T-2→Heute"]; mae_t2 <- met$mae[met$horizon == "T-2→Heute"]
+    
+    sub_txt <- sprintf("Sign-Accuracy T-1: %d%% | MAE T-1: %.2f%%   •   Sign-Accuracy T-2: %d%% | MAE T-2: %.2f%%",
+                       round(100*acc_t1), mae_t1, round(100*acc_t2), mae_t2)
+    
+    ggplot(ts_df, aes(x = Datum, y = E_delta, group = horizon, color = horizon)) +
+      geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
+      geom_line(linewidth = 0.8) +
+      geom_point(size = 1.6) +
+      geom_line(data = act_df,
+                inherit.aes = FALSE,
+                aes(x = Datum, y = actual_delta, color = "Ist-Wert", group = 1),
+                linewidth = 0.8) +
+      geom_point(data = act_df,
+                 inherit.aes = FALSE,
+                 aes(x = Datum, y = actual_delta, color = "Ist-Wert"),
+                 size = 1.6) +
+      scale_color_manual(
+        name   = NULL,
+        breaks = c("T-2→Heute", "T-1→Heute", "Ist-Wert"),
+        values = c("T-1→Heute" = "red", "T-2→Heute" = "blue", "Ist-Wert" = "black")
+      ) +
+      labs(
+        title = "Vorhersage vs. Ist über die Zeit",
+        subtitle = sub_txt,
+        x = NULL, y = "Δ Marktwert (%)"
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(legend.position = "top")
   })
   
   
@@ -4528,6 +4837,95 @@ server <- function(input, output, session) {
     p <- mwclass_plot_obj()
     ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
   })
+  
+  ## ---- Query ----
+  
+  # Kandidatenliste für Vortags-MW (Reihenfolge = Priorität)
+  ref_candidates <- c("MW_Vortag","MW_vortag","MW_vortag_eur","MW_vortag_€","MW_vortag_euro")
+  
+  manager_segment_df <- reactive({
+    data <- gebotsprofil_mwclass_filtered()
+    req(nrow(data) > 0, input$seg_manager, !is.na(input$seg_mw), !is.na(input$seg_tol))
+    
+    # Vortags-MW erzwingen
+    ref_col <- intersect(ref_candidates, names(data))[1]
+    validate(need(!is.null(ref_col), "Spalte für Vortags-MW nicht gefunden."))
+    
+    df <- data %>%
+      filter(Bieter == input$seg_manager) %>%
+      filter(!is.na(.data[[ref_col]]), !is.na(Diff_Prozent)) %>%
+      mutate(Ref_MW = as.numeric(.data[[ref_col]]))
+    
+    # ± Toleranz um Ziel-MW
+    target <- as.numeric(input$seg_mw)
+    tol <- as.numeric(input$seg_tol) / 100
+    rng <- target * c(1 - tol, 1 + tol)
+    
+    df <- df %>% filter(Ref_MW >= rng[1], Ref_MW <= rng[2])
+    
+    # Datum robust parsen, falls vorhanden
+    if ("Datum" %in% names(df)) {
+      df$Datum <- coalesce(ymd(df$Datum), dmy(df$Datum), suppressWarnings(as.Date(df$Datum)))
+    } else {
+      df$Datum <- NA
+    }
+    
+    # Gebotsbetrag ermitteln oder approximieren
+    amount_candidates <- c("Gebot","Hoechstgebot","Zweitgebot","Betrag","Gebot_EUR")
+    amt_col <- intersect(amount_candidates, names(df))[1]
+    if (is.null(amt_col)) {
+      df <- df %>%
+        mutate(Gebot_EUR = round(Ref_MW * (1 + Diff_Prozent/100)))
+    } else {
+      df <- df %>%
+        mutate(Gebot_EUR = as.numeric(str_replace_all(.data[[amt_col]], "[^0-9-]", "")))
+    }
+    
+    # Faktor-Reihenfolge für Optik
+    if ("Typ" %in% names(df)) {
+      df$Typ <- factor(df$Typ, levels = c("Hoechstgebot","Zweitgebot"))
+    }
+    
+    # Tooltip
+    df %>%
+      mutate(
+        tooltip = paste0(
+          "Spieler: ", coalesce(Spieler, ""), "\n",
+          "Typ: ", coalesce(as.character(Typ), ""), "\n",
+          "Gebot: ", ifelse(is.na(Gebot_EUR), "–",
+                            paste0(formatC(Gebot_EUR, big.mark=".", format="f", digits=0), " €")), "\n",
+          "Vortags-MW: ", paste0(formatC(Ref_MW, big.mark=".", format="f", digits=0), " €"), "\n",
+          "Abweichung: ", round(Diff_Prozent, 1), " %\n",
+          "Datum: ", ifelse(is.na(Datum), "", format(Datum, "%d.%m.%Y"))
+        )
+      )
+  })
+  
+  output$manager_segment_plot <- renderPlotly({
+    df <- manager_segment_df()
+    req(nrow(df) > 0)
+    
+    # Ø je Typ
+    means <- df %>%
+      group_by(Typ) %>%
+      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+    
+    p <- ggplot(df, aes(x = Typ, y = Diff_Prozent, color = Typ, fill = Typ, text = tooltip)) +
+      geom_boxplot(width = 0.5, outlier.shape = NA, alpha = 0.45) +
+      ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8, priority = "random") +
+      geom_hline(data = means, aes(yintercept = Mean),
+                 color = "grey60", linetype = "dashed", linewidth = 0.6, inherit.aes = FALSE) +
+      geom_text(data = means, aes(x = Typ, y = Mean, label = round(Mean, 1)),
+                color = "black", fontface = "bold", size = 5, vjust = -0.6, inherit.aes = FALSE) +
+      labs(title = "", x = "", y = "Abweichung vom MW Vortag (%)") +
+      scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
+      theme_minimal(base_size = 16) +
+      theme(legend.position = "none")
+    
+    ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
+  })
+  
   
   ## ---- Gebotsverhalten über die Zeit ----
   
