@@ -347,10 +347,20 @@ ui <- navbarPage(
                       ),
                       fluidRow(
                         column(
-                          width = 12,
-                          div(
-                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
-                            plotOutput("mw_predict_plot", height = "420px", width = "50%")
+                          width = 8,
+                          plotOutput("mw_predict_plot", height = 360)
+                        ),
+                        column(
+                          width = 4,
+                          wellPanel(
+                            tags$strong("2-Tages-Vorhersage – Einstellungen"),
+                            checkboxInput("ref_use", "Analog-Boost aktiv", value = TRUE),
+                            selectInput("ref_season", "Saison-Analog", choices = c("2021-22","2024-25"), selected = "2021-22"),
+                            sliderInput("ref_weight", "Boost-Gewicht", min = 0, max = 1, value = 0.1, step = 0.05),
+                            sliderInput("w_wd",  "Gewicht Wochentag",   min = 0, max = 1, value = 0.9,  step = 0.05),
+                            sliderInput("w_perm","Gewicht lag1+lag2",   min = 0, max = 1, value = 0.05, step = 0.05),
+                            sliderInput("w_l7",  "Gewicht lag7",        min = 0, max = 1, value = 0.05, step = 0.05),
+                            helpText("Gewichte werden intern normalisiert.")
                           )
                         )
                       ),
@@ -2344,57 +2354,115 @@ server <- function(input, output, session) {
   
   ## ---- MW-Analyse ----
   
-  # Helper auf Basis deines change_df, jetzt für "mw_verlauf" UND "mw_analyse" nutzbar
+  # Fenster: letzte 5 Wochen relativ zum jüngsten Datum
   change_df_reactive <- reactive({
-    # req(input$main_navbar == "Marktwert-Entwicklung",
-    #     input$mw_tabs %in% c("mw_verlauf","mw_analyse"))  # <- AUS
-    clean_df <- gesamt_mw_df %>% filter(!is.na(Datum)) %>% arrange(Datum)
+    clean_df <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      mutate(Datum = as.Date(Datum)) %>%
+      arrange(Datum)
+    
+    end_date   <- max(clean_df$Datum, na.rm = TRUE)
+    start_date <- end_date - 27  # 5 Wochen = 35 Tage
+    
+    
     df <- clean_df %>%
-      mutate(MW_vortag = lag(MW_gesamt),
-             abs_change = MW_gesamt - MW_vortag,
-             pct_change = 100 * abs_change / MW_vortag) %>%
+      mutate(
+        MW_vortag  = lag(MW_gesamt),
+        abs_change = MW_gesamt - MW_vortag,
+        pct_change = 100 * abs_change / MW_vortag
+      ) %>%
+      filter(Datum >= start_date) %>%       # erst jetzt filtern
       filter(is.finite(pct_change))
+    
     req(nrow(df) > 0)
     df
   })
   
   
-  # 1) Wochentagseffekt (ohne Locale-Probleme)
+  # Plot: Balken = Mittelwert, Fehlerbalken = ±SD
   output$mw_weekday_effect_plot <- renderPlot({
     df <- change_df_reactive() %>%
       mutate(
-        wd_num   = as.integer(format(Datum, "%u")),                # 1=Mo ... 7=So
+        wd_num    = as.integer(format(Datum, "%u")),  # 1=Mo ... 7=So
         wochentag = factor(c("Mo","Di","Mi","Do","Fr","Sa","So")[wd_num],
                            levels = c("Mo","Di","Mi","Do","Fr","Sa","So"), ordered = TRUE)
       )
     
+    # Wochen-Bucket relativ zum jüngsten Datum 
+    end_date <- max(df$Datum, na.rm = TRUE)
+    df <- df %>%
+      mutate(
+        week_idx = pmin(5L, floor(as.numeric(end_date - Datum) / 7) + 1L),
+        week_lbl = factor(paste0("W-", week_idx), levels = paste0("W-", 1:5))
+      )
+    
+    
     sum_df <- df %>%
       group_by(wochentag) %>%
-      summarise(mean_change = mean(pct_change, na.rm = TRUE), .groups = "drop")
+      summarise(
+        mean_change = mean(pct_change, na.rm = TRUE),
+        sd_change   = sd(pct_change,   na.rm = TRUE),
+        .groups = "drop"
+      )
     
     ggplot(sum_df, aes(x = wochentag, y = mean_change, fill = mean_change >= 0)) +
       geom_col(width = 0.7) +
+      # SD: grau, dashed, etwas dicker
+      geom_errorbar(aes(ymin = mean_change - sd_change,
+                        ymax = mean_change + sd_change),
+                    width = 0.2, linewidth = 0.8,
+                    colour = "grey40", linetype = "dashed") +
+      # Beeswarm: einzelne Tage, farbig je Woche (W-1 ... W-4)
+      geom_beeswarm(
+        data = df,
+        mapping = aes(x = wochentag, y = pct_change, colour = week_lbl),
+        inherit.aes = FALSE,
+        groupOnX = TRUE,
+        size = 4, cex = 1.2, dodge.width = 0.6, show.legend = TRUE
+      ) +
       geom_hline(yintercept = 0, linewidth = 0.4) +
-      scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
-      labs(title = "Wochentagseffekt", x = NULL, y = "Ø Tagesänderung (%)") +
+      scale_fill_manual(values = c(`TRUE` = "darkgreen", `FALSE` = "red"), guide = "none") +
+      scale_colour_manual(
+        values = c("W-1"="#0072B2","W-2"="#E69F00","W-3"="#009E73","W-4"="#D55E00","W-5"="#CC79A7"),
+        name = "Woche"
+      ) +
+      labs(title = "Wochentagseffekt", x = NULL, y = "Tagesänderung (%)") +
       theme_minimal(base_size = 16)
   })
   
-  # ===== Optionen =====
-  options(
-    # Vorsaison-Blend (separat, wirkt auf den finalen Mittelpunkt von E_delta)
-    mw_ref_use    = TRUE,          # TRUE/FALSE
-    mw_ref_season = "2021-22",     # "2021-22" oder "2024-25"
-    mw_ref_weight = 0.5,           # 0..1
-    
-    # Gewichte des Basismixes (normieren sich intern auf 1)
-    mw_w_perm = 0.6,               # Anteil Teilmodell: lag1 + lag2
-    mw_w_wd   = 0.3,               # Anteil Teilmodell: Wochentag
-    mw_w_lag7 = 0.1                # Anteil Teilmodell: lag7
-  )
+  ### ===== Optionen =====
+  # Inputs -> options()
+  observe({
+    if (!is.null(input$ref_use))    options(mw_ref_use    = input$ref_use)
+    if (!is.null(input$ref_season)) options(mw_ref_season = input$ref_season)
+    if (!is.null(input$ref_weight)) options(mw_ref_weight = input$ref_weight)
+    if (!is.null(input$w_perm))     options(mw_w_perm     = input$w_perm)
+    if (!is.null(input$w_wd))       options(mw_w_wd       = input$w_wd)
+    if (!is.null(input$w_l7))       options(mw_w_lag7     = input$w_l7)
+  })
   
-  # ===== 2) 2-Tages Vorhersage  + Ensemble + Saison-Analog-Boost (3-Tage-Trend, optional) =====
+  observeEvent(TRUE, {
+    updateCheckboxInput(session, "ref_use",    value = isTRUE(getOption("mw_ref_use", TRUE)))
+    updateSelectInput( session, "ref_season",  selected = as.character(getOption("mw_ref_season","2021-22")))
+    updateSliderInput( session, "ref_weight",  value = as.numeric(getOption("mw_ref_weight", 0.1)))
+    updateSliderInput( session, "w_perm",      value = as.numeric(getOption("mw_w_perm", 0.05)))
+    updateSliderInput( session, "w_wd",        value = as.numeric(getOption("mw_w_wd", 0.9)))
+    updateSliderInput( session, "w_l7",        value = as.numeric(getOption("mw_w_lag7", 0.05)))
+  }, once = TRUE)
+  
+  
+  #### ===== 2-Tages Vorhersage  + Ensemble + Saison-Analog-Boost (3-Tage-Trend, optional) =====
   mw_pred <- reactive({
+    # zuerst warten, bis Inputs initialisiert sind
+    req(!is.null(input$ref_use), !is.null(input$ref_season), !is.null(input$ref_weight),
+        !is.null(input$w_perm),  !is.null(input$w_wd),      !is.null(input$w_l7))
+    
+    
+    # reaktive Abhängigkeit
+    deps <- list(input$ref_use, input$ref_season, input$ref_weight,
+                 input$w_perm,  input$w_wd,      input$w_l7)
+    force(deps)
+    
     clean_df <- gesamt_mw_df %>% filter(!is.na(Datum)) %>% arrange(Datum)
     df <- clean_df %>%
       mutate(
@@ -2430,22 +2498,27 @@ server <- function(input, output, session) {
     half_life <- 9
     w <- 0.5 ^ (as.numeric(last_date - train_df$Datum) / half_life)
     
+    # --- Nur für Wochentag: letzten Wochen ---
+    wd_df <- train_df %>% filter(Datum >= last_date - 27)
+    if (nrow(wd_df) < 10) wd_df <- train_df
+    w_wd <- w[match(wd_df$Datum, train_df$Datum, nomatch = NA)]
+    
     # --- Gewichte für Basismix aus Optionen ---
     w_perm <- as.numeric(getOption("mw_w_perm", 0.6))
-    w_wd   <- as.numeric(getOption("mw_w_wd",   0.3))
+    w_wd_m <- as.numeric(getOption("mw_w_wd",   0.3))
     w_lag7 <- as.numeric(getOption("mw_w_lag7", 0.1))
-    wsum   <- sum(w_perm, w_wd, w_lag7, na.rm = TRUE)
-    if (!is.finite(wsum) || wsum <= 0) { w_perm <- 1; w_wd <- 0; w_lag7 <- 0; wsum <- 1 }
-    a_perm <- w_perm/wsum; a_wd <- w_wd/wsum; a_lag7 <- w_lag7/wsum
+    wsum   <- sum(w_perm, w_wd_m, w_lag7, na.rm = TRUE)
+    if (!is.finite(wsum) || wsum <= 0) { w_perm <- 1; w_wd_m <- 0; w_lag7 <- 0; wsum <- 1 }
+    a_perm <- w_perm/wsum; a_wd <- w_wd_m/wsum; a_lag7 <- w_lag7/wsum
     
     # --- Modelle ---
-    # Richtung (volle Spezifikation)
+    # Richtung (volle Spezifikation auf train_df)
     m_prob <- glm(I(pct_w > 0) ~ lag1 + lag2 + lag7 + wd,
                   data = train_df, family = quasibinomial(), weights = w)
     
     # Drei Teilmodelle für Größenprognose
     m_perm <- lm(pct_w ~ lag1 + lag2, data = train_df, weights = w)
-    m_wd   <- lm(pct_w ~ wd,          data = train_df, weights = w)
+    m_wd   <- lm(pct_w ~ wd,          data = wd_df,    weights = w_wd)
     m_l7   <- lm(pct_w ~ lag7,        data = train_df, weights = w)
     
     safe_sigma <- function(mod){
@@ -2494,11 +2567,11 @@ server <- function(input, output, session) {
       lwr  <- y_base - crit*se_mix
       upr  <- y_base + crit*se_mix
       
-      # ---- Saison-Analog-Boost (3-Tage-Trend, optional via options) ----
-      ref_use    <- isTRUE(getOption("mw_ref_use", FALSE))
-      ref_season <- as.character(getOption("mw_ref_season", NA))
-      ref_weight <- as.numeric(getOption("mw_ref_weight", 0.35))
-      ref_weight <- ifelse(is.finite(ref_weight), pmin(1, pmax(0, ref_weight)), 0.35)
+      # ---- Saison-Analog-Boost (unverändert)
+      ref_use    <- isTRUE(input$ref_use)
+      ref_season <- as.character(input$ref_season)
+      ref_weight <- as.numeric(input$ref_weight)
+      ref_weight <- ifelse(is.finite(ref_weight), pmin(1, pmax(0, ref_weight)), 0.1)
       
       if (ref_use && !is.na(ref_season)) {
         curr_start <- min(df$Datum, na.rm = TRUE)
@@ -2556,7 +2629,7 @@ server <- function(input, output, session) {
           }
         }
       }
-      # ---- Ende Analog-Boost ----
+      # ---- Ende Analog-Boost
       
       res[[k]] <- data.frame(
         Datum     = as.Date(next_dates[k]),
@@ -2586,45 +2659,78 @@ server <- function(input, output, session) {
     list(pred_df = pred_df, info_txt = paste(info_txt, collapse = "\n"))
   })
   
-  
-  
-  # ---- Plot
+  #### ---- 2-Tages Plot ----
   output$mw_predict_plot <- renderPlot({
     mp <- mw_pred()
     if (is.null(mp)) return(invisible(NULL))
     pred_df <- mp$pred_df
     pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
     
-    # --- dynamische Y-Limits: Platz für negative E_delta + obere Ränder ---
-    y_min <- suppressWarnings(min(0, pred_df$lwr, pred_df$E_delta, na.rm = TRUE))
-    y_max <- suppressWarnings(max(pred_df$P_up, pred_df$upr, na.rm = TRUE))
-    y_min <- if (is.finite(y_min)) y_min - 0.05 else 0
-    y_max <- if (is.finite(y_max)) y_max + 0.15 else 1
+    # Skala für Δ so, dass 0% -> 0 (gemeinsamer Ursprung)
+    d_min <- suppressWarnings(min(pred_df$lwr, pred_df$E_delta, na.rm = TRUE))
+    d_max <- suppressWarnings(max(pred_df$upr, pred_df$E_delta, na.rm = TRUE))
+    R <- max(abs(d_min), abs(d_max))
+    if (!is.finite(R) || R <= 0) R <- 1
+    map_y <- function(d) d / R
+    inv_y <- function(y) y * R
     
-    # --- Analog-Hinweis (optional via options) ---
-    ref_use <- isTRUE(getOption("mw_ref_use", FALSE))
-    ref_sea <- as.character(getOption("mw_ref_season", NA))
-    ref_wgt <- getOption("mw_ref_weight", 0.35)
+    # Farben je Sicherheit
+    pred_df <- pred_df %>%
+      dplyr::mutate(
+        prob_signed = ifelse(E_delta >= 0, P_up, -P_up),   # <- hier die Logik
+        col_delta = dplyr::case_when(
+          E_delta >= 0 & P_up > 0.75 ~ "#1B5E20",
+          E_delta >= 0 & P_up > 0.25 ~ "#2E7D32",
+          E_delta >= 0               ~ "#66BB6A",
+          E_delta <  0 & P_up > 0.75 ~ "#B71C1C",
+          E_delta <  0 & P_up > 0.25 ~ "#D32F2F",
+          TRUE                       ~ "#EF5350"
+        )
+      )
+    
+    # Optionaler Subtitle
+    ref_use <- isTRUE(getOption("mw_ref_use", TRUE))
+    ref_sea <- as.character(getOption("mw_ref_season", 2021-22))
+    ref_wgt <- getOption("mw_ref_weight", 0.1)
     sub_txt <- if (ref_use && is.finite(ref_wgt) && !is.na(ref_sea))
       sprintf("Analog-Boost: %s, Gewicht %.0f%%", ref_sea, 100*max(0,min(1,ref_wgt))) else NULL
     
     ggplot(pred_df, aes(x = label)) +
-      geom_col(aes(y = P_up, fill = P_up >= 0.5), width = 0.6) +
-      geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.4) +
-      geom_text(aes(y = P_up + 0.05, label = combo_lbl), size = 5, fontface = "bold") +
-      geom_point(aes(y = E_delta), size = 2, color = "black") +
-      geom_errorbar(aes(ymin = lwr, ymax = upr), width = 0.15, linewidth = 0.4,
-                    linetype = "dashed", color = "grey50") +
-      geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
-      scale_fill_manual(values = c(`TRUE` = "darkgreen", `FALSE` = "red"), guide = "none") +
-      coord_cartesian(ylim = c(y_min, y_max)) +
-      labs(title = "2 Tages-Vorhersage", subtitle = sub_txt,
-           x = NULL, y = "Wahrscheinlichkeit / erwartete ∆ (%)") +
+      # 1) Wahrscheinlichkeit: grauer Balken, bei negativem Δ nach unten
+      geom_col(aes(y = prob_signed), width = 0.55, fill = "grey70") +
+      
+      # 2) Δ%: farbiger Balken um 0 herum (auf Primärachse gemappt)
+      geom_col(aes(y = map_y(E_delta), fill = col_delta),
+               width = 0.3, colour = "black", linewidth = 0.2) +
+      
+      # 3) Unsicherheit Δ: Fehlerbalken, grau, dashed, dicker
+      geom_errorbar(aes(ymin = map_y(lwr), ymax = map_y(upr)),
+                    width = 0.12, linewidth = 0.8,
+                    linetype = "dashed", colour = "grey40") +
+      
+      # Null-Linie
+      geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
+      
+      # Labels oberhalb/unterhalb des Prob-Balkens
+      geom_text(aes(y = ifelse(prob_signed >= 0,
+                               pmin(1, prob_signed + 0.06),
+                               pmax(-1, prob_signed - 0.06)),
+                    label = combo_lbl),
+                size = 5, fontface = "bold") +
+      
+      scale_fill_identity() +
+      scale_y_continuous(
+        limits = c(-1.1, 1.1),
+        name   = "Wahrscheinlichkeit (signiert)",
+        sec.axis = sec_axis(~ inv_y(.), name = "Δ Marktwert (%)")
+      ) +
+      labs(title = "2-Tages-Vorhersage", subtitle = sub_txt, x = NULL, y = NULL) +
       theme_minimal(base_size = 16)
   })
   
   
-  # # ---- Guards für tägliches Speichern 
+  
+  ##### ---- Tägliches Speichern ----
   # 1. Täglicher Tick (einmal pro Minute prüfen)
   today_tick <- reactive({
     invalidateLater(60 * 1000)
@@ -2667,9 +2773,8 @@ server <- function(input, output, session) {
     message("mw_pred gespeichert: ", path)
   })
   
-  
 
-  # 3) Vorhersagen-Check
+  #### ---- Vorhersagen-Check Plot ----
   output$mw_pred_vs_actual_plot <- renderPlot({
     path <- file.path("data","mw_pred.csv")
     validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
@@ -2736,7 +2841,7 @@ server <- function(input, output, session) {
     
   })
   
-  # 4) Zeitreihe: T-1/T-2 Prognosen + Ist-Verlauf, nur für Tage mit Predictions
+  #### ---- Vorhersagen-Check Zeitreihen-Plot ----
   output$mw_pred_ts_plot <- renderPlot({
     path <- file.path("data", "mw_pred.csv")
     validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
