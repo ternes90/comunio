@@ -11,16 +11,17 @@ Thomas;Oppie;Abwehr
 Thomas;Hajdari;Abwehr
 Thomas;Arthur;Abwehr
 Thomas;Stenzel;Abwehr
+Thomas;Ogbus;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
 Alfons;Philippe;Sturm
 Alfons;Burke;Sturm
-Alfons;Saad;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
 Alfons;Martel;Mittelfeld
 Alfons;Remberg;Mittelfeld
+Alfons;Chandler;Mittelfeld
 Alfons;Ginter;Abwehr
 Alfons;Querfeld;Abwehr
 Alfons;Jaquez;Abwehr
@@ -29,7 +30,6 @@ Alfons;Deman;Abwehr
 Alfons;Vasilj;Tor
 Christoph;Scherhant;Sturm
 Christoph;Nusa;Sturm
-Christoph;Honsak;Sturm
 Christoph;Baumgartner;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
@@ -68,15 +68,18 @@ Dominik;Kimmich;Mittelfeld
 Dominik;Seiwald;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
 Dominik;Bischof;Mittelfeld
+Dominik;Maza;Mittelfeld
 Dominik;Nartey;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
+Dominik;Couto;Abwehr
 Dominik;Zehnter;Abwehr
 Dominik;Mets;Abwehr
 Dominik;Kobel;Tor
 Nico;Olise;Sturm
 Nico;Höler;Sturm
 Nico;Glatzel;Sturm
+Nico;Fellhauer;Mittelfeld
 Nico;Fujita;Mittelfeld
 Nico;Sabitzer;Mittelfeld
 Nico;Haberer;Mittelfeld
@@ -93,6 +96,7 @@ Christian;Rexhbeçaj;Mittelfeld
 Christian;Jeong;Mittelfeld
 Christian;Schöppner;Mittelfeld
 Christian;Tapsoba;Abwehr
+Christian;Föhrenbach;Abwehr
 Christian;Elfadli;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
 Christian;Kim;Abwehr
