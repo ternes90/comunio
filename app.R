@@ -25,6 +25,7 @@ if (is_connect && !requireNamespace("slider", quietly = TRUE)) {
 }
 suppressPackageStartupMessages(library(slider))
 
+options(shiny.session.inactivityTimeout = 2*60*60*1000)  # 2h
 
 
 # ---- UI ----
@@ -304,7 +305,7 @@ ui <- navbarPage(
                       div(
                         style = "text-align: center; margin-bottom: 10px;",
                         HTML("<b>Legende:</b><br>
-             <span style='color:darkgrey; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
+             <span style='color:grey40; font-weight:bold;'>▍</span> Gesamtmarktwert (alle Spieler) &nbsp;&nbsp;
              <span style='color:orange; font-weight:bold;'>▍</span> Saison 2021/22 &nbsp;&nbsp;
              <span style='color:red; font-weight:bold;'>▍</span> Saison 2024/25" )
                         
@@ -368,20 +369,40 @@ ui <- navbarPage(
                         column(
                           width = 12,
                           div(
-                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
-                            plotOutput("mw_pred_vs_actual_plot", height = "420px", width = "60%")
-                          )
-                        )
-                      ),
-                      fluidRow(
-                        column(
-                          width = 12,
-                          div(
-                            style = "display: flex; justify-content: center; align-items: center; margin-bottom: 20px; margin-top: 20px;",
-                            plotOutput("mw_pred_ts_plot", height = "420px", width = "80%")
+                            style = "width:100%; display:flex; justify-content:center;",
+                            # Innen: zentriert und begrenzt
+                            div(
+                              style = "width:100%; max-width:1600px; margin:0 auto;",
+                              # Dreispaltiges Layout
+                              div(
+                                style = "width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin:20px 0; flex-wrap:wrap;",
+                                
+                                # Links: Güte-Tabelle (fix 320px)
+                                div(
+                                  style = "flex:0 0 320px; max-width:320px;",
+                                  wellPanel(style = "padding:12px;", uiOutput("mw_pred_ts_metrics"))
+                                ),
+                                
+                                # Mitte: Zeitreihen-Plot (~66.7% der Restbreite)
+                                div(
+                                  style = "flex:0 0 calc((100% - 320px - 40px) * 0.6667); max-width:calc((100% - 320px - 40px) * 0.6667);",
+                                  plotOutput("mw_pred_ts_plot", height = 420, width = "100%")
+                                ),
+                                
+                                # Rechts: Prediction-vs-Ist (~33.3% der Restbreite)
+                                div(
+                                  style = "flex:0 0 calc((100% - 320px - 40px) * 0.3333); max-width:calc((100% - 320px - 40px) * 0.3333);",
+                                  plotOutput("mw_pred_vs_actual_plot", height = 420, width = "100%")
+                                )
+                              )
+                            )
                           )
                         )
                       )
+                      
+                      
+                      
+                      
                       
                       
              )
@@ -742,6 +763,7 @@ ui <- navbarPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
+  session$allowReconnect(TRUE)
   
   #Save beeswarm position
   pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
@@ -1772,7 +1794,6 @@ server <- function(input, output, session) {
         xmax = xmax + 0.5
       )
     
-    
     ggplot() +
       # Boxen unterlegen
       geom_rect(
@@ -1789,49 +1810,49 @@ server <- function(input, output, session) {
       ) +
       geom_vline(xintercept = as.Date("2025-08-22"), linetype = "dotted",
                  color = "darkred", linewidth = 1) +
-      annotate("text", x = as.Date("2025-08-22"), y = 0.8,
+      annotate("text", x = as.Date("2025-08-22") - 2, y = 0.825,
                label = "Saisonstart", color = "darkred", angle = 90,
                fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-09-07"), linetype = "dotted",
                  color = "darkgreen", linewidth = 1) +
-      annotate("text", x = as.Date("2025-09-07"), y = 0.875,
-               label = "Kippunkt 1 (19/22/23) 07.09.25", color = "darkgreen",
+      annotate("text", x = as.Date("2025-09-07") - 2, y = 0.875,
+               label = "K1 (19/22/23) 07.09.25", color = "darkgreen", 
                angle = 90, fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-10-07"), linetype = "dotted",
                  color = "orange", linewidth = 1) +
-      annotate("text", x = as.Date("2025-10-07"), y = 0.9,
-               label = "Kippunkt 2 (18/21) 07.10.25", color = "orange",
+      annotate("text", x = as.Date("2025-10-07") - 2, y = 0.86,
+               label = "K2 (18/21) 07.10.25", color = "orange",
                angle = 90, fontface = "bold", size = 5) +
       geom_vline(xintercept = as.Date("2025-12-24"), linetype = "dotted",
                  color = "red", linewidth = 1.5) +
-      annotate("text", x = as.Date("2025-12-24"), y = 0.95,
-               label = "Kippunkt 3 (13/14/19/24) 24.12.25", color = "red",
+      annotate("text", x = as.Date("2025-12-24") - 2, y = 0.895,
+               label = "K3 (13/14/19/24) 24.12.25", color = "red",
                angle = 90, vjust = 0.15, fontface = "bold", size = 5) +
-      
       geom_segment(
         data = arrow_df,
         aes(x = x0, y = y0, xend = x1, yend = y1),
         arrow = arrow(length = unit(0.3, "cm"), type = "closed"),
-        color = arrow_df$color, linewidth = 1.2, inherit.aes = FALSE
+        color = arrow_df$color, linewidth = 1, inherit.aes = FALSE,
+        alpha = 0.5
       ) +
-      coord_cartesian(ylim = c(0.75, 1.5)) +
+      coord_cartesian(ylim = c(0.75, 1.45)) +
       labs(
         title = "Marktwertentwicklung (relativ zum Startwert)",
         x = "Datum", y = "Relativer Marktwert", color = "Linientyp"
       ) +
-      scale_color_manual(values = c("Gesamtmarktwert" = "darkgrey")) +
+      scale_color_manual(values = c("Gesamtmarktwert" = "grey40")) +
+      scale_x_date(expand = expansion(mult = c(0.01, 0.03))) +
       theme_minimal(base_size = 16) +
       theme(legend.position = "none") +
-      
       geom_line(
         data = filter(sp, Saison == "2024-25"),
         aes(x = Datum, y = MW_rel_normiert),
-        color = "red", linetype = "dashed", linewidth = 1.3, na.rm = TRUE
+        color = "red", linetype = "dotted", linewidth = 1.3, na.rm = TRUE
       ) +
       geom_line(
         data = filter(sp, Saison == "2021-22"),
         aes(x = Datum, y = MW_rel_normiert),
-        color = "orange", linetype = "dashed", linewidth = 1.3, na.rm = TRUE
+        color = "orange", linetype = "dotted", linewidth = 1.3, na.rm = TRUE
       )
   })
   
@@ -1862,7 +1883,8 @@ server <- function(input, output, session) {
         size = 4
       ) +
       scale_fill_manual(values = c(`TRUE`="darkgreen", `FALSE`="red"), guide = "none") +
-      scale_x_date(date_breaks = "1 week", date_labels = "%d.%m.") +
+      scale_x_date(date_breaks = "1 week", date_labels = "%d.%m.",
+                   expand = expansion(mult = c(0.01, 0.03))) +
       labs(title = "Tägliche Marktwert-Veränderung", x = "Datum", y = "∆ zum Vortag (%)") +
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -2135,19 +2157,151 @@ server <- function(input, output, session) {
       filter(days_since_start >= 0)
   })
   
+  # Prognose Hist.
+  mw_knn_pred <- reactive({
+    req(input$selected_seasons)
+    L <- 100          # Lookback-Tage
+    k <- 5           # Anzahl Nachbarn
+    
+    # Historisch: pro Saison relativ zum Saisonstart normieren
+    hist <- normalized_data() %>%
+      group_by(Saison) %>%
+      arrange(days_since_start, .by_group = TRUE) %>%
+      mutate(MW_rel = Marktwert / first(Marktwert)) %>%
+      ungroup()
+    
+    # Aktuell: Gesamtmarktwert wie oben normieren
+    today <- Sys.Date()
+    current_year <- format(today, "%Y")
+    saison_start_this_year <- as.Date(paste0(current_year, "-07-01"))
+    t0 <- as.numeric(today - saison_start_this_year)
+    
+    curr <- gesamt_mw_roh %>%
+      group_by(Datum) %>%
+      summarise(MW = sum(Marktwert, na.rm = TRUE), .groups = "drop") %>%
+      mutate(days_since_start = as.numeric(Datum - saison_start_this_year)) %>%
+      filter(days_since_start >= 0, days_since_start <= t0) %>%
+      arrange(days_since_start) %>%
+      mutate(MW_rel = MW / first(MW))
+    
+    # Vergleichsfenster [t0-L+1 .. t0]
+    seg_curr <- curr %>%
+      filter(days_since_start > t0 - L & days_since_start <= t0) %>%
+      transmute(d = days_since_start - t0, MW_rel)
+    
+    # Distanz je Saison über das gleiche d-Raster
+    dist_df <- hist %>%
+      filter(days_since_start > t0 - L & days_since_start <= t0) %>%
+      transmute(Saison, d = days_since_start - t0, MW_rel) %>%
+      inner_join(seg_curr, by = "d", suffix = c("_hist", "_curr")) %>%
+      group_by(Saison) %>%
+      summarise(rmse = sqrt(mean((MW_rel_hist - MW_rel_curr)^2, na.rm = TRUE)),
+                n = n(), .groups = "drop") %>%
+      filter(n >= L * 0.8) %>%
+      arrange(rmse)
+    
+    best <- head(dist_df$Saison, k)
+    
+    if (isTRUE(getOption("mw_include_2122", FALSE)) &&
+        "2021-22" %in% dist_df$Saison && !"2021-22" %in% best) {
+      best <- unique(c("2021-22", best))[seq_len(min(k, length(unique(c("2021-22", best)))))]
+    }
+    
+    # Nachbar-Änderung für "morgen" (t0->t0+1) als Prozent
+    neigh_next <- hist %>%
+      filter(Saison %in% best, days_since_start %in% c(t0, t0 + 1)) %>%
+      group_by(Saison) %>%
+      arrange(days_since_start, .by_group = TRUE) %>%
+      summarise(pct_next = 100 * (last(MW_rel) / first(MW_rel) - 1),
+                .groups = "drop")
+    
+    pred_pct <- mean(neigh_next$pct_next, na.rm = TRUE)
+    pred_sd  <- sd(neigh_next$pct_next, na.rm = TRUE)
+    
+    # Aktueller Wert für Plotpunkt „morgen“
+    curr_today_val <- curr %>% filter(days_since_start == t0) %>% pull(MW)
+    pred_abs <- curr_today_val * (pred_pct / 100)
+    
+    list(
+      neighbors = best,
+      pred_pct  = pred_pct,
+      pred_sd   = pred_sd,
+      t0        = t0,
+      y_today   = curr_today_val,
+      y_tomorrow= curr_today_val * (1 + pred_pct/100)
+    )
+  })
+  
+  # Select top 4 similar seasons
+  similar_top4 <- reactive({
+    L <- 100
+    today <- Sys.Date()
+    saison_start_this_year <- as.Date(paste0(format(today, "%Y"), "-07-01"))
+    t0 <- as.numeric(today - saison_start_this_year)
+    
+    hist <- all_season_data() %>%
+      filter(!grepl("^Sommerpause", Saison)) %>%
+      mutate(
+        Datum = as.Date(Datum),
+        saison_start = as.Date(paste0(substr(Saison, 1, 4), "-07-01")),
+        days_since_start = as.integer(Datum - saison_start)
+      ) %>%
+      filter(days_since_start >= 0) %>%
+      group_by(Saison) %>%
+      arrange(days_since_start, .by_group = TRUE) %>%
+      mutate(MW_rel = Marktwert / first(Marktwert)) %>%
+      ungroup()
+    
+    curr <- gesamt_mw_roh %>%
+      group_by(Datum) %>%
+      summarise(MW = sum(Marktwert, na.rm = TRUE), .groups = "drop") %>%
+      mutate(days_since_start = as.numeric(Datum - saison_start_this_year)) %>%
+      filter(days_since_start >= 0, days_since_start <= t0) %>%
+      arrange(days_since_start) %>%
+      mutate(MW_rel = MW / first(MW))
+    
+    seg_curr <- curr %>%
+      filter(days_since_start > t0 - L & days_since_start <= t0) %>%
+      transmute(d = days_since_start - t0, MW_rel)
+    
+    dist_df <- hist %>%
+      filter(days_since_start > t0 - L & days_since_start <= t0) %>%
+      transmute(Saison, d = days_since_start - t0, MW_rel) %>%
+      inner_join(seg_curr, by = "d", suffix = c("_hist", "_curr")) %>%
+      group_by(Saison) %>%
+      summarise(rmse = sqrt(mean((MW_rel_hist - MW_rel_curr)^2, na.rm = TRUE)),
+                n = n(), .groups = "drop") %>%
+      filter(n >= L * 0.8) %>%
+      arrange(rmse) 
+    
+    sel <- head(dist_df$Saison, 5)
+    
+    if (isTRUE(getOption("mw_include_2122", FALSE)) &&
+        "2021-22" %in% dist_df$Saison && !"2021-22" %in% sel) {
+      sel <- unique(c("2021-22", sel))
+    }
+    
+    # nur echte Saisons und auf 5 begrenzen
+    sel <- intersect(sel, real_seasons)[seq_len(min(5, length(sel)))]
+    sel
+  })
+  
+  options(mw_include_2122 = FALSE)  # FALSE = aus
+  
+  
   ## ---- Hist. Saisonverläufe - Select ----
   
   # Einmalige Initialisierung der Checkbox-Choices
   observeEvent(TRUE, {
-    sel <- c(real_seasons[n_real], real_seasons[n_real-2])
-    updateCheckboxGroupInput(
-      session, "selected_seasons",
-      choices  = real_seasons,
-      selected = sel
-    )
+    sel <- isolate(similar_top4())
+    if (length(sel) == 0) sel <- c(real_seasons[n_real], real_seasons[n_real-2])
+    sel <- sel[sel %in% real_seasons]
+    updateCheckboxGroupInput(session, "selected_seasons",
+                             choices = real_seasons, selected = sel)
   }, once = TRUE)
   
-  # Button-Handler nur noch auf real_seasons beziehen:
+  
+  # All Button
   observeEvent(input$select_all, {
     updateCheckboxGroupInput(
       session, "selected_seasons",
@@ -2155,6 +2309,8 @@ server <- function(input, output, session) {
       selected = real_seasons
     )
   })
+  
+  # None Button
   observeEvent(input$select_none, {
     updateCheckboxGroupInput(
       session, "selected_seasons",
@@ -2162,6 +2318,8 @@ server <- function(input, output, session) {
       selected = character(0)
     )
   })
+  
+  # Custom 2 Button
   observeEvent(input$select_custom, {
     sel2 <- tail(real_seasons, 4)
     updateCheckboxGroupInput(
@@ -2170,14 +2328,19 @@ server <- function(input, output, session) {
       selected = sel2
     )
   })
+  
+  # Custom 1 Button
   observeEvent(input$select_last3, {
-    sel <- c(real_seasons[n_real], real_seasons[n_real-2])
+    sel <- isolate(similar_top4())
+    if (length(sel) == 0) sel <- c(real_seasons[n_real], real_seasons[n_real-2])
+    sel <- sel[sel %in% real_seasons]
     updateCheckboxGroupInput(
       session, "selected_seasons",
       choices  = real_seasons,
       selected = sel
     )
   })
+  
   
   output$historical_seasons_plot_selected <- renderPlot({
     req(input$main_navbar == "Marktwert-Entwicklung",
@@ -2289,6 +2452,19 @@ server <- function(input, output, session) {
     gesamt_arrow_color <- ifelse(gesamt_avg_pct_diff > 0, "darkgreen",
                                  ifelse(gesamt_avg_pct_diff < 0, "red", "black"))
     
+    # kNN-Prognose aufbereiten
+    kp <- mw_knn_pred()
+    knn_text <- if (is.null(kp) || is.na(kp$pred_pct)) {
+      "Ähnlichkeits-Prognose: nicht genügend Daten"
+    } else {
+      sprintf("Ähnlichkeits-Prognose: morgen %+.2f%% (kNN, k=%d, ± %.2f)",
+              kp$pred_pct, length(kp$neighbors), kp$pred_sd)
+    }
+    knn_arrow_label <- if (is.null(kp) || is.na(kp$pred_pct)) "" else if (kp$pred_pct > 0) "▲" else if (kp$pred_pct < 0) "▼" else ""
+    knn_arrow_color <- if (is.null(kp) || is.na(kp$pred_pct)) "black" else if (kp$pred_pct > 0) "darkgreen" else if (kp$pred_pct < 0) "red" else "black"
+    
+    
+    
     # Grafik bauen
     ggplot(df_filtered, aes(x = days_since_start, y = Marktwert, color = Saison)) +
       # Band für Mittelwert ± SD
@@ -2333,15 +2509,20 @@ server <- function(input, output, session) {
         fontface = "bold",
         size = 4
       ) +
-      annotate("text", x = Inf, y = Inf, label = prog_text,
-               hjust = 1.1, vjust = 2, size = 5, color = "black", fontface = "bold") +
-      annotate("text", x = Inf, y = Inf, label = arrow_label,
-               hjust = 1.05, vjust = 1.25, size = 8, color = arrow_color, fontface = "bold") +
-      
       annotate("text", x = Inf, y = Inf, label = gesamt_prog_text,
-               hjust = 1.1, vjust = 3.5, size = 5, color = "black", fontface = "bold") +
+               hjust = 1.05, vjust = 6.0, size = 5, color = "black", fontface = "bold") +
       annotate("text", x = Inf, y = Inf, label = gesamt_arrow_label,
-               hjust = 1.05, vjust = 2.5, size = 8, color = gesamt_arrow_color, fontface = "bold") +
+               hjust = 1.05, vjust = 6.0, size = 5, color = gesamt_arrow_color, fontface = "bold") +
+      
+      annotate("text", x = Inf, y = Inf, label = prog_text,
+               hjust = 1.05, vjust = 3.8, size = 5, color = "black", fontface = "bold") +
+      annotate("text", x = Inf, y = Inf, label = arrow_label,
+               hjust = 1.05, vjust = 3.8, size = 5, color = arrow_color, fontface = "bold") +
+      
+      annotate("text", x = Inf, y = Inf, label = knn_text,
+               hjust = 1.05, vjust = 1.6, size = 5, color = "black", fontface = "bold") +
+      annotate("text", x = Inf, y = Inf, label = knn_arrow_label,
+               hjust = 1.05, vjust = 1.6, size = 5, color = knn_arrow_color, fontface = "bold") +
     
       labs(
         title = "Historische Marktwertverläufe mit Mittelwert ± SD",
@@ -2740,10 +2921,72 @@ server <- function(input, output, session) {
   # 2. Einmal täglich speichern (nur nach 06:15 Europe/Berlin)
   observeEvent(today_tick(), {
     now <- as.POSIXct(Sys.time(), tz = "Europe/Berlin")
-    if (format(now, "%H%M") < "0615") return(invisible(NULL))  # vor 06:15 nichts speichern
+    if (format(now, "%H%M") < "0615") return(invisible(NULL))
     
-    pred <- mw_pred()
-    if (is.null(pred)) return()
+    pred <- mw_pred(); if (is.null(pred)) return()
+    
+    # kNN holen – wenn Auswahl (noch) nicht initialisiert, Fallback auf alle Saisons
+    kp <- tryCatch({
+      if (!is.null(isolate(input$selected_seasons)) &&
+          length(isolate(input$selected_seasons)) > 0) {
+        mw_knn_pred()
+      } else {
+        # --- Fallback kNN ohne UI-Auswahl (gleiches L/k wie oben verwenden) ---
+        L <- 100; k <- 5
+        today <- as.Date(now)
+        saison_start_this_year <- as.Date(paste0(format(today, "%Y"), "-07-01"))
+        t0 <- as.numeric(today - saison_start_this_year)
+        
+        hist <- all_season_data() %>%
+          filter(!grepl("^Sommerpause", Saison)) %>%
+          mutate(Datum = as.Date(Datum),
+                 saison_start = as.Date(paste0(substr(Saison, 1, 4), "-07-01")),
+                 days_since_start = as.integer(Datum - saison_start)) %>%
+          filter(days_since_start >= 0) %>%
+          group_by(Saison) %>%
+          arrange(days_since_start, .by_group = TRUE) %>%
+          mutate(MW_rel = Marktwert / first(Marktwert)) %>%
+          ungroup()
+        
+        curr <- gesamt_mw_roh %>%
+          group_by(Datum) %>%
+          summarise(MW = sum(Marktwert, na.rm = TRUE), .groups = "drop") %>%
+          mutate(days_since_start = as.numeric(Datum - saison_start_this_year)) %>%
+          filter(days_since_start >= 0, days_since_start <= t0) %>%
+          arrange(days_since_start) %>%
+          mutate(MW_rel = MW / first(MW))
+        
+        seg_curr <- curr %>%
+          filter(days_since_start > t0 - L & days_since_start <= t0) %>%
+          transmute(d = days_since_start - t0, MW_rel)
+        
+        dist_df <- hist %>%
+          filter(days_since_start > t0 - L & days_since_start <= t0) %>%
+          transmute(Saison, d = days_since_start - t0, MW_rel) %>%
+          inner_join(seg_curr, by = "d", suffix = c("_hist", "_curr")) %>%
+          group_by(Saison) %>%
+          summarise(rmse = sqrt(mean((MW_rel_hist - MW_rel_curr)^2, na.rm = TRUE)),
+                    n = n(), .groups = "drop") %>%
+          filter(n >= L * 0.8) %>%
+          arrange(rmse)
+        
+        best <- head(dist_df$Saison, k)
+        # 2021-22 ggf. erzwingen
+        if (isTRUE(getOption("mw_include_2122", FALSE)) &&
+            "2021-22" %in% dist_df$Saison && !"2021-22" %in% best) {
+          best <- unique(c("2021-22", best))[seq_len(min(k, length(unique(c("2021-22", best)))))]
+        }
+        
+        neigh_next <- hist %>%
+          filter(Saison %in% best, days_since_start %in% c(t0, t0 + 1)) %>%
+          group_by(Saison) %>%
+          arrange(days_since_start, .by_group = TRUE) %>%
+          summarise(pct_next = 100 * (last(MW_rel) / first(MW_rel) - 1),
+                    .groups = "drop")
+        
+        list(pred_pct = mean(neigh_next$pct_next, na.rm = TRUE))
+      }
+    }, error = function(e) NULL)
     
     dir.create("data", showWarnings = FALSE, recursive = TRUE)
     path <- file.path("data", "mw_pred.csv")
@@ -2755,11 +2998,19 @@ server <- function(input, output, session) {
     new$Datum     <- as.Date(new$Datum)
     new$Wochentag <- as.character(new$Wochentag)
     
+    # kNN-Prognose als Prozent-Delta für T-1 setzen
+    new$knn_delta <- NA_real_
+    if (!is.null(kp) && is.list(kp) && is.finite(kp$pred_pct)) {
+      idx <- which(new$Datum == as.Date(new$run_date[1]) + 1L)
+      if (length(idx) >= 1) new$knn_delta[idx[1]] <- kp$pred_pct
+    }
+    
     if (file.exists(path)) {
       old <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
       if (!is.null(old) && "run_date" %in% names(old) && any(old$run_date == new$run_date[1])) {
         return(invisible(NULL))
       }
+      if (!is.null(old) && !"knn_delta" %in% names(old)) old$knn_delta <- NA_real_
       if (!is.null(old)) {
         old$Datum     <- as.Date(old$Datum)
         old$Wochentag <- as.character(old$Wochentag)
@@ -2773,72 +3024,137 @@ server <- function(input, output, session) {
     message("mw_pred gespeichert: ", path)
   })
   
-
-  #### ---- Vorhersagen-Check Plot ----
-  output$mw_pred_vs_actual_plot <- renderPlot({
-    path <- file.path("data","mw_pred.csv")
+  # Erstelle Datensatzals reactive function für Prediction-Tabelle mw_pred_ts_metrics
+  pred_ts_metrics <- reactive({
+    path <- file.path("data", "mw_pred.csv")
     validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
-
-    # Vorhersage-Historie laden
+    
     pred <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
     validate(need(!is.null(pred), "Vorhersage-Datei ist nicht lesbar."))
-
-    # Typen
+    
+    model_cutoff <- as.Date("2025-10-26")
+    
     pred$run_date <- as.Date(pred$run_date)
     pred$Datum    <- as.Date(pred$Datum)
-
-    # Tatsächliche Tagesänderungen aus gesamt_mw_df berechnen
-    act <- gesamt_mw_df %>%
+    if (!"knn_delta" %in% names(pred)) pred$knn_delta <- NA_real_
+    
+    act_df <- gesamt_mw_df %>%
       filter(!is.na(Datum)) %>%
+      transmute(Datum = as.Date(Datum),
+                MW_gesamt = as.numeric(MW_gesamt)) %>%
       arrange(Datum) %>%
       mutate(
-        MW_vortag  = lag(MW_gesamt),
-        abs_change = MW_gesamt - MW_vortag,
-        pct_change = 100 * abs_change / MW_vortag
+        MW_vortag    = lag(MW_gesamt),
+        actual_delta = 100 * (MW_gesamt - MW_vortag) / MW_vortag
       ) %>%
-      filter(is.finite(pct_change)) %>%
-      select(Datum, actual_delta = pct_change)
-
-    # Nur für letzten verfügbaren Markttag vergleichen
-    last_actual_day <- max(act$Datum, na.rm = TRUE)
-
-    cmp <- pred %>%
-      inner_join(act, by = "Datum") %>%
-      filter(
-        Datum == last_actual_day,
-        run_date %in% c(Datum - 1L, Datum - 2L)
-      ) %>%
-      mutate(
-        horizon = ifelse(run_date == Datum - 1L, "T-1→Heute", "T-2→Heute")
-      )
-
-    validate(need(nrow(cmp) > 0, "Noch keine passenden Vorhersagen für den letzten Markttag."))
-
-    # Plot
-    ggplot(cmp, aes(x = factor(horizon, levels = c("T-2→Heute","T-1→Heute")))) +
-      # Prognose (Kreis)
-      geom_point(aes(y = E_delta, color = "Vorhersage"), size = 3) +
-      geom_errorbar(aes(ymin = lwr, ymax = upr, color = "Vorhersage"),
-                    width = 0.15, linewidth = 0.4, linetype = "dashed") +
-      # Ist-Wert (Dreieck)
-      geom_point(aes(y = actual_delta, color = "Ist-Wert"), shape = 17, size = 3) +
-      geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
-      scale_color_manual(
-        name = NULL,
-        values = c("Vorhersage" = "steelblue", "Ist-Wert" = "black")
-      ) +
-      labs(
-        title    = paste0("Prediction vs. Ist (", format(last_actual_day, "%d.%m.%Y"), ")"),
-        x = NULL, y = "Δ Marktwert (%)",
-        subtitle = paste(
-          sprintf("T-1: P↑ %.0f%%", 100*cmp$P_up[cmp$horizon=="T-1→Heute"]),
-          sprintf("T-2: P↑ %.0f%%", 100*cmp$P_up[cmp$horizon=="T-2→Heute"]),
-          sep = "   "
-        )
-      ) +
-      theme_minimal(base_size = 16) +
-      theme(legend.position = "top")
+      filter(is.finite(actual_delta)) %>%
+      select(Datum, actual_delta)
     
+    ts_df <- pred %>%
+      mutate(
+        horizon = case_when(
+          run_date == Datum - 1L ~ "T-1→Heute",
+          run_date == Datum - 2L ~ "T-2→Heute",
+          TRUE ~ NA_character_
+        )
+      ) %>%
+      filter(!is.na(horizon)) %>%
+      select(Datum, horizon, E_delta) %>%
+      group_by(Datum, horizon) %>%
+      summarise(E_delta = mean(E_delta, na.rm = TRUE), .groups = "drop") %>%
+      arrange(Datum)
+    
+    eps <- 1e-9
+    sign0 <- function(x) ifelse(abs(x) < eps, 0, ifelse(x > 0, 1, -1))
+    
+    cmp <- ts_df %>%
+      inner_join(act_df, by = "Datum") %>%
+      mutate(
+        abs_err = abs(E_delta - actual_delta),
+        sign_ok = sign0(E_delta) == sign0(actual_delta),
+        model   = ifelse(Datum <= model_cutoff, "M1", "M2")
+      )
+    
+    met_by_model <- cmp %>%
+      group_by(model, horizon) %>%
+      summarise(
+        mae = mean(abs_err, na.rm = TRUE),
+        acc = mean(sign_ok, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    pick <- function(m, h, col) {
+      v <- met_by_model[[col]][met_by_model$model == m & met_by_model$horizon == h]
+      ifelse(length(v) == 1 && is.finite(v), v, NA_real_)
+    }
+    
+    # kNN T-1
+    knn_cmp <- pred %>%
+      filter(run_date == Datum - 1L, is.finite(knn_delta)) %>%
+      inner_join(act_df, by = "Datum") %>%
+      mutate(
+        abs_err = abs(knn_delta - actual_delta),
+        sign_ok = sign0(knn_delta) == sign0(actual_delta)
+      )
+    
+    acc_knn <- mean(knn_cmp$sign_ok, na.rm = TRUE)
+    mae_knn <- mean(knn_cmp$abs_err, na.rm = TRUE)
+    
+    tibble::tibble(
+      Modell   = c("M1", "M1", "M2", "M2", "kNN"),
+      Horizont = c("T-1→Heute", "T-2→Heute", "T-1→Heute", "T-2→Heute", "T-1→Heute"),
+      Acc      = c(
+        pick("M1","T-1→Heute","acc"),
+        pick("M1","T-2→Heute","acc"),
+        pick("M2","T-1→Heute","acc"),
+        pick("M2","T-2→Heute","acc"),
+        acc_knn
+      ),
+      MAE      = c(
+        pick("M1","T-1→Heute","mae"),
+        pick("M1","T-2→Heute","mae"),
+        pick("M2","T-1→Heute","mae"),
+        pick("M2","T-2→Heute","mae"),
+        mae_knn
+      )
+    )
+  })
+  
+  #### ---- Vorhersagen-Check Tabelle ----
+  output$mw_pred_ts_metrics <- renderUI({
+    df <- pred_ts_metrics()
+    req(nrow(df) > 0)
+    
+    fmt_acc <- function(x) ifelse(is.finite(x), paste0(round(100*x), "%"), "n/a")
+    fmt_mae <- function(x) ifelse(is.finite(x), sprintf("%.2f%%", x), "n/a")
+    
+    rows <- lapply(seq_len(nrow(df)), function(i) {
+      tags$tr(
+        tags$td(df$Modell[i]),
+        tags$td(df$Horizont[i]),
+        tags$td(style = "text-align:right;", fmt_acc(df$Acc[i])),
+        tags$td(style = "text-align:right;", fmt_mae(df$MAE[i]))
+      )
+    })
+    
+    tags$div(
+      style = "width:100%;",
+      tags$strong("Güte je Modell"),
+      tags$table(
+        style = "width:100%; border-collapse:collapse; margin-top:8px; font-size:14px;",
+        tags$thead(
+          tags$tr(
+            tags$th("Modell",   style="text-align:left;  border-bottom:1px solid #ddd; padding-bottom:4px;"),
+            tags$th("Horizont", style="text-align:left;  border-bottom:1px solid #ddd; padding-bottom:4px;"),
+            tags$th("Acc",      style="text-align:right; border-bottom:1px solid #ddd; padding-bottom:4px;"),
+            tags$th("MAE",      style="text-align:right; border-bottom:1px solid #ddd; padding-bottom:4px;")
+          )
+        ),
+        tags$tbody(rows)
+      ),
+      tags$div(style="color:#666; font-size:12px; margin-top:6px;",
+               "Acc = Vorzeichen-Trefferquote · MAE = mittlerer |Fehler| in %")
+    )
   })
   
   #### ---- Vorhersagen-Check Zeitreihen-Plot ----
@@ -2846,12 +3162,17 @@ server <- function(input, output, session) {
     path <- file.path("data", "mw_pred.csv")
     validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
     
+    model_cutoff <- as.Date("2025-10-26")
+    
+    # Vorhersagen laden
     pred <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
     validate(need(!is.null(pred), "Vorhersage-Datei ist nicht lesbar."))
     
     pred$run_date <- as.Date(pred$run_date)
     pred$Datum    <- as.Date(pred$Datum)
+    if (!"knn_delta" %in% names(pred)) pred$knn_delta <- NA_real_
     
+    # Zeitreihen der Modellvorhersagen (T-1/T-2)
     ts_df <- pred %>%
       mutate(
         horizon = case_when(
@@ -2868,6 +3189,7 @@ server <- function(input, output, session) {
     
     validate(need(nrow(ts_df) > 0, "Keine passenden Horizonte in mw_pred.csv."))
     
+    # Ist-Werte
     act_df <- gesamt_mw_df %>%
       filter(!is.na(Datum)) %>%
       transmute(Datum = as.Date(Datum),
@@ -2880,33 +3202,16 @@ server <- function(input, output, session) {
       filter(is.finite(actual_delta)) %>%
       select(Datum, actual_delta)
     
+    # Nur die Tage plotten, für die auch Vorhersagen existieren
     pred_dates <- sort(unique(ts_df$Datum))
     act_df <- act_df %>% filter(Datum %in% pred_dates)
     
-    # --- Gütemaße je Horizon ---
-    eps <- 1e-9
-    sign0 <- function(x) ifelse(abs(x) < eps, 0, ifelse(x > 0, 1, -1))
-    
-    cmp <- ts_df %>%
-      inner_join(act_df, by = "Datum") %>%
-      mutate(
-        abs_err = abs(E_delta - actual_delta),
-        sign_ok = sign0(E_delta) == sign0(actual_delta)
-      )
-    
-    met <- cmp %>%
-      group_by(horizon) %>%
-      summarise(
-        mae = mean(abs_err, na.rm = TRUE),
-        acc = mean(sign_ok, na.rm = TRUE),
-        .groups = "drop"
-      )
-    
-    acc_t1 <- met$acc[met$horizon == "T-1→Heute"]; mae_t1 <- met$mae[met$horizon == "T-1→Heute"]
-    acc_t2 <- met$acc[met$horizon == "T-2→Heute"]; mae_t2 <- met$mae[met$horizon == "T-2→Heute"]
-    
-    sub_txt <- sprintf("Sign-Accuracy T-1: %d%% | MAE T-1: %.2f%%   •   Sign-Accuracy T-2: %d%% | MAE T-2: %.2f%%",
-                       round(100*acc_t1), mae_t1, round(100*acc_t2), mae_t2)
+    # kNN-Serie: T-1 bezogen (run_date == Datum - 1)
+    knn_df <- pred %>%
+      filter(run_date == Datum - 1L) %>%
+      select(Datum, knn_delta) %>%
+      filter(is.finite(knn_delta)) %>%
+      arrange(Datum)
     
     ggplot(ts_df, aes(x = Datum, y = E_delta, group = horizon, color = horizon)) +
       geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
@@ -2920,18 +3225,127 @@ server <- function(input, output, session) {
                  inherit.aes = FALSE,
                  aes(x = Datum, y = actual_delta, color = "Ist-Wert"),
                  size = 1.6) +
+      geom_line(data = knn_df,
+                inherit.aes = FALSE,
+                aes(x = Datum, y = knn_delta, color = "kNN T-1"),
+                linewidth = 0.8) +
+      geom_point(data = knn_df,
+                 inherit.aes = FALSE,
+                 aes(x = Datum, y = knn_delta, color = "kNN T-1"),
+                 size = 1.6) +
+      geom_vline(xintercept = model_cutoff, linetype = "longdash", color = "grey40") +
       scale_color_manual(
         name   = NULL,
-        breaks = c("T-2→Heute", "T-1→Heute", "Ist-Wert"),
-        values = c("T-1→Heute" = "red", "T-2→Heute" = "blue", "Ist-Wert" = "black")
+        breaks = c("T-2→Heute", "T-1→Heute", "kNN T-1", "Ist-Wert"),
+        values = c("T-1→Heute" = "red", "T-2→Heute" = "blue", "kNN T-1" = "steelblue", "Ist-Wert" = "black")
       ) +
       labs(
-        title = "Vorhersage vs. Ist über die Zeit",
-        subtitle = sub_txt,
+        caption = "Bis inkl. 25.10: Modell 1 (2-Tages-/Wochenrhythmus).  Ab 26.10: Modell 2 (Lag7 + Saison-Boost).  kNN: Ähnlichkeits-Prognose.",
         x = NULL, y = "Δ Marktwert (%)"
       ) +
       theme_minimal(base_size = 14) +
-      theme(legend.position = "top")
+      theme(legend.position = "top", plot.title = element_blank())
+  })
+  
+  #### ---- Vorhersagen-Check Heute ----
+  output$mw_pred_vs_actual_plot <- renderPlot({
+    path <- file.path("data","mw_pred.csv")
+    validate(need(file.exists(path), "Noch keine gespeicherten Vorhersagen."))
+    
+    pred <- tryCatch(read.csv(path, stringsAsFactors = FALSE), error = function(e) NULL)
+    validate(need(!is.null(pred), "Vorhersage-Datei ist nicht lesbar."))
+    
+    pred$run_date <- as.Date(pred$run_date)
+    pred$Datum    <- as.Date(pred$Datum)
+    if (!"knn_delta" %in% names(pred)) pred$knn_delta <- NA_real_
+    
+    act <- gesamt_mw_df %>%
+      filter(!is.na(Datum)) %>%
+      arrange(Datum) %>%
+      mutate(
+        MW_vortag  = lag(MW_gesamt),
+        abs_change = MW_gesamt - MW_vortag,
+        pct_change = 100 * abs_change / MW_vortag
+      ) %>%
+      filter(is.finite(pct_change)) %>%
+      select(Datum, actual_delta = pct_change)
+    
+    last_actual_day <- max(act$Datum, na.rm = TRUE)
+    
+    cmp <- pred %>%
+      inner_join(act, by = "Datum") %>%
+      filter(
+        Datum == last_actual_day,
+        run_date %in% c(Datum - 1L, Datum - 2L)
+      ) %>%
+      mutate(
+        horizon = ifelse(run_date == Datum - 1L, "T-1→Heute", "T-2→Heute")
+      )
+    
+    validate(need(nrow(cmp) > 0, "Noch keine passenden Vorhersagen für den letzten Markttag."))
+    
+    # kNN T-1 für letzten Markttag
+    knn_val <- pred %>%
+      filter(Datum == last_actual_day, run_date == Datum - 1L) %>%
+      summarise(v = mean(knn_delta, na.rm = TRUE), .groups = "drop") %>%
+      pull(v)
+    if (!is.finite(knn_val)) knn_val <- NA_real_
+    knn_pt <- data.frame(horizon = factor("T-1→Heute", levels = c("T-2→Heute","T-1→Heute")),
+                         y = knn_val)
+    
+    x_levels <- c("T-2→Heute","T-1→Heute")
+    cmp$horizon <- factor(cmp$horizon, levels = x_levels)
+    
+    ggplot(data = cmp, aes(x = horizon)) +
+      # Prognose T-2 (blau)
+      {if (any(cmp$horizon == "T-2→Heute")) geom_point(
+        data = subset(cmp, horizon == "T-2→Heute"),
+        aes(y = E_delta, color = "T-2"), size = 3)} +
+      {if (any(cmp$horizon == "T-2→Heute")) geom_errorbar(
+        data = subset(cmp, horizon == "T-2→Heute"),
+        aes(ymin = lwr, ymax = upr, color = "T-2"),
+        width = 0.15, linewidth = 0.4, linetype = "dashed")} +
+      
+      # Prognose T-1 (rot)
+      {if (any(cmp$horizon == "T-1→Heute")) geom_point(
+        data = subset(cmp, horizon == "T-1→Heute"),
+        aes(y = E_delta, color = "T-1"), size = 3)} +
+      {if (any(cmp$horizon == "T-1→Heute")) geom_errorbar(
+        data = subset(cmp, horizon == "T-1→Heute"),
+        aes(ymin = lwr, ymax = upr, color = "T-1"),
+        width = 0.15, linewidth = 0.4, linetype = "dashed")} +
+      
+      # kNN T-1 (steelblue), Punkt bei T-1
+      {if (is.finite(knn_val)) geom_point(
+        data = knn_pt, aes(x = horizon, y = y, color = "kNN T-1"),
+        size = 3, shape = 15)} +
+      
+      # Ist-Wert (schwarz), an beiden x-Werten
+      geom_point(aes(y = actual_delta, color = "Ist-Wert"), shape = 17, size = 3) +
+      
+      geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
+      scale_color_manual(
+        name = NULL,
+        values = c("T-1" = "red", "T-2" = "blue", "kNN T-1" = "steelblue", "Ist-Wert" = "black")
+      ) +
+      labs(
+        x = NULL, y = "Δ Marktwert (%)",
+        subtitle = paste(
+          sprintf("T-1: Δ %s",
+                  ifelse(any(cmp$horizon == "T-1→Heute"),
+                         sprintf("%+.2f%%", cmp$E_delta[cmp$horizon == "T-1→Heute"][1]),
+                         "n/a")),
+          sprintf("T-2: Δ %s",
+                  ifelse(any(cmp$horizon == "T-2→Heute"),
+                         sprintf("%+.2f%%", cmp$E_delta[cmp$horizon == "T-2→Heute"][1]),
+                         "n/a")),
+          sprintf("kNN T-1: %s",
+                  ifelse(is.finite(knn_val), sprintf("%+.2f%%", knn_val), "n/a")),
+          sep = "   "
+        )
+      ) +
+      theme_minimal(base_size = 16) +
+      theme(legend.position = "top", plot.title = element_blank())
   })
   
   
