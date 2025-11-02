@@ -1,8 +1,8 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Honorat;Sturm
-Thomas;Ouédraogo;Mittelfeld
 Thomas;Stage;Mittelfeld
+Thomas;Ouédraogo;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Knauff;Mittelfeld
 Thomas;Führich;Mittelfeld
@@ -11,13 +11,12 @@ Thomas;Laimer;Abwehr
 Thomas;Oppie;Abwehr
 Thomas;Hajdari;Abwehr
 Thomas;Arthur;Abwehr
-Thomas;Gocholeishvili;Abwehr
 Thomas;Stenzel;Abwehr
+Thomas;Gocholeishvili;Abwehr
 Thomas;Ogbus;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
-Alfons;Philippe;Sturm
 Alfons;Reyna;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
@@ -30,8 +29,8 @@ Alfons;Jaquez;Abwehr
 Alfons;van den Berg;Abwehr
 Alfons;Deman;Abwehr
 Alfons;Vasilj;Tor
-Christoph;Scherhant;Sturm
 Christoph;Nusa;Sturm
+Christoph;Scherhant;Sturm
 Christoph;Baumgartner;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
@@ -42,23 +41,23 @@ Christoph;Upamecano;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Mittelfeld
-Pascal;Larsson;Mittelfeld
 Pascal;Kainz;Mittelfeld
+Pascal;Larsson;Mittelfeld
 Pascal;Skhiri;Mittelfeld
-Pascal;Can;Mittelfeld
 Pascal;Irvine;Mittelfeld
+Pascal;Can;Mittelfeld
 Pascal;Svensson;Abwehr
 Pascal;W. Orbán;Abwehr
 Pascal;Elvedi;Abwehr
 Pascal;Klostermann;Abwehr
 Pascal;Baumann;Tor
 Pascal;L. Philipp;Tor
-Andreas;Tiago Tomás;Sturm
 Andreas;Rômulo;Sturm
 Andreas;Dompé;Sturm
+Andreas;Tiago Tomás;Sturm
 Andreas;Hollerbach;Sturm
-Andreas;Schmid;Mittelfeld
 Andreas;Reitz;Mittelfeld
+Andreas;Schmid;Mittelfeld
 Andreas;Bensebaini;Abwehr
 Andreas;L. Vušković;Abwehr
 Andreas;Matsima;Abwehr
@@ -79,8 +78,8 @@ Nico;Olise;Sturm
 Nico;Höler;Sturm
 Nico;Glatzel;Sturm
 Nico;Fellhauer;Mittelfeld
-Nico;Fujita;Mittelfeld
 Nico;Sabitzer;Mittelfeld
+Nico;Fujita;Mittelfeld
 Nico;Haberer;Mittelfeld
 Nico;Doekhi;Abwehr
 Nico;Muheim;Abwehr
@@ -95,8 +94,8 @@ Christian;Jeong;Mittelfeld
 Christian;Schöppner;Mittelfeld
 Christian;Tapsoba;Abwehr
 Christian;Föhrenbach;Abwehr
-Christian;Elfadli;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
+Christian;Elfadli;Abwehr
 Christian;Kim;Abwehr
 Christian;Köhn;Abwehr
 Christian;Grabara;Tor
