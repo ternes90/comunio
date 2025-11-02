@@ -1,11 +1,11 @@
 ﻿Datum;Spieler;Besitzer;Hoechstgebot;Hoechstbietender;Zweitgebot;Zweitbietender
 02.11.2025;Puertas;Computer;2856000;Thomas;2756000.0;Alfons
-02.11.2025;Burke;Alfons;3821400;Computer;;
-02.11.2025;Reyna;Computer;2220000;Alfons;2033000.0;Thomas
-02.11.2025;Andrich;Nico;3348800;Computer;;
 02.11.2025;Uzun;Thomas;13870000;Computer;;
-02.11.2025;Honorat;Computer;7445000;Thomas;7300000.0;Alfons
 02.11.2025;Gocholeishvili;Computer;2376000;Thomas;2277000.0;Christoph
+02.11.2025;Honorat;Computer;7445000;Thomas;7300000.0;Alfons
+02.11.2025;Burke;Alfons;3821400;Computer;;
+02.11.2025;Andrich;Nico;3348800;Computer;;
+02.11.2025;Reyna;Computer;2220000;Alfons;2033000.0;Thomas
 01.11.2025;Ogbus;Computer;178000;Thomas;170050.0;Alfons
 01.11.2025;Honsak;Christoph;2740500;Computer;;
 01.11.2025;Föhrenbach;Computer;2500100;Christian;2476000.0;Thomas
@@ -17,10 +17,10 @@
 01.11.2025;Fellhauer;Computer;4090000;Nico;;
 01.11.2025;Nartey;Dominik;2173600;Computer;;
 01.11.2025;Couto;Computer;5026005;Dominik;4915000.0;Alfons
-31.10.2025;Urbig;Alfons;525000;Computer;;
-31.10.2025;Mikelbrencis;Alfons;1292800;Computer;;
-31.10.2025;Wahl;Thomas;3214400;Computer;;
 31.10.2025;Haidara;Alfons;1127000;Computer;;
+31.10.2025;Wahl;Thomas;3214400;Computer;;
+31.10.2025;Mikelbrencis;Alfons;1292800;Computer;;
+31.10.2025;Urbig;Alfons;525000;Computer;;
 30.10.2025;van den Berg;Computer;1305320;Alfons;1300000.0;Andreas
 30.10.2025;Geiger;Nico;166600;Computer;;
 30.10.2025;Haberer;Computer;1360000;Nico;;
@@ -31,29 +31,29 @@
 29.10.2025;Zehnter;Computer;1608762;Dominik;1605000.0;Alfons
 29.10.2025;Haidara;Computer;1245160;Alfons;1193924.0;Dominik
 29.10.2025;Burke;Computer;3835000;Alfons;3770005.0;Dominik
+28.10.2025;Kohr;Computer;3377020;Alfons;;
+28.10.2025;Nebel;Computer;6955020;Alfons;;
+28.10.2025;Jaquez;Computer;3491020;Alfons;;
 28.10.2025;Beck;Dominik;1924000;Computer;;
 28.10.2025;Kade;Thomas;2100000;Computer;;
-28.10.2025;Jaquez;Computer;3491020;Alfons;;
-28.10.2025;Nebel;Computer;6955020;Alfons;;
-28.10.2025;Kohr;Computer;3377020;Alfons;;
 27.10.2025;Götze;Christoph;1778400;Computer;;
 27.10.2025;Honsak;Computer;2580300;Christoph;2555900.0;Alfons
 27.10.2025;Führich;Computer;4345000;Thomas;4052005.0;Dominik
 27.10.2025;Poku;Computer;12291802;Dominik;11532000.0;Thomas
 27.10.2025;Knauff;Computer;4854900;Thomas;4730000.0;Alfons
-26.10.2025;Kade;Computer;2245000;Thomas;2235500.0;Nico
-26.10.2025;Pyrka;Alfons;1449000;Computer;;
-26.10.2025;Hübers;Alfons;3447600;Computer;;
 26.10.2025;Ouédraogo;Computer;7532000;Thomas;7150005.0;Dominik
-26.10.2025;Zivzivadze;Alfons;2210000;Computer;;
 26.10.2025;Saad;Computer;2812050;Alfons;2643000.0;Thomas
-25.10.2025;Avdullahu;Computer;5800000;Christoph;;
-25.10.2025;Ansah;Thomas;7605300;Computer;;
-25.10.2025;Ilić;Christoph;3885000;Computer;;
-25.10.2025;Arthur;Computer;3043000;Thomas;2760010.0;Alfons
+26.10.2025;Zivzivadze;Alfons;2210000;Computer;;
+26.10.2025;Kade;Computer;2245000;Thomas;2235500.0;Nico
+26.10.2025;Hübers;Alfons;3447600;Computer;;
+26.10.2025;Pyrka;Alfons;1449000;Computer;;
+25.10.2025;Geiger;Computer;185500;Nico;171001.0;Dominik
 25.10.2025;Damar;Christoph;3491700;Computer;;
 25.10.2025;Amoura;Thomas;9991000;Computer;;
-25.10.2025;Geiger;Computer;185500;Nico;171001.0;Dominik
+25.10.2025;Ansah;Thomas;7605300;Computer;;
+25.10.2025;Arthur;Computer;3043000;Thomas;2760010.0;Alfons
+25.10.2025;Ilić;Christoph;3885000;Computer;;
+25.10.2025;Avdullahu;Computer;5800000;Christoph;;
 24.10.2025;Schimmer;Thomas;1466400;Computer;;
 24.10.2025;Kofane;Thomas;10129600;Computer;;
 24.10.2025;Nartey;Computer;2024500;Dominik;1585000.0;Alfons
@@ -62,57 +62,57 @@
 23.10.2025;Deman;Computer;171050;Alfons;;
 23.10.2025;Ngankam;Nico;273000;Computer;;
 23.10.2025;Schimmer;Computer;1554000;Thomas;1520400.0;Alfons
-22.10.2025;Nebel;Alfons;7457500;Computer;;
-22.10.2025;Kofane;Computer;9345000;Thomas;9045100.0;Alfons
 22.10.2025;Götze;Computer;1748500;Christoph;1560000.0;Andreas
-21.10.2025;Højlund;Thomas;872200;Computer;;
+22.10.2025;Kofane;Computer;9345000;Thomas;9045100.0;Alfons
+22.10.2025;Nebel;Alfons;7457500;Computer;;
 21.10.2025;Doan;Computer;12031618;Dominik;;
 21.10.2025;Bebou;Dominik;2235100;Computer;;
 21.10.2025;Y. Engelhardt;Dominik;4670000;Computer;;
 21.10.2025;Belocian;Dominik;1438500;Computer;;
 21.10.2025;Ache;Alfons;2880900;Computer;;
 21.10.2025;Sano;Computer;5900000;Alfons;5511000.0;Thomas
+21.10.2025;Højlund;Thomas;872200;Computer;;
 20.10.2025;Nicolas;Thomas;1525100;Computer;;
 20.10.2025;Hanche-Olsen;Alfons;1742400;Computer;;
 20.10.2025;Stenzel;Computer;174000;Thomas;172000.0;Alfons
 20.10.2025;Nübel;Computer;3011000;Thomas;2970000.0;Nico
-19.10.2025;Ache;Computer;3012060;Alfons;;
-19.10.2025;Pyrka;Computer;1415000;Alfons;1400000.0;Andreas
+19.10.2025;Ouédraogo;Dominik;7330000;Computer;;
+19.10.2025;M. Wolf;Dominik;1840000;Computer;;
+19.10.2025;Damar;Computer;4700200;Christoph;4185560.0;Alfons
 19.10.2025;Saliakas;Christoph;2128500;Computer;;
 19.10.2025;Kohr;Christoph;3514500;Computer;;
-19.10.2025;Ouédraogo;Dominik;7330000;Computer;;
-19.10.2025;Damar;Computer;4700200;Christoph;4185560.0;Alfons
-19.10.2025;M. Wolf;Dominik;1840000;Computer;;
+19.10.2025;Pyrka;Computer;1415000;Alfons;1400000.0;Andreas
+19.10.2025;Ache;Computer;3012060;Alfons;;
 18.10.2025;Nsoki;Alfons;520200;Computer;;
 18.10.2025;Mikelbrencis;Computer;745000;Alfons;;
 18.10.2025;Kiala;Alfons;499200;Computer;;
 18.10.2025;Hanche-Olsen;Computer;1850000;Alfons;;
 18.10.2025;van den Berg;Alfons;1390500;Computer;;
 18.10.2025;Führich;Dominik;4557000;Computer;;
-17.10.2025;Terrier;Andreas;2730000;Computer;;
-17.10.2025;Y. Engelhardt;Computer;4600000;Dominik;;
-17.10.2025;Kübler;Alfons;2593800;Computer;;
-17.10.2025;Svanberg;Andreas;2900800;Computer;;
 17.10.2025;M. Wolf;Computer;1900000;Dominik;;
-17.10.2025;Schick;Alfons;13891500;Computer;;
-17.10.2025;Backhaus;Dominik;1484700;Computer;;
-17.10.2025;Führich;Computer;4290000;Dominik;;
 17.10.2025;Fischer;Andreas;2090700;Computer;;
+17.10.2025;Backhaus;Dominik;1484700;Computer;;
+17.10.2025;Schick;Alfons;13891500;Computer;;
+17.10.2025;Führich;Computer;4290000;Dominik;;
+17.10.2025;Svanberg;Andreas;2900800;Computer;;
+17.10.2025;Terrier;Andreas;2730000;Computer;;
+17.10.2025;Kübler;Alfons;2593800;Computer;;
+17.10.2025;Y. Engelhardt;Computer;4600000;Dominik;;
 16.10.2025;Zivzivadze;Computer;2340020;Alfons;2305500.0;Dominik
 16.10.2025;Reitz;Computer;6290000;Andreas;;
 16.10.2025;Gulácsi;Alfons;2605800;Computer;;
 16.10.2025;Vini Souza;Computer;4920000;Christian;;
 15.10.2025;Saliakas;Computer;2130200;Christoph;;
-15.10.2025;Grifo;Computer;11260000;Alfons;11092000.0;Dominik
 15.10.2025;Højlund;Computer;1054000;Thomas;1025100.0;Dominik
 15.10.2025;Conteh;Christian;1500000;Computer;;
+15.10.2025;Grifo;Computer;11260000;Alfons;11092000.0;Dominik
 14.10.2025;Bebou;Computer;2052324;Dominik;2025900.0;Christoph
 14.10.2025;Ansah;Computer;7845000;Thomas;7626000.0;Dominik
 14.10.2025;Tah;Thomas;8629200;Computer;;
 14.10.2025;Meiser;Andreas;170000;Computer;;
 14.10.2025;Grimaldo;Thomas;12540000;Computer;;
-13.10.2025;Hajdari;Computer;2343000;Thomas;;
 13.10.2025;Vasilj;Computer;3180000;Alfons;;
+13.10.2025;Hajdari;Computer;2343000;Thomas;;
 12.10.2025;Herrmann;Alfons;1442000;Computer;;
 12.10.2025;Skov;Christoph;1522500;Computer;;
 12.10.2025;Meiser;Computer;160000;Andreas;;
@@ -127,10 +127,10 @@
 11.10.2025;Uzun;Computer;17303003;Thomas;17190888.0;Dominik
 11.10.2025;Backhaus;Computer;1651000;Dominik;;
 11.10.2025;Seiwald;Computer;6572000;Dominik;;
-10.10.2025;Kiala;Computer;184020;Alfons;;
-10.10.2025;Tah;Computer;9423000;Thomas;8910000.0;Alfons
 10.10.2025;El Khannouss;Dominik;16304900;Computer;;
 10.10.2025;Schick;Computer;17200000;Alfons;16523000.0;Thomas
+10.10.2025;Tah;Computer;9423000;Thomas;8910000.0;Alfons
+10.10.2025;Kiala;Computer;184020;Alfons;;
 09.10.2025;J. Hofmann;Alfons;2631600;Computer;;
 09.10.2025;Hranáč;Dominik;2436000;Computer;;
 09.10.2025;Essende;Dominik;3916500;Computer;;
@@ -141,62 +141,62 @@
 08.10.2025;Giannoulis;Christoph;2930200;Computer;;
 08.10.2025;Henrichs;Computer;2025000;Dominik;1600000.0;Alfons
 08.10.2025;van den Berg;Computer;1544200;Alfons;1530000.0;Andreas
-07.10.2025;Wind;Alfons;3990000;Computer;;
-07.10.2025;Kimmich;Computer;21395200;Dominik;18566000.0;Thomas
-07.10.2025;Sano;Dominik;7360000;Computer;;
-07.10.2025;El Khannouss;Computer;15956154;Dominik;15120000.0;Thomas
-07.10.2025;Matanović;Alfons;7108200;Computer;;
 07.10.2025;Mwene;Dominik;2873700;Computer;;
-07.10.2025;Stöger;Andreas;5720000;Computer;;
-07.10.2025;Skov;Computer;1280000;Christoph;1280000.0;Alfons
 07.10.2025;Hajdari;Dominik;2461700;Computer;;
+07.10.2025;Skov;Computer;1280000;Christoph;1280000.0;Alfons
+07.10.2025;Stöger;Andreas;5720000;Computer;;
+07.10.2025;Sano;Dominik;7360000;Computer;;
+07.10.2025;Matanović;Alfons;7108200;Computer;;
+07.10.2025;El Khannouss;Computer;15956154;Dominik;15120000.0;Thomas
+07.10.2025;Kimmich;Computer;21395200;Dominik;18566000.0;Thomas
+07.10.2025;Wind;Alfons;3990000;Computer;;
 06.10.2025;Markgraf;Thomas;176800;Computer;;
 06.10.2025;Demirović;Thomas;11870100;Computer;;
 06.10.2025;Hranáč;Computer;2434750;Dominik;2376000.0;Alfons
 06.10.2025;Makengo;Dominik;2280000;Computer;;
+05.10.2025;Beck;Alfons;2300000;Dominik;;
+05.10.2025;Makengo;Computer;2593579;Dominik;2413200.0;Christoph
+05.10.2025;Diomande;Computer;7050000;Alfons;;
+05.10.2025;Ritzka;Dominik;1279200;Computer;;
+05.10.2025;H. Behrens;Nico;189000;Computer;;
+05.10.2025;Mwene;Computer;3200800;Dominik;3075555.0;Nico
 05.10.2025;Traoré;Dominik;1659000;Computer;;
 05.10.2025;Saliakas;Nico;2863400;Computer;;
 05.10.2025;Burger;Alfons;3108000;Computer;;
-05.10.2025;Mwene;Computer;3200800;Dominik;3075555.0;Nico
-05.10.2025;Beck;Alfons;2300000;Dominik;;
-05.10.2025;Ritzka;Dominik;1279200;Computer;;
-05.10.2025;Diomande;Computer;7050000;Alfons;;
-05.10.2025;H. Behrens;Nico;189000;Computer;;
-05.10.2025;Makengo;Computer;2593579;Dominik;2413200.0;Christoph
 04.10.2025;Leitsch;Christoph;515100;Computer;;
 04.10.2025;Beck;Computer;1635070;Alfons;;
 04.10.2025;Matanović;Computer;7481000;Alfons;7480008.0;Dominik
 04.10.2025;Harder;Dominik;8170000;Computer;;
 04.10.2025;Essende;Computer;4365005;Dominik;3987500.0;Nico
 04.10.2025;Telle;Alfons;174600;Computer;;
-03.10.2025;Osterhage;Alfons;2860800;Computer;;
-03.10.2025;Tah;Thomas;8914800;Computer;;
-03.10.2025;H. Behrens;Computer;170000;Nico;;
-03.10.2025;Königsdörffer;Nico;3749200;Computer;;
 03.10.2025;Ramaj;Alfons;3068000;Computer;;
-03.10.2025;Kölle;Alfons;1292800;Computer;;
-03.10.2025;Belocian;Computer;666666;Dominik;;
-03.10.2025;Pereira Lage;Computer;3899000;Christian;3754000.0;Thomas
 03.10.2025;Henrichs;Alfons;1334400;Computer;;
+03.10.2025;Belocian;Computer;666666;Dominik;;
+03.10.2025;Kölle;Alfons;1292800;Computer;;
+03.10.2025;Pereira Lage;Computer;3899000;Christian;3754000.0;Thomas
+03.10.2025;Königsdörffer;Nico;3749200;Computer;;
+03.10.2025;Tah;Thomas;8914800;Computer;;
+03.10.2025;Osterhage;Alfons;2860800;Computer;;
+03.10.2025;H. Behrens;Computer;170000;Nico;;
 02.10.2025;Telle;Computer;170020;Alfons;;
 02.10.2025;Hübers;Computer;3058020;Alfons;3010000.0;Dominik
 02.10.2025;Fernández;Alfons;5969600;Computer;;
 02.10.2025;Burger;Computer;2971050;Alfons;2865000.0;Thomas
 02.10.2025;Osterhage;Computer;2767020;Alfons;2762214.0;Dominik
-01.10.2025;Busch;Christoph;1178100;Computer;;
-01.10.2025;Banzuzi;Dominik;4605600;Computer;;
-01.10.2025;Harder;Computer;8908672;Dominik;8190000.0;Thomas
-01.10.2025;Agyekum;Christian;196000;Computer;;
 01.10.2025;Herrmann;Computer;950020;Alfons;;
-01.10.2025;Oppie;Computer;2632000;Thomas;;
-01.10.2025;Kabak;Christian;1383700;Computer;;
 01.10.2025;Kölle;Computer;1372000;Alfons;1290000.0;Andreas
-30.09.2025;Nsoki;Computer;660500;Alfons;;
-30.09.2025;Skov;Nico;1484700;Computer;;
-30.09.2025;Mets;Computer;1051000;Dominik;825050.0;Alfons
+01.10.2025;Kabak;Christian;1383700;Computer;;
+01.10.2025;Oppie;Computer;2632000;Thomas;;
+01.10.2025;Busch;Christoph;1178100;Computer;;
+01.10.2025;Agyekum;Christian;196000;Computer;;
+01.10.2025;Harder;Computer;8908672;Dominik;8190000.0;Thomas
+01.10.2025;Banzuzi;Dominik;4605600;Computer;;
 30.09.2025;Giannoulis;Computer;4150300;Christoph;3555898.0;Dominik
-30.09.2025;Schmied;Nico;1837500;Computer;;
 30.09.2025;Baumgartner;Computer;8780000;Christoph;;
+30.09.2025;Schmied;Nico;1837500;Computer;;
+30.09.2025;Mets;Computer;1051000;Dominik;825050.0;Alfons
+30.09.2025;Skov;Nico;1484700;Computer;;
+30.09.2025;Nsoki;Computer;660500;Alfons;;
 29.09.2025;Fellhauer;Alfons;2919000;Computer;;
 29.09.2025;Demirović;Computer;14234000;Thomas;14116590.0;Dominik
 29.09.2025;Lucas Vázquez;Alfons;5971200;Computer;;
@@ -204,82 +204,82 @@
 29.09.2025;Königsdörffer;Computer;3965700;Nico;;
 29.09.2025;Hajdari;Computer;3160505;Dominik;;
 29.09.2025;Kübler;Computer;3430000;Alfons;3324675.0;Dominik
+28.09.2025;Theate;Christoph;4410000;Computer;;
+28.09.2025;Fernández;Computer;5925000;Alfons;5534546.0;Dominik
+28.09.2025;Chema Andrés;Dominik;7840000;Computer;;
+28.09.2025;Ogbus;Nico;197600;Computer;;
+28.09.2025;Andrich;Computer;4845500;Nico;;
 28.09.2025;Čović;Dominik;1168200;Computer;;
 28.09.2025;Hountondji;Thomas;7373000;Computer;;
 28.09.2025;Thielmann;Christoph;7529600;Computer;;
-28.09.2025;Andrich;Computer;4845500;Nico;;
-28.09.2025;Theate;Christoph;4410000;Computer;;
-28.09.2025;Chema Andrés;Dominik;7840000;Computer;;
-28.09.2025;Ogbus;Nico;197600;Computer;;
-28.09.2025;Fernández;Computer;5925000;Alfons;5534546.0;Dominik
-27.09.2025;Ogbus;Computer;197500;Nico;190800.0;Alfons
-27.09.2025;Jakić;Dominik;4930000;Computer;;
-27.09.2025;Wind;Computer;3430000;Alfons;;
-27.09.2025;Schmied;Computer;1945500;Nico;;
 27.09.2025;Remberg;Computer;3900000;Alfons;;
-27.09.2025;Massengo;Dominik;5137600;Computer;;
-27.09.2025;Schimmer;Dominik;380000;Computer;;
-27.09.2025;Højlund;Dominik;1880000;Computer;;
 27.09.2025;Saad;Alfons;3297000;Computer;;
-26.09.2025;Silas;Alfons;644800;Computer;;
-26.09.2025;Ullrich;Christoph;2900700;Computer;;
-26.09.2025;Amoura;Computer;13725000;Thomas;12607664.0;Dominik
-26.09.2025;Kampl;Dominik;1029000;Computer;;
-26.09.2025;Bülter;Thomas;8180000;Computer;;
+27.09.2025;Højlund;Dominik;1880000;Computer;;
+27.09.2025;Schimmer;Dominik;380000;Computer;;
+27.09.2025;Massengo;Dominik;5137600;Computer;;
+27.09.2025;Schmied;Computer;1945500;Nico;;
+27.09.2025;Wind;Computer;3430000;Alfons;;
+27.09.2025;Jakić;Dominik;4930000;Computer;;
+27.09.2025;Ogbus;Computer;197500;Nico;190800.0;Alfons
 26.09.2025;Mohya;Thomas;1831500;Computer;;
+26.09.2025;Gimber;Alfons;1176000;Computer;;
+26.09.2025;Baum;Dominik;623700;Computer;;
+26.09.2025;Busch;Computer;1400000;Christoph;1310000.0;Nico
 26.09.2025;Kemlein;Alfons;1144500;Computer;;
 26.09.2025;Scally;Thomas;2161400;Computer;;
-26.09.2025;Busch;Computer;1400000;Christoph;1310000.0;Nico
-26.09.2025;Baum;Dominik;623700;Computer;;
-26.09.2025;Gimber;Alfons;1176000;Computer;;
-25.09.2025;Lukeba;Computer;5660000;Christoph;5550000.0;Alfons
-25.09.2025;Coulibaly;Alfons;3162000;Computer;;
-25.09.2025;Zivzivadze;Christian;1554000;Computer;;
-25.09.2025;Bülter;Computer;9237000;Thomas;;
+26.09.2025;Bülter;Thomas;8180000;Computer;;
+26.09.2025;Kampl;Dominik;1029000;Computer;;
+26.09.2025;Amoura;Computer;13725000;Thomas;12607664.0;Dominik
+26.09.2025;Ullrich;Christoph;2900700;Computer;;
+26.09.2025;Silas;Alfons;644800;Computer;;
+25.09.2025;Jeltsch;Christoph;4310000;Computer;;
+25.09.2025;Baku;Dominik;6211800;Computer;;
+25.09.2025;Skov;Computer;2020000;Nico;;
+25.09.2025;Sinani;Computer;7500000;Alfons;6910000.0;Dominik
+25.09.2025;Markgraf;Computer;170022;Thomas;;
+25.09.2025;Skov Olsen;Dominik;5416200;Computer;;
 25.09.2025;Stark;Christian;1876800;Computer;;
 25.09.2025;Gimber;Computer;1081500;Alfons;;
-25.09.2025;Jeltsch;Christoph;4310000;Computer;;
-25.09.2025;Skov Olsen;Dominik;5416200;Computer;;
-25.09.2025;Markgraf;Computer;170022;Thomas;;
-25.09.2025;Sinani;Computer;7500000;Alfons;6910000.0;Dominik
-25.09.2025;Skov;Computer;2020000;Nico;;
-25.09.2025;Baku;Dominik;6211800;Computer;;
-24.09.2025;Karl;Dominik;5967000;Computer;;
-24.09.2025;Chema Andrés;Computer;7161000;Dominik;7022000.0;Thomas
-24.09.2025;Čović;Computer;1422543;Dominik;1322060.0;Alfons
+25.09.2025;Bülter;Computer;9237000;Thomas;;
+25.09.2025;Zivzivadze;Christian;1554000;Computer;;
+25.09.2025;Coulibaly;Alfons;3162000;Computer;;
+25.09.2025;Lukeba;Computer;5660000;Christoph;5550000.0;Alfons
 24.09.2025;Ramaj;Computer;2400760;Alfons;2332000.0;Thomas
 24.09.2025;Tah;Computer;7456000;Thomas;7270060.0;Alfons
+24.09.2025;Karl;Dominik;5967000;Computer;;
+24.09.2025;Čović;Computer;1422543;Dominik;1322060.0;Alfons
+24.09.2025;Chema Andrés;Computer;7161000;Dominik;7022000.0;Thomas
 23.09.2025;Boniface;Thomas;11740400;Computer;;
 23.09.2025;Karazor;Nico;5296500;Computer;;
 23.09.2025;Zetterer;Andreas;2502600;Computer;;
 23.09.2025;Svensson;Computer;5812122;Pascal;5700000.0;Alfons
 23.09.2025;Kemlein;Computer;1065040;Alfons;;
 23.09.2025;Fellhauer;Computer;2978440;Alfons;;
-22.09.2025;Caci;Pascal;4340000;Computer;;
-22.09.2025;Ostrzinski;Thomas;164800;Computer;;
-22.09.2025;Lomb;Dominik;164800;Computer;;
-22.09.2025;Traoré;Computer;1530255;Dominik;1400000.0;Christoph
-22.09.2025;Mohya;Computer;1556000;Thomas;1500000.0;Alfons
-22.09.2025;Huseinbašić;Alfons;1626800;Computer;;
-22.09.2025;Ullrich;Dominik;2700000;Christoph;;
-22.09.2025;Král;Alfons;1900500;Computer;;
 22.09.2025;Campbell;Computer;700000;Christoph;655000.0;Alfons
-22.09.2025;Heuer Fernandes;Computer;3150000;Andreas;3000000.0;Alfons
-22.09.2025;Massengo;Computer;4562827;Dominik;4500000.0;Christoph
-22.09.2025;Kampl;Computer;787923;Dominik;702000.0;Thomas
-22.09.2025;Trimmel;Computer;2688500;Nico;;
-22.09.2025;Brandt;Thomas;8369200;Computer;;
 22.09.2025;Campbell;Christoph;600000;Computer;;
+22.09.2025;Brandt;Thomas;8369200;Computer;;
+22.09.2025;Trimmel;Computer;2688500;Nico;;
+22.09.2025;Kampl;Computer;787923;Dominik;702000.0;Thomas
+22.09.2025;Massengo;Computer;4562827;Dominik;4500000.0;Christoph
+22.09.2025;Heuer Fernandes;Computer;3150000;Andreas;3000000.0;Alfons
+22.09.2025;Král;Alfons;1900500;Computer;;
+22.09.2025;Caci;Pascal;4340000;Computer;;
+22.09.2025;Huseinbašić;Alfons;1626800;Computer;;
+22.09.2025;Mohya;Computer;1556000;Thomas;1500000.0;Alfons
+22.09.2025;Traoré;Computer;1530255;Dominik;1400000.0;Christoph
+22.09.2025;Lomb;Dominik;164800;Computer;;
+22.09.2025;Ostrzinski;Thomas;164800;Computer;;
+22.09.2025;Ullrich;Dominik;2700000;Christoph;;
 21.09.2025;Lomb;Computer;160011;Dominik;;
-20.09.2025;Nicolas;Computer;2902000;Thomas;2840060.0;Alfons
-20.09.2025;Philippe;Computer;2020060;Alfons;1975000.0;Thomas
-20.09.2025;Baum;Computer;714000;Dominik;680160.0;Alfons
-20.09.2025;Nusa;Computer;7000000;Christoph;6426000.0;Alfons
 20.09.2025;Chukwuemeka;Christoph;7550000;Computer;;
+20.09.2025;Henrichs;Computer;1127160;Alfons;;
+20.09.2025;Leitsch;Computer;340000;Christoph;320005.0;Nico
 20.09.2025;Irié;Dominik;1264800;Computer;;
 20.09.2025;Hansen-Aarøen;Alfons;320000;Computer;;
-20.09.2025;Leitsch;Computer;340000;Christoph;320005.0;Nico
-20.09.2025;Henrichs;Computer;1127160;Alfons;;
+20.09.2025;Nusa;Computer;7000000;Christoph;6426000.0;Alfons
+20.09.2025;Baum;Computer;714000;Dominik;680160.0;Alfons
+20.09.2025;Philippe;Computer;2020060;Alfons;1975000.0;Thomas
+20.09.2025;Nicolas;Computer;2902000;Thomas;2840060.0;Alfons
 19.09.2025;Wahi;Nico;3276900;Computer;;
 19.09.2025;Krauß;Nico;2500000;Computer;;
 19.09.2025;Hack;Alfons;6354600;Computer;;
@@ -290,31 +290,31 @@
 18.09.2025;Jeltsch;Computer;3800000;Christoph;;
 18.09.2025;Kabak;Computer;1480000;Christian;1425952.0;Dominik
 18.09.2025;Machino;Christoph;6760000;Computer;;
-17.09.2025;J. Hofmann;Computer;1925000;Alfons;1921201.0;Dominik
-17.09.2025;Hansen-Aarøen;Computer;340040;Alfons;;
-17.09.2025;Friedrich;Nico;284200;Computer;;
 17.09.2025;Nebel;Computer;8333040;Alfons;8267500.0;Nico
-17.09.2025;Sabitzer;Computer;4555555;Nico;4530040.0;Alfons
 17.09.2025;Karl;Computer;5662208;Dominik;5388000.0;Thomas
+17.09.2025;Sabitzer;Computer;4555555;Nico;4530040.0;Alfons
+17.09.2025;Friedrich;Nico;284200;Computer;;
+17.09.2025;Hansen-Aarøen;Computer;340040;Alfons;;
+17.09.2025;J. Hofmann;Computer;1925000;Alfons;1921201.0;Dominik
 16.09.2025;Kristensen;Alfons;5880000;Computer;;
 16.09.2025;Glatzel;Computer;2655700;Nico;;
-15.09.2025;Schimmer;Computer;340001;Dominik;;
-15.09.2025;Metcalfe;Alfons;1196000;Computer;;
-15.09.2025;Lynen;Computer;2658961;Dominik;2577000.0;Thomas
-15.09.2025;Weiper;Dominik;6323200;Computer;;
-15.09.2025;I. Schmidt;Alfons;3292800;Computer;;
-15.09.2025;Prömel;Dominik;3520000;Computer;;
 15.09.2025;Fenyő;Alfons;199500;Computer;;
-15.09.2025;Terrier;Computer;1900000;Andreas;1876000.0;Thomas
-15.09.2025;Castrop;Nico;1617100;Computer;;
-15.09.2025;L. Vušković;Computer;4427000;Andreas;;
 15.09.2025;Schlager;Alfons;4446000;Computer;;
+15.09.2025;L. Vušković;Computer;4427000;Andreas;;
+15.09.2025;Castrop;Nico;1617100;Computer;;
+15.09.2025;Terrier;Computer;1900000;Andreas;1876000.0;Thomas
 15.09.2025;Chema Andrés;Alfons;6149100;Computer;;
-14.09.2025;Torunarigha;Andreas;4160000;Computer;;
-14.09.2025;Lucas Vázquez;Computer;7855000;Alfons;7854000.0;Thomas
+15.09.2025;Prömel;Dominik;3520000;Computer;;
+15.09.2025;Weiper;Dominik;6323200;Computer;;
+15.09.2025;Lynen;Computer;2658961;Dominik;2577000.0;Thomas
+15.09.2025;Metcalfe;Alfons;1196000;Computer;;
+15.09.2025;Schimmer;Computer;340001;Dominik;;
+15.09.2025;I. Schmidt;Alfons;3292800;Computer;;
 14.09.2025;Paçarada;Alfons;1968600;Computer;;
 14.09.2025;Zagadou;Computer;1730000;Dominik;;
 14.09.2025;Pieper;Alfons;1185600;Computer;;
+14.09.2025;Lucas Vázquez;Computer;7855000;Alfons;7854000.0;Thomas
+14.09.2025;Torunarigha;Andreas;4160000;Computer;;
 13.09.2025;Süle;Computer;1400000;Dominik;;
 13.09.2025;Ljubičić;Thomas;367500;Computer;;
 13.09.2025;Friedrich;Computer;347500;Nico;;
@@ -322,14 +322,14 @@
 13.09.2025;Irié;Computer;1400008;Dominik;1290060.0;Alfons
 13.09.2025;Fenyő;Computer;190060;Alfons;;
 13.09.2025;Chema Andrés;Computer;5620060;Alfons;5512000.0;Thomas
-12.09.2025;Sano;Computer;5070000;Dominik;;
-12.09.2025;Højlund;Computer;1231000;Dominik;1090001.0;Nico
-12.09.2025;Anselmino;Alfons;6203400;Computer;;
-12.09.2025;Silas;Computer;409620;Alfons;;
+12.09.2025;Ljubičić;Computer;356000;Thomas;;
 12.09.2025;Paçarada;Computer;1990000;Alfons;;
 12.09.2025;Banzuzi;Computer;2300000;Dominik;;
 12.09.2025;Beier;Alfons;7455000;Computer;;
-12.09.2025;Ljubičić;Computer;356000;Thomas;;
+12.09.2025;Silas;Computer;409620;Alfons;;
+12.09.2025;Sano;Computer;5070000;Dominik;;
+12.09.2025;Anselmino;Alfons;6203400;Computer;;
+12.09.2025;Højlund;Computer;1231000;Dominik;1090001.0;Nico
 11.09.2025;Kofane;Alfons;4150000;Computer;;
 10.09.2025;Bakayoko;Thomas;9920000;Computer;;
 09.09.2025;Bakayoko;Computer;9367000;Thomas;;
@@ -338,32 +338,32 @@
 09.09.2025;Daghim;Nico;3140800;Computer;;
 09.09.2025;Pieringer;Computer;2956115;Dominik;2745020.0;Alfons
 09.09.2025;Luis Díaz;Dominik;25630000;Computer;;
-08.09.2025;Azhil;Computer;172000;Thomas;;
-08.09.2025;Dorsch;Nico;1802500;Computer;;
-08.09.2025;Luis Díaz;Computer;23120012;Dominik;;
 08.09.2025;Itō;Nico;1580800;Computer;;
 08.09.2025;Rexhbeçaj;Computer;1920000;Christian;;
-07.09.2025;Demirović;Thomas;9349600;Computer;;
-07.09.2025;Haberer;Dominik;1770000;Computer;;
-07.09.2025;Seelt;Dominik;1240000;Computer;;
-07.09.2025;Daghim;Computer;3385575;Nico;2893000.0;Thomas
-07.09.2025;Itō;Computer;1396700;Nico;1385000.0;Dominik
-07.09.2025;Boey;Alfons;2009900;Computer;;
-07.09.2025;Zieler;Computer;490000;Christian;;
-07.09.2025;Köhn;Computer;1880000;Christian;;
+08.09.2025;Azhil;Computer;172000;Thomas;;
+08.09.2025;Luis Díaz;Computer;23120012;Dominik;;
+08.09.2025;Dorsch;Nico;1802500;Computer;;
 07.09.2025;Goretzka;Dominik;8770000;Computer;;
+07.09.2025;Boey;Alfons;2009900;Computer;;
+07.09.2025;Köhn;Computer;1880000;Christian;;
+07.09.2025;Zieler;Computer;490000;Christian;;
+07.09.2025;Haberer;Dominik;1770000;Computer;;
+07.09.2025;Itō;Computer;1396700;Nico;1385000.0;Dominik
+07.09.2025;Daghim;Computer;3385575;Nico;2893000.0;Thomas
+07.09.2025;Seelt;Dominik;1240000;Computer;;
+07.09.2025;Demirović;Thomas;9349600;Computer;;
 06.09.2025;Neuhaus;Christoph;2620000;Computer;;
 06.09.2025;Machino;Computer;6388000;Christoph;6300011.0;Dominik
 06.09.2025;Beier;Computer;6585010;Alfons;6575800.0;Nico
 06.09.2025;S. El Mala;Dominik;4846400;Computer;;
+05.09.2025;Goretzka;Computer;8770008;Dominik;;
+05.09.2025;Huseinbašić;Computer;1125000;Alfons;955800.0;Nico
+05.09.2025;Beste;Christian;2619000;Computer;;
+05.09.2025;Kömür;Christian;5266800;Computer;;
+05.09.2025;Kim;Computer;3660000;Christian;;
+05.09.2025;Seelt;Computer;1761000;Dominik;1670000.0;Christoph
 05.09.2025;Vidić;Christoph;175100;Computer;;
 05.09.2025;Pherai;Computer;534000;Thomas;;
-05.09.2025;Seelt;Computer;1761000;Dominik;1670000.0;Christoph
-05.09.2025;Kim;Computer;3660000;Christian;;
-05.09.2025;Goretzka;Computer;8770008;Dominik;;
-05.09.2025;Kömür;Christian;5266800;Computer;;
-05.09.2025;Beste;Christian;2619000;Computer;;
-05.09.2025;Huseinbašić;Computer;1125000;Alfons;955800.0;Nico
 04.09.2025;Anselmino;Computer;4525000;Alfons;4385700.0;Nico
 04.09.2025;Saad;Computer;3333300;Alfons;3100000.0;Christoph
 04.09.2025;Karazor;Computer;6475800;Nico;;
@@ -371,76 +371,76 @@
 04.09.2025;Brandt;Computer;10376000;Thomas;9950000.0;Andreas
 04.09.2025;Fellhauer;Thomas;2220000;Computer;;
 04.09.2025;Kusi-Asare;Thomas;2373000;Computer;;
-03.09.2025;Pieper;Computer;935200;Alfons;930000.0;Christoph
-03.09.2025;S. El Mala;Computer;4834903;Dominik;4587000.0;Thomas
-03.09.2025;Krauß;Computer;3145100;Nico;3100000.0;Alfons
-03.09.2025;I. Schmidt;Computer;3666200;Alfons;3598000.0;Thomas
 03.09.2025;Hajdari;Alfons;4078800;Computer;;
+03.09.2025;Schäfer;Nico;1989000;Computer;;
 03.09.2025;Giannoulis;Alfons;4029000;Computer;;
 03.09.2025;Tauer;Alfons;228800;Computer;;
-03.09.2025;Schäfer;Nico;1989000;Computer;;
-02.09.2025;Čović;Thomas;1444000;Computer;;
-02.09.2025;Knauff;Nico;6128500;Computer;;
-02.09.2025;Nusa;Thomas;8320000;Computer;;
-02.09.2025;Dinkçi;Alfons;3716800;Computer;;
-02.09.2025;Stage;Computer;5023000;Thomas;4700500.0;Christoph
-02.09.2025;Malatini;Dominik;472500;Computer;;
+03.09.2025;I. Schmidt;Computer;3666200;Alfons;3598000.0;Thomas
+03.09.2025;S. El Mala;Computer;4834903;Dominik;4587000.0;Thomas
+03.09.2025;Pieper;Computer;935200;Alfons;930000.0;Christoph
+03.09.2025;Krauß;Computer;3145100;Nico;3100000.0;Alfons
 02.09.2025;Röhl;Andreas;1577000;Computer;;
-02.09.2025;Baku;Computer;5040397;Dominik;5032000.0;Thomas
-02.09.2025;Netz;Dominik;1472900;Computer;;
-02.09.2025;Fellhauer;Computer;2202200;Thomas;2200000.0;Alfons
-02.09.2025;Sahiti;Andreas;1570000;Computer;;
 02.09.2025;Götze;Dominik;2257500;Computer;;
+02.09.2025;Sahiti;Andreas;1570000;Computer;;
+02.09.2025;Fellhauer;Computer;2202200;Thomas;2200000.0;Alfons
+02.09.2025;Netz;Dominik;1472900;Computer;;
+02.09.2025;Baku;Computer;5040397;Dominik;5032000.0;Thomas
+02.09.2025;Malatini;Dominik;472500;Computer;;
+02.09.2025;Stage;Computer;5023000;Thomas;4700500.0;Christoph
+02.09.2025;Dinkçi;Alfons;3716800;Computer;;
+02.09.2025;Nusa;Thomas;8320000;Computer;;
+02.09.2025;Knauff;Nico;6128500;Computer;;
+02.09.2025;Čović;Thomas;1444000;Computer;;
+01.09.2025;Boniface;Computer;4823000;Thomas;;
+01.09.2025;Kofane;Computer;3900000;Alfons;3800000.0;Christoph
+01.09.2025;Undav;Alfons;9010000;Computer;;
+01.09.2025;Lynen;Christoph;2420000;Computer;;
 01.09.2025;Prömel;Computer;2456005;Dominik;2265000.0;Thomas
 01.09.2025;Özcan;Alfons;811200;Computer;;
-01.09.2025;Lynen;Christoph;2420000;Computer;;
-01.09.2025;Undav;Alfons;9010000;Computer;;
-01.09.2025;Kofane;Computer;3900000;Alfons;3800000.0;Christoph
-01.09.2025;Boniface;Computer;4823000;Thomas;;
 31.08.2025;Götze;Computer;2470008;Dominik;;
-31.08.2025;Suzuki;Christoph;3680000;Computer;;
 31.08.2025;Ramšak;Christoph;197600;Computer;;
 31.08.2025;Bensebaini;Computer;4427400;Andreas;4089000.0;Thomas
 31.08.2025;van den Berg;Computer;2950008;Dominik;2725500.0;Nico
 31.08.2025;Asllani;Computer;9175200;Alfons;8750000.0;Andreas
 31.08.2025;Telle;Nico;186200;Computer;;
 31.08.2025;Suzuki;Computer;4000000;Christoph;3690080.0;Dominik
-30.08.2025;Weiper;Computer;7101008;Dominik;6257000.0;Thomas
-30.08.2025;Hajdari;Computer;4300000;Alfons;4266000.0;Thomas
-30.08.2025;Pauli;Andreas;280800;Computer;;
+31.08.2025;Suzuki;Christoph;3680000;Computer;;
 30.08.2025;Kusi-Asare;Computer;1765000;Thomas;1700800.0;Christoph
 30.08.2025;Tauer;Computer;235000;Alfons;;
+30.08.2025;Pauli;Andreas;280800;Computer;;
+30.08.2025;Hajdari;Computer;4300000;Alfons;4266000.0;Thomas
+30.08.2025;Weiper;Computer;7101008;Dominik;6257000.0;Thomas
+29.08.2025;Dahmen;Dominik;2700000;Computer;;
+29.08.2025;Maier;Thomas;591700;Computer;;
+29.08.2025;Ogbus;Dominik;230000;Computer;;
+29.08.2025;Sabitzer;Thomas;5320000;Computer;;
+29.08.2025;Dahmen;Computer;2960008;Dominik;;
+29.08.2025;Kilian;Alfons;173400;Computer;;
+29.08.2025;Ceesay;Thomas;958800;Computer;;
+29.08.2025;Luis Díaz;Dominik;21273000;Computer;;
+29.08.2025;Xavi Simons;Nico;8494100;Computer;;
+29.08.2025;Hincapié;Andreas;4222400;Computer;;
 29.08.2025;Gnabry;Alfons;12579000;Computer;;
 29.08.2025;Scienza;Dominik;5700000;Computer;;
-29.08.2025;Hincapié;Andreas;4222400;Computer;;
+29.08.2025;Neuhaus;Computer;1691000;Christoph;;
 29.08.2025;Saliakas;Computer;2485500;Nico;2250008.0;Dominik
 29.08.2025;Baldé;Alfons;432600;Computer;;
 29.08.2025;Kim;Thomas;4029900;Computer;;
-29.08.2025;Neuhaus;Computer;1691000;Christoph;;
-29.08.2025;Xavi Simons;Nico;8494100;Computer;;
-29.08.2025;Dahmen;Dominik;2700000;Computer;;
-29.08.2025;Ceesay;Thomas;958800;Computer;;
-29.08.2025;Kilian;Alfons;173400;Computer;;
-29.08.2025;Dahmen;Computer;2960008;Dominik;;
-29.08.2025;Sabitzer;Thomas;5320000;Computer;;
-29.08.2025;Ogbus;Dominik;230000;Computer;;
-29.08.2025;Maier;Thomas;591700;Computer;;
-29.08.2025;Luis Díaz;Dominik;21273000;Computer;;
 28.08.2025;Castrop;Computer;1276500;Nico;;
-28.08.2025;Maier;Computer;641000;Thomas;634200.0;Alfons
 28.08.2025;Scally;Computer;2765000;Thomas;2656185.0;Nico
+28.08.2025;Maier;Computer;641000;Thomas;634200.0;Alfons
 27.08.2025;Demirović;Computer;5822009;Thomas;5811400.0;Dominik
 27.08.2025;Neuer;Dominik;2929500;Computer;;
 27.08.2025;Sabitzer;Computer;5343000;Thomas;5146700.0;Dominik
 27.08.2025;Kim;Computer;4356000;Thomas;4067855.0;Nico
 27.08.2025;Telle;Computer;170000;Nico;;
-26.08.2025;Vidić;Computer;180500;Christoph;;
-26.08.2025;Højlund;Alfons;1191800;Computer;;
+26.08.2025;Conteh;Computer;1189000;Christian;;
+26.08.2025;Đurić;Dominik;244800;Computer;;
+26.08.2025;Ramšak;Computer;170500;Christoph;;
 26.08.2025;Kobel;Computer;3274172;Dominik;3021000.0;Thomas
 26.08.2025;Gnabry;Computer;11000000;Alfons;10611000.0;Thomas
-26.08.2025;Conteh;Computer;1189000;Christian;;
-26.08.2025;Ramšak;Computer;170500;Christoph;;
-26.08.2025;Đurić;Dominik;244800;Computer;;
+26.08.2025;Højlund;Alfons;1191800;Computer;;
+26.08.2025;Vidić;Computer;180500;Christoph;;
 25.08.2025;Tietz;Alfons;4514700;Computer;;
 25.08.2025;Xavi Simons;Computer;8225500;Nico;7978000.0;Thomas
 25.08.2025;Jakić;Computer;3146005;Dominik;3065000.0;Thomas
@@ -451,153 +451,153 @@
 25.08.2025;Zesiger;Dominik;1510000;Computer;;
 25.08.2025;N. Banks;Dominik;1040000;Computer;;
 25.08.2025;Saliakas;Nico;2172600;Computer;;
-24.08.2025;Luis Díaz;Computer;18675530;Dominik;18654000.0;Thomas
+24.08.2025;Özcan;Computer;875000;Alfons;;
+24.08.2025;Friedrich;Alfons;571200;Computer;;
+24.08.2025;Raab;Alfons;300000;Computer;;
+24.08.2025;Götze;Christoph;3320000;Computer;;
+24.08.2025;Metcalfe;Computer;585000;Alfons;485000.0;Dominik
 24.08.2025;Thielmann;Computer;2600000;Christoph;2522000.0;Alfons
 24.08.2025;Mané;Alfons;2116800;Computer;;
-24.08.2025;Metcalfe;Computer;585000;Alfons;485000.0;Dominik
-24.08.2025;Özcan;Computer;875000;Alfons;;
-24.08.2025;Raab;Alfons;300000;Computer;;
-24.08.2025;Friedrich;Alfons;571200;Computer;;
-24.08.2025;Götze;Christoph;3320000;Computer;;
-23.08.2025;Kilian;Computer;182000;Alfons;;
-23.08.2025;Topp;Dominik;2544100;Computer;;
-23.08.2025;Kaufmann;Computer;800060;Alfons;753685.0;Nico
-23.08.2025;Friedrich;Computer;555000;Alfons;536254.0;Dominik
-23.08.2025;D. Nemeth;Dominik;1911000;Computer;;
+24.08.2025;Luis Díaz;Computer;18675530;Dominik;18654000.0;Thomas
 23.08.2025;Poku;Thomas;7260000;Computer;;
-23.08.2025;Mets;Dominik;410000;Computer;;
-23.08.2025;Højlund;Computer;1330000;Alfons;1204042.0;Dominik
 23.08.2025;Mæhle;Dominik;3536000;Computer;;
-22.08.2025;Königsdörffer;Dominik;4140000;Computer;;
-22.08.2025;Sander;Computer;3000000;Christoph;;
-22.08.2025;Dong;Alfons;300000;Computer;;
-22.08.2025;Königsdörffer;Computer;3761001;Dominik;;
+23.08.2025;Højlund;Computer;1330000;Alfons;1204042.0;Dominik
+23.08.2025;Mets;Dominik;410000;Computer;;
+23.08.2025;Kilian;Computer;182000;Alfons;;
+23.08.2025;D. Nemeth;Dominik;1911000;Computer;;
+23.08.2025;Kaufmann;Computer;800060;Alfons;753685.0;Nico
+23.08.2025;Topp;Dominik;2544100;Computer;;
+23.08.2025;Friedrich;Computer;555000;Alfons;536254.0;Dominik
 22.08.2025;Kabar;Alfons;417100;Computer;;
-22.08.2025;Mwene;Christoph;3000000;Computer;;
-22.08.2025;Kerber;Alfons;624000;Computer;;
-22.08.2025;Wimmer;Alfons;4947000;Computer;;
 22.08.2025;Deman;Alfons;597800;Computer;;
-21.08.2025;Wimmer;Computer;4655000;Alfons;;
-21.08.2025;Vidić;Thomas;206000;Computer;;
-21.08.2025;Gregoritsch;Nico;1842400;Computer;;
-21.08.2025;Thielmann;Thomas;2485600;Computer;;
-21.08.2025;Drljača;Dominik;178500;Computer;;
-21.08.2025;Vasilj;Alfons;3131000;Computer;;
-21.08.2025;Höfler;Alfons;748800;Computer;;
+22.08.2025;Wimmer;Alfons;4947000;Computer;;
+22.08.2025;Kerber;Alfons;624000;Computer;;
+22.08.2025;Mwene;Christoph;3000000;Computer;;
+22.08.2025;Königsdörffer;Computer;3761001;Dominik;;
+22.08.2025;Dong;Alfons;300000;Computer;;
+22.08.2025;Sander;Computer;3000000;Christoph;;
+22.08.2025;Königsdörffer;Dominik;4140000;Computer;;
 21.08.2025;Baldé;Computer;385000;Alfons;368000.0;Thomas
-21.08.2025;Kohr;Computer;4000000;Christoph;3770001.0;Dominik
-21.08.2025;Dong;Computer;290020;Alfons;;
-21.08.2025;Diks;Christoph;3296700;Computer;;
-21.08.2025;Leweling;Dominik;6394500;Computer;;
-21.08.2025;Adli;Nico;3366000;Computer;;
 21.08.2025;Hendriks;Nico;843900;Computer;;
-20.08.2025;Adli;Computer;3245700;Nico;3204200.0;Andreas
-20.08.2025;Svensson;Thomas;5057300;Computer;;
-20.08.2025;Baumgartner;Alfons;2835000;Computer;;
+21.08.2025;Adli;Nico;3366000;Computer;;
+21.08.2025;Diks;Christoph;3296700;Computer;;
+21.08.2025;Dong;Computer;290020;Alfons;;
+21.08.2025;Kohr;Computer;4000000;Christoph;3770001.0;Dominik
+21.08.2025;Leweling;Dominik;6394500;Computer;;
+21.08.2025;Höfler;Alfons;748800;Computer;;
+21.08.2025;Drljača;Dominik;178500;Computer;;
+21.08.2025;Thielmann;Thomas;2485600;Computer;;
+21.08.2025;Vasilj;Alfons;3131000;Computer;;
+21.08.2025;Gregoritsch;Nico;1842400;Computer;;
+21.08.2025;Vidić;Thomas;206000;Computer;;
+21.08.2025;Wimmer;Computer;4655000;Alfons;;
 20.08.2025;Hountondji;Computer;2643000;Thomas;2600000.0;Alfons
-20.08.2025;Král;Computer;760000;Alfons;742700.0;Nico
 20.08.2025;Kerber;Computer;578060;Alfons;570008.0;Dominik
+20.08.2025;Král;Computer;760000;Alfons;742700.0;Nico
+20.08.2025;Baumgartner;Alfons;2835000;Computer;;
+20.08.2025;Svensson;Thomas;5057300;Computer;;
+20.08.2025;Adli;Computer;3245700;Nico;3204200.0;Andreas
 19.08.2025;Palacios;Dominik;4470000;Computer;;
 19.08.2025;Remberg;Christoph;3069400;Computer;;
 19.08.2025;Leweling;Computer;5953179;Dominik;5735500.0;Nico
 19.08.2025;Palacios;Computer;4650008;Dominik;;
 19.08.2025;Pedersen;Alfons;212100;Computer;;
-18.08.2025;Drljača;Computer;160288;Dominik;160088.0;Thomas
-18.08.2025;Höfler;Computer;742000;Alfons;692500.0;Nico
 18.08.2025;Kabar;Computer;385000;Alfons;377001.0;Thomas
 18.08.2025;Pedersen;Computer;200080;Alfons;;
-17.08.2025;Akpoguma;Alfons;1854000;Computer;;
-17.08.2025;Nordin;Alfons;679800;Computer;;
+18.08.2025;Höfler;Computer;742000;Alfons;692500.0;Nico
+18.08.2025;Drljača;Computer;160288;Dominik;160088.0;Thomas
 17.08.2025;Kemlein;Alfons;934500;Computer;;
+17.08.2025;Nordin;Alfons;679800;Computer;;
 17.08.2025;Poku;Computer;6145000;Thomas;6131508.0;Dominik
-16.08.2025;Peretz;Alfons;1617100;Computer;;
-16.08.2025;Götze;Dominik;3900000;Christoph;;
-16.08.2025;N. Banks;Computer;1379859;Dominik;1176000.0;Thomas
-16.08.2025;Vasilj;Computer;2825060;Alfons;2801200.0;Andreas
-16.08.2025;André Silva;Andreas;4086600;Computer;;
-16.08.2025;Schlager;Computer;5060760;Alfons;4956005.0;Dominik
+17.08.2025;Akpoguma;Alfons;1854000;Computer;;
 16.08.2025;Maier;Alfons;598500;Computer;;
-16.08.2025;Seiwald;Alfons;2662400;Computer;;
-16.08.2025;Raab;Computer;180000;Alfons;;
-16.08.2025;Al-Dakhil;Dominik;871500;Computer;;
 16.08.2025;Trapp;Alfons;2288000;Computer;;
-15.08.2025;Heuer Fernandes;Thomas;1792200;Computer;;
-15.08.2025;Zetterer;Computer;2490000;Andreas;2455000.0;Alfons
+16.08.2025;Al-Dakhil;Dominik;871500;Computer;;
+16.08.2025;Raab;Computer;180000;Alfons;;
+16.08.2025;Seiwald;Alfons;2662400;Computer;;
+16.08.2025;Vasilj;Computer;2825060;Alfons;2801200.0;Andreas
+16.08.2025;Schlager;Computer;5060760;Alfons;4956005.0;Dominik
+16.08.2025;André Silva;Andreas;4086600;Computer;;
+16.08.2025;N. Banks;Computer;1379859;Dominik;1176000.0;Thomas
+16.08.2025;Götze;Dominik;3900000;Christoph;;
+16.08.2025;Peretz;Alfons;1617100;Computer;;
+15.08.2025;Bénes;Alfons;1228500;Computer;;
+15.08.2025;Vandevoordt;Andreas;2193900;Computer;;
+15.08.2025;D. Nemeth;Computer;1915005;Dominik;1830000.0;Alfons
+15.08.2025;Ullrich;Computer;1775005;Dominik;;
 15.08.2025;Omlin;Andreas;854900;Computer;;
 15.08.2025;Vidić;Computer;160077;Thomas;;
-15.08.2025;Vandevoordt;Andreas;2193900;Computer;;
-15.08.2025;Ullrich;Computer;1775005;Dominik;;
-15.08.2025;Bénes;Alfons;1228500;Computer;;
-15.08.2025;D. Nemeth;Computer;1915005;Dominik;1830000.0;Alfons
+15.08.2025;Heuer Fernandes;Thomas;1792200;Computer;;
+15.08.2025;Zetterer;Computer;2490000;Andreas;2455000.0;Alfons
 14.08.2025;F. Nmecha;Dominik;6283200;Computer;;
 14.08.2025;Hložek;Nico;3832500;Computer;;
 14.08.2025;Jóhannesson;Computer;3988888;Dominik;3900000.0;Christoph
 14.08.2025;Davies;Thomas;3275400;Computer;;
 14.08.2025;Seiwald;Computer;2535000;Alfons;;
 14.08.2025;Chaves;Nico;2017600;Computer;;
-13.08.2025;Ceesay;Computer;342001;Thomas;341000.0;Dominik
-13.08.2025;Vini Souza;Dominik;3423900;Computer;;
-13.08.2025;Klostermann;Computer;2135355;Pascal;;
-13.08.2025;S. Banks;Alfons;448800;Computer;;
-13.08.2025;Mæhle;Computer;2538202;Dominik;2453000.0;Thomas
-13.08.2025;Diehl;Thomas;554400;Computer;;
 13.08.2025;Friedl;Pascal;3138300;Computer;;
-13.08.2025;Keitel;Andreas;777000;Computer;;
-13.08.2025;Ostrzinski;Computer;160000;Thomas;;
-13.08.2025;Pieper;Alfons;1641600;Computer;;
-13.08.2025;Götze;Computer;3777083;Dominik;3600000.0;Alfons
 13.08.2025;Thielmann;Computer;2434000;Thomas;2388416.0;Dominik
-12.08.2025;Nordin;Computer;775080;Alfons;768850.0;Dominik
-12.08.2025;Hanche-Olsen;Christoph;880000;Computer;;
-12.08.2025;Poulsen;Thomas;4050000;Computer;;
-12.08.2025;Conteh;Andreas;861000;Computer;;
-12.08.2025;Dickes;Alfons;178500;Computer;;
+13.08.2025;Götze;Computer;3777083;Dominik;3600000.0;Alfons
+13.08.2025;Ostrzinski;Computer;160000;Thomas;;
+13.08.2025;Keitel;Andreas;777000;Computer;;
+13.08.2025;Pieper;Alfons;1641600;Computer;;
+13.08.2025;Diehl;Thomas;554400;Computer;;
+13.08.2025;S. Banks;Alfons;448800;Computer;;
+13.08.2025;Ceesay;Computer;342001;Thomas;341000.0;Dominik
+13.08.2025;Klostermann;Computer;2135355;Pascal;;
+13.08.2025;Vini Souza;Dominik;3423900;Computer;;
+13.08.2025;Mæhle;Computer;2538202;Dominik;2453000.0;Thomas
 12.08.2025;Trapp;Computer;2420000;Alfons;2282000.0;Thomas
-12.08.2025;Tah;Pascal;7635600;Computer;;
-12.08.2025;F. Nmecha;Computer;6190000;Dominik;;
-12.08.2025;Burkardt;Christoph;12071600;Computer;;
 12.08.2025;Rothe;Dominik;2646000;Computer;;
-11.08.2025;Rothe;Computer;2492005;Dominik;;
-11.08.2025;Vini Souza;Computer;3400005;Dominik;;
-11.08.2025;Süle;Alfons;3318000;Computer;;
-11.08.2025;Baumgartner;Computer;2620000;Alfons;2605005.0;Dominik
-11.08.2025;Doan;Thomas;10400000;Computer;;
-11.08.2025;Bénes;Computer;1325000;Alfons;1315005.0;Dominik
+12.08.2025;Burkardt;Christoph;12071600;Computer;;
+12.08.2025;F. Nmecha;Computer;6190000;Dominik;;
+12.08.2025;Tah;Pascal;7635600;Computer;;
+12.08.2025;Dickes;Alfons;178500;Computer;;
+12.08.2025;Conteh;Andreas;861000;Computer;;
+12.08.2025;Poulsen;Thomas;4050000;Computer;;
+12.08.2025;Hanche-Olsen;Christoph;880000;Computer;;
+12.08.2025;Nordin;Computer;775080;Alfons;768850.0;Dominik
 11.08.2025;Haidara;Dominik;1250000;Computer;;
-11.08.2025;Irié;Alfons;1564500;Computer;;
-11.08.2025;Banzuzi;Alfons;4047900;Computer;;
-11.08.2025;Deman;Computer;244040;Alfons;242000.0;Nico
 11.08.2025;Diks;Computer;3200000;Christoph;2955040.0;Alfons
-10.08.2025;Koudossou;Dominik;811200;Computer;;
-10.08.2025;Kauã Santos;Dominik;683400;Computer;;
-10.08.2025;Haidara;Computer;1312000;Dominik;;
+11.08.2025;Deman;Computer;244040;Alfons;242000.0;Nico
+11.08.2025;Banzuzi;Alfons;4047900;Computer;;
+11.08.2025;Irié;Alfons;1564500;Computer;;
+11.08.2025;Baumgartner;Computer;2620000;Alfons;2605005.0;Dominik
+11.08.2025;Bénes;Computer;1325000;Alfons;1315005.0;Dominik
+11.08.2025;Rothe;Computer;2492005;Dominik;;
+11.08.2025;Süle;Alfons;3318000;Computer;;
+11.08.2025;Vini Souza;Computer;3400005;Dominik;;
+11.08.2025;Doan;Thomas;10400000;Computer;;
 10.08.2025;Gouweleeuw;Christoph;4212700;Computer;;
+10.08.2025;Ceesay;Dominik;339900;Computer;;
 10.08.2025;Topp;Computer;3015164;Dominik;;
 10.08.2025;Tah;Computer;7812121;Pascal;7588500.0;Dominik
-10.08.2025;Ceesay;Dominik;339900;Computer;;
-09.08.2025;Haller;Pascal;1320500;Computer;;
-09.08.2025;Bahoya;Nico;5428500;Computer;;
-09.08.2025;Dickes;Computer;160000;Alfons;160000.0;Dominik
-09.08.2025;Keller;Dominik;210000;Computer;;
-09.08.2025;Pieper;Computer;1680080;Alfons;;
-09.08.2025;Coulibaly;Computer;226000;Alfons;215000.0;Andreas
-09.08.2025;Chaves;Computer;1795700;Nico;1790886.0;Dominik
-09.08.2025;J. Hofmann;Alfons;3349500;Computer;;
+10.08.2025;Haidara;Computer;1312000;Dominik;;
+10.08.2025;Kauã Santos;Dominik;683400;Computer;;
+10.08.2025;Koudossou;Dominik;811200;Computer;;
 09.08.2025;Kemlein;Computer;821180;Alfons;819558.0;Dominik
-09.08.2025;Tohumcu;Andreas;665600;Computer;;
-09.08.2025;Tousart;Andreas;353600;Computer;;
-09.08.2025;Skov Olsen;Computer;2580090;Dominik;;
-09.08.2025;Kastanaras;Thomas;175100;Computer;;
-09.08.2025;M. Wolf;Dominik;1955200;Computer;;
-09.08.2025;Lührs;Alfons;210000;Computer;;
 09.08.2025;Burkardt;Computer;11117300;Christoph;11080000.0;Dominik
-08.08.2025;B. Dárdai;Alfons;1059300;Computer;;
-08.08.2025;Lynen;Computer;2450300;Christoph;2440000.0;Dominik
-08.08.2025;N. Collins;Dominik;2299500;Computer;;
-08.08.2025;Koulierakis;Christoph;2910000;Computer;;
+09.08.2025;Lührs;Alfons;210000;Computer;;
+09.08.2025;M. Wolf;Dominik;1955200;Computer;;
+09.08.2025;Kastanaras;Thomas;175100;Computer;;
+09.08.2025;Skov Olsen;Computer;2580090;Dominik;;
+09.08.2025;Tousart;Andreas;353600;Computer;;
+09.08.2025;Tohumcu;Andreas;665600;Computer;;
+09.08.2025;Keller;Dominik;210000;Computer;;
+09.08.2025;J. Hofmann;Alfons;3349500;Computer;;
+09.08.2025;Chaves;Computer;1795700;Nico;1790886.0;Dominik
+09.08.2025;Coulibaly;Computer;226000;Alfons;215000.0;Andreas
+09.08.2025;Pieper;Computer;1680080;Alfons;;
+09.08.2025;Dickes;Computer;160000;Alfons;160000.0;Dominik
+09.08.2025;Bahoya;Nico;5428500;Computer;;
+09.08.2025;Haller;Pascal;1320500;Computer;;
 08.08.2025;Boniface;Dominik;8746500;Computer;;
-08.08.2025;Keller;Computer;191199;Dominik;;
 08.08.2025;Ouédraogo;Christoph;1530000;Computer;;
+08.08.2025;Keller;Computer;191199;Dominik;;
+08.08.2025;Lynen;Computer;2450300;Christoph;2440000.0;Dominik
+08.08.2025;Koulierakis;Christoph;2910000;Computer;;
+08.08.2025;B. Dárdai;Alfons;1059300;Computer;;
+08.08.2025;N. Collins;Dominik;2299500;Computer;;
 07.08.2025;Boniface;Computer;7390000;Dominik;;
 07.08.2025;Koulierakis;Computer;2660000;Christoph;;
 07.08.2025;Poulsen;Computer;4734000;Thomas;4704870.0;Dominik
@@ -605,13 +605,13 @@
 07.08.2025;Kastanaras;Computer;161001;Thomas;160040.0;Alfons
 07.08.2025;N. Collins;Computer;2270000;Dominik;;
 07.08.2025;Alvero;Andreas;422300;Computer;;
-06.08.2025;Mané;Computer;350020;Alfons;300000.0;Andreas
-06.08.2025;Voll;Thomas;173400;Computer;;
-06.08.2025;N. Banks;Thomas;1723800;Computer;;
 06.08.2025;Maier;Computer;487000;Alfons;;
+06.08.2025;Chiarodia;Andreas;630000;Computer;;
 06.08.2025;Nsoki;Christoph;1452300;Computer;;
 06.08.2025;Openda;Dominik;8950000;Computer;;
-06.08.2025;Chiarodia;Andreas;630000;Computer;;
+06.08.2025;N. Banks;Thomas;1723800;Computer;;
+06.08.2025;Voll;Thomas;173400;Computer;;
+06.08.2025;Mané;Computer;350020;Alfons;300000.0;Andreas
 05.08.2025;Tauer;Alfons;171700;Computer;;
 05.08.2025;Lührs;Computer;200460;Alfons;200000.0;Nico
 05.08.2025;Nübel;Dominik;2910000;Computer;;
@@ -622,29 +622,29 @@
 05.08.2025;Sabitzer;Dominik;2482300;Computer;;
 05.08.2025;Hanche-Olsen;Computer;750000;Christoph;;
 05.08.2025;Bebou;Alfons;798000;Computer;;
-04.08.2025;Arthur;Christoph;2574000;Computer;;
-04.08.2025;Peretz;Computer;1680000;Alfons;1611000.0;Thomas
-04.08.2025;Amoura;Dominik;8435400;Computer;;
-04.08.2025;Christensen;Andreas;200000;Computer;;
-04.08.2025;Openda;Computer;8670000;Dominik;;
-04.08.2025;Mæhle;Christoph;2908800;Computer;;
-04.08.2025;M. Wolf;Computer;1760000;Dominik;;
 04.08.2025;Svensson;Computer;4169000;Thomas;4088500.0;Nico
+04.08.2025;M. Wolf;Computer;1760000;Dominik;;
+04.08.2025;Mæhle;Christoph;2908800;Computer;;
+04.08.2025;Openda;Computer;8670000;Dominik;;
+04.08.2025;Christensen;Andreas;200000;Computer;;
+04.08.2025;Arthur;Christoph;2574000;Computer;;
+04.08.2025;Amoura;Dominik;8435400;Computer;;
+04.08.2025;Peretz;Computer;1680000;Alfons;1611000.0;Thomas
 03.08.2025;Pavlović;Nico;6110000;Computer;;
 03.08.2025;Nordin;Alfons;720000;Computer;;
 03.08.2025;N. Banks;Computer;1611000;Thomas;1587800.0;Nico
 03.08.2025;Henrichs;Thomas;1990000;Computer;;
-03.08.2025;Nübel;Computer;2833040;Dominik;;
 03.08.2025;B. Dárdai;Computer;1055080;Alfons;1021918.0;Dominik
 03.08.2025;Zesiger;Computer;2013482;Dominik;;
+03.08.2025;Nübel;Computer;2833040;Dominik;;
 02.08.2025;Grifo;Dominik;10395000;Computer;;
 02.08.2025;Treu;Thomas;2635500;Computer;;
 02.08.2025;Richter;Computer;370000;Thomas;;
 02.08.2025;Remberg;Computer;2250000;Christoph;2162000.0;Alfons
 02.08.2025;Musiala;Dominik;7360000;Computer;;
+01.08.2025;Koudossou;Computer;860005;Dominik;;
 01.08.2025;Mainka;Computer;4000000;Christoph;;
 01.08.2025;Sabitzer;Computer;2355005;Dominik;2150000.0;Alfons
-01.08.2025;Koudossou;Computer;860005;Dominik;;
 31.07.2025;Meyer;Thomas;249600;Computer;;
 31.07.2025;Amoura;Computer;8594001;Dominik;8574000.0;Christoph
 31.07.2025;T. Philipp;Alfons;164800;Computer;;
@@ -653,17 +653,17 @@
 31.07.2025;Voll;Computer;177002;Thomas;172880.0;Alfons
 31.07.2025;Borges Sanches;Thomas;244800;Computer;;
 31.07.2025;Milošević;Thomas;227700;Computer;;
-30.07.2025;Král;Dominik;401700;Computer;;
-30.07.2025;Lemperle;Christoph;2110000;Computer;;
-30.07.2025;Nusa;Computer;5804000;Thomas;;
-30.07.2025;Røssing-Lelesiit;Dominik;322400;Computer;;
+30.07.2025;Milošević;Computer;223000;Thomas;217080.0;Alfons
+30.07.2025;Adli;Dominik;2550000;Computer;;
+30.07.2025;Grifo;Computer;9210000;Dominik;;
+30.07.2025;Hübers;Dominik;2230000;Computer;;
+30.07.2025;Gnabry;Pascal;6699000;Computer;;
 30.07.2025;Musiala;Computer;7032010;Dominik;;
 30.07.2025;Lemperle;Computer;2060300;Christoph;;
-30.07.2025;Milošević;Computer;223000;Thomas;217080.0;Alfons
-30.07.2025;Gnabry;Pascal;6699000;Computer;;
-30.07.2025;Hübers;Dominik;2230000;Computer;;
-30.07.2025;Grifo;Computer;9210000;Dominik;;
-30.07.2025;Adli;Dominik;2550000;Computer;;
+30.07.2025;Røssing-Lelesiit;Dominik;322400;Computer;;
+30.07.2025;Nusa;Computer;5804000;Thomas;;
+30.07.2025;Lemperle;Christoph;2110000;Computer;;
+30.07.2025;Král;Dominik;401700;Computer;;
 29.07.2025;P. Aaronson;Dominik;1090000;Computer;;
 29.07.2025;Burkardt;Thomas;12913200;Computer;;
 29.07.2025;Arthur;Computer;1660500;Christoph;;
@@ -672,13 +672,13 @@
 29.07.2025;Zesiger;Christoph;2050300;Computer;;
 29.07.2025;Kabadayi;Alfons;273000;Computer;;
 29.07.2025;Agu;Thomas;3286400;Computer;;
-28.07.2025;Klostermann;Dominik;2340000;Computer;;
-28.07.2025;Král;Computer;430774;Dominik;420140.0;Alfons
-28.07.2025;Nebel;Dominik;7583400;Computer;;
-28.07.2025;Uzun;Dominik;4284000;Computer;;
 28.07.2025;Baumgartner;Dominik;2548000;Computer;;
-28.07.2025;Røssing-Lelesiit;Computer;331161;Dominik;295040.0;Alfons
 28.07.2025;T. Philipp;Computer;160040;Alfons;;
+28.07.2025;Røssing-Lelesiit;Computer;331161;Dominik;295040.0;Alfons
+28.07.2025;Uzun;Dominik;4284000;Computer;;
+28.07.2025;Nebel;Dominik;7583400;Computer;;
+28.07.2025;Král;Computer;430774;Dominik;420140.0;Alfons
+28.07.2025;Klostermann;Dominik;2340000;Computer;;
 27.07.2025;Jeong;Computer;1950999;Christian;;
 27.07.2025;Weiper;Thomas;5250000;Computer;;
 27.07.2025;Stark;Computer;2155000;Christian;2150009.0;Dominik
@@ -688,13 +688,13 @@
 26.07.2025;Mwene;Computer;1990200;Christoph;1986000.0;Dominik
 26.07.2025;Smolčić;Christian;176400;Computer;;
 25.07.2025;Vavro;Dominik;4919200;Computer;;
+24.07.2025;Nordin;Computer;650680;Alfons;;
+24.07.2025;Giannoulis;Computer;3110080;Alfons;;
+24.07.2025;Vavro;Computer;4710000;Dominik;;
+24.07.2025;Ekitiké;Christian;8320200;Computer;;
 24.07.2025;Meffert;Alfons;947600;Computer;;
 24.07.2025;Matanović;Alfons;4419800;Computer;;
 24.07.2025;Raum;Christoph;6080000;Computer;;
-24.07.2025;Nordin;Computer;650680;Alfons;;
-24.07.2025;Ekitiké;Christian;8320200;Computer;;
-24.07.2025;Vavro;Computer;4710000;Dominik;;
-24.07.2025;Giannoulis;Computer;3110080;Alfons;;
 23.07.2025;Wanner;Dominik;4423800;Computer;;
 22.07.2025;Nsoki;Computer;700000;Christoph;617040.0;Alfons
 22.07.2025;Cozza;Christian;182400;Computer;;
@@ -706,11 +706,11 @@
 21.07.2025;Borges Sanches;Computer;181008;Thomas;180040.0;Alfons
 20.07.2025;Stach;Dominik;3740000;Computer;;
 20.07.2025;Zesiger;Computer;1974100;Christoph;;
-19.07.2025;Trimmel;Pascal;1046400;Computer;;
-19.07.2025;Skov Olsen;Computer;2080100;Christoph;;
-19.07.2025;S. Banks;Computer;352020;Alfons;;
 19.07.2025;A. Jung;Pascal;896100;Computer;;
 19.07.2025;Anton;Computer;4910000;Christoph;;
+19.07.2025;S. Banks;Computer;352020;Alfons;;
+19.07.2025;Skov Olsen;Computer;2080100;Christoph;;
+19.07.2025;Trimmel;Pascal;1046400;Computer;;
 18.07.2025;Čović;Computer;255000;Thomas;235220.0;Alfons
 18.07.2025;Laimer;Computer;5378000;Thomas;;
 18.07.2025;Gebel;Dominik;171700;Computer;;
@@ -724,11 +724,11 @@
 17.07.2025;Gebel;Computer;160800;Dominik;;
 17.07.2025;Weiser;Christoph;4740000;Computer;;
 17.07.2025;Palacios;Thomas;5237100;Computer;;
-16.07.2025;Capaldo;Computer;4500100;Christoph;;
-16.07.2025;Pléa;Christoph;5500000;Computer;;
-16.07.2025;Petersson;Computer;161288;Dominik;160160.0;Alfons
 16.07.2025;Moerstedt;Dominik;1934400;Computer;;
 16.07.2025;Nkounkou;Thomas;493500;Computer;;
+16.07.2025;Capaldo;Computer;4500100;Christoph;;
+16.07.2025;Petersson;Computer;161288;Dominik;160160.0;Alfons
+16.07.2025;Pléa;Christoph;5500000;Computer;;
 15.07.2025;Chase;Dominik;462000;Computer;;
 15.07.2025;Bitshiabu;Christoph;2638400;Computer;;
 15.07.2025;Jeong;Christoph;2060400;Computer;;
@@ -736,17 +736,17 @@
 13.07.2025;Ma. Müller;Thomas;168000;Computer;;
 13.07.2025;Weißhaupt;Dominik;2205000;Computer;;
 13.07.2025;Pléa;Computer;5724000;Christoph;;
-12.07.2025;Bitshiabu;Computer;2800000;Christoph;2784000.0;Thomas
-12.07.2025;Laimer;Pascal;5170100;Computer;;
-12.07.2025;Smolčić;Computer;200999;Christian;180300.0;Thomas
 12.07.2025;Ma. Müller;Computer;161009;Thomas;160060.0;Alfons
-12.07.2025;Koulierakis;Pascal;2966400;Computer;;
 12.07.2025;Gnabry;Christoph;6890000;Computer;;
+12.07.2025;Koulierakis;Pascal;2966400;Computer;;
+12.07.2025;Bitshiabu;Computer;2800000;Christoph;2784000.0;Thomas
+12.07.2025;Smolčić;Computer;200999;Christian;180300.0;Thomas
+12.07.2025;Laimer;Pascal;5170100;Computer;;
 11.07.2025;P. Pfeiffer;Christian;306900;Computer;;
-10.07.2025;Jeong;Computer;1900000;Christoph;1887500.0;Nico
-10.07.2025;Raab;Computer;172000;Thomas;170060.0;Alfons
 10.07.2025;M. Philipp;Alfons;275400;Computer;;
 10.07.2025;Gnabry;Computer;7460600;Christoph;;
+10.07.2025;Raab;Computer;172000;Thomas;170060.0;Alfons
+10.07.2025;Jeong;Computer;1900000;Christoph;1887500.0;Nico
 09.07.2025;Finkgräfe;Christoph;3050000;Computer;;
 09.07.2025;Uzun;Christoph;3403700;Computer;;
 09.07.2025;Hack;Christoph;5522400;Computer;;
@@ -758,13 +758,13 @@
 08.07.2025;Čović;Alfons;173400;Computer;;
 08.07.2025;Weiper;Computer;3765009;Thomas;;
 08.07.2025;Krattenmacher;Thomas;1165500;Computer;;
+07.07.2025;Muslija;Christoph;703500;Computer;;
+07.07.2025;Niehues;Alfons;176800;Computer;;
+07.07.2025;Čović;Computer;160240;Alfons;160033.0;Thomas
 07.07.2025;Elmas;Alfons;659200;Computer;;
+07.07.2025;Flekken;Thomas;2753800;Computer;;
 07.07.2025;Malanga;Thomas;244800;Computer;;
 07.07.2025;Höfler;Dominik;478400;Computer;;
-07.07.2025;Flekken;Thomas;2753800;Computer;;
-07.07.2025;Muslija;Christoph;703500;Computer;;
-07.07.2025;Čović;Computer;160240;Alfons;160033.0;Thomas
-07.07.2025;Niehues;Alfons;176800;Computer;;
 06.07.2025;Grimaldo;Computer;7489000;Thomas;;
 06.07.2025;Urbig;Thomas;850000;Computer;;
 06.07.2025;Flekken;Computer;2745000;Thomas;;
@@ -775,10 +775,10 @@
 04.07.2025;Treu;Computer;2788000;Thomas;;
 04.07.2025;Muslija;Computer;660000;Christoph;;
 04.07.2025;Hložek;Computer;5555555;Nico;;
-03.07.2025;Oliveira;Thomas;189000;Computer;;
-03.07.2025;Bruun Larsen;Thomas;959500;Computer;;
 03.07.2025;Cozza;Computer;176000;Christian;174002.0;Thomas
 03.07.2025;Krattenmacher;Computer;1126000;Thomas;;
+03.07.2025;Oliveira;Thomas;189000;Computer;;
+03.07.2025;Bruun Larsen;Thomas;959500;Computer;;
 02.07.2025;Faghir;Computer;191002;Thomas;190240.0;Alfons
 01.07.2025;Sahiti;Computer;770000;Andreas;;
 01.07.2025;Petersson;Thomas;166400;Computer;;
@@ -786,31 +786,31 @@
 30.06.2025;Akpoguma;Computer;1900000;Alfons;;
 30.06.2025;Oliveira;Computer;180000;Thomas;;
 30.06.2025;Ilić;Computer;4950900;Christoph;;
-29.06.2025;Nacho Ferri;Computer;170009;Thomas;;
-29.06.2025;Nsoki;Dominik;430500;Computer;;
-29.06.2025;Petersson;Computer;160000;Thomas;;
-29.06.2025;Palacios;Computer;5717000;Thomas;;
+29.06.2025;B. Dárdai;Christoph;1203600;Computer;;
 29.06.2025;Paredes;Christoph;950000;Computer;;
 29.06.2025;Chaves;Christoph;1570000;Computer;;
-29.06.2025;B. Dárdai;Christoph;1203600;Computer;;
+29.06.2025;Nsoki;Dominik;430500;Computer;;
+29.06.2025;Palacios;Computer;5717000;Thomas;;
+29.06.2025;Nacho Ferri;Computer;170009;Thomas;;
+29.06.2025;Petersson;Computer;160000;Thomas;;
 28.06.2025;Kömür;Computer;2350050;Christian;2272000.0;Thomas
 28.06.2025;Busch;Christoph;730000;Computer;;
 28.06.2025;Urbig;Computer;923400;Thomas;922000.0;Alfons
 28.06.2025;Niehues;Computer;182060;Alfons;181009.0;Thomas
-27.06.2025;Torunarigha;Computer;3390000;Andreas;;
-27.06.2025;Meffert;Computer;1750000;Alfons;;
-27.06.2025;Dietz;Thomas;189000;Computer;;
 27.06.2025;Tauer;Computer;190080;Alfons;190000.0;Thomas
+27.06.2025;Dietz;Thomas;189000;Computer;;
+27.06.2025;Meffert;Computer;1750000;Alfons;;
+27.06.2025;Torunarigha;Computer;3390000;Andreas;;
 26.06.2025;Mittelstädt;Thomas;8872500;Computer;;
 26.06.2025;Černý;Christoph;845500;Computer;;
 26.06.2025;Busch;Computer;740000;Christoph;724980.0;Alfons
 26.06.2025;Moukoko;Andreas;1290000;Computer;;
 26.06.2025;Wätjen;Thomas;239200;Computer;;
 26.06.2025;Rosenfelder;Alfons;2434100;Computer;;
-25.06.2025;Agu;Computer;3121000;Thomas;;
-25.06.2025;Glatzel;Computer;4811000;Thomas;;
 25.06.2025;B. Dárdai;Computer;1290000;Christoph;;
 25.06.2025;Henrichs;Christoph;3151800;Computer;;
+25.06.2025;Glatzel;Computer;4811000;Thomas;;
+25.06.2025;Agu;Computer;3121000;Thomas;;
 24.06.2025;L. Philipp;Computer;262000;Pascal;;
 24.06.2025;Laimer;Computer;3681515;Pascal;3672500.0;Nico
 24.06.2025;Telle;Thomas;187200;Computer;;
@@ -824,10 +824,10 @@
 22.06.2025;Weißhaupt;Computer;2198950;Dominik;2123001.0;Nico
 22.06.2025;Can;Computer;4232323;Pascal;3555100.0;Nico
 22.06.2025;Höler;Computer;3455500;Nico;;
-21.06.2025;Vermeeren;Christoph;1816500;Computer;;
-21.06.2025;Götze;Christoph;3896400;Computer;;
 21.06.2025;Kücüksahin;Dominik;176400;Computer;;
 21.06.2025;Breithaupt;Dominik;210000;Computer;;
+21.06.2025;Vermeeren;Christoph;1816500;Computer;;
+21.06.2025;Götze;Christoph;3896400;Computer;;
 20.06.2025;Upamecano;Computer;7581680;Christoph;5800000.0;Alfons
 20.06.2025;Schimmer;Computer;245000;Dominik;222040.0;Alfons
 20.06.2025;Reis;Christian;2163000;Computer;;
@@ -839,42 +839,42 @@
 19.06.2025;Breithaupt;Computer;190001;Dominik;;
 19.06.2025;Moerstedt;Computer;1200008;Dominik;;
 19.06.2025;Maier;Alfons;850500;Computer;;
-18.06.2025;Ouédraogo;Computer;2207700;Christoph;2143700.0;Dominik
-18.06.2025;Ceesay;Computer;290009;Dominik;;
-18.06.2025;Stöger;Computer;5750000;Andreas;5715000.0;Alfons
-18.06.2025;Tschernuth;Christoph;161600;Computer;;
-18.06.2025;Kim;Pascal;4809000;Computer;;
-18.06.2025;Černý;Computer;1200015;Christoph;;
 18.06.2025;Mets;Computer;745000;Dominik;650000.0;Andreas
+18.06.2025;Černý;Computer;1200015;Christoph;;
+18.06.2025;Kim;Pascal;4809000;Computer;;
+18.06.2025;Tschernuth;Christoph;161600;Computer;;
+18.06.2025;Stöger;Computer;5750000;Andreas;5715000.0;Alfons
+18.06.2025;Ceesay;Computer;290009;Dominik;;
+18.06.2025;Ouédraogo;Computer;2207700;Christoph;2143700.0;Dominik
 17.06.2025;Kim;Computer;5523535;Pascal;;
 17.06.2025;Tschernuth;Computer;160005;Christoph;;
 17.06.2025;Telle;Computer;160044;Thomas;160005.0;Christoph
 17.06.2025;Ilaix Moriba;Andreas;295800;Computer;;
 17.06.2025;Ritzka;Computer;630008;Dominik;;
 17.06.2025;Petersson;Computer;160033;Thomas;160005.0;Christoph
-16.06.2025;Klostermann;Computer;2889001;Dominik;2582700.0;Nico
-16.06.2025;Dietz;Computer;161008;Thomas;160040.0;Alfons
-16.06.2025;M. El Mala;Computer;440000;Andreas;425040.0;Alfons
-16.06.2025;Dina Ebimbe;Alfons;442900;Computer;;
-16.06.2025;Maza;Nico;9790200;Computer;;
-16.06.2025;García;Christoph;7477800;Computer;;
 16.06.2025;Netz;Computer;1389001;Dominik;1320020.0;Alfons
-16.06.2025;Jatta;Thomas;1960000;Computer;;
-16.06.2025;Stergiou;Christian;1148400;Computer;;
-16.06.2025;Preu;Christoph;339500;Computer;;
-16.06.2025;N. Schlotterbeck;Computer;7729250;Dominik;7075500.0;Nico
 16.06.2025;Veratschnig;Christoph;360500;Computer;;
+16.06.2025;N. Schlotterbeck;Computer;7729250;Dominik;7075500.0;Nico
+16.06.2025;Preu;Christoph;339500;Computer;;
+16.06.2025;Stergiou;Christian;1148400;Computer;;
+16.06.2025;Jatta;Thomas;1960000;Computer;;
+16.06.2025;García;Christoph;7477800;Computer;;
+16.06.2025;Dina Ebimbe;Alfons;442900;Computer;;
+16.06.2025;M. El Mala;Computer;440000;Andreas;425040.0;Alfons
+16.06.2025;Dietz;Computer;161008;Thomas;160040.0;Alfons
+16.06.2025;Klostermann;Computer;2889001;Dominik;2582700.0;Nico
+16.06.2025;Maza;Nico;9790200;Computer;;
 15.06.2025;Dahmen;Thomas;3131400;Computer;;
 15.06.2025;Sieb;Computer;1660001;Dominik;;
 15.06.2025;Matanović;Computer;2800020;Alfons;2700000.0;Christoph
 15.06.2025;Gomis;Thomas;1390500;Computer;;
 15.06.2025;Burkardt;Computer;16203000;Thomas;15555555.0;Nico
 15.06.2025;Malatini;Computer;880008;Dominik;;
-14.06.2025;Højlund;Alfons;1328700;Computer;;
-14.06.2025;Al-Dakhil;Computer;961001;Dominik;;
-14.06.2025;Maier;Computer;875000;Alfons;868000.0;Dominik
-14.06.2025;García;Computer;7533800;Christoph;7360000.0;Alfons
 14.06.2025;Osterhage;Thomas;2288000;Computer;;
+14.06.2025;García;Computer;7533800;Christoph;7360000.0;Alfons
+14.06.2025;Maier;Computer;875000;Alfons;868000.0;Dominik
+14.06.2025;Al-Dakhil;Computer;961001;Dominik;;
+14.06.2025;Højlund;Alfons;1328700;Computer;;
 13.06.2025;Schlager;Dominik;3759500;Computer;;
 13.06.2025;Schäfer;Computer;1545200;Nico;1541000.0;Dominik
 13.06.2025;Nsoki;Computer;470008;Dominik;;
@@ -883,166 +883,166 @@
 13.06.2025;Ogbus;Computer;457700;Dominik;;
 13.06.2025;Ginter;Computer;5200510;Alfons;5142422.0;Pascal
 13.06.2025;A. Jung;Computer;1723555;Pascal;1676000.0;Dominik
-12.06.2025;Sander;Dominik;2270000;Computer;;
-12.06.2025;Prtajin;Alfons;280000;Computer;;
-12.06.2025;Süle;Computer;4710001;Alfons;4679509.0;Dominik
-12.06.2025;Beste;Dominik;3450000;Computer;;
-12.06.2025;Ouédraogo;Nico;2069600;Computer;;
-12.06.2025;Zetterer;Christoph;2667000;Computer;;
-12.06.2025;Vagnoman;Nico;2114600;Computer;;
-12.06.2025;Fukuda;Alfons;420000;Computer;;
-12.06.2025;Ljubičić;Alfons;808500;Computer;;
-12.06.2025;Millot;Computer;6750000;Andreas;6700000.0;Alfons
-12.06.2025;Traoré;Christoph;1326000;Computer;;
 12.06.2025;Schmitz;Thomas;171700;Computer;;
+12.06.2025;Traoré;Christoph;1326000;Computer;;
+12.06.2025;Millot;Computer;6750000;Andreas;6700000.0;Alfons
 12.06.2025;Noll;Computer;164000;Dominik;161000.0;Thomas
-11.06.2025;Trimmel;Computer;2121323;Pascal;;
-11.06.2025;Hennrich;Dominik;168000;Computer;;
-11.06.2025;Neuhaus;Computer;3167000;Thomas;2861100.0;Nico
-11.06.2025;Can;Dominik;3520000;Computer;;
-11.06.2025;Stergiou;Dominik;1500000;Christian;;
-11.06.2025;Elfadli;Dominik;3800000;Christian;;
-11.06.2025;Maza;Computer;9575555;Nico;9564000.0;Thomas
-11.06.2025;Schöppner;Alfons;4900000;Christian;;
-11.06.2025;Skarke;Thomas;1407600;Computer;;
+12.06.2025;Vagnoman;Nico;2114600;Computer;;
+12.06.2025;Ljubičić;Alfons;808500;Computer;;
+12.06.2025;Fukuda;Alfons;420000;Computer;;
+12.06.2025;Ouédraogo;Nico;2069600;Computer;;
+12.06.2025;Beste;Dominik;3450000;Computer;;
+12.06.2025;Süle;Computer;4710001;Alfons;4679509.0;Dominik
+12.06.2025;Prtajin;Alfons;280000;Computer;;
+12.06.2025;Zetterer;Christoph;2667000;Computer;;
+12.06.2025;Sander;Dominik;2270000;Computer;;
 11.06.2025;Vasilj;Dominik;3161300;Computer;;
+11.06.2025;Elfadli;Dominik;3800000;Christian;;
 11.06.2025;Gomis;Computer;1477000;Thomas;;
-10.06.2025;Nebel;Computer;12756800;Dominik;;
-10.06.2025;Amiri;Computer;13600300;Christoph;12934000.0;Thomas
-10.06.2025;Vagnoman;Computer;2087500;Nico;2080000.0;Alfons
-10.06.2025;K. Müller;Christoph;1840800;Computer;;
-10.06.2025;Schmitz;Computer;160000;Thomas;;
+11.06.2025;Schöppner;Alfons;4900000;Christian;;
+11.06.2025;Maza;Computer;9575555;Nico;9564000.0;Thomas
+11.06.2025;Skarke;Thomas;1407600;Computer;;
+11.06.2025;Stergiou;Dominik;1500000;Christian;;
+11.06.2025;Can;Dominik;3520000;Computer;;
+11.06.2025;Neuhaus;Computer;3167000;Thomas;2861100.0;Nico
+11.06.2025;Hennrich;Dominik;168000;Computer;;
+11.06.2025;Trimmel;Computer;2121323;Pascal;;
 10.06.2025;Juranović;Nico;1440000;Computer;;
+10.06.2025;Schmitz;Computer;160000;Thomas;;
+10.06.2025;K. Müller;Christoph;1840800;Computer;;
+10.06.2025;Vagnoman;Computer;2087500;Nico;2080000.0;Alfons
+10.06.2025;Amiri;Computer;13600300;Christoph;12934000.0;Thomas
+10.06.2025;Nebel;Computer;12756800;Dominik;;
 09.06.2025;Ma. Müller;Dominik;242400;Computer;;
 09.06.2025;Alvero;Computer;360000;Andreas;345011.0;Alfons
 09.06.2025;Widmer;Alfons;748800;Computer;;
 09.06.2025;Tabaković;Alfons;1832600;Computer;;
 09.06.2025;Dina Ebimbe;Computer;560000;Alfons;;
 09.06.2025;Schöppner;Computer;3900000;Alfons;3417500.0;Nico
-08.06.2025;Hübers;Computer;3450001;Dominik;3435011.0;Alfons
-08.06.2025;Lainer;Dominik;760000;Computer;;
-08.06.2025;G. Orban;Nico;1868500;Computer;;
-08.06.2025;Ilaix Moriba;Computer;350000;Andreas;323233.0;Pascal
-08.06.2025;J. Hofmann;Computer;5000000;Alfons;4112122.0;Pascal
-08.06.2025;Prtajin;Computer;310000;Alfons;;
-08.06.2025;Undav;Computer;13850000;Alfons;12550000.0;Nico
-08.06.2025;Vidić;Thomas;166400;Computer;;
-08.06.2025;B. Dárdai;Dominik;1884900;Computer;;
-08.06.2025;Gerhardt;Christian;873600;Computer;;
 08.06.2025;Suzuki;Nico;6110000;Computer;;
+08.06.2025;Gerhardt;Christian;873600;Computer;;
+08.06.2025;Vidić;Thomas;166400;Computer;;
 08.06.2025;Chabot;Computer;6391777;Dominik;;
 08.06.2025;Chase;Computer;1011001;Dominik;965000.0;Alfons
-07.06.2025;Friedrich;Dominik;1040000;Computer;;
-07.06.2025;Pesch;Nico;198000;Computer;;
-07.06.2025;Matanović;Dominik;1713600;Computer;;
-07.06.2025;Burke;Dominik;5018400;Computer;;
+08.06.2025;B. Dárdai;Dominik;1884900;Computer;;
+08.06.2025;Hübers;Computer;3450001;Dominik;3435011.0;Alfons
+08.06.2025;Undav;Computer;13850000;Alfons;12550000.0;Nico
+08.06.2025;J. Hofmann;Computer;5000000;Alfons;4112122.0;Pascal
+08.06.2025;Ilaix Moriba;Computer;350000;Andreas;323233.0;Pascal
+08.06.2025;G. Orban;Nico;1868500;Computer;;
+08.06.2025;Lainer;Dominik;760000;Computer;;
+08.06.2025;Prtajin;Computer;310000;Alfons;;
 07.06.2025;Geiger;Nico;1060500;Computer;;
-07.06.2025;Baumgartner;Computer;3110009;Dominik;3000000.0;Alfons
-07.06.2025;Finkgräfe;Computer;2221000;Christoph;2000000.0;Alfons
 07.06.2025;Ma. Müller;Computer;195008;Dominik;173000.0;Alfons
-06.06.2025;Chaves;Computer;3200000;Christoph;2600000.0;Christian
-06.06.2025;Widmer;Computer;800289;Alfons;800008.0;Dominik
-06.06.2025;Ljubičić;Computer;605009;Alfons;;
-06.06.2025;Irvine;Computer;4536666;Pascal;3777000.0;Thomas
-06.06.2025;Heuer Fernandes;Computer;2555000;Thomas;2550002.0;Dominik
-06.06.2025;Koudossou;Dominik;462000;Computer;;
+07.06.2025;Finkgräfe;Computer;2221000;Christoph;2000000.0;Alfons
+07.06.2025;Baumgartner;Computer;3110009;Dominik;3000000.0;Alfons
+07.06.2025;Burke;Dominik;5018400;Computer;;
+07.06.2025;Matanović;Dominik;1713600;Computer;;
+07.06.2025;Pesch;Nico;198000;Computer;;
+07.06.2025;Friedrich;Dominik;1040000;Computer;;
 06.06.2025;Skhiri;Computer;5355355;Pascal;4700000.0;Alfons
-06.06.2025;Muslija;Dominik;450000;Computer;;
-06.06.2025;Haberer;Computer;1685000;Dominik;1665123.0;Nico
-06.06.2025;Juranović;Computer;1395200;Nico;1350005.0;Dominik
 06.06.2025;Swider;Christoph;164800;Computer;;
-05.06.2025;Dźwigała;Christoph;203700;Computer;;
-05.06.2025;Berisha;Pascal;2028000;Computer;;
-05.06.2025;Dong;Pascal;595200;Computer;;
-05.06.2025;Tietz;Computer;4500000;Alfons;4050008.0;Dominik
-05.06.2025;Poulsen;Pascal;1620000;Computer;;
+06.06.2025;Juranović;Computer;1395200;Nico;1350005.0;Dominik
+06.06.2025;Haberer;Computer;1685000;Dominik;1665123.0;Nico
+06.06.2025;Muslija;Dominik;450000;Computer;;
+06.06.2025;Chaves;Computer;3200000;Christoph;2600000.0;Christian
+06.06.2025;Koudossou;Dominik;462000;Computer;;
+06.06.2025;Heuer Fernandes;Computer;2555000;Thomas;2550002.0;Dominik
+06.06.2025;Irvine;Computer;4536666;Pascal;3777000.0;Thomas
+06.06.2025;Ljubičić;Computer;605009;Alfons;;
+06.06.2025;Widmer;Computer;800289;Alfons;800008.0;Dominik
 05.06.2025;Hollerbach;Computer;7390000;Andreas;7150009.0;Alfons
-05.06.2025;Gleiber;Christoph;192000;Computer;;
-05.06.2025;Ngankam;Dominik;470000;Computer;;
-05.06.2025;Hranáč;Alfons;199500;Computer;;
 05.06.2025;Stiller;Christoph;13020800;Computer;;
-04.06.2025;P. Aaronson;Computer;2150008;Dominik;1500000.0;Christoph
-04.06.2025;F. Becker;Thomas;520000;Computer;;
-04.06.2025;Vasilj;Computer;3110005;Dominik;2945500.0;Nico
-04.06.2025;L. Reis;Alfons;5500000;Christian;;
-04.06.2025;S. Burchert;Thomas;163200;Computer;;
-04.06.2025;Stanišić;Thomas;7266000;Computer;;
+05.06.2025;Hranáč;Alfons;199500;Computer;;
+05.06.2025;Ngankam;Dominik;470000;Computer;;
+05.06.2025;Gleiber;Christoph;192000;Computer;;
+05.06.2025;Poulsen;Pascal;1620000;Computer;;
+05.06.2025;Tietz;Computer;4500000;Alfons;4050008.0;Dominik
+05.06.2025;Dong;Pascal;595200;Computer;;
+05.06.2025;Berisha;Pascal;2028000;Computer;;
+05.06.2025;Dźwigała;Christoph;203700;Computer;;
 04.06.2025;Vidić;Computer;160000;Thomas;;
-04.06.2025;Friedl;Computer;4123233;Pascal;4000000.0;Christoph
-04.06.2025;Paçarada;Pascal;3097500;Computer;;
-04.06.2025;Larsson;Computer;6757575;Pascal;5545555.0;Nico
 04.06.2025;Adli;Computer;5350000;Dominik;4655700.0;Nico
+04.06.2025;Larsson;Computer;6757575;Pascal;5545555.0;Nico
+04.06.2025;Paçarada;Pascal;3097500;Computer;;
+04.06.2025;Friedl;Computer;4123233;Pascal;4000000.0;Christoph
 04.06.2025;Keitel;Computer;670000;Andreas;641089.0;Alfons
-03.06.2025;Ullrich;Christian;1036800;Computer;;
-03.06.2025;Fischer;Computer;1200000;Andreas;1185000.0;Alfons
-03.06.2025;Hennrich;Christian;180000;Dominik;;
-03.06.2025;Obert;Nico;388500;Computer;;
+04.06.2025;Stanišić;Thomas;7266000;Computer;;
+04.06.2025;L. Reis;Alfons;5500000;Christian;;
+04.06.2025;Vasilj;Computer;3110005;Dominik;2945500.0;Nico
+04.06.2025;F. Becker;Thomas;520000;Computer;;
+04.06.2025;P. Aaronson;Computer;2150008;Dominik;1500000.0;Christoph
+04.06.2025;S. Burchert;Thomas;163200;Computer;;
 03.06.2025;Haidara;Christian;1726400;Computer;;
-03.06.2025;Muslija;Nico;580000;Dominik;;
-03.06.2025;Conteh;Computer;1200000;Andreas;1110000.0;Alfons
 03.06.2025;Özcan;Christian;1449600;Computer;;
-02.06.2025;Meyer;Computer;262000;Thomas;;
-02.06.2025;S. Burchert;Computer;160033;Thomas;;
-02.06.2025;Doan;Computer;14211000;Thomas;13640008.0;Dominik
-02.06.2025;Buta;Thomas;1060900;Computer;;
-02.06.2025;Koudossou;Computer;456005;Dominik;393000.0;Thomas
-02.06.2025;Raab;Nico;210000;Computer;;
-02.06.2025;Elvedi;Computer;4123233;Pascal;3100000.0;Alfons
-02.06.2025;Gerhardt;Alfons;1500000;Christian;;
-02.06.2025;Poller;Nico;285600;Computer;;
+03.06.2025;Conteh;Computer;1200000;Andreas;1110000.0;Alfons
+03.06.2025;Muslija;Nico;580000;Dominik;;
+03.06.2025;Obert;Nico;388500;Computer;;
+03.06.2025;Hennrich;Christian;180000;Dominik;;
+03.06.2025;Fischer;Computer;1200000;Andreas;1185000.0;Alfons
+03.06.2025;Ullrich;Christian;1036800;Computer;;
+02.06.2025;Manzambi;Pascal;4268000;Computer;;
+02.06.2025;Schlager;Computer;2850005;Dominik;2700000.0;Alfons
+02.06.2025;Suzuki;Computer;7755200;Nico;7300000.0;Christoph
+02.06.2025;Dźwigała;Computer;230000;Christoph;;
+02.06.2025;L. Grill;Thomas;193800;Computer;;
+02.06.2025;Hämmerle;Nico;183600;Computer;;
 02.06.2025;Sakar;Pascal;163200;Computer;;
 02.06.2025;Goretzka;Alfons;9061500;Computer;;
-02.06.2025;Hämmerle;Nico;183600;Computer;;
-02.06.2025;L. Grill;Thomas;193800;Computer;;
-02.06.2025;Dźwigała;Computer;230000;Christoph;;
-02.06.2025;Suzuki;Computer;7755200;Nico;7300000.0;Christoph
-02.06.2025;Schlager;Computer;2850005;Dominik;2700000.0;Alfons
-02.06.2025;Manzambi;Pascal;4268000;Computer;;
-01.06.2025;Juranović;Pascal;1312500;Computer;;
-01.06.2025;Frimpong;Thomas;6468800;Computer;;
-01.06.2025;Schmitz;Pascal;188100;Computer;;
-01.06.2025;Tschernuth;Thomas;273000;Computer;;
-01.06.2025;Raimund;Pascal;426400;Computer;;
+02.06.2025;Elvedi;Computer;4123233;Pascal;3100000.0;Alfons
+02.06.2025;Poller;Nico;285600;Computer;;
+02.06.2025;Raab;Nico;210000;Computer;;
+02.06.2025;Koudossou;Computer;456005;Dominik;393000.0;Thomas
+02.06.2025;Buta;Thomas;1060900;Computer;;
+02.06.2025;Doan;Computer;14211000;Thomas;13640008.0;Dominik
+02.06.2025;S. Burchert;Computer;160033;Thomas;;
+02.06.2025;Meyer;Computer;262000;Thomas;;
+02.06.2025;Gerhardt;Alfons;1500000;Christian;;
+01.06.2025;Gebel;Thomas;217800;Computer;;
+01.06.2025;Šeško;Dominik;12852000;Computer;;
+01.06.2025;Öztunali;Dominik;197600;Computer;;
+01.06.2025;Günter;Thomas;1888700;Computer;;
+01.06.2025;Ngankam;Computer;566000;Dominik;543000.0;Thomas
+01.06.2025;Suhonen;Dominik;218400;Computer;;
+01.06.2025;Mikelbrencis;Alfons;1639300;Computer;;
 01.06.2025;Koulierakis;Computer;4135353;Pascal;3500000.0;Andreas
 01.06.2025;Krätzig;Thomas;2793000;Computer;;
-01.06.2025;Gebel;Thomas;217800;Computer;;
-01.06.2025;Mikelbrencis;Alfons;1639300;Computer;;
-01.06.2025;Suhonen;Dominik;218400;Computer;;
-01.06.2025;Ngankam;Computer;566000;Dominik;543000.0;Thomas
-01.06.2025;Günter;Thomas;1888700;Computer;;
-01.06.2025;Öztunali;Dominik;197600;Computer;;
-01.06.2025;Šeško;Dominik;12852000;Computer;;
-31.05.2025;Keitel;Alfons;589000;Computer;;
-31.05.2025;Berisha;Computer;1423233;Pascal;1390000.0;Andreas
-31.05.2025;Mittelstädt;Computer;10558000;Thomas;10000002.0;Christian
-31.05.2025;Goretzka;Computer;9231900;Alfons;;
-31.05.2025;Pyrka;Alfons;1515000;Computer;;
+01.06.2025;Raimund;Pascal;426400;Computer;;
+01.06.2025;Tschernuth;Thomas;273000;Computer;;
+01.06.2025;Schmitz;Pascal;188100;Computer;;
+01.06.2025;Frimpong;Thomas;6468800;Computer;;
+01.06.2025;Juranović;Pascal;1312500;Computer;;
 31.05.2025;Højlund;Computer;1230011;Alfons;1200000.0;Andreas
+31.05.2025;Buta;Computer;1255000;Thomas;1162000.0;Alfons
+31.05.2025;Obert;Computer;420050;Nico;;
+31.05.2025;Beste;Computer;3105003;Dominik;2947500.0;Nico
 31.05.2025;L. Grill;Computer;180000;Thomas;;
 31.05.2025;Ekitiké;Computer;15000000;Christian;;
-31.05.2025;Beste;Computer;3105003;Dominik;2947500.0;Nico
-31.05.2025;Obert;Computer;420050;Nico;;
-31.05.2025;Buta;Computer;1255000;Thomas;1162000.0;Alfons
+31.05.2025;Pyrka;Alfons;1515000;Computer;;
+31.05.2025;Mittelstädt;Computer;10558000;Thomas;10000002.0;Christian
+31.05.2025;Berisha;Computer;1423233;Pascal;1390000.0;Andreas
+31.05.2025;Keitel;Alfons;589000;Computer;;
+31.05.2025;Goretzka;Computer;9231900;Alfons;;
 30.05.2025;Suhonen;Computer;250008;Dominik;;
 30.05.2025;Hranáč;Computer;1660000;Alfons;165000.0;Thomas
-29.05.2025;Voll;Dominik;421400;Computer;;
-29.05.2025;Diehl;Computer;240000;Thomas;;
-29.05.2025;Feller;Alfons;712500;Computer;;
-29.05.2025;Mané;Dominik;197600;Computer;;
-29.05.2025;Gregoritsch;Computer;1085555;Nico;;
-29.05.2025;Fukuda;Computer;168000;Alfons;;
-29.05.2025;G. Orban;Computer;1250000;Nico;;
-29.05.2025;Šeško;Computer;10480001;Dominik;;
-29.05.2025;F. Müller;Pascal;1000000;Christoph;;
 29.05.2025;Stiller;Computer;13050000;Christoph;12475500.0;Nico
-29.05.2025;Stanišić;Computer;6688000;Thomas;6245500.0;Nico
-29.05.2025;Mikelbrencis;Computer;1685000;Alfons;1643000.0;Thomas
-29.05.2025;Atubolu;Computer;3500000;Christoph;2858588.0;Pascal
-29.05.2025;Vidović;Dominik;435600;Computer;;
-29.05.2025;Lainer;Computer;820005;Dominik;798500.0;Nico
-29.05.2025;Muslija;Computer;720500;Nico;560000.0;Christoph
-29.05.2025;Đurić;Alfons;185400;Computer;;
 29.05.2025;Öztunali;Computer;200007;Dominik;175000.0;Thomas
+29.05.2025;Đurić;Alfons;185400;Computer;;
+29.05.2025;Muslija;Computer;720500;Nico;560000.0;Christoph
+29.05.2025;Lainer;Computer;820005;Dominik;798500.0;Nico
+29.05.2025;Vidović;Dominik;435600;Computer;;
+29.05.2025;Atubolu;Computer;3500000;Christoph;2858588.0;Pascal
+29.05.2025;Mikelbrencis;Computer;1685000;Alfons;1643000.0;Thomas
+29.05.2025;Stanišić;Computer;6688000;Thomas;6245500.0;Nico
+29.05.2025;F. Müller;Pascal;1000000;Christoph;;
+29.05.2025;Šeško;Computer;10480001;Dominik;;
+29.05.2025;G. Orban;Computer;1250000;Nico;;
+29.05.2025;Fukuda;Computer;168000;Alfons;;
+29.05.2025;Gregoritsch;Computer;1085555;Nico;;
+29.05.2025;Mané;Dominik;197600;Computer;;
+29.05.2025;Feller;Alfons;712500;Computer;;
+29.05.2025;Diehl;Computer;240000;Thomas;;
+29.05.2025;Voll;Dominik;421400;Computer;;
 28.05.2025;Baku;Christian;4871900;Computer;;
 28.05.2025;Adeh;Christian;336000;Computer;;
 28.05.2025;Sarco;Christian;204000;Computer;;
