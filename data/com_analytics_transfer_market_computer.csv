@@ -1934,16 +1934,31 @@ Chema Andrés;Mittelfeld;VfB Stuttgart;33;6.460.000;6.030.000;5,5;Halten;Gut;2;3
 Fábio Vieira;Mittelfeld;Hamburger SV;15;5.430.000;4.960.000;3,0;Halten;Schlecht;1;0;Computer;03.11.2025
 Günter;Abwehr;Sport-Club Freiburg;8;1.400.000;1.400.000;1,6;Halten;Schlecht;0;1.7;Computer;04.11.2025
 Stark;Abwehr;SV Werder Bremen;0;1.400.000;1.410.000;0,0;Halten;Schlecht;0;1.2;Computer;04.11.2025
-Akpoguma;Abwehr;TSG Hoffenheim;3;300.000;300.000;1,5;Halten;Durchschnittlich;4;N/A;Computer;04.11.2025
+Akpoguma;Abwehr;TSG Hoffenheim;3;300.000;300.000;1,5;Halten;Durchschnittlich;4;;Computer;04.11.2025
 Nartey;Mittelfeld;VfB Stuttgart;14;2.190.000;2.140.000;2,8;Halten;Durchschnittlich;2;2.2;Computer;04.11.2025
-Davies;Abwehr;FC Bayern München;0;3.930.000;3.790.000;5,2;Kaufen;Gut;5;N/A;Computer;04.11.2025
+Davies;Abwehr;FC Bayern München;0;3.930.000;3.790.000;5,2;Kaufen;Gut;5;;Computer;04.11.2025
 Adeyemi;Stürmer;Borussia Dortmund;40;9.390.000;9.340.000;5,7;Halten;Gut;1;4.1;Computer;04.11.2025
 Grimaldo;Abwehr;Bayer 04 Leverkusen;70;14.100.000;14.130.000;8,8;Halten;Schlecht;2;7.3;Computer;04.11.2025
-Wöber;Abwehr;SV Werder Bremen;0;700.000;680.000;3,6;Kaufen;Gut;5;N/A;Computer;04.11.2025
+Wöber;Abwehr;SV Werder Bremen;0;700.000;680.000;3,6;Kaufen;Gut;5;;Computer;04.11.2025
 Smith;Abwehr;FC St. Pauli;37;3.170.000;3.180.000;4,1;Halten;Gut;5;2.9;Computer;04.11.2025
 Ilić;Stürmer;1. FC Union Berlin;26;3.540.000;3.700.000;2,9;Halten;Schlecht;0;1.6;Computer;04.11.2025
 Røssing-Lelesiit;Stürmer;Hamburger SV;9;600.000;700.000;1,5;Kaufen;Schlecht;0;0.2;Computer;04.11.2025
-Jones;Stürmer;FC St. Pauli;0;370.000;380.000;0,0;Halten;Schlecht;0;N/A;Computer;04.11.2025
-Doumbia;Abwehr;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;04.11.2025
+Jones;Stürmer;FC St. Pauli;0;370.000;380.000;0,0;Halten;Schlecht;0;;Computer;04.11.2025
+Doumbia;Abwehr;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;04.11.2025
 El Khannouss;Mittelfeld;VfB Stuttgart;48;13.710.000;13.670.000;6,9;Halten;Schlecht;2;4.5;Computer;04.11.2025
 Fábio Vieira;Mittelfeld;Hamburger SV;15;5.220.000;5.020.000;3,0;Halten;Schlecht;1;0;Computer;04.11.2025
+Günter;Abwehr;Sport-Club Freiburg;8;1.390.000;1.400.000;1,6;Halten;Schlecht;0;1.8;Computer;05.11.2025
+Akpoguma;Abwehr;TSG Hoffenheim;3;290.000;310.000;1,5;Halten;Durchschnittlich;4;N/A;Computer;05.11.2025
+Nartey;Mittelfeld;VfB Stuttgart;14;2.180.000;2.130.000;2,8;Halten;Durchschnittlich;2;2.2;Computer;05.11.2025
+Batshuayi;Stürmer;Eintracht Frankfurt;5;780.000;840.000;1,3;Halten;Schlecht;0;2.1;Computer;05.11.2025
+Davies;Abwehr;FC Bayern München;0;4.500.000;4.560.000;5,2;Kaufen;Gut;4;N/A;Computer;05.11.2025
+Adeyemi;Stürmer;Borussia Dortmund;40;9.440.000;9.240.000;5,7;Halten;Gut;1;4.1;Computer;05.11.2025
+Grimaldo;Abwehr;Bayer 04 Leverkusen;70;12.920.000;12.160.000;8,8;Verkaufen;Durchschnittlich;0;7.4;Computer;05.11.2025
+Wöber;Abwehr;SV Werder Bremen;0;700.000;680.000;3,6;Halten;Gut;5;N/A;Computer;05.11.2025
+Niehues;Mittelfeld;1. FC Heidenheim 1846;17;1.740.000;1.770.000;2,8;Halten;Durchschnittlich;2;1.1;Computer;05.11.2025
+Smith;Abwehr;FC St. Pauli;37;3.480.000;3.500.000;4,1;Halten;Gut;5;2.8;Computer;05.11.2025
+Røssing-Lelesiit;Stürmer;Hamburger SV;9;600.000;650.000;1,5;Halten;Schlecht;0;0.1;Computer;05.11.2025
+Jones;Stürmer;FC St. Pauli;0;360.000;360.000;0,0;Halten;Schlecht;0;N/A;Computer;05.11.2025
+Doumbia;Abwehr;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;05.11.2025
+El Khannouss;Mittelfeld;VfB Stuttgart;48;14.590.000;14.650.000;6,9;Halten;Schlecht;2;4.6;Computer;05.11.2025
+Harder;Stürmer;RB Leipzig;13;2.540.000;2.630.000;2,6;Halten;Schlecht;0;3.3;Computer;05.11.2025
