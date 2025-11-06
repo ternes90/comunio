@@ -1,17 +1,4 @@
 ﻿Manager;Spieler;Position
-Thomas;Kane;Sturm
-Thomas;Honorat;Sturm
-Thomas;Stage;Mittelfeld
-Thomas;Ouédraogo;Mittelfeld
-Thomas;M. Eggestein;Mittelfeld
-Thomas;Knauff;Mittelfeld
-Thomas;Führich;Mittelfeld
-Thomas;Puertas;Mittelfeld
-Thomas;Laimer;Abwehr
-Thomas;Oppie;Abwehr
-Thomas;Arthur;Abwehr
-Thomas;Ogbus;Abwehr
-Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
 Alfons;Boniface;Sturm
@@ -35,8 +22,10 @@ Christoph;Baumgartner;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
 Christoph;Avdullahu;Mittelfeld
+Christoph;Nartey;Mittelfeld
 Christoph;Lukeba;Abwehr
 Christoph;Mainka;Abwehr
+Christoph;Smith;Abwehr
 Christoph;Upamecano;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
@@ -50,6 +39,7 @@ Pascal;Svensson;Abwehr
 Pascal;W. Orbán;Abwehr
 Pascal;Elvedi;Abwehr
 Pascal;Klostermann;Abwehr
+Pascal;Davies;Abwehr
 Pascal;Baumann;Tor
 Pascal;L. Philipp;Tor
 Andreas;Rômulo;Sturm
@@ -64,14 +54,15 @@ Andreas;Matsima;Abwehr
 Andreas;Bauer;Abwehr
 Andreas;Heuer Fernandes;Tor
 Dominik;Luis Díaz;Sturm
+Dominik;Adeyemi;Sturm
 Dominik;Pieringer;Sturm
 Dominik;Kimmich;Mittelfeld
-Dominik;Seiwald;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
 Dominik;Bischof;Mittelfeld
 Dominik;Maza;Mittelfeld
 Dominik;Chabot;Abwehr
 Dominik;N. Schlotterbeck;Abwehr
+Dominik;Doumbia;Abwehr
 Dominik;Kobel;Tor
 Nico;Olise;Sturm
 Nico;Höler;Sturm
