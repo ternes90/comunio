@@ -1962,18 +1962,33 @@ Jones;Stürmer;FC St. Pauli;0;360.000;360.000;0,0;Halten;Schlecht;0;;Computer;05
 Doumbia;Abwehr;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;05.11.2025
 El Khannouss;Mittelfeld;VfB Stuttgart;48;14.590.000;14.650.000;6,9;Halten;Schlecht;2;4.6;Computer;05.11.2025
 Harder;Stürmer;RB Leipzig;13;2.540.000;2.630.000;2,6;Halten;Schlecht;0;3.3;Computer;05.11.2025
-Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;0;N/A;Computer;06.11.2025
-Akpoguma;Abwehr;TSG Hoffenheim;3;280.000;290.000;1,5;Halten;Durchschnittlich;2;N/A;Computer;06.11.2025
+Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;0;;Computer;06.11.2025
+Akpoguma;Abwehr;TSG Hoffenheim;3;280.000;290.000;1,5;Halten;Durchschnittlich;2;;Computer;06.11.2025
 Batshuayi;Stürmer;Eintracht Frankfurt;5;750.000;790.000;1,3;Halten;Schlecht;0;2.1;Computer;06.11.2025
-Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Gut;0;N/A;Computer;06.11.2025
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Gut;0;;Computer;06.11.2025
 Lemperle;Stürmer;TSG Hoffenheim;46;6.030.000;5.910.000;5,8;Halten;Gut;0;1.6;Computer;06.11.2025
 Buta;Abwehr;Eintracht Frankfurt;0;750.000;740.000;0,0;Halten;Schlecht;0;0.4;Computer;06.11.2025
-Peretz;Torhüter;Hamburger SV;0;200.000;200.000;0,0;Halten;Schlecht;0;N/A;Computer;06.11.2025
+Peretz;Torhüter;Hamburger SV;0;200.000;200.000;0,0;Halten;Schlecht;0;;Computer;06.11.2025
 Niehues;Mittelfeld;1. FC Heidenheim 1846;17;1.720.000;1.750.000;2,8;Halten;Durchschnittlich;1;1;Computer;06.11.2025
-Gendrey;Abwehr;TSG Hoffenheim;0;420.000;420.000;3,4;Kaufen;Gut;5;N/A;Computer;06.11.2025
-Telle;Abwehr;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;06.11.2025
+Gendrey;Abwehr;TSG Hoffenheim;0;420.000;420.000;3,4;Kaufen;Gut;5;;Computer;06.11.2025
+Telle;Abwehr;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;06.11.2025
 Røssing-Lelesiit;Stürmer;Hamburger SV;9;560.000;620.000;1,5;Kaufen;Schlecht;0;0.1;Computer;06.11.2025
-Jones;Stürmer;FC St. Pauli;0;380.000;380.000;0,0;Halten;Schlecht;0;N/A;Computer;06.11.2025
+Jones;Stürmer;FC St. Pauli;0;380.000;380.000;0,0;Halten;Schlecht;0;;Computer;06.11.2025
 Bouanani;Stürmer;VfB Stuttgart;13;2.450.000;2.410.000;2,6;Halten;Schlecht;0;2.1;Computer;06.11.2025
 El Khannouss;Mittelfeld;VfB Stuttgart;48;15.730.000;15.760.000;6,9;Halten;Schlecht;2;4.6;Computer;06.11.2025
 Harder;Stürmer;RB Leipzig;13;2.560.000;2.590.000;2,6;Halten;Schlecht;0;3.4;Computer;06.11.2025
+Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;0;N/A;Computer;07.11.2025
+Batshuayi;Stürmer;Eintracht Frankfurt;5;830.000;860.000;1,3;Halten;Schlecht;0;2.3;Computer;07.11.2025
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Gut;0;N/A;Computer;07.11.2025
+Karazor;Mittelfeld;VfB Stuttgart;22;3.350.000;3.330.000;3,1;Halten;Durchschnittlich;0;3.6;Computer;07.11.2025
+Ache;Stürmer;1. FC Köln;29;3.860.000;3.940.000;3,2;Halten;Durchschnittlich;0;2.5;Computer;07.11.2025
+Lemperle;Stürmer;TSG Hoffenheim;46;6.120.000;6.030.000;5,8;Halten;Gut;0;1.4;Computer;07.11.2025
+Buta;Abwehr;Eintracht Frankfurt;0;720.000;710.000;0,0;Halten;Schlecht;0;0.4;Computer;07.11.2025
+Peretz;Torhüter;Hamburger SV;0;210.000;210.000;0,0;Halten;Schlecht;0;N/A;Computer;07.11.2025
+Niehues;Mittelfeld;1. FC Heidenheim 1846;17;1.670.000;1.680.000;2,8;Halten;Gut;1;0.9;Computer;07.11.2025
+Gendrey;Abwehr;TSG Hoffenheim;0;420.000;420.000;3,4;Kaufen;Gut;5;N/A;Computer;07.11.2025
+Nordin;Mittelfeld;1. FSV Mainz 05;20;1.720.000;1.690.000;3,3;Halten;Gut;1;0.9;Computer;07.11.2025
+Telle;Abwehr;1. FC Köln;0;170.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;07.11.2025
+Robatsch;Abwehr;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;07.11.2025
+Bouanani;Stürmer;VfB Stuttgart;13;2.310.000;2.310.000;2,6;Halten;Durchschnittlich;0;2.2;Computer;07.11.2025
+Harder;Stürmer;RB Leipzig;13;2.420.000;2.400.000;2,6;Halten;Schlecht;0;3.6;Computer;07.11.2025
