@@ -87,6 +87,18 @@ logo_map <- c(
   "VfL Wolfsburg" = "VfL Wolfsburg.png"
 )
 
+## ---- Startkapitalwerte ---- 
+startkapital_fix <- c(
+  "Alfons" = 14230000,
+  "Nico" = 15530000,
+  "Andreas" = 15790000,
+  "Pascal" = 15800000,
+  "Thomas" = 16830000,
+  "Christoph" = 17640000,
+  "Christian" = 18140000,
+  "Dominik" = 18040000
+)
+
 ## ---- sp_tm Spielplan 2025 ----
 sp_tm <- read.csv(
   "data/spielplan_TM_2025.csv",
@@ -117,11 +129,17 @@ n_real       <- length(real_seasons)
 
 
 ## ---- reactive_vals ----
+startup_time <- reactiveVal(NULL)
 verfuegbares_kapital_dominik <- reactiveVal(0)
 kontostand_dominik           <- reactiveVal(0)
 tm_trend_global <- reactiveVal(NULL)
 # reactiveVal für den gemeinsamen Transfermarkt DataFrame
 tm_common <- reactiveVal(NULL)
+# cache
+gebotsprofil_cache <- reactiveVal(NULL)
+spieler_stats_cache <- reactiveVal(NULL)
+dat_rel_angebote_cache <- reactiveVal(NULL)
+match_li_cache <- reactiveVal(list())
 
 ## ---- helpers ----
 # Spieler-Info reader
@@ -241,6 +259,11 @@ arrow_for <- function(a, b) {
 
 # Hilfsfunktion für sicheres Escaping in HTML-Attributen in MEIN TEAM
 safe_attr <- function(x) htmltools::htmlEscape(x, attribute = TRUE)
+
+# Hilfsfunktion: Nur Vornamen extrahieren
+vorname <- function(name) {
+  strsplit(name, " ")[[1]][1]
+}
 
 # ---- UI ----
 ui <- navbarPage(
@@ -996,6 +1019,9 @@ server <- function(input, output, session) {
         dt_tab   <- as.numeric(difftime(tdb, t0, units = "secs"))
         dt_flush <- as.numeric(difftime(tfl, t0, units = "secs"))
         
+        # store startup time (in seconds)
+        startup_time(dt_flush)
+        
         line <- paste(format(tfl, "%Y-%m-%d %H:%M:%S"),
                       session$token,
                       sprintf("%.3f", dt_tab),
@@ -1010,10 +1036,17 @@ server <- function(input, output, session) {
   
   #Update stempel
   output$last_update <- renderText({
-    tryCatch(
+    last <- tryCatch(
       readLines("data/last_updated.txt", warn = FALSE)[1],
       error = function(e) "unbekannt"
     )
+    
+    st <- startup_time()
+    if (is.null(st)) {
+      paste0(last)
+    } else {
+      paste0(last, " · Startup: ", sprintf("%.3f s", st))
+    }
   })
   
   # Kapital + Kontostand von Dominik beobachten und speichern
@@ -1225,9 +1258,10 @@ server <- function(input, output, session) {
                          choices = sort(unique(ap_df$Verein)), server = TRUE)
   })
   
-  # ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
+  # ---- data ----
   
-  # könnte global
+  ## ---- df ----
+  
   teams_df <- read.csv2("data/TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
   
   transfers <- read.csv2("data/TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
@@ -1300,71 +1334,81 @@ server <- function(input, output, session) {
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
-  # com_analytics_all_players
-  ca_df <- read_delim(
-    "data/com_analytics_all_players.csv",
-    delim = ";",
-    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-    show_col_types = FALSE
-  ) %>%
-    mutate(
-      SPIELER = trimws(enc2utf8(as.character(SPIELER))),
-      Datum   = as.Date(Datum, format = "%d.%m.%Y")
-    ) %>%
-    filter(Datum == max(Datum, na.rm = TRUE)) %>%
-    transmute(
-      SPIELER,
-      Position = Positionsgruppe,
-      Verein = POSITION,
-      Punkte_pro_Spiel = `PUNKTE PRO SPIEL`,
-      Gesamtpunkte = GESAMTPUNKTE,
-      Preis_Leistung = `PREIS-LEISTUNG`,
-      Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`,
-      Verletzungsanfälligkeit = Verletzungsanfälligkeit
-    )
-  
-  # com_analytics_transfer_market_computer
-  ca2_df <- read_delim(
-    "data/com_analytics_transfer_market_computer.csv",
-    delim = ";",
-    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-    na = c("", "NA", "N/A", "n/a", "-"),
-    show_col_types = FALSE
-  ) %>%
-    mutate(
-      Datum   = as.Date(Datum, format = "%d.%m.%Y"),
-      SPIELER = trimws(enc2utf8(as.character(SPIELER)))
-    ) %>%
-    filter(Datum == max(Datum, na.rm = TRUE))
-  
   # marktwertverlauf_gesamt
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
-  # ANGEBOTE
-  angebote <- read.csv2(
-    "data/ANGEBOTE.csv",
-    sep = ";",
-    stringsAsFactors = FALSE,
-    fileEncoding = "UTF-8",
-    check.names = FALSE) %>%
-    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) 
-  
-  # ---- LI Info ----
+  # LI Info 
   li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
   
+  # ---- df lazy load ----
+  load_non_dashboard_data <- function() {
+    safe <- function(expr) {
+      tryCatch(eval(expr), error = function(e) {
+        message("Lazy-Load Fehler: ", conditionMessage(e))
+        NULL
+      })
+    }
+
+    # com_analytics (große Files)
+    if (!exists("ca_df", inherits = TRUE) && file.exists("data/com_analytics_all_players.csv")) {
+      ca_df <<- safe(quote({
+        read_delim("data/com_analytics_all_players.csv", delim = ";",
+                   locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+                   show_col_types = FALSE) %>%
+          mutate(SPIELER = trimws(enc2utf8(as.character(SPIELER))),
+                 Datum   = as.Date(Datum, format = "%d.%m.%Y")) %>%
+          filter(Datum == max(Datum, na.rm = TRUE)) %>%
+          transmute(SPIELER, Position = Positionsgruppe, Verein = POSITION,
+                    Punkte_pro_Spiel = `PUNKTE PRO SPIEL`, Gesamtpunkte = GESAMTPUNKTE,
+                    Preis_Leistung = `PREIS-LEISTUNG`, Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`,
+                    Verletzungsanfälligkeit = Verletzungsanfälligkeit)
+      }))
+    }
+    
+    if (!exists("ca2_df", inherits = TRUE) && file.exists("data/com_analytics_transfer_market_computer.csv")) {
+      ca2_df <<- safe(quote({
+        read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";",
+                   locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+                   na = c("", "NA", "N/A", "n/a", "-"), show_col_types = FALSE) %>%
+          mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
+                 SPIELER = trimws(enc2utf8(as.character(SPIELER)))) %>%
+          filter(Datum == max(Datum, na.rm = TRUE))
+      }))
+    }
+    
+    # Angebots-Datei (Transfermarkt-Tab)
+    if (!exists("angebote", inherits = TRUE) && file.exists("data/ANGEBOTE.csv")) {
+      angebote <<- safe(quote({
+        tmp <- read.csv2("data/ANGEBOTE.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8", check.names = FALSE)
+        tmp$Datum <- as.Date(tmp$Datum, format = "%d.%m.%Y")
+        tmp
+      }))
+    }
+    
+  }
+  
+  observeEvent(input$main_navbar, {
+    req(identical(input$main_navbar, "Dashboard"))
+    onFlushed(function() {
+      # Lade schwere Daten nach erstem Dashboard-Render
+      load_non_dashboard_data()
+    }, once = TRUE)
+  })
+  
+  
+  ## ---- reactives ----
+  
   # Global nicht möglich
-  spieler_stats_spielplan <- reactive({
-    req(input$transfermarkt_tabs == "spieler_info")
+  ### ---- spieler_stats_spielplan ----
+  observeEvent(input$transfermarkt_tabs, {
+    if (input$transfermarkt_tabs != "spieler_info") return()
+    if (!is.null(spieler_stats_cache())) return()
     
     path <- file.path("data", "PLAYER_STATS.csv")
     validate(need(file.exists(path), "PLAYER_STATS.csv fehlt."))
     
-    read.csv(
-      path,
-      sep = ";", header = TRUE, stringsAsFactors = FALSE,
-      fileEncoding = "UTF-8", check.names = FALSE,
-      na.strings = c("", "NA")
-    ) %>%
+    tmp <- read.csv(path, sep = ";", header = TRUE, stringsAsFactors = FALSE,
+                    fileEncoding = "UTF-8", check.names = FALSE, na.strings = c("", "NA")) %>%
       mutate(
         Datum    = as.Date(Datum, format = "%d.%m.%Y"),
         Spieler  = trimws(enc2utf8(Spieler)),
@@ -1376,75 +1420,53 @@ server <- function(input, output, session) {
       filter(!is.na(Spieler), Spieler != "", !is.na(Spieltag)) %>%
       distinct(Spieler, Spieltag, .keep_all = TRUE) %>%
       arrange(Spieler, Spieltag) %>%
-      # Scrape-Datum umbenennen, damit es keinen Konflikt gibt
       rename(Datum_scrape = Datum) %>%
-      # aktuellen Verein je Spieler inline aus ap_df ableiten (neueste Zeile)
       left_join({
         ap_df %>%
           filter(!is.na(Spieler), Spieler != "", !is.na(Verein), Verein != "") %>%
-          select(Spieler, Verein, Datum) %>% 
+          select(Spieler, Verein, Datum) %>%
           arrange(Spieler, Datum) %>%
           group_by(Spieler) %>%
           filter(Datum == max(Datum, na.rm = TRUE)) %>%
           slice_tail(n = 1) %>%
           ungroup() %>%
-          transmute(
-            Spieler = trimws(enc2utf8(Spieler)),
-            Verein  = trimws(enc2utf8(Verein))
-          )
+          transmute(Spieler = trimws(enc2utf8(Spieler)), Verein = trimws(enc2utf8(Verein)))
       }, by = "Spieler") %>%
-      # Spielplan joinen (viele-zu-viele ok, wird danach gefiltert)
-      left_join(
-        sp_tm %>% rename(Matchdatum = Datum),
-        by = "Spieltag",
-        relationship = "many-to-many"
-      ) %>%
-      # Heim/Gast + Gegner bestimmen
+      left_join(sp_tm %>% rename(Matchdatum = Datum), by = "Spieltag", relationship = "many-to-many") %>%
       mutate(
-        HeimGast = case_when(
-          Verein == Heim ~ "Heim",
-          Verein == Gast ~ "Gast",
-          TRUE ~ NA_character_
-        ),
-        Gegner = case_when(
-          HeimGast == "Heim" ~ Gast,
-          HeimGast == "Gast" ~ Heim,
-          TRUE ~ NA_character_
-        )
+        HeimGast = case_when(Verein == Heim ~ "Heim", Verein == Gast ~ "Gast", TRUE ~ NA_character_),
+        Gegner = case_when(HeimGast == "Heim" ~ Gast, HeimGast == "Gast" ~ Heim, TRUE ~ NA_character_)
       ) %>%
-      # nur gültige Paarungen behalten
       filter(!is.na(HeimGast), !is.na(Gegner), !is.na(Matchdatum)) %>%
-      # falls wegen Duplikaten je Spieltag >1 Zeile übrig bleibt, eine behalten
       group_by(Spieler, Spieltag) %>%
       slice_head(n = 1) %>%
       ungroup() %>%
-      # Finale Spalten setzen: Datum = Matchdatum
-      transmute(
-        Spieler,
-        Verein,
-        Spieltag,
-        Datum   = Matchdatum,
-        Gegner,
-        HeimGast,
-        Note,
-        Punkte,
-        Status
-      ) %>%
+      transmute(Spieler, Verein, Spieltag, Datum = Matchdatum, Gegner, HeimGast, Note, Punkte, Status) %>%
       arrange(Spieler, Spieltag, Datum)
+    
+    spieler_stats_cache(tmp)
+  }, ignoreInit = TRUE)
+  
+  spieler_stats_spielplan <- reactive({
+    req(!is.null(spieler_stats_cache()))
+    spieler_stats_cache()
   })
   
-  # --- Angebotanalyse-reactive ---
-  dat_rel_angebote <- reactive({
-    req(input$main_navbar == "Transfermarkt")
+  ### ---- dat_rel_angebote ----
+  observeEvent(input$main_navbar, {
+    if (!identical(input$main_navbar, "Transfermarkt")) return()
+    if (!is.null(dat_rel_angebote_cache())) return()   # already computed
+    if (!exists("angebote", inherits = TRUE) || !is.data.frame(angebote)) return()
     
+    # safe compute (same logic wie vorher)
     betrag_col <- if ("Angebot (€)" %in% names(angebote)) "Angebot (€)" else "Angebot"
     
-    a <- angebote %>%
+    tmp <- angebote %>%
       mutate(Angebot = as.numeric(.data[[betrag_col]])) %>%
       select(Spieler, Datum, Angebot, Status)
     
-    spieler_set <- unique(a$Spieler)
-    datum_set   <- unique(a$Datum)
+    spieler_set <- unique(tmp$Spieler)
+    datum_set   <- unique(tmp$Datum)
     
     mw_am_tag <- ap_df %>%
       filter(Spieler %in% spieler_set, Datum %in% datum_set) %>%
@@ -1454,7 +1476,7 @@ server <- function(input, output, session) {
       filter(Spieler %in% spieler_set, Datum %in% (datum_set - 1)) %>%
       transmute(Spieler, Datum = Datum + 1, MW_Vortag = Marktwert)
     
-    a %>%
+    res <- tmp %>%
       left_join(mw_am_tag, by = c("Spieler","Datum")) %>%
       left_join(mw_vortag, by = c("Spieler","Datum")) %>%
       mutate(
@@ -1467,33 +1489,59 @@ server <- function(input, output, session) {
           TRUE ~ NA_character_
         )
       )
+    
+    dat_rel_angebote_cache(res)
+  }, ignoreInit = TRUE)
+  
+  # reactive wrapper (API unverändert)
+  dat_rel_angebote <- reactive({
+    req(!is.null(dat_rel_angebote_cache()))
+    dat_rel_angebote_cache()
   })
   
-  # ---- LI Info ----
-  match_li_row <- reactive({
-    req(input$main_navbar == "Transfermarkt", input$spieler_select2)
-    req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
+  ### ---- match_li_row ----
+  observeEvent(input$spieler_select2, {
+    if (!identical(input$main_navbar, "Transfermarkt")) return()
+    if (is.null(input$spieler_select2) || !nzchar(input$spieler_select2)) return()
+    if (!exists("li_df", inherits = TRUE) || !is.data.frame(li_df)) return()
     
     k <- norm_key(input$spieler_select2)
+    cache <- match_li_cache()
+    if (!is.null(cache[[k]])) return()   # already cached
+    
     tmp <- li_df
-    tmp$k <- norm_key(tmp$Comunio_Name)
-    out <- tmp[tmp$k == k, , drop = FALSE]
+    tmp$.k <- norm_key(tmp$Comunio_Name)
+    out <- tmp[tmp$.k == k, , drop = FALSE]
+    if (nrow(out) > 0) out <- out[1, , drop = FALSE]
+    
+    cache[[k]] <- out
+    match_li_cache(cache)
+  }, ignoreInit = TRUE)
+  
+  # reactive wrapper: liefert cached row (oder empty df)
+  match_li_row <- reactive({
+    req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
+    req(input$spieler_select2)
+    k <- norm_key(input$spieler_select2)
+    cache <- match_li_cache()
+    if (!is.null(cache[[k]])) return(cache[[k]])
+    # fallback: compute synchronously if not cached (keeps API robust)
+    tmp <- li_df
+    tmp$.k <- norm_key(tmp$Comunio_Name)
+    out <- tmp[tmp$.k == k, , drop = FALSE]
     if (nrow(out) == 0) return(out)
     out[1, , drop = FALSE]
   })
-
-  standings_df <- reactive({
-    st_df %>% 
-      group_by(Manager) %>%
-      slice_max(Datum, with_ties = FALSE) %>%
-      ungroup()
-  }) 
   
-  # ---- gebotsprofil_clean ----
-  gebotsprofil_clean <- reactive({
-    req(transfers, transfermarkt)
+  ### ---- gebotsprofil_clean ----
+  observeEvent(input$main_navbar, {
+    if (!input$main_navbar %in% c("Transfermarkt", "Bieterprofile")) return()
+    if (!is.null(gebotsprofil_cache())) return()   # already computed
     
-    gebotsprofil <- lapply(1:nrow(transfers), function(i) {
+    req(exists("transfers", inherits = TRUE), is.data.frame(transfers))
+    req(exists("transfermarkt", inherits = TRUE), is.data.frame(transfermarkt))
+    
+    tmp <- lapply(seq_len(nrow(transfers)), function(i) {
       zeile <- transfers[i, ]
       mw_vortag <- get_MW_vortag(zeile$Spieler, zeile$Datum, transfermarkt)
       res <- data.frame(
@@ -1504,7 +1552,8 @@ server <- function(input, output, session) {
         MW_vortag = mw_vortag,
         Diff_Abs = zeile$Hoechstgebot - mw_vortag,
         Diff_Prozent = round(100 * (zeile$Hoechstgebot - mw_vortag) / mw_vortag, 1),
-        Typ = "Hoechstgebot"
+        Typ = "Hoechstgebot",
+        stringsAsFactors = FALSE
       )
       if (!is.na(zeile$Zweitgebot) & !is.na(zeile$Zweitbietender)) {
         res2 <- data.frame(
@@ -1515,52 +1564,59 @@ server <- function(input, output, session) {
           MW_vortag = mw_vortag,
           Diff_Abs = zeile$Zweitgebot - mw_vortag,
           Diff_Prozent = round(100 * (zeile$Zweitgebot - mw_vortag) / mw_vortag, 1),
-          Typ = "Zweitgebot"
+          Typ = "Zweitgebot",
+          stringsAsFactors = FALSE
         )
         res <- rbind(res, res2)
       }
       res
     }) %>% bind_rows()
     
-    # Filter auf echte Mitspieler (nicht Computer) und gültige MW_vortag
-    gebotsprofil %>%
-      filter(Bieter != "Computer" & !is.na(MW_vortag))
+    tmp <- tmp %>% filter(Bieter != "Computer" & !is.na(MW_vortag))
+    gebotsprofil_cache(tmp)
+  }, ignoreInit = TRUE)
+  
+  # reactive wrapper (unchanged API)
+  gebotsprofil_clean <- reactive({
+    req(!is.null(gebotsprofil_cache()))
+    gebotsprofil_cache()
   })
   
-  # ---- gebotsprofil range ----
-  gebotsprofil_mwclass_filtered <- reactive({
-    req(input$mwclass_date_range)
-    
-    gebotsprofil_mwclass() %>%
-      filter(Datum >= input$mwclass_date_range[1], Datum <= input$mwclass_date_range[2])
-  })
-  
-  # ---- MW Klasse vergeben ----
+  #### ---- gebotsprofil_mwclass ----
   gebotsprofil_mwclass <- reactive({
-    gebotsprofil_clean() %>%
+    df <- gebotsprofil_clean()
+    req(nrow(df) > 0)
+    df %>%
       mutate(
         MW_Klasse = case_when(
           MW_vortag < 0.5e6 ~ "<0.5 Mio",
-          MW_vortag < 1e6 ~ "0.5–1 Mio",
-          MW_vortag < 2.5e6 ~ "1–2.5 Mio",
-          MW_vortag < 5e6 ~ "2.5–5 Mio",
-          MW_vortag < 10e6 ~ "5–10 Mio",
-          MW_vortag >= 10e6 ~ ">10 Mio",
-          TRUE ~ "unbekannt"
+          MW_vortag < 1e6    ~ "0.5–1 Mio",
+          MW_vortag < 2.5e6  ~ "1–2.5 Mio",
+          MW_vortag < 5e6    ~ "2.5–5 Mio",
+          MW_vortag < 10e6   ~ "5–10 Mio",
+          MW_vortag >= 10e6  ~ ">10 Mio",
+          TRUE               ~ "unbekannt"
         )
       )
   })
   
-  ## ---- Zusammenfassungstabelle für MW-Klassen
+  #### ---- gebotsprofil range ----
+  gebotsprofil_mwclass_filtered <- reactive({
+    req(input$mwclass_date_range)
+    df <- gebotsprofil_mwclass()
+    req(nrow(df) > 0)
+    df %>% filter(Datum >= input$mwclass_date_range[1], Datum <= input$mwclass_date_range[2])
+  })
+  
+  #### ---- mwclass_summary ----
   mwclass_summary <- reactive({
-    gebotsprofil_mwclass() %>%
+    df <- gebotsprofil_mwclass()
+    req(nrow(df) > 0)
+    df %>%
       mutate(
         MW_Klasse = factor(
           MW_Klasse,
-          levels = c(
-            "<0.5 Mio", "0.5–1 Mio", "1–2.5 Mio",
-            "2.5–5 Mio", "5–10 Mio", ">10 Mio"
-          ),
+          levels = c("<0.5 Mio","0.5–1 Mio","1–2.5 Mio","2.5–5 Mio","5–10 Mio",">10 Mio"),
           ordered = TRUE
         )
       ) %>%
@@ -1568,7 +1624,7 @@ server <- function(input, output, session) {
       summarise(
         Anzahl_gesamt = n(),
         Anzahl_Hoechstgebote = sum(Typ == "Hoechstgebot"),
-        Anzahl_Zweitgebote = sum(Typ == "Zweitgebot"),
+        Anzahl_Zweitgebote    = sum(Typ == "Zweitgebot"),
         Durchschnitt_Abweichung = round(mean(Diff_Prozent, na.rm = TRUE), 1),
         Min = min(Diff_Prozent, na.rm = TRUE),
         Max = max(Diff_Prozent, na.rm = TRUE),
@@ -1577,8 +1633,8 @@ server <- function(input, output, session) {
       arrange(Bieter, MW_Klasse)
   })
   
-  # ---- HELPER: GPT prompt builder ----
-  # für Spieler-Info Seite (muss im server sein, da sie auf Datensätze zugreift, die global nicht vorhanden sind) 
+  ## ---- helper functions ----
+  # HELPER: GPT prompt builder für Spieler-Info Seite (muss im server sein, da sie auf Datensätze zugreift, die global nicht vorhanden sind) 
   get_verein <- function(sp) {
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
     sel  <- norm(sp)
@@ -6490,23 +6546,6 @@ server <- function(input, output, session) {
   
   ## ---- Kontostände je Spieler ----
   
-  # Hilfsfunktion: Nur Vornamen extrahieren
-  vorname <- function(name) {
-    strsplit(name, " ")[[1]][1]
-  }
-  
-  # Fixe Startkapitalwerte (vollständige Namen als Keys)
-  startkapital_fix <- c(
-    "Alfons" = 14230000,
-    "Nico" = 15530000,
-    "Andreas" = 15790000,
-    "Pascal" = 15800000,
-    "Thomas" = 16830000,
-    "Christoph" = 17640000,
-    "Christian" = 18140000,
-    "Dominik" = 18040000
-  )
-
   # Vornamen-Index für Startkapital
   startkapital_fix_vornamen <- startkapital_fix
   names(startkapital_fix_vornamen) <- sapply(names(startkapital_fix), vorname)
@@ -6871,16 +6910,16 @@ server <- function(input, output, session) {
     stats <- ts %>%
       arrange(Manager, Datum) %>%
       group_by(Manager) %>%
-      mutate(is_minus = Kontostand < 0,
-             start_run = is_minus & (is.na(lag(is_minus)) | !lag(is_minus))) %>%
+      mutate(
+        is_minus = Kontostand < 0,
+        start_run = is_minus & (is.na(lag(is_minus)) | !lag(is_minus))
+      ) %>%
       summarise(
         Tage_total     = n(),
         Tage_im_Minus  = sum(is_minus, na.rm = TRUE),
-        Anteil_Minus   = if_else(Tage_total > 0, 100 * Tage_im_Minus / Tage_total, 0),
+        Anteil_Minus   = if (Tage_total > 0) 100 * sum(is_minus, na.rm = TRUE) / Tage_total else 0,
         Episoden_Minus = sum(start_run, na.rm = TRUE),
-        Tiefstes_Minus = if_else(any(is_minus, na.rm = TRUE),
-                                 min(Kontostand[is_minus], na.rm = TRUE),
-                                 0),
+        Tiefstes_Minus = if (any(is_minus, na.rm = TRUE)) min(Kontostand[is_minus], na.rm = TRUE) else 0,
         .groups = "drop"
       ) %>%
       mutate(Anteil_Minus = round(Anteil_Minus, 1)) %>%
@@ -6892,6 +6931,7 @@ server <- function(input, output, session) {
         `Tiefstes Minus (€)` = Tiefstes_Minus
       ) %>%
       as.data.frame()
+    
     
     DT::datatable(
       stats,
