@@ -25,14 +25,229 @@ if (is_connect && !requireNamespace("slider", quietly = TRUE)) {
 }
 suppressPackageStartupMessages(library(slider))
 
-options(shiny.session.inactivityTimeout = 2*60*60*1000)  # 2h
+# ---- Globale Daten ----
 
+today <- Sys.Date()
+
+#Startup log
+LOG_PATH <- "logs/perf_log.csv"
+if (!dir.exists(dirname(LOG_PATH))) dir.create(dirname(LOG_PATH), recursive = TRUE, showWarnings = FALSE)
+if (!file.exists(LOG_PATH)) {
+  writeLines("timestamp;session;dt_to_tab_s;dt_to_flush_s", LOG_PATH)
+}
+
+#Save beeswarm position
+pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
+
+## ---- Manuelle MW Werte ----
+manuelle_werte <- tibble(
+  Datum = as.Date(c(
+    "2025-06-01", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05",
+    "2025-06-06", "2025-06-07", "2025-06-08", "2025-06-09", "2025-06-10",
+    "2025-06-11", "2025-06-12", "2025-06-13", "2025-06-14", "2025-06-15"
+  )),
+  Marktwert = c(
+    1487390000, 1458940000, 1530070000, 1527560000, 1568600000,
+    1566740000, 1609040000, 1575690000, 1603080000, 1569800000,
+    1587530000, 1556450000, 1587250000, 1537530000, 1549230000
+  )
+)
+
+## ---- nickname_mapping ----
+nickname_mapping <- c(
+  "Alfon" = "Alfons",
+  "Nico_2510" = "Nico",
+  "HenzgenT" = "Thomas",
+  "Hosche" = "Christoph",
+  "Crunch" = "Christian",
+  "Dr. Bier" = "Dominik",
+  "Calli" = "Pascal",
+  "Computer" = "Computer"
+)
+
+## ---- logo_map ----
+logo_map <- c(
+  "1. FC Köln" = "1 FC Köln.png",
+  "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
+  "Borussia Dortmund" = "Borussia Dortmund.png",
+  "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
+  "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
+  "FC Augsburg" = "FC Augsburg.png",
+  "FC Bayern München" = "FC Bayern München.png",
+  "Hamburger SV" = "Hamburger SV.png",
+  "1. FC Heidenheim 1846" = "Heidenheim.png",
+  "RB Leipzig" = "Leipzig.png",
+  "1. FSV Mainz 05" = "Mainz 05.png",
+  "Sport-Club Freiburg" = "SC Freiburg.png",
+  "FC St. Pauli" = "St Pauli.png",
+  "SV Werder Bremen" = "SV Werder Bremen.png",
+  "TSG Hoffenheim" = "TSG Hoffenheim.png",
+  "1. FC Union Berlin" = "Union Berlin.png",
+  "VfB Stuttgart" = "VfB Stuttgart.png",
+  "VfL Wolfsburg" = "VfL Wolfsburg.png"
+)
+
+## ---- sp_tm Spielplan 2025 ----
+sp_tm <- read.csv(
+  "data/spielplan_TM_2025.csv",
+  sep = ";", header = TRUE, stringsAsFactors = FALSE,
+  fileEncoding = "UTF-8", check.names = FALSE, na.strings = c("", "NA")
+) %>%
+  transmute(
+    Spieltag = as.integer(Spieltag),
+    Datum    = as.Date(Datum),
+    Heim     = trimws(enc2utf8(Heim)),
+    Gast     = trimws(enc2utf8(Gast))
+  ) %>%
+  distinct() %>%
+  arrange(Spieltag, Datum, Heim, Gast)
+
+## ---- seasons ----
+data_path <- "./global_MW"
+
+seasons <- c("2004-05", "2005-06", "2006-07", "2007-08", "2008-09",
+             "2009-10", "2010-11", "2011-12", "2012-13", "2013-14",
+             "2014-15", "2015-16", "2016-17", "2017-18", "2018-19",
+             "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "Sommerpause_2021", "Sommerpause_2024")
+
+# Nur die regulären Saisons (ohne Sommerpause)
+real_seasons <- seasons[!grepl("^Sommerpause", seasons)]
+n_real       <- length(real_seasons)
+
+
+
+## ---- reactive_vals ----
+verfuegbares_kapital_dominik <- reactiveVal(0)
+kontostand_dominik           <- reactiveVal(0)
+tm_trend_global <- reactiveVal(NULL)
+# reactiveVal für den gemeinsamen Transfermarkt DataFrame
+tm_common <- reactiveVal(NULL)
+
+## ---- helpers ----
+# Spieler-Info reader
+safe_val <- function(v) ifelse(length(v) == 0 || is.na(v) || !nzchar(as.character(v)), "", as.character(v))
+safe_img <- function(url, width_px) {
+  url <- safe_val(url)
+  if (!nzchar(url)) return(NULL)
+  tags$img(src = url, width = width_px, onerror = "this.style.display='none'")
+}
+
+# Helper function für LI-Mapping 
+norm_key <- function(x) {
+  x <- enc2utf8(as.character(x))
+  x <- tolower(trimws(x))
+  x <- chartr("ß", "ss", x)
+  x
+}
+
+# Funktion MW vom Vortag suchen 
+get_MW_vortag <- function(spieler, datum, transfermarkt) {
+  tm <- transfermarkt %>%
+    filter(Spieler == spieler, TM_Stand <= (datum - days(1))) %>%
+    arrange(desc(TM_Stand)) %>%
+    slice(1)
+  if (nrow(tm) == 1) tm$Marktwert else NA
+}
+
+# MW-Klasse bestimmen
+get_mw_klasse <- function(mw) {
+  if (mw < 5e5) {
+    "<0.5 Mio"
+  } else if (mw < 1e6) {
+    "0.5–1 Mio"
+  } else if (mw < 2.5e6) {
+    "1–2.5 Mio"
+  } else if (mw < 5e6) {
+    "2.5–5 Mio"
+  } else if (mw < 1e7) {
+    "5–10 Mio"
+  } else {
+    ">10 Mio"
+  }
+}
+
+# Hilfsfunktion, um auf Transfermark  t pro Zeile einen Shiny-Button zu erzeugen
+shinyButton <- function(id, label = "→") {
+  sprintf(
+    '<button class="btn btn-xs btn-primary" onclick="Shiny.setInputValue(\'transfer_row\', %s, {priority: \'event\'})">%s</button>',
+    id, label
+  )
+}
+
+# GPT prompt Spieler-Info-Seite
+build_prompt <- function(sp, ve) {
+  paste0(
+    "Aufgabe: Analysiere den Bundesligaspieler ", sp, " (", ve, ").\n",
+    "Heutiges Datum (Europe/Berlin): ", today, ". Nutze NUR Inhalte der letzten 30 Tage; ältere als 'älter' kennzeichnen. Zeitbezüge strikt relativ zu diesem Datum.\n",
+    "Quellen: Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, LigaInsider, Comunio-Magazin, seriöse Regionalmedien. Keine Social Media/Foren. Jede Aussage mit [1], [2] … belegen; jüngste Quelle gewinnt. Unklares als 'Unklar'.\n",
+    "Bestimme den nächsten Bundesligaspieltag inkl. Gegner, Datum, Ort aus offizieller Quelle.\n\n",
+    "Liefere GENAU diese Abschnitte:\n",
+    "- Status jetzt:\n",
+    "- Einsatz 1–2 Wochen:\n",
+    "- Trainerstimme:\n",
+    "- Verletzung / Rückkehr:\n",
+    "- Aufstellungsempfehlung:\n",
+    "- Gegneranalyse nächster Spieltag:\n",
+    "- Quellen (YYYY-MM-DD):"
+  )
+}
+
+make_links <- function(x){
+  # 1) Markdown-Links -> HTML
+  x <- gsub("\\[([^\\]]+)\\]\\((https?://[^)\\s]+)\\)",
+            "<a href='\\2' target='_blank'>\\1</a>", x, perl=TRUE)
+  
+  # 2) Nackte URLs -> HTML (breiter Zeichensatz, ohne bereits verlinkte)
+  pat <- "(?<!href=['\"])\\bhttps?://[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+"
+  m <- gregexpr(pat, x, perl=TRUE)
+  regmatches(x, m) <- lapply(regmatches(x, m), function(urls){
+    vapply(urls, function(u){
+      # evtl. angehängte Satzzeichen am Ende abschneiden
+      u2 <- sub("[)\\]\\},.?!:;]+$", "", u)
+      sprintf("<a href='%s' target='_blank'>%s</a>", u2, u2)
+    }, character(1))
+  })
+  x
+}
+
+# Helper function für Alle Teams Rechner
+safe_id <- function(x) gsub("[^A-Za-z0-9]+", "_", x)
+cb_id   <- function(manager, spieler) paste0("sel__", safe_id(manager), "__", safe_id(spieler))
+
+# Load hist seasons
+load_season_data <- function(season) {
+  file_name <- file.path(data_path, paste0("historic_market_values_", season, ".csv"))
+  if (!file.exists(file_name)) return(NULL)
+  readr::read_csv(file_name, show_col_types = FALSE) %>%
+    # Spalte für Jahresanfang in 2025 nur für „Sommerpause“ umschreiben
+    mutate(
+      Datum_raw = as.Date(Datum),
+      Datum = if (grepl("^Sommerpause", season)) {
+        as.Date(format(Datum_raw, "2025-%m-%d"))
+      } else {
+        Datum_raw
+      },
+      Saison = season
+    )
+}
+
+# Pfeil für Kader-Entwicklung
+arrow_for <- function(a, b) {
+  if (is.na(a) || is.na(b)) return("")
+  if (b > a) return("<span style='color:#388e3c;font-weight:bold;'>▲</span>")
+  if (b < a) return("<span style='color:#e53935;font-weight:bold;'>▼</span>")
+  return("<span style='color:#757575;font-weight:bold;'>▬</span>")
+}
+
+# Hilfsfunktion für sicheres Escaping in HTML-Attributen in MEIN TEAM
+safe_attr <- function(x) htmltools::htmlEscape(x, attribute = TRUE)
 
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse", 
   id = "main_navbar",
   
+  ## ---- htmls-tags ----
   #Pushaktualisierung
   header = tagList(
     tags$div(
@@ -375,23 +590,23 @@ ui <- navbarPage(
                               style = "width:100%; max-width:1600px; margin:0 auto;",
                               # Dreispaltiges Layout
                               div(
-                                style = "width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin:20px 0; flex-wrap:wrap;",
+                                style = "width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin:20px 0; flex-wrap:nowrap;",
                                 
-                                # Links: Güte-Tabelle (fix 320px)
+                                # Links: Güte-Tabelle
                                 div(
-                                  style = "flex:0 0 320px; max-width:320px;",
+                                  style = "flex:1 1 0%; max-width:none;",
                                   wellPanel(style = "padding:12px;", uiOutput("mw_pred_ts_metrics"))
                                 ),
                                 
-                                # Mitte: Zeitreihen-Plot (~66.7% der Restbreite)
+                                # Mitte: Zeitreihen-Plot
                                 div(
-                                  style = "flex:0 0 calc((100% - 320px - 40px) * 0.6667); max-width:calc((100% - 320px - 40px) * 0.6667);",
+                                  style = "flex:3 1 0%; max-width:none;",
                                   plotOutput("mw_pred_ts_plot", height = 420, width = "100%")
                                 ),
                                 
-                                # Rechts: Prediction-vs-Ist (~33.3% der Restbreite)
+                                # Rechts: Prediction-vs-Ist
                                 div(
-                                  style = "flex:0 0 calc((100% - 320px - 40px) * 0.3333); max-width:calc((100% - 320px - 40px) * 0.3333);",
+                                  style = "flex:1 1 0%; max-width:none;",
                                   plotOutput("mw_pred_vs_actual_plot", height = 420, width = "100%")
                                 )
                               )
@@ -399,6 +614,7 @@ ui <- navbarPage(
                           )
                         )
                       )
+                      
                       
                       
                       
@@ -717,7 +933,7 @@ ui <- navbarPage(
                       fluidPage(
                         fluidRow(
                           column(2,
-                                 selectInput("flip_player_select", "Spieler auswählen:", choices = NULL)
+                                 selectInput("flip_player_select", "Spieler auswählen:", choices = c("Alle"), selected = "Alle")
                           ),
                           column(10, DTOutput("flip_player_table"))
                         )
@@ -763,10 +979,35 @@ ui <- navbarPage(
 
 # ---- SERVER ----
 server <- function(input, output, session) {
-  session$allowReconnect(TRUE)
+  # Session-Startzeit
+  session$userData$t0 <- Sys.time()
   
-  #Save beeswarm position
-  pos_qr <- ggbeeswarm::position_quasirandom(width = 0.22)
+  # Sobald der Dashboard-Tab das erste Mal aktiv ist, Zeiten loggen
+  observeEvent(input$main_navbar, {
+    if (is.null(session$userData$t_dashboard) && identical(input$main_navbar, "Dashboard")) {
+      session$userData$t_dashboard <- Sys.time()
+      
+      # Nach dem nächsten kompletten Flush einmalig loggen
+      onFlushed(function() {
+        t0  <- session$userData$t0
+        tdb <- session$userData$t_dashboard
+        tfl <- Sys.time()
+        
+        dt_tab   <- as.numeric(difftime(tdb, t0, units = "secs"))
+        dt_flush <- as.numeric(difftime(tfl, t0, units = "secs"))
+        
+        line <- paste(format(tfl, "%Y-%m-%d %H:%M:%S"),
+                      session$token,
+                      sprintf("%.3f", dt_tab),
+                      sprintf("%.3f", dt_flush),
+                      sep = ";")
+        
+        try(write(line, file = LOG_PATH, append = TRUE), silent = TRUE)
+      }, once = TRUE)
+    }
+  }, ignoreInit = FALSE)
+  
+  
   #Update stempel
   output$last_update <- renderText({
     tryCatch(
@@ -774,12 +1015,6 @@ server <- function(input, output, session) {
       error = function(e) "unbekannt"
     )
   })
-  
-  verfuegbares_kapital_dominik <- reactiveVal(0)
-  kontostand_dominik           <- reactiveVal(0)
-  tm_trend_global <- reactiveVal(NULL)
-  # ---- Status für Plotly ----
-  plotly_on <- reactiveVal(FALSE)
   
   # Kapital + Kontostand von Dominik beobachten und speichern
   observe({
@@ -887,7 +1122,7 @@ server <- function(input, output, session) {
         )
       
       choices <- ap_df %>%
-        filter(Datum == Sys.Date()) %>%
+        filter(Datum == today) %>%
         pull(Spieler) %>%
         sort()
       updateSelectInput(session, "spieler_select2", choices = choices)
@@ -946,7 +1181,7 @@ server <- function(input, output, session) {
   observeEvent(input$flip_summary_today_rows_selected, {
     if (!is.null(input$flip_summary_today_rows_selected)) {
     updateNavbarPage(session, "main_navbar", selected = "Flip-Analyse")
-    updateTabsetPanel(session, "flip_tabs", selected = "Kader & Historie")
+    updateTabsetPanel(session, "flip_tabs", selected = "Historie (Tabelle)")
     }
   })
   
@@ -961,31 +1196,46 @@ server <- function(input, output, session) {
     )
   })
   
-  # ---- Daten / df / list / functions ----
+  # Gebotsprofil range 
+  observe({
+    dat <- gebotsprofil_clean() 
+    if (nrow(dat) == 0) return()
+    min_date <- min(dat$Datum)
+    max_date <- max(dat$Datum)
+    
+    updateSliderInput(session, "mwclass_date_range",
+                      min = min_date,
+                      max = max_date,
+                      value = c(min_date, max_date)
+    )
+  })
   
-  ## ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
-  
-  sp_tm <- read.csv(
-    "data/spielplan_TM_2025.csv",
-    sep = ";", header = TRUE, stringsAsFactors = FALSE,
-    fileEncoding = "UTF-8", check.names = FALSE, na.strings = c("", "NA")
-  ) %>%
-    transmute(
-      Spieltag = as.integer(Spieltag),
-      Datum    = as.Date(Datum),
-      Heim     = trimws(enc2utf8(Heim)),
-      Gast     = trimws(enc2utf8(Gast))
-    ) %>%
-    distinct() %>%
-    arrange(Spieltag, Datum, Heim, Gast)
+  # flip_player_select
+  observe({
+    choices <- c("Alle", sort(unique(flip_data()$Besitzer)))
+    cur <- isolate(input$flip_player_select)
+    sel <- if (!is.null(cur) && cur %in% choices) cur else "Alle"
+    updateSelectInput(session, "flip_player_select", choices = choices, selected = sel)
+  })
   
   
+  # verein_filter
+  observe({
+    updateSelectizeInput(session, "verein_filter",
+                         choices = sort(unique(ap_df$Verein)), server = TRUE)
+  })
+  
+  # ---- teams_df / transfers / transfermarkt / ap_df / tm_df / st_df ----
+  
+  # könnte global
   teams_df <- read.csv2("data/TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
   
   transfers <- read.csv2("data/TRANSFERS_all.csv", sep = ";", na.strings = c("", "NA")) %>%
-      mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
+    mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
+           Hoechstgebot = as.numeric(Hoechstgebot),
+           Zweitgebot = as.numeric(Zweitgebot)) %>% 
+    mutate(Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot)) #Umwandeln von Fehlgebot von Alfons
   
-  # Basis einmal vor dem Summieren abzweigen
   transactions_base <- read_delim(
     "data/TRANSACTIONS.csv",
     delim = ";",
@@ -996,14 +1246,14 @@ server <- function(input, output, session) {
       Spieler = as.character(Spieler),
       Manager = word(Spieler, 1)
     ) %>%
-    filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000))
+    filter(!(Datum == "01.06.2025" & Manager == "Alfons" & Transaktion == -166000)) #Herausnehmen von Fehlgebot von Alfons
   
-  # Dein unverändertes Objekt für andere Plots
+  # Transaktionen für alle Plots inkl. Korrekturen
   transactions <- transactions_base %>%
     group_by(Manager) %>%
     summarise(Transaction_Summe = sum(Transaktion, na.rm = TRUE), .groups = "drop")
   
-  # Platzierungen auf Basis der gleichen Quelle
+  # Transaktionen für Platzierungen Plot
   patzierungen_df <- transactions_base %>%
     # nur echte Platzierungsboni, Cupunio o.ä. raus
     filter(str_detect(
@@ -1016,12 +1266,12 @@ server <- function(input, output, session) {
     complete(Manager, Platzierung = 1:8, fill = list(Anzahl = 0)) %>%
     arrange(Manager, Platzierung)
   
-  
   transfermarkt <- read_csv2("data/TRANSFERMARKT.csv",
                              locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
                              show_col_types = FALSE) %>%
     mutate(TM_Stand = as.Date(TM_Stand, format = "%d.%m.%Y"))
   
+  # ALL_PLAYERS
   ap_df <- read.csv2("data/ALL_PLAYERS.csv", sep = ";", na.strings = c("", "NA"), stringsAsFactors = FALSE, fileEncoding = "UTF-8") %>% 
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
            Marktwert = as.numeric(Marktwert))
@@ -1033,21 +1283,24 @@ server <- function(input, output, session) {
     ungroup() %>%
     select(Spieler, StatusText, StatusIcon)
   
+  # COMP_TM_RESTZEIT
   tm_df <- read.csv2("data/COMP_TM_RESTZEIT.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
   
+  # STANDINGS
   st_df <- read_csv2("data/STANDINGS.csv", 
-                            col_types = cols(
-                              Manager = col_character(),
-                              Teamwert = col_double(),
-                              Gesamtpunkte = col_double(),
-                              `letzte Punkte` = col_double(),
-                              Datum = col_character()
-                            ),
-                            locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
-                            show_col_types = FALSE
+                     col_types = cols(
+                       Manager = col_character(),
+                       Teamwert = col_double(),
+                       Gesamtpunkte = col_double(),
+                       `letzte Punkte` = col_double(),
+                       Datum = col_character()
+                     ),
+                     locale = locale(encoding = "UTF-8", decimal_mark = ",", grouping_mark = "."),
+                     show_col_types = FALSE
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
-
+  
+  # com_analytics_all_players
   ca_df <- read_delim(
     "data/com_analytics_all_players.csv",
     delim = ";",
@@ -1070,11 +1323,12 @@ server <- function(input, output, session) {
       Verletzungsanfälligkeit = Verletzungsanfälligkeit
     )
   
-  #Kaufempfehung etc.
+  # com_analytics_transfer_market_computer
   ca2_df <- read_delim(
     "data/com_analytics_transfer_market_computer.csv",
     delim = ";",
     locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
+    na = c("", "NA", "N/A", "n/a", "-"),
     show_col_types = FALSE
   ) %>%
     mutate(
@@ -1083,10 +1337,10 @@ server <- function(input, output, session) {
     ) %>%
     filter(Datum == max(Datum, na.rm = TRUE))
   
-  #All player hist. MW
+  # marktwertverlauf_gesamt
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
-  #Angebote
+  # ANGEBOTE
   angebote <- read.csv2(
     "data/ANGEBOTE.csv",
     sep = ";",
@@ -1095,8 +1349,94 @@ server <- function(input, output, session) {
     check.names = FALSE) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) 
   
-  # --- Reactive: Trend + Verein hinzufügen ---
+  # ---- LI Info ----
+  li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+  
+  # Global nicht möglich
+  spieler_stats_spielplan <- reactive({
+    req(input$transfermarkt_tabs == "spieler_info")
+    
+    path <- file.path("data", "PLAYER_STATS.csv")
+    validate(need(file.exists(path), "PLAYER_STATS.csv fehlt."))
+    
+    read.csv(
+      path,
+      sep = ";", header = TRUE, stringsAsFactors = FALSE,
+      fileEncoding = "UTF-8", check.names = FALSE,
+      na.strings = c("", "NA")
+    ) %>%
+      mutate(
+        Datum    = as.Date(Datum, format = "%d.%m.%Y"),
+        Spieler  = trimws(enc2utf8(Spieler)),
+        Spieltag = suppressWarnings(as.integer(Spieltag)),
+        Note     = suppressWarnings(as.numeric(Note)),
+        Punkte   = suppressWarnings(as.integer(Punkte)),
+        Status   = trimws(enc2utf8(Status))
+      ) %>%
+      filter(!is.na(Spieler), Spieler != "", !is.na(Spieltag)) %>%
+      distinct(Spieler, Spieltag, .keep_all = TRUE) %>%
+      arrange(Spieler, Spieltag) %>%
+      # Scrape-Datum umbenennen, damit es keinen Konflikt gibt
+      rename(Datum_scrape = Datum) %>%
+      # aktuellen Verein je Spieler inline aus ap_df ableiten (neueste Zeile)
+      left_join({
+        ap_df %>%
+          filter(!is.na(Spieler), Spieler != "", !is.na(Verein), Verein != "") %>%
+          select(Spieler, Verein, Datum) %>% 
+          arrange(Spieler, Datum) %>%
+          group_by(Spieler) %>%
+          filter(Datum == max(Datum, na.rm = TRUE)) %>%
+          slice_tail(n = 1) %>%
+          ungroup() %>%
+          transmute(
+            Spieler = trimws(enc2utf8(Spieler)),
+            Verein  = trimws(enc2utf8(Verein))
+          )
+      }, by = "Spieler") %>%
+      # Spielplan joinen (viele-zu-viele ok, wird danach gefiltert)
+      left_join(
+        sp_tm %>% rename(Matchdatum = Datum),
+        by = "Spieltag",
+        relationship = "many-to-many"
+      ) %>%
+      # Heim/Gast + Gegner bestimmen
+      mutate(
+        HeimGast = case_when(
+          Verein == Heim ~ "Heim",
+          Verein == Gast ~ "Gast",
+          TRUE ~ NA_character_
+        ),
+        Gegner = case_when(
+          HeimGast == "Heim" ~ Gast,
+          HeimGast == "Gast" ~ Heim,
+          TRUE ~ NA_character_
+        )
+      ) %>%
+      # nur gültige Paarungen behalten
+      filter(!is.na(HeimGast), !is.na(Gegner), !is.na(Matchdatum)) %>%
+      # falls wegen Duplikaten je Spieltag >1 Zeile übrig bleibt, eine behalten
+      group_by(Spieler, Spieltag) %>%
+      slice_head(n = 1) %>%
+      ungroup() %>%
+      # Finale Spalten setzen: Datum = Matchdatum
+      transmute(
+        Spieler,
+        Verein,
+        Spieltag,
+        Datum   = Matchdatum,
+        Gegner,
+        HeimGast,
+        Note,
+        Punkte,
+        Status
+      ) %>%
+      arrange(Spieler, Spieltag, Datum)
+  })
+  
+  # --- Angebotanalyse-reactive ---
   dat_rel_angebote <- reactive({
+    req(input$main_navbar == "Transfermarkt")
+    
     betrag_col <- if ("Angebot (€)" %in% names(angebote)) "Angebot (€)" else "Angebot"
     
     a <- angebote %>%
@@ -1129,12 +1469,11 @@ server <- function(input, output, session) {
       )
   })
   
-  ## ---- Liga Insider Info ----
-  li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
-  
+  # ---- LI Info ----
   match_li_row <- reactive({
-    req(input$spieler_select2)
+    req(input$main_navbar == "Transfermarkt", input$spieler_select2)
     req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
+    
     k <- norm_key(input$spieler_select2)
     tmp <- li_df
     tmp$k <- norm_key(tmp$Comunio_Name)
@@ -1142,61 +1481,7 @@ server <- function(input, output, session) {
     if (nrow(out) == 0) return(out)
     out[1, , drop = FALSE]
   })
-  
-  safe_val <- function(v) ifelse(length(v) == 0 || is.na(v) || !nzchar(as.character(v)), "", as.character(v))
-  safe_img <- function(url, width_px) {
-    url <- safe_val(url)
-    if (!nzchar(url)) return(NULL)
-    tags$img(src = url, width = width_px, onerror = "this.style.display='none'")
-  }
-  
-  ## ---- nickname_mapping ----
-  nickname_mapping <- c(
-    "Alfon" = "Alfons",
-    "Nico_2510" = "Nico",
-    "HenzgenT" = "Thomas",
-    "Hosche" = "Christoph",
-    "Crunch" = "Christian",
-    "Dr. Bier" = "Dominik",
-    "Calli" = "Pascal",
-    "Computer" = "Computer"
-  )
-  
-  # Mapping von Vereinsnamen zu Dateinamen
-  logo_map <- c(
-    "1. FC Köln" = "1 FC Köln.png",
-    "Bayer 04 Leverkusen" = "Bayer Leverkusen.png",
-    "Borussia Dortmund" = "Borussia Dortmund.png",
-    "Borussia Mönchengladbach" = "Borussia Mönchengladbach.png",
-    "Eintracht Frankfurt" = "Eintracht Frankfurt.png",
-    "FC Augsburg" = "FC Augsburg.png",
-    "FC Bayern München" = "FC Bayern München.png",
-    "Hamburger SV" = "Hamburger SV.png",
-    "1. FC Heidenheim 1846" = "Heidenheim.png",
-    "RB Leipzig" = "Leipzig.png",
-    "1. FSV Mainz 05" = "Mainz 05.png",
-    "Sport-Club Freiburg" = "SC Freiburg.png",
-    "FC St. Pauli" = "St Pauli.png",
-    "SV Werder Bremen" = "SV Werder Bremen.png",
-    "TSG Hoffenheim" = "TSG Hoffenheim.png",
-    "1. FC Union Berlin" = "Union Berlin.png",
-    "VfB Stuttgart" = "VfB Stuttgart.png",
-    "VfL Wolfsburg" = "VfL Wolfsburg.png"
-  )
-  
-  ## ---- data_all ----
-  data_all <- reactive({
-    transfers <- transfers %>%
-      mutate(
-        Datum = as.Date(Datum, format = "%d.%m.%Y"),
-        Hoechstgebot = as.numeric(Hoechstgebot),
-        Zweitgebot = as.numeric(Zweitgebot),
-        Hoechstgebot = ifelse(Datum == as.Date("2025-05-30") & Spieler == "Hranáč", 166000, Hoechstgebot) #Umwandeln von Fehlgebot von Alfons
-      )
-    
-    list(transfers = transfers, transfermarkt = transfermarkt)
-  })
-  
+
   standings_df <- reactive({
     st_df %>% 
       group_by(Manager) %>%
@@ -1204,11 +1489,9 @@ server <- function(input, output, session) {
       ungroup()
   }) 
   
-  ## ---- gebotsprofil_clean (MW nur Vortag oder davor!) ----
+  # ---- gebotsprofil_clean ----
   gebotsprofil_clean <- reactive({
-    dat <- data_all()
-    transfers <- dat$transfers
-    transfermarkt <- dat$transfermarkt
+    req(transfers, transfermarkt)
     
     gebotsprofil <- lapply(1:nrow(transfers), function(i) {
       zeile <- transfers[i, ]
@@ -1244,7 +1527,7 @@ server <- function(input, output, session) {
       filter(Bieter != "Computer" & !is.na(MW_vortag))
   })
   
-  ## ---- für slider ----
+  # ---- gebotsprofil range ----
   gebotsprofil_mwclass_filtered <- reactive({
     req(input$mwclass_date_range)
     
@@ -1252,32 +1535,7 @@ server <- function(input, output, session) {
       filter(Datum >= input$mwclass_date_range[1], Datum <= input$mwclass_date_range[2])
   })
   
-  observe({
-    dat <- gebotsprofil_clean()  # oder woher du deine Daten nimmst
-    if (nrow(dat) == 0) return()
-    min_date <- min(dat$Datum)
-    max_date <- max(dat$Datum)
-    
-    updateSliderInput(session, "mwclass_date_range",
-                      min = min_date,
-                      max = max_date,
-                      value = c(min_date, max_date)
-    )
-  })
-  
-  ## ---- flip_player_select ----
-  observe({
-    updateSelectInput(session, "flip_player_select",
-                      choices = sort(unique(flip_data()$Besitzer)))
-  })
-  
-  ## ---- verein_filter ----
-  observe({
-    updateSelectizeInput(session, "verein_filter",
-                         choices = sort(unique(ap_df$Verein)), server = TRUE)
-  })
-  
-  ## ---- MW Klasse vergeben ----
+  # ---- MW Klasse vergeben ----
   gebotsprofil_mwclass <- reactive({
     gebotsprofil_clean() %>%
       mutate(
@@ -1319,64 +1577,8 @@ server <- function(input, output, session) {
       arrange(Bieter, MW_Klasse)
   })
   
-
-  ## ---- FUNKTIONEN ----
-  ### ---- Funktion MW vom Vortag suchen ----
-  get_MW_vortag <- function(spieler, datum, transfermarkt) {
-    tm <- transfermarkt %>%
-      filter(Spieler == spieler, TM_Stand <= (datum - days(1))) %>%
-      arrange(desc(TM_Stand)) %>%
-      slice(1)
-    if (nrow(tm) == 1) tm$Marktwert else NA
-  }
-  
-  ### ---- MW-Klasse bestimmen ----
-  get_mw_klasse <- function(mw) {
-    if (mw < 5e5) {
-      "<0.5 Mio"
-    } else if (mw < 1e6) {
-      "0.5–1 Mio"
-    } else if (mw < 2.5e6) {
-      "1–2.5 Mio"
-    } else if (mw < 5e6) {
-      "2.5–5 Mio"
-    } else if (mw < 1e7) {
-      "5–10 Mio"
-    } else {
-      ">10 Mio"
-    }
-  }
-  
-  ### ---- Hilfsfunktion, um pro Zeile einen Shiny-Button zu erzeugen ----
-  shinyButton <- function(id, label = "→") {
-    sprintf(
-      '<button class="btn btn-xs btn-primary" onclick="Shiny.setInputValue(\'transfer_row\', %s, {priority: \'event\'})">%s</button>',
-      id, label
-    )
-  }
-  
-  ### ---- Render UIs ----
-  output$manager_select_ui <- renderUI({
-    # Besitzer ohne "Computer"
-    mgrs <- setdiff(unique(transfers$Besitzer), "Computer")
-    selectInput(
-      inputId  = "manager_select",
-      label    = "Manager auswählen:",
-      choices  = sort(mgrs),
-      selected = sort(mgrs)[5]
-    )
-  })
-  
-  ### ---- Helper function für LI-Mapping ----
-  norm_key <- function(x) {
-    x <- enc2utf8(as.character(x))
-    x <- tolower(trimws(x))
-    x <- chartr("ß", "ss", x)
-    x
-  }
-  
-  ### ---- Helper function für GPT ----
-  ## Helpers 
+  # ---- HELPER: GPT prompt builder ----
+  # für Spieler-Info Seite (muss im server sein, da sie auf Datensätze zugreift, die global nicht vorhanden sind) 
   get_verein <- function(sp) {
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
     sel  <- norm(sp)
@@ -1386,7 +1588,6 @@ server <- function(input, output, session) {
         mutate(.k = norm(Spieler), Datum = as.Date(Datum)) %>%
         filter(.k == sel)
       if (nrow(tmp) > 0) {
-        today <- Sys.Date()
         row <- tmp %>% filter(Datum == today) %>% slice_tail(n=1)
         if (nrow(row) == 0) row <- tmp %>% arrange(desc(Datum)) %>% slice_head(n=1)
         ve <- as.character(row$Verein[1])
@@ -1405,49 +1606,6 @@ server <- function(input, output, session) {
     v <- as.character(tmp2[[col]][1]); ifelse(is.na(v), "", v)
   }
   
-  build_prompt <- function(sp, ve) {
-    today <- format(Sys.Date(), "%Y-%m-%d")
-    paste0(
-      "Gib GENAU dieses Format zurück:\n",
-      "Spieler\nVerein\n\n",
-      ">>> Die erste Zeile muss mit '", sp, "' beginnen. ",
-      ">>> Die zweite Zeile muss mit '", ve, "' beginnen. ",
-      "Falls der Verein leer/unsicher ist, trage den korrekt ermittelten aktuellen Verein dort ein. <<<\n",
-      "Info: Kurz, faktenbasiert zu Rolle/Status; Einsatz 1–2 Wochen; Trainerstimme; Verletzung; Falls Verletzung, Rückkehrzeitpunkt; Wechsel. ",
-      "Keine Semikolons in 'Info'. KEINE Markdown-Links. Jede Aussage mit [1], [2] … belegen. ",
-      "Am Ende von 'Info' eine neue Zeile 'Quellen:' und die URLs mit Datum YYYY-MM-DD, bevorzugt Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, lokale Qualitätsmedien. ",
-      "Meide Social Media.\n\n",
-      "Stammplatz: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Potenzial: <Zahl 0.0–3.0 in 0.5-Schritten>\n",
-      "Wechselwahrscheinlichkeit: <Zahl 0.0–3.0 in 0.5-Schritten>\n\n",
-      "Suchfenster: primär letzte 60 Tage, sonst ältere verlässliche Quellen mit Datum. ",
-      "Stand: ", today, ". Antworte NUR in diesem Format."
-    )
-  }
-  
-  make_links <- function(x){
-    # 1) Markdown-Links -> HTML
-    x <- gsub("\\[([^\\]]+)\\]\\((https?://[^)\\s]+)\\)",
-              "<a href='\\2' target='_blank'>\\1</a>", x, perl=TRUE)
-    
-    # 2) Nackte URLs -> HTML (breiter Zeichensatz, ohne bereits verlinkte)
-    pat <- "(?<!href=['\"])\\bhttps?://[A-Za-z0-9\\-._~:/?#\\[\\]@!$&'()*+,;=%]+"
-    m <- gregexpr(pat, x, perl=TRUE)
-    regmatches(x, m) <- lapply(regmatches(x, m), function(urls){
-      vapply(urls, function(u){
-        # evtl. angehängte Satzzeichen am Ende abschneiden
-        u2 <- sub("[)\\]\\},.?!:;]+$", "", u)
-        sprintf("<a href='%s' target='_blank'>%s</a>", u2, u2)
-      }, character(1))
-    })
-    x
-  }
-  
-  ### ---- Helper function für Alle Teams Rechner ----
-  
-  safe_id <- function(x) gsub("[^A-Za-z0-9]+", "_", x)
-  cb_id   <- function(manager, spieler) paste0("sel__", safe_id(manager), "__", safe_id(spieler))
-  
   mw_aktuell_rx <- reactive({
     gesamt_mw_roh %>%
       group_by(Spieler) %>%
@@ -1455,12 +1613,12 @@ server <- function(input, output, session) {
       summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
   })
   
-  
   # ---- DASHBOARD ----
-  
   ## ---- News ----
   
   output$dashboard_news <- renderUI({
+    req(input$main_navbar == "Dashboard")
+    
     req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
     req(!is.null(mein_kader_df()))
     kad <- mein_kader_df()
@@ -1495,7 +1653,6 @@ server <- function(input, output, session) {
     news$dt <- dt
     news$d  <- as.Date(news$dt, tz = "Europe/Berlin")
     
-    today <- as.Date(Sys.time(), tz = "Europe/Berlin")
     news <- news[!is.na(news$d) & news$d >= (today - 7) & news$d <= today, , drop = FALSE]
     if (nrow(news) == 0) return(div("Keine News der letzten 7 Tage"))
     
@@ -1530,23 +1687,25 @@ server <- function(input, output, session) {
   })
   
   ## ---- Transferaktivitäten ----
-  output$transfer_summary_today <- DT::renderDT({
-    selected_date <- if (input$flip_day == "Gestern") Sys.Date() - 1 else Sys.Date()
+  output$transfer_summary_today <- renderDT({
+    req(input$main_navbar == "Dashboard")
+    
+    selected_date <- if (input$flip_day == "Gestern") today - 1 else today
     
     df <- transfers %>%
       filter(Datum == selected_date, Hoechstbietender != "Computer") %>%
+      select(Spieler, Preis = Hoechstgebot, Hoechstbietender) %>%
       left_join(
-        ap_df %>% filter(Datum == selected_date)   %>% select(Spieler, Marktwert_today = Marktwert),
+        ap_df %>% filter(Datum == selected_date) %>% transmute(Spieler, Marktwert_today = Marktwert),
         by = "Spieler"
       ) %>%
       left_join(
-        ap_df %>% filter(Datum == selected_date-1) %>% select(Spieler, Marktwert_prev  = Marktwert),
+        ap_df %>% filter(Datum == selected_date - 1) %>% transmute(Spieler, Marktwert_prev = Marktwert),
         by = "Spieler"
       ) %>%
       mutate(
-        Preis     = as.numeric(Hoechstgebot),
-        MW_Vortag = as.numeric(Marktwert_prev),
-        MW_Heute  = as.numeric(Marktwert_today),
+        MW_Vortag = Marktwert_prev,
+        MW_Heute  = Marktwert_today,
         Diff_pct  = ifelse(!is.na(MW_Vortag) & MW_Vortag > 0,
                            100 * (Preis - MW_Vortag) / MW_Vortag,
                            NA_real_),
@@ -1596,8 +1755,10 @@ server <- function(input, output, session) {
   })
   
   ## ---- Flip-Aktivitäten ----
-  output$flip_summary_today <- DT::renderDT({
-    selected_date <- if (input$flip_day == "Gestern") Sys.Date() - 1 else Sys.Date()
+  output$flip_summary_today <- renderDT({
+    req(input$main_navbar == "Dashboard")
+    
+    selected_date <- if (input$flip_day == "Gestern") today - 1 else today
     
     df <- flip_data() %>%
       filter(Verkaufsdatum == selected_date) %>%
@@ -1619,6 +1780,8 @@ server <- function(input, output, session) {
   
   ## ---- Marktwerttrend ----
   output$mw_zeitachse_preview <- renderPlot({
+    req(input$main_navbar == "Dashboard")
+    
     # Vorhersage optional holen
     pred <- tryCatch(mw_pred(), error = function(e) NULL)
     info <- if (!is.null(pred)) pred$info_txt else NULL
@@ -1658,7 +1821,9 @@ server <- function(input, output, session) {
   
   
   ## ---- Kontostände ----
-  output$kreditrahmen_uebersicht_preview <- DT::renderDT({
+  output$kreditrahmen_uebersicht_preview <- renderDT({
+    req(input$main_navbar == "Dashboard")
+    
     kapital_df <- kapital_df_reactive() %>%
       select(
         Manager,
@@ -1673,7 +1838,7 @@ server <- function(input, output, session) {
     
     idx_vk <- which(names(kapital_df) == "Verfügbares Kapital") - 1L
     
-    DT::datatable(
+    datatable(
       kapital_df,
       rownames = FALSE,
       colnames = c("Manager","Teamwert (€)","Kontostand (€)","Teamwertpotenzial (€)","Verfügbares Kapital (€)"),
@@ -1700,6 +1865,7 @@ server <- function(input, output, session) {
   ## ---- Flip-Preview ----
   output$flip_preview <- renderPlot({
     req(input$main_navbar == "Dashboard")
+    
     df <- flip_data() %>%
       group_by(Besitzer) %>%
       summarise(Gesamtgewinn = sum(Gewinn, na.rm = TRUE), .groups = "drop")
@@ -1727,20 +1893,7 @@ server <- function(input, output, session) {
   
   # ---- MARKTWERTENTWICKLUNG ----
   ## ---- Gesamtmarktwerte ----
-  # Manuell zusätzliche Tagesdaten ergänzen
-  manuelle_werte <- tibble(
-    Datum = as.Date(c(
-      "2025-06-01", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05",
-      "2025-06-06", "2025-06-07", "2025-06-08", "2025-06-09", "2025-06-10",
-      "2025-06-11", "2025-06-12", "2025-06-13", "2025-06-14", "2025-06-15"
-    )),
-    Marktwert = c(
-      1487390000, 1458940000, 1530070000, 1527560000, 1568600000,
-      1566740000, 1609040000, 1575690000, 1603080000, 1569800000,
-      1587530000, 1556450000, 1587250000, 1537530000, 1549230000
-    )
-  )
-  
+
   # CSV + manuelle Werte kombinieren
   gesamt_mw_roh <- ap_df %>% 
     bind_rows(manuelle_werte)
@@ -1951,7 +2104,7 @@ server <- function(input, output, session) {
     df_plot_norm <- df_plot %>%
       left_join(startwerte, by = "Klasse") %>%
       mutate(MW_normiert = MW_Ø / Start_MW) %>%
-      filter(Datum <= Sys.Date()- 365)
+      filter(Datum <= today - 365)
     
     
     ggplot(df_plot_norm, aes(x = Datum, y = MW_normiert, color = Klasse)) +
@@ -1962,10 +2115,10 @@ server <- function(input, output, session) {
         x = "",
         color = "MW-Klasse"
       )  + 
-      geom_vline(xintercept = as.numeric(Sys.Date() - 365), color = "darkred", linetype = "dashed", linewidth = 1) +
+      geom_vline(xintercept = as.numeric(today - 365), color = "darkred", linetype = "dashed", linewidth = 1) +
       annotate(
         "text",
-        x = Sys.Date() - 365,
+        x = today - 365,
         y = 0.7,  # ggf. anpassen
         label = "Heute vor 1 Jahr",
         color = "darkred",
@@ -2053,10 +2206,10 @@ server <- function(input, output, session) {
       ) +
       scale_color_brewer(palette = "Paired") +
       coord_cartesian(ylim = c(0.6, 1.2)) +
-      geom_vline(xintercept = as.numeric(Sys.Date()), color = "darkred", linetype = "dashed", linewidth = 1) +
+      geom_vline(xintercept = as.numeric(today), color = "darkred", linetype = "dashed", linewidth = 1) +
       annotate(
         "text",
-        x = Sys.Date(),
+        x = today,
         y = 0.7,  # ggf. anpassen
         label = "Heute",
         color = "darkred",
@@ -2071,33 +2224,6 @@ server <- function(input, output, session) {
   
   
   ## ---- Hist. Martkwertverläufe - Chronologie ----
-  
-  data_path <- "./global_MW"
-  
-  seasons <- c("2004-05", "2005-06", "2006-07", "2007-08", "2008-09",
-               "2009-10", "2010-11", "2011-12", "2012-13", "2013-14",
-               "2014-15", "2015-16", "2016-17", "2017-18", "2018-19",
-               "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "Sommerpause_2021", "Sommerpause_2024")
-  
-  # Nur die regulären Saisons (ohne Sommerpause)
-  real_seasons <- seasons[!grepl("^Sommerpause", seasons)]
-  n_real       <- length(real_seasons)
-  
-  load_season_data <- function(season) {
-    file_name <- file.path(data_path, paste0("historic_market_values_", season, ".csv"))
-    if (!file.exists(file_name)) return(NULL)
-    readr::read_csv(file_name, show_col_types = FALSE) %>%
-      # Spalte für Jahresanfang in 2025 nur für „Sommerpause“ umschreiben
-      mutate(
-        Datum_raw = as.Date(Datum),
-        Datum = if (grepl("^Sommerpause", season)) {
-          as.Date(format(Datum_raw, "2025-%m-%d"))
-        } else {
-          Datum_raw
-        },
-        Saison = season
-      )
-  }
   
   # Alle Saison-Daten laden
   all_season_data <- reactive({
@@ -2171,7 +2297,6 @@ server <- function(input, output, session) {
       ungroup()
     
     # Aktuell: Gesamtmarktwert wie oben normieren
-    today <- Sys.Date()
     current_year <- format(today, "%Y")
     saison_start_this_year <- as.Date(paste0(current_year, "-07-01"))
     t0 <- as.numeric(today - saison_start_this_year)
@@ -2235,7 +2360,6 @@ server <- function(input, output, session) {
   # Select top 4 similar seasons
   similar_top4 <- reactive({
     L <- 100
-    today <- Sys.Date()
     saison_start_this_year <- as.Date(paste0(format(today, "%Y"), "-07-01"))
     t0 <- as.numeric(today - saison_start_this_year)
     
@@ -2349,7 +2473,6 @@ server <- function(input, output, session) {
     req(nrow(df) > 0)
     req(input$selected_seasons)
     
-    today <- Sys.Date()
     current_year <- format(today, "%Y")
     saison_start_this_year <- as.Date(paste0(current_year, "-07-01"))
     days_since_start_today <- as.numeric(today - saison_start_this_year)
@@ -2598,7 +2721,6 @@ server <- function(input, output, session) {
         data = df,
         mapping = aes(x = wochentag, y = pct_change, colour = week_lbl),
         inherit.aes = FALSE,
-        groupOnX = TRUE,
         size = 4, cex = 1.2, dodge.width = 0.6, show.legend = TRUE
       ) +
       geom_hline(yintercept = 0, linewidth = 0.4) +
@@ -2933,7 +3055,6 @@ server <- function(input, output, session) {
       } else {
         # --- Fallback kNN ohne UI-Auswahl (gleiches L/k wie oben verwenden) ---
         L <- 100; k <- 5
-        today <- as.Date(now)
         saison_start_this_year <- as.Date(paste0(format(today, "%Y"), "-07-01"))
         t0 <- as.numeric(today - saison_start_this_year)
         
@@ -3053,8 +3174,8 @@ server <- function(input, output, session) {
     ts_df <- pred %>%
       mutate(
         horizon = case_when(
-          run_date == Datum - 1L ~ "T-1→Heute",
-          run_date == Datum - 2L ~ "T-2→Heute",
+          run_date == Datum - 1L ~ "T-1",
+          run_date == Datum - 2L ~ "T-2",
           TRUE ~ NA_character_
         )
       ) %>%
@@ -3102,23 +3223,24 @@ server <- function(input, output, session) {
     
     tibble::tibble(
       Modell   = c("M1", "M1", "M2", "M2", "kNN"),
-      Horizont = c("T-1→Heute", "T-2→Heute", "T-1→Heute", "T-2→Heute", "T-1→Heute"),
+      Horizont = c("T-1", "T-2", "T-1", "T-2", "T-1"),
       Acc      = c(
-        pick("M1","T-1→Heute","acc"),
-        pick("M1","T-2→Heute","acc"),
-        pick("M2","T-1→Heute","acc"),
-        pick("M2","T-2→Heute","acc"),
+        pick("M1","T-1","acc"),
+        pick("M1","T-2","acc"),
+        pick("M2","T-1","acc"),
+        pick("M2","T-2","acc"),
         acc_knn
       ),
       MAE      = c(
-        pick("M1","T-1→Heute","mae"),
-        pick("M1","T-2→Heute","mae"),
-        pick("M2","T-1→Heute","mae"),
-        pick("M2","T-2→Heute","mae"),
+        pick("M1","T-1","mae"),
+        pick("M1","T-2","mae"),
+        pick("M2","T-1","mae"),
+        pick("M2","T-2","mae"),
         mae_knn
       )
     )
   })
+  
   
   #### ---- Vorhersagen-Check Tabelle ----
   output$mw_pred_ts_metrics <- renderUI({
@@ -3237,7 +3359,7 @@ server <- function(input, output, session) {
       scale_color_manual(
         name   = NULL,
         breaks = c("T-2→Heute", "T-1→Heute", "kNN T-1", "Ist-Wert"),
-        values = c("T-1→Heute" = "red", "T-2→Heute" = "blue", "kNN T-1" = "steelblue", "Ist-Wert" = "black")
+        values = c("T-1→Heute" = "red", "T-2→Heute" = "blue", "kNN T-1" = "grey90", "Ist-Wert" = "black")
       ) +
       labs(
         caption = "Bis inkl. 25.10: Modell 1 (2-Tages-/Wochenrhythmus).  Ab 26.10: Modell 2 (Lag7 + Saison-Boost).  kNN: Ähnlichkeits-Prognose.",
@@ -3279,65 +3401,65 @@ server <- function(input, output, session) {
         run_date %in% c(Datum - 1L, Datum - 2L)
       ) %>%
       mutate(
-        horizon = ifelse(run_date == Datum - 1L, "T-1→Heute", "T-2→Heute")
+        horizon = ifelse(run_date == Datum - 1L, "T-1", "T-2")
       )
     
     validate(need(nrow(cmp) > 0, "Noch keine passenden Vorhersagen für den letzten Markttag."))
     
-    # kNN T-1 für letzten Markttag
+    # Reihenfolge links T-1, rechts T-2
+    x_levels <- c("T-1","T-2")
+    cmp$horizon <- factor(cmp$horizon, levels = x_levels)
+    
+    # kNN T-1 Punkt bei T-1
     knn_val <- pred %>%
       filter(Datum == last_actual_day, run_date == Datum - 1L) %>%
       summarise(v = mean(knn_delta, na.rm = TRUE), .groups = "drop") %>%
       pull(v)
     if (!is.finite(knn_val)) knn_val <- NA_real_
-    knn_pt <- data.frame(horizon = factor("T-1→Heute", levels = c("T-2→Heute","T-1→Heute")),
-                         y = knn_val)
-    
-    x_levels <- c("T-2→Heute","T-1→Heute")
-    cmp$horizon <- factor(cmp$horizon, levels = x_levels)
+    knn_pt <- data.frame(horizon = factor("T-1", levels = x_levels), y = knn_val)
     
     ggplot(data = cmp, aes(x = horizon)) +
-      # Prognose T-2 (blau)
-      {if (any(cmp$horizon == "T-2→Heute")) geom_point(
-        data = subset(cmp, horizon == "T-2→Heute"),
-        aes(y = E_delta, color = "T-2"), size = 3)} +
-      {if (any(cmp$horizon == "T-2→Heute")) geom_errorbar(
-        data = subset(cmp, horizon == "T-2→Heute"),
-        aes(ymin = lwr, ymax = upr, color = "T-2"),
-        width = 0.15, linewidth = 0.4, linetype = "dashed")} +
-      
       # Prognose T-1 (rot)
-      {if (any(cmp$horizon == "T-1→Heute")) geom_point(
-        data = subset(cmp, horizon == "T-1→Heute"),
+      {if (any(cmp$horizon == "T-1")) geom_point(
+        data = subset(cmp, horizon == "T-1"),
         aes(y = E_delta, color = "T-1"), size = 3)} +
-      {if (any(cmp$horizon == "T-1→Heute")) geom_errorbar(
-        data = subset(cmp, horizon == "T-1→Heute"),
+      {if (any(cmp$horizon == "T-1")) geom_errorbar(
+        data = subset(cmp, horizon == "T-1"),
         aes(ymin = lwr, ymax = upr, color = "T-1"),
         width = 0.15, linewidth = 0.4, linetype = "dashed")} +
       
-      # kNN T-1 (steelblue), Punkt bei T-1
+      # Prognose T-2 (blau)
+      {if (any(cmp$horizon == "T-2")) geom_point(
+        data = subset(cmp, horizon == "T-2"),
+        aes(y = E_delta, color = "T-2"), size = 3)} +
+      {if (any(cmp$horizon == "T-2")) geom_errorbar(
+        data = subset(cmp, horizon == "T-2"),
+        aes(ymin = lwr, ymax = upr, color = "T-2"),
+        width = 0.15, linewidth = 0.4, linetype = "dashed")} +
+      
+      # kNN T-1
       {if (is.finite(knn_val)) geom_point(
         data = knn_pt, aes(x = horizon, y = y, color = "kNN T-1"),
         size = 3, shape = 15)} +
       
-      # Ist-Wert (schwarz), an beiden x-Werten
+      # Ist-Wert an beiden x
       geom_point(aes(y = actual_delta, color = "Ist-Wert"), shape = 17, size = 3) +
       
       geom_hline(yintercept = 0, linetype = "dotted", linewidth = 0.4) +
       scale_color_manual(
         name = NULL,
-        values = c("T-1" = "red", "T-2" = "blue", "kNN T-1" = "steelblue", "Ist-Wert" = "black")
+        values = c("T-1" = "red", "T-2" = "blue", "kNN T-1" = "grey80", "Ist-Wert" = "black")
       ) +
       labs(
         x = NULL, y = "Δ Marktwert (%)",
         subtitle = paste(
           sprintf("T-1: Δ %s",
-                  ifelse(any(cmp$horizon == "T-1→Heute"),
-                         sprintf("%+.2f%%", cmp$E_delta[cmp$horizon == "T-1→Heute"][1]),
+                  ifelse(any(cmp$horizon == "T-1"),
+                         sprintf("%+.2f%%", cmp$E_delta[cmp$horizon == "T-1"][1]),
                          "n/a")),
           sprintf("T-2: Δ %s",
-                  ifelse(any(cmp$horizon == "T-2→Heute"),
-                         sprintf("%+.2f%%", cmp$E_delta[cmp$horizon == "T-2→Heute"][1]),
+                  ifelse(any(cmp$horizon == "T-2"),
+                         sprintf("%+.2f%%", cmp$E_delta[cmp$horizon == "T-2"][1]),
                          "n/a")),
           sprintf("kNN T-1: %s",
                   ifelse(is.finite(knn_val), sprintf("%+.2f%%", knn_val), "n/a")),
@@ -3347,6 +3469,7 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16) +
       theme(legend.position = "top", plot.title = element_blank())
   })
+  
   
   
   # ---- TRANSFERMARKT ----
@@ -3379,7 +3502,7 @@ server <- function(input, output, session) {
   output$bid_prediction <- renderUI({
     # Welcher Wochentag ist heute?
     today_wd <- factor(
-      weekdays(Sys.Date(), abbreviate = TRUE),
+      weekdays(today, abbreviate = TRUE),
       levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
     )
     
@@ -3405,7 +3528,7 @@ server <- function(input, output, session) {
     HTML(paste0(
       "<div style='margin:8px 0; padding:8px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;'>",
       "<strong>Erwartete Bieter heute (", 
-      format(Sys.Date(), "%A, %d.%m.%Y"), "):</strong> ",
+      format(today, "%A, %d.%m.%Y"), "):</strong> ",
       paste(labels, collapse = " | "),
       "</div>"
     ))
@@ -3413,9 +3536,6 @@ server <- function(input, output, session) {
   
 
   ## ---- Tabelle ----
-  
-  # 1) reactiveVal für den gemeinsamen DataFrame
-  tm_common <- reactiveVal(NULL)
   
   # 2) Observer oder reactive, der tm_common einmal neu berechnet, sobald tm_df oder ap_df sich ändern:
   observeEvent(list(tm_df, ap_df), {
@@ -3536,12 +3656,12 @@ server <- function(input, output, session) {
           ")</span>"
         )
       ) %>%
-      # Fallback: wenn kein Profil-Mean vorliegt, dann einfach base_val anzeigen
+      # Fallback: wenn kein Profil-Mean vorliegt, dann einfach base_val * 1.3 (30% mehr) anzeigen
       mutate(
         IdealesGebot_num = ifelse(is.na(IdealesGebot_num), base_val, IdealesGebot_num),
         IdealesGebot     = ifelse(
           is.na(IdealesGebotProzent),
-          paste0(format(base_val, big.mark=".", decimal.mark=","), " €"),
+          paste0(format(base_val * 1.3, big.mark=".", decimal.mark=","), " €"),
           IdealesGebot
         )
       ) %>%
@@ -3550,7 +3670,6 @@ server <- function(input, output, session) {
     
     # 4) Maximalgebot (90%-Perzentil) dynamisch auf Mindestgebot oder Marktwert
     transfers_clean <- transfers %>%
-      mutate(Hoechstgebot = as.numeric(Hoechstgebot)) %>%
       filter(!is.na(Hoechstgebot))
     
     max_datum <- max(transfers_clean$Datum, na.rm = TRUE)
@@ -3602,12 +3721,12 @@ server <- function(input, output, session) {
           ")</span>"
         )
       ) %>%
-      # Fallback: wenn kein Faktor da, Einfach base_val anzeigen
+      # Fallback: wenn kein Faktor da, Einfach base_val *1.3 anzeigen
       mutate(
         Maximalgebot_num = ifelse(is.na(Maximalgebot_num), base_val, Maximalgebot_num),
         Maximalgebot     = ifelse(
           is.na(MaximalgebotProzent),
-          paste0(format(base_val, big.mark=".", decimal.mark=","), " €"),
+          paste0(format(base_val * 1.3, big.mark=".", decimal.mark=","), " €"),
           Maximalgebot
         )
       ) %>%
@@ -3667,10 +3786,6 @@ server <- function(input, output, session) {
     
     # 6) Historische Punkte & Details mergen
     df <- df %>%
-      left_join(
-        ca_df %>% select(Spieler = SPIELER, `Historische Punkteausbeute` = Historische_Punkteausbeute, Verletzungsanfälligkeit),
-        by = "Spieler"
-      ) %>%
       left_join(
         ca2_df %>%
             select(
@@ -3754,36 +3869,33 @@ server <- function(input, output, session) {
     df <- df %>%
       mutate(
         Gebote_minmax = paste0(
-          "<div>",
-          "<div><strong>Min:</strong> ",
+          "<div style='margin:0;padding:0;line-height:1.1;font-size:12px'>",
+          "<div style='margin:0;padding:0'><strong>Min:</strong> ",
           format(Minimalgebot_num, big.mark=".", decimal.mark=","), " € ",
-          "<button class='btn btn-xs btn-light copy-btn' data-value='", Minimalgebot_num, "' title='Kopieren'>📋</button>",
+          "<button class='btn btn-xs btn-light copy-btn' style='padding:0 4px;line-height:1.1;font-size:11px' data-value='", Minimalgebot_num, "' title='Kopieren'>📋</button>",
           " <span style='font-size:85%;color:#666;'>(",
-          ifelse(is.na(MinimalgebotProzent),"–",
-                 paste0(ifelse(MinimalgebotProzent>0,"+",""), MinimalgebotProzent, "%")),
+          ifelse(is.na(MinimalgebotProzent),"–", paste0(ifelse(MinimalgebotProzent>0,"+",""), MinimalgebotProzent, "%")),
           ")</span></div>",
-          "<div><strong>Ideal:</strong> ",
+          "<div style='margin:0;padding:0'><strong>Ideal:</strong> ",
           format(IdealesGebot_num, big.mark=".", decimal.mark=","), " € ",
-          "<button class='btn btn-xs btn-light copy-btn' data-value='", IdealesGebot_num, "' title='Kopieren'>📋</button>",
+          "<button class='btn btn-xs btn-light copy-btn' style='padding:0 4px;line-height:1.1;font-size:11px' data-value='", IdealesGebot_num, "' title='Kopieren'>📋</button>",
           " <span style='font-size:85%;color:#666;'>(",
-          ifelse(is.na(IdealesGebotProzent),"–",
-                 paste0(ifelse(IdealesGebotProzent>0,"+",""), IdealesGebotProzent, "%")),
+          ifelse(is.na(IdealesGebotProzent),"–", paste0(ifelse(IdealesGebotProzent>0,"+",""), IdealesGebotProzent, "%")),
           ")</span></div>",
-          "<div><strong>Max:</strong> ",
+          "<div style='margin:0;padding:0'><strong>Max:</strong> ",
           format(Maximalgebot_num, big.mark=".", decimal.mark=","), " € ",
-          "<button class='btn btn-xs btn-light copy-btn' data-value='", Maximalgebot_num, "' title='Kopieren'>📋</button>",
+          "<button class='btn btn-xs btn-light copy-btn' style='padding:0 4px;line-height:1.1;font-size:11px' data-value='", Maximalgebot_num, "' title='Kopieren'>📋</button>",
           " <span style='font-size:85%;color:#666;'>(",
-          ifelse(is.na(MaximalgebotProzent),"–",
-                 paste0(ifelse(MaximalgebotProzent>0,"+",""), MaximalgebotProzent, "%")),
+          ifelse(is.na(MaximalgebotProzent),"–", paste0(ifelse(MaximalgebotProzent>0,"+",""), MaximalgebotProzent, "%")),
           ")</span></div>",
           "</div>"
         )
+        
       )
     
     
     # fehlende Spalten auffüllen
-    needed <- c("Spieler","StatusTag","POSITION","Logo","PUNKTE","Punkte pro Spiel","Preis-Leistung", "Verletzungsanfälligkeit",
-                "Historische Punkteausbeute","Marktwert","Zielwert","Mindestgebot", "Gebote_minmax",
+    needed <- c("Logo","Spieler","StatusTag","POSITION","PUNKTE","Punkte pro Spiel","Marktwert","Zielwert","Mindestgebot", "Gebote_minmax","Preis-Leistung",
                 "Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)","action2","action")
     
     
@@ -3800,14 +3912,15 @@ server <- function(input, output, session) {
     DT::datatable(
       sub_df,
       colnames = c(
-        "Spieler"," ","Position","Verein","Punkte","PPS","Preis-Leistung", "<span style='color:red;'>✚</span> Risiko","Hist.","Marktwert",
-        "Zielwert","Mindestgebot","Gebote (Min/Ideal/Max)", "Gebote",
+        "","Spieler","","Position","Punkte","PPS","Marktwert",
+        "Zielwert","Mindestgebot","Gebote (Min/Ideal/Max)","Preis-Leistung", "Gebote",
         "Maximalgebot" = NULL,  # entfällt
         "Empfehlung","Besitzer",
         "Angebotsende","Trend","Info","Rechner",""
       )
       ,
       escape    = FALSE,
+      class = 'compact',
       selection = "none",
       rownames  = FALSE,
       callback = JS(
@@ -3845,12 +3958,15 @@ server <- function(input, output, session) {
         ordering   = TRUE,
         pageLength = 20,
         columnDefs = list(
-          list(className = 'dt-left',  targets = 0:1),
-          list(className = 'dt-right', targets = 2:7),
-          list(className = 'dt-center',targets = ncol(sub_df)-2),
-          list(visible=FALSE, targets=ncol(sub_df) - 1)
+          list(className = 'dt-right', targets = 0),                 
+          list(className = 'dt-left',   targets = c(1, 2)),          
+          list(className = 'dt-center', targets = 3:8),              
+          list(className = 'dt-left',   targets = 9),                
+          list(className = 'dt-center', targets = 10:(ncol(sub_df)-1)),
+          list(visible = FALSE, targets = ncol(sub_df) - 1)        
         )
       )
+      
     ) %>% 
       formatStyle(
         'Verbleibende Zeit',
@@ -3945,7 +4061,6 @@ server <- function(input, output, session) {
     
     news <- news[order(news$dt, decreasing = TRUE, na.last = TRUE), , drop = FALSE]
     
-    today <- as.Date(Sys.time(), tz = "Europe/Berlin")
     rel_label <- function(d) {
       if (is.na(d)) return("")
       diff <- as.integer(today - d)
@@ -3976,7 +4091,7 @@ server <- function(input, output, session) {
   })
   
 
-  # -LI-Leistungsdaten: Summary (Note/Punkte/EQ)
+  # LI-Leistungsdaten: Summary (Note/Punkte/EQ)
   output$spieler_li_perf_summary <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -4091,78 +4206,101 @@ server <- function(input, output, session) {
     
   })
   
-  
-  
+  # MW
   output$spieler_info_mw <- renderPlotly({
-    #### ---- MW ----
-    req(input$spieler_select2, mw_all, ap_df)
+    req(input$spieler_select2, mw_all, ap_df, spieler_stats_spielplan())
     
-    norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
+    norm    <- function(x) tolower(trimws(enc2utf8(as.character(x))))
     fmt_eur <- function(x) ifelse(is.na(x), "-", paste0(format(round(x), big.mark=".", decimal.mark=","), " €"))
-    pct <- function(x) ifelse(is.na(x), "-", sprintf("%.1f%%", 100*x))
     
-    sel  <- norm(input$spieler_select2)
+    sel <- norm(input$spieler_select2)
     
     hist <- mw_all %>%
       mutate(Datum = as.Date(Datum),
              Marktwert = as.numeric(Marktwert),
-             K = norm(Spieler),
-             src = factor("hist", levels = c("hist","daily")))
+             K = norm(Spieler))
     
     daily <- ap_df %>%
       mutate(Datum = as.Date(Datum),
              Marktwert = as.numeric(Marktwert),
-             K = norm(Spieler),
-             src = factor("daily", levels = c("hist","daily")))
+             K = norm(Spieler))
     
-    df <- bind_rows(hist, daily) %>%
+    df <- bind_rows(mutate(hist, src = "hist"),
+                    mutate(daily, src = "daily")) %>%
       filter(K == sel) %>%
       arrange(Datum, src) %>%
       group_by(Datum) %>% slice_tail(n = 1) %>% ungroup()
     
     req(nrow(df) > 0)
-    x_min <- as.Date("2024-06-01")
-    x_max <- max(df$Datum, na.rm = TRUE)
     
-    # Kennzahlen
+    events <- spieler_stats_spielplan() %>%
+      mutate(K = norm(Spieler)) %>%
+      filter(K == sel) %>%
+      mutate(
+        Punkte = suppressWarnings(as.integer(Punkte)),
+        Note   = suppressWarnings(as.numeric(Note)),
+        HG     = ifelse(HeimGast == "Heim", "H", ifelse(HeimGast == "Gast", "G", NA_character_)),
+        hover  = paste0(
+          format(Datum, "%Y-%m-%d"),
+          "<br><b>Punkte:</b> ", ifelse(is.na(Punkte), "-", Punkte),
+          "<br><b>Note:</b> ", ifelse(is.na(Note), "-", sprintf("%.1f", Note)),
+          "<br><b>Gegner:</b> ", ifelse(is.na(Gegner), "-", Gegner), " (", HG, ")"
+        )
+      ) %>%
+      filter(!is.na(Punkte)) %>%
+      arrange(Datum)
+    
     mw_mean   <- mean(df$Marktwert, na.rm = TRUE)
     mw_median <- median(df$Marktwert, na.rm = TRUE)
     mw_max    <- max(df$Marktwert, na.rm = TRUE)
-    mw_min    <- min(df$Marktwert, na.rm = TRUE)
     mw_curr   <- df$Marktwert[which.max(df$Datum)]
     
-    # Comunio-MW-Potenziale
-    pot_vs_max    <- if (is.finite(mw_max) && mw_max > 0) mw_curr / mw_max else NA_real_
-    pot_vs_median <- if (is.finite(mw_median) && mw_median > 0) mw_curr / mw_median else NA_real_
-    pot_vs_mean   <- if (is.finite(mw_mean) && mw_mean > 0) mw_curr / mw_mean else NA_real_
+    df_hover <- df %>%
+      transmute(
+        x_dt = as.POSIXct(Datum),
+        Marktwert = Marktwert,
+        hover = paste0(
+          format(Datum, "%Y-%m-%d"),
+          "<br><b>Marktwert:</b> ", fmt_eur(Marktwert)
+        )
+      )
     
-    diff_max_abs <- mw_curr - mw_max
-    diff_med_abs <- mw_curr - mw_median
-    diff_mean_abs<- mw_curr - mw_mean
+    p <- plot_ly()
     
-    # Linien für Legende
-    lines_df <- data.frame(
-      y = c(mw_mean, mw_median, mw_max, mw_min),
-      what = factor(c("Mean","Median","Hoch","Tief"),
-                    levels = c("Mean","Median","Hoch","Tief")),
-      lty = c("longdash","dotted","solid","solid")
-    )
+    # Punkte-Bars (rechte Achse), breite Balken, KEINE Textlabels im Balken
+    if (nrow(events) > 0) {
+      bar_width_ms <- 24 * 60 * 60 * 1000 * 1.2
+      p <- p %>%
+        add_bars(
+          data         = events,
+          x            = ~as.POSIXct(Datum),
+          y            = ~as.numeric(Punkte),
+          yaxis        = "y2",
+          name         = "Punkte",
+          width        = bar_width_ms,
+          marker       = list(color = "rgba(211,47,47,0.85)",
+                              line = list(color = "#b71c1c", width = 0.6)),
+          text         = ~hover,                       # nur für Tooltip
+          textposition = "none",                       # << keine Textanzeige im Balken
+          hovertemplate = "%{text}<extra></extra>",
+          showlegend   = FALSE
+        )
+    }
     
-    p <- ggplot(df, aes(x = Datum, y = Marktwert)) +
-      geom_line() +
-      geom_point(size = 1) +
-      geom_hline(
-        data = lines_df,
-        aes(yintercept = y, color = what, linetype = I(lty)),  # I() fixiert, kein Mapping
-        linewidth = 0.6
-      ) +
-      scale_x_date(limits = c(x_min, x_max)) +
-      labs(title = NULL, x = NULL, y = "Marktwert (€)", color = NULL) +
-      theme_minimal(base_size = 16)
+    # MW-Linie (Tooltip an der Linie)
+    p <- p %>%
+      add_lines(
+        data   = df_hover,
+        x      = ~x_dt,
+        y      = ~Marktwert,
+        name   = "Marktwert",
+        text   = ~hover,
+        hovertemplate = "%{text}<extra></extra>",
+        line   = list(width = 2, color = "#1f77b4"),
+        showlegend = FALSE
+      )
     
-    
-    gp <- ggplotly(p, tooltip = c("Datum", "Marktwert"))
-    
+    # Annotationen
     ann <- list(
       list(
         text = paste0(
@@ -4174,28 +4312,41 @@ server <- function(input, output, session) {
         x = 0, y = 1.10, xref = "paper", yref = "paper",
         showarrow = FALSE, align = "left",
         font = list(size = 18)
-      ),
-      list(
-        text = paste0(
-          "<b>Potenzial vs. Hoch:</b> ", pct(pot_vs_max),
-          " (Δ ", fmt_eur(diff_max_abs), ") · ",
-          "<b>Median:</b> ", pct(pot_vs_median),
-          " (Δ ", fmt_eur(diff_med_abs), ") · ",
-          "<b>Mittel:</b> ", pct(pot_vs_mean),
-          " (Δ ", fmt_eur(diff_mean_abs), ")"
-        ),
-        x = 0, y = 1.05, xref = "paper", yref = "paper",
-        showarrow = FALSE, align = "left",
-        font = list(size = 16)
       )
     )
     
-    gp %>% layout(margin = list(t = 70), annotations = ann)
+    # Graue 0-Linien für y und y2
+    zero_lines <- list(
+      list(type = "line", xref = "paper", yref = "y",  x0 = 0, x1 = 1, y0 = 0, y1 = 0,
+           line = list(color = "#bdbdbd", width = 1, dash = "dot")),
+      list(type = "line", xref = "paper", yref = "y2", x0 = 0, x1 = 1, y0 = 0, y1 = 0,
+           line = list(color = "#bdbdbd", width = 1, dash = "dot"))
+    )
     
-    
+    p %>%
+      layout(
+        margin = list(t = 70, r = 20, l = 10),
+        annotations = ann,
+        shapes = zero_lines,
+        hovermode = "x unified",
+        xaxis  = list(type = "date", autorange = TRUE, title = NULL),  # << kein x-Titel
+        yaxis  = list(title = NULL, showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
+        yaxis2 = list(
+          overlaying = "y",
+          side = "right",
+          title = NULL,
+          showticklabels = FALSE,
+          zeroline = FALSE,
+          showgrid = FALSE,
+          range = c(-30, 30),
+          tickmode = "linear",
+          dtick = 5
+        ),
+        barmode = "overlay",
+        bargap  = 0,
+        hoverlabel = list(align = "left")
+      )
   })
-  
-  
   
   # Leistungsdaten 
   output$spieler_info_raw <- DT::renderDT({
@@ -4245,7 +4396,7 @@ server <- function(input, output, session) {
       }
       
       incProgress(0.20, detail="Prompt")
-      prompt_str <- gpt_prompt()                  # <— einheitlich
+      prompt_str <- gpt_prompt()              
       mdl <- if (!is.null(input$gpt_model) && nzchar(input$gpt_model)) input$gpt_model else "gpt-4o-mini"
       
       incProgress(0.40, detail="API")
@@ -4630,10 +4781,6 @@ server <- function(input, output, session) {
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
-  
-  # Hilfsfunktion für sicheres Escaping in HTML-Attributen
-  safe_attr <- function(x) htmltools::htmlEscape(x, attribute = TRUE)
-  
   # 1) Reaktive Daten-Vorbereitung
   mein_kader_df <- reactive({
     # Basis: alle Spieler von Dominik
@@ -4683,13 +4830,6 @@ server <- function(input, output, session) {
         select(Spieler, tag, Marktwert) %>%
         distinct(Spieler, tag, .keep_all = TRUE) %>%
         tidyr::pivot_wider(names_from = tag, values_from = Marktwert)
-      
-      arrow_for <- function(a, b) {
-        if (is.na(a) || is.na(b)) return("")
-        if (b > a) return("<span style='color:#388e3c;font-weight:bold;'>▲</span>")
-        if (b < a) return("<span style='color:#e53935;font-weight:bold;'>▼</span>")
-        return("<span style='color:#757575;font-weight:bold;'>▬</span>")
-      }
       
       df_pre <- df0 %>%
         left_join(mw_aktuell, by = "Spieler") %>%
@@ -4753,8 +4893,7 @@ server <- function(input, output, session) {
       left_join(ca_df %>% select(-Verein, -Position, -Gesamtpunkte), by = c("Spieler" = "SPIELER")) %>%
       rename(
         "Punkte pro Spiel"           = Punkte_pro_Spiel,
-        "Preis-Leistung"             = Preis_Leistung,
-        "Historische Punkteausbeute" = Historische_Punkteausbeute
+        "Preis-Leistung"             = Preis_Leistung
       )
     
     # --- LI: Einsatzquote + Startelf-Prozent (kompakt "E/S11") ---
@@ -4818,7 +4957,6 @@ server <- function(input, output, session) {
         pps   <- gruppe$`Punkte pro Spiel`[i]
         es11  <- gruppe$Einsatz_S11_fmt[i]
         pl    <- gruppe$`Preis-Leistung`[i]
-        hist  <- gruppe$`Historische Punkteausbeute`[i]
         mw    <- gruppe$Marktwert_fmt[i]
         diff  <- gruppe$Diff_fmt[i]
         diffk <- gruppe$Diff_Kauf_fmt[i]
@@ -4838,9 +4976,6 @@ server <- function(input, output, session) {
           ))
         )
         
-        # tm_date lokal bestimmen
-        tm_date <- format(Sys.Date(), "%Y-%m-%d")
-        
         mask <- ap_df$Spieler == sp
         mw_vec <- suppressWarnings(as.numeric(ap_df$Marktwert[mask]))
         dt_vec <- as.Date(ap_df$Datum[mask])
@@ -4859,7 +4994,7 @@ server <- function(input, output, session) {
         
         prompt_str <- paste0(
           "Aufgabe: Analysiere den Bundesligaspieler ", sp, " (", gruppe$Verein[i], ").\n",
-          "Heutiges Datum (Europe/Berlin): ", tm_date, ". Nutze NUR Inhalte der letzten 30 Tage; ältere als 'älter' kennzeichnen. Zeitbezüge strikt relativ zu diesem Datum.\n",
+          "Heutiges Datum (Europe/Berlin): ", today, ". Nutze NUR Inhalte der letzten 30 Tage; ältere als 'älter' kennzeichnen. Zeitbezüge strikt relativ zu diesem Datum.\n",
           "Quellen: Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, LigaInsider, Comunio-Magazin, seriöse Regionalmedien. Keine Social Media/Foren. Jede Aussage mit [1], [2] … belegen; jüngste Quelle gewinnt. Unklares als 'Unklar'.\n",
           "Bestimme den nächsten Bundesligaspieltag inkl. Gegner, Datum, Ort aus offizieller Quelle.\n\n",
           "Comunio-Marktwertdaten (nur Zusatz, keine Quelle): Aktuell=", mw_curr,
@@ -4897,15 +5032,13 @@ server <- function(input, output, session) {
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
            <td style='padding:4px; text-align:center;'>%s</td>
-           <td style='padding:4px; text-align:right;'>%s</td>
          </tr>",
           v,sp,stat,trend3,diff,diffk,
           mw, 
           ifelse(is.na(pps), "-", format(round(pps, 2), decimal.mark=",")),
           es11,
-          btn, btn_gpt,
           ifelse(is.na(pl),  "-", pl),
-          ifelse(is.na(hist), "-", hist)
+          btn, btn_gpt
         )
       })
       
@@ -4927,10 +5060,9 @@ server <- function(input, output, session) {
        <th style='text-align:center;'>MW</th>
        <th style='text-align:center;'>PPS</th>
        <th style='text-align:center;'>E/S11&nbsp;%</th>
-       <th style='text-align:center;'> </th>
-       <th style='text-align:center;'> </th>
        <th style='text-align:center;'>Preis-Leistung</th>
-       <th style='text-align:center;'>Hist. Punkteausbeute</th>
+       <th style='text-align:center;'> </th>
+       <th style='text-align:center;'> </th>
      </tr></thead>",
       paste(grouped_sections, collapse = "\n"),
       "</tbody></table>"
@@ -5256,8 +5388,8 @@ server <- function(input, output, session) {
           MW_Klasse,
           levels = c("<0.5 Mio","0.5–1 Mio","1–2.5 Mio","2.5–5 Mio","5–10 Mio",">10 Mio")
         )
-      ) %>%
-      filter(Diff_Prozent <= 50)
+      ) 
+      #filter(Diff_Prozent <= 50) filter
     
     plotdata_beeswarm <- plotdata %>%
       group_by(Bieter, MW_Klasse) %>%
@@ -5366,7 +5498,7 @@ server <- function(input, output, session) {
     data <- gebotsprofil_mwclass_filtered()
     req(nrow(data) > 0, input$seg_manager, !is.na(input$seg_mw), !is.na(input$seg_tol))
     
-    # Vortags-MW erzwingen
+    ref_candidates <- c("MW_Vortag","MW_vortag","MW_vortag_eur","MW_vortag_€","MW_vortag_euro")
     ref_col <- intersect(ref_candidates, names(data))[1]
     validate(need(!is.null(ref_col), "Spalte für Vortags-MW nicht gefunden."))
     
@@ -5375,45 +5507,45 @@ server <- function(input, output, session) {
       filter(!is.na(.data[[ref_col]]), !is.na(Diff_Prozent)) %>%
       mutate(Ref_MW = as.numeric(.data[[ref_col]]))
     
-    # ± Toleranz um Ziel-MW
     target <- as.numeric(input$seg_mw)
-    tol <- as.numeric(input$seg_tol) / 100
-    rng <- target * c(1 - tol, 1 + tol)
+    tol    <- as.numeric(input$seg_tol) / 100
+    rng    <- target * c(1 - tol, 1 + tol)
+    df     <- df %>% filter(Ref_MW >= rng[1], Ref_MW <= rng[2])
     
-    df <- df %>% filter(Ref_MW >= rng[1], Ref_MW <= rng[2])
-    
-    # Datum robust parsen, falls vorhanden
+    # Datum robust parsen (ohne laute Warnungen)
     if ("Datum" %in% names(df)) {
-      df$Datum <- coalesce(ymd(df$Datum), dmy(df$Datum), suppressWarnings(as.Date(df$Datum)))
+      dchr <- as.character(df$Datum)
+      dchr[!nzchar(dchr)] <- NA_character_
+      df$Datum <- dplyr::coalesce(
+        suppressWarnings(lubridate::ymd(dchr, quiet = TRUE)),
+        suppressWarnings(lubridate::dmy(dchr, quiet = TRUE)),
+        suppressWarnings(as.Date(df$Datum, tryFormats = c("%Y-%m-%d","%d.%m.%Y")))
+      )
     } else {
-      df$Datum <- NA
+      df$Datum <- as.Date(NA)
     }
     
-    # Gebotsbetrag ermitteln oder approximieren
     amount_candidates <- c("Gebot","Hoechstgebot","Zweitgebot","Betrag","Gebot_EUR")
     amt_col <- intersect(amount_candidates, names(df))[1]
     if (is.null(amt_col)) {
-      df <- df %>%
-        mutate(Gebot_EUR = round(Ref_MW * (1 + Diff_Prozent/100)))
+      df <- df %>% mutate(Gebot_EUR = round(Ref_MW * (1 + Diff_Prozent/100)))
     } else {
-      df <- df %>%
-        mutate(Gebot_EUR = as.numeric(str_replace_all(.data[[amt_col]], "[^0-9-]", "")))
+      df <- df %>% mutate(Gebot_EUR = as.numeric(stringr::str_replace_all(.data[[amt_col]], "[^0-9-]", "")))
     }
     
-    # Faktor-Reihenfolge für Optik
     if ("Typ" %in% names(df)) {
       df$Typ <- factor(df$Typ, levels = c("Hoechstgebot","Zweitgebot"))
     }
     
-    # Tooltip
+    fmt_eur0 <- function(x) ifelse(is.na(x), "–", paste0(format(round(x), big.mark=".", decimal.mark=","), " €"))
+    
     df %>%
       mutate(
         tooltip = paste0(
-          "Spieler: ", coalesce(Spieler, ""), "\n",
-          "Typ: ", coalesce(as.character(Typ), ""), "\n",
-          "Gebot: ", ifelse(is.na(Gebot_EUR), "–",
-                            paste0(formatC(Gebot_EUR, big.mark=".", format="f", digits=0), " €")), "\n",
-          "Vortags-MW: ", paste0(formatC(Ref_MW, big.mark=".", format="f", digits=0), " €"), "\n",
+          "Spieler: ", dplyr::coalesce(Spieler, ""), "\n",
+          "Typ: ", dplyr::coalesce(as.character(Typ), ""), "\n",
+          "Gebot: ", fmt_eur0(Gebot_EUR), "\n",
+          "Vortags-MW: ", fmt_eur0(Ref_MW), "\n",
           "Abweichung: ", round(Diff_Prozent, 1), " %\n",
           "Datum: ", ifelse(is.na(Datum), "", format(Datum, "%d.%m.%Y"))
         )
@@ -5424,18 +5556,19 @@ server <- function(input, output, session) {
     df <- manager_segment_df()
     req(nrow(df) > 0)
     
-    # Ø je Typ
     means <- df %>%
-      group_by(Typ) %>%
-      summarise(Mean = mean(Diff_Prozent), .groups = "drop")
+      dplyr::group_by(Typ) %>%
+      dplyr::summarise(Mean = mean(Diff_Prozent), .groups = "drop")
     
     p <- ggplot(df, aes(x = Typ, y = Diff_Prozent, color = Typ, fill = Typ, text = tooltip)) +
       geom_boxplot(width = 0.5, outlier.shape = NA, alpha = 0.45) +
       ggbeeswarm::geom_beeswarm(cex = 2, size = 2.5, alpha = 0.8, priority = "random") +
-      geom_hline(data = means, aes(yintercept = Mean),
-                 color = "grey60", linetype = "dashed", linewidth = 0.6, inherit.aes = FALSE) +
-      geom_text(data = means, aes(x = Typ, y = Mean, label = round(Mean, 1)),
-                color = "black", fontface = "bold", size = 5, vjust = -0.6, inherit.aes = FALSE) +
+      geom_hline(data = means, 
+                 aes(yintercept = Mean),
+                 color = "grey60", linetype = "dashed", linewidth = 0.6) +
+      geom_text(data = means, inherit.aes = FALSE,
+                aes(x = Typ, y = Mean, label = round(Mean, 1)),
+                color = "black", fontface = "bold", size = 5, vjust = -0.6) +
       labs(title = "", x = "", y = "Abweichung vom MW Vortag (%)") +
       scale_color_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
       scale_fill_manual(values = c("Hoechstgebot" = "#1f77b4", "Zweitgebot" = "#ff7f0e")) +
@@ -5446,8 +5579,8 @@ server <- function(input, output, session) {
   })
   
   
-  ## ---- Gebotsverhalten über die Zeit ----
   
+  ## ---- Gebotsverhalten über die Zeit ----
   output$trendplot <- renderPlot({
     req(nrow(gebotsprofil_clean()) > 0)
     plotdata <- gebotsprofil_clean() %>%
@@ -5627,8 +5760,7 @@ server <- function(input, output, session) {
   
   # -- Flip-Gewinn vorbereiten: alle Kauf→Verkauf-Zyklen je Spieler×Besitzer
   flip_data <- reactive({
-    req(data_all())
-    transfers <- data_all()$transfers
+    req(transfers)
     
     # --- Events für Käufe und Verkäufe ---
     einkaeufe <- transfers %>%
@@ -5636,7 +5768,7 @@ server <- function(input, output, session) {
       transmute(Spieler,
                 Besitzer = Hoechstbietender,
                 Datum,
-                Preis = as.numeric(Hoechstgebot),
+                Preis = Hoechstgebot,
                 type = "buy")
     
     verkaeufe <- transfers %>%
@@ -5644,7 +5776,7 @@ server <- function(input, output, session) {
       transmute(Spieler,
                 Besitzer,
                 Datum,
-                Preis = as.numeric(Hoechstgebot),
+                Preis = Hoechstgebot,
                 type = "sell")
     
     # --- gemeinsamer Event-Stream ---
@@ -6012,20 +6144,30 @@ server <- function(input, output, session) {
     # Marktwert aktuell je Spieler
     mw_aktuell <- gesamt_mw_roh %>%
       mutate(
-        # ISO zuerst, sonst deutsch; letzter Fallback base
-        Datum    = coalesce(ymd(Datum), dmy(Datum), suppressWarnings(as.Date(Datum))),
+        Datum = trimws(as.character(Datum)),
+        Datum = na_if(Datum, ""),
+        Datum = coalesce(
+          ymd(Datum, quiet = TRUE),
+          dmy(Datum, quiet = TRUE),
+          suppressWarnings(as.Date(Datum))
+        ),
         Marktwert = as.numeric(Marktwert)
       ) %>%
       group_by(Spieler) %>%
       filter(Datum == max(Datum, na.rm = TRUE)) %>%
       summarise(Marktwert_aktuell = first(Marktwert), .groups = "drop")
     
+    
     # letzter Kauf je (Spieler, Manager)
     kaufpreise <- transfers %>%
       mutate(
-        # deutsch zuerst, sonst ISO
-        Datum = coalesce(dmy(Datum), ymd(Datum), suppressWarnings(as.Date(Datum))),
-        # falls "1.234.567" vorkommt:
+        Datum = trimws(as.character(Datum)),
+        Datum = na_if(Datum, ""),
+        Datum = coalesce(
+          dmy(Datum, quiet = TRUE),
+          ymd(Datum, quiet = TRUE),
+          suppressWarnings(as.Date(Datum))
+        ),
         Hoechstgebot = as.numeric(gsub("\\.", "", as.character(Hoechstgebot)))
       ) %>%
       group_by(Spieler, Hoechstbietender) %>%
@@ -6037,6 +6179,7 @@ server <- function(input, output, session) {
         Kaufdatum = as.Date(Datum),
         Kaufpreis = Hoechstgebot
       )
+    
     
     # Plot-Daten
     plot_df <- teams_df %>%
@@ -6118,6 +6261,17 @@ server <- function(input, output, session) {
   
   
   ## ---- Flip-Historie: MW-events ----
+  output$manager_select_ui <- renderUI({
+    # Besitzer ohne "Computer"
+    mgrs <- setdiff(unique(transfers$Besitzer), "Computer")
+    selectInput(
+      inputId  = "manager_select",
+      label    = "Manager auswählen:",
+      choices  = sort(mgrs),
+      selected = sort(mgrs)[5]
+    )
+  })
+  
   output$mw_events <- renderPlotly({
     req(input$manager_select, gesamt_mw_df)
     
@@ -6201,9 +6355,8 @@ server <- function(input, output, session) {
     
     # Layout: relative statt stack
     p <- p %>% layout(
-      barmode = "relative",   # <-- trennt pos/neg sauber
-      bargap = 0.35,
-      bargroupgap = 0.25,
+      barmode = "relative",
+      bargap  = 0.35,
       xaxis = list(title = "", type = "date"),
       yaxis  = list(title = "MW normiert (Start = 1)", rangemode = "tozero"),
       yaxis2 = list(title = "Gewinn (€)", overlaying = "y", side = "right",
@@ -6212,29 +6365,67 @@ server <- function(input, output, session) {
       margin = list(l = 60, r = 70, t = 40, b = 40)
     )
     
-    
     p
   })
   
   ## ---- Flip-Historie je Spieler ----
   output$flip_player_table <- renderDT({
     req(input$flip_player_select)
-    today <- Sys.Date()
-    mw_today <- ap_df %>% 
-      filter(Datum == today) %>% 
+    
+    mw_today <- ap_df %>%
+      filter(Datum == today) %>%
       select(Spieler, Marktwert)
     
-    flip_data() %>%
-      filter(Besitzer == input$flip_player_select) %>%
-      left_join(mw_today, by = "Spieler") %>% 
-      select(Verkaufsdatum, Spieler, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Marktwert, Gewinn) %>%
-      arrange(desc(Verkaufsdatum)) %>%
-      datatable(
-        options = list(dom = "t",
-                       paging = FALSE),
-        colnames = c("Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Aktueller Marktwert", "Gewinn/Verlust (€)")
-      )
+    # Daten
+    df_all <- flip_data()                    # ungefiltert für stabile Farb-Map
+    df <- df_all
+    show_owner <- input$flip_player_select == "Alle"
+    if (!show_owner) df <- df %>% filter(Besitzer == input$flip_player_select)
+    
+    df <- df %>%
+      left_join(mw_today, by = "Spieler")
+    
+    # Stabile Farbzuordnung für alle Manager
+    cols_base <- c(
+      "#A6CEE3","#1F78B4","#B2DF8A","#33A02C",
+      "#FB9A99","#E31A1C","#FDBF6F","#FF7F00",
+      "#CAB2D6","#6A3D9A","#FFFF99","#B15928"
+    )
+    owners_all <- sort(unique(df_all$Besitzer))
+    cols_vec   <- rep_len(cols_base, length(owners_all))
+    col_map    <- setNames(adjustcolor(cols_vec, alpha.f = 0.05), owners_all)
+    
+    if (show_owner) {
+      dt <- df %>%
+        select(Besitzer, Verkaufsdatum, Spieler, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Marktwert, Gewinn) %>%
+        arrange(desc(Verkaufsdatum)) %>%
+        datatable(
+          options = list(dom = "ft", paging = TRUE, pageLength = 20),
+          colnames = c("Besitzer", "Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Aktueller Marktwert", "Gewinn/Verlust (€)")
+        ) %>%
+        formatStyle(
+          "Besitzer",
+          target = "row",
+          backgroundColor = styleEqual(names(col_map), unname(col_map))
+        ) %>%
+        formatStyle("Gewinn", color = styleInterval(0, c("#C62828", "#2E7D32"))) %>%  # <0 rot, >=0 grün
+        formatStyle("Gewinn", color = styleEqual(0, "#666666"))                       # 0 grau
+    } else {
+      dt <- df %>%
+        select(Verkaufsdatum, Spieler, Einkaufsdatum, Einkaufspreis, Verkaufspreis, Marktwert, Gewinn) %>%
+        arrange(desc(Verkaufsdatum)) %>%
+        datatable(
+          options = list(dom = "t", paging = FALSE),
+          colnames = c("Verkaufsdatum", "Spieler", "Kaufdatum", "Einkaufspreis", "Verkaufspreis", "Aktueller Marktwert", "Gewinn/Verlust (€)")
+        ) %>%
+        formatStyle("Gewinn", color = styleInterval(0, c("#C62828", "#2E7D32"))) %>%
+        formatStyle("Gewinn", color = styleEqual(0, "#666666"))
+      
+    }
+    
+    dt
   })
+  
   
   # ---- PERFORMANCE ----
   
@@ -6357,8 +6548,7 @@ server <- function(input, output, session) {
   
   ### ---- kapital_df_reactive ----
   kapital_df_reactive <- reactive({
-    dat <- data_all()
-    transfers <- dat$transfers
+    req(transfers)
     
     alle_manager <- names(startkapital_fix)
     
@@ -6429,8 +6619,7 @@ server <- function(input, output, session) {
   
   ### ---- kapital_ts_reactive ----
   kapital_ts_reactive <- reactive({
-    dat <- data_all()
-    transfers <- dat$transfers
+    req(transfers)
     alle_manager <- names(startkapital_fix)
     
     stopifnot(all(c("Datum","Manager","Gesamtpunkte","letzte Punkte") %in% names(st_df)))
