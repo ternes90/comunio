@@ -1,5 +1,6 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
+Thomas;Diomande;Sturm
 Thomas;Honorat;Sturm
 Thomas;Stage;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
@@ -11,6 +12,7 @@ Thomas;Grimaldo;Abwehr
 Thomas;Laimer;Abwehr
 Thomas;Arthur;Abwehr
 Thomas;Ogbus;Abwehr
+Thomas;Robatsch;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
