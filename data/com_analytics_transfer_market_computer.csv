@@ -2008,17 +2008,32 @@ Robatsch;Abwehr;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;0
 Diomande;Stürmer;RB Leipzig;42;11.580.000;11.690.000;4,7;Halten;Schlecht;1;7.7;Computer;08.11.2025
 Bouanani;Stürmer;VfB Stuttgart;13;2.390.000;2.410.000;2,6;Halten;Durchschnittlich;0;2.3;Computer;08.11.2025
 Bell;Abwehr;1. FSV Mainz 05;17;1.140.000;1.130.000;2,1;Halten;Durchschnittlich;2;0.9;Computer;09.11.2025
-Blaswich;Torhüter;Bayer 04 Leverkusen;0;170.000;170.000;2,7;Halten;Gut;1;N/A;Computer;09.11.2025
+Blaswich;Torhüter;Bayer 04 Leverkusen;0;170.000;170.000;2,7;Halten;Gut;1;;Computer;09.11.2025
 Bernardo;Abwehr;TSG Hoffenheim;33;2.970.000;2.810.000;3,3;Verkaufen;Durchschnittlich;1;1.9;Computer;09.11.2025
-Musiala;Mittelfeld;FC Bayern München;0;13.750.000;12.810.000;8,0;Kaufen;Gut;4;N/A;Computer;09.11.2025
+Musiala;Mittelfeld;FC Bayern München;0;13.750.000;12.810.000;8,0;Kaufen;Gut;4;;Computer;09.11.2025
 Jenz;Abwehr;VfL Wolfsburg;20;1.590.000;1.560.000;2,5;Halten;Durchschnittlich;3;1.9;Computer;09.11.2025
 Kemlein;Mittelfeld;1. FC Union Berlin;20;2.040.000;2.030.000;2,5;Halten;Durchschnittlich;3;1;Computer;09.11.2025
 Hendriks;Abwehr;VfB Stuttgart;14;1.920.000;1.950.000;2,0;Halten;Schlecht;0;2.9;Computer;09.11.2025
 Nordin;Mittelfeld;1. FSV Mainz 05;20;1.610.000;1.600.000;3,3;Halten;Gut;3;0.8;Computer;09.11.2025
-Đurić;Mittelfeld;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;09.11.2025
-Harchaoui;Mittelfeld;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;09.11.2025
-Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;09.11.2025
-Robatsch;Abwehr;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;09.11.2025
-Markgraf;Abwehr;1. FC Union Berlin;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;09.11.2025
+Đurić;Mittelfeld;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;09.11.2025
+Harchaoui;Mittelfeld;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;09.11.2025
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;09.11.2025
+Robatsch;Abwehr;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;09.11.2025
+Markgraf;Abwehr;1. FC Union Berlin;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;09.11.2025
 Diomande;Stürmer;RB Leipzig;42;12.220.000;12.460.000;4,2;Halten;Schlecht;2;8.2;Computer;09.11.2025
 Bøving;Stürmer;1. FSV Mainz 05;3;710.000;700.000;1,5;Halten;Schlecht;0;-0.1;Computer;09.11.2025
+Bell;Abwehr;1. FSV Mainz 05;17;1.070.000;1.030.000;2,1;Halten;Durchschnittlich;2;1.8;Computer;10.11.2025
+Blaswich;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;2,7;Halten;Gut;0;N/A;Computer;10.11.2025
+M. Philipp;Stürmer;Sport-Club Freiburg;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;10.11.2025
+Bernardo;Abwehr;TSG Hoffenheim;35;2.990.000;3.070.000;3,5;Halten;Durchschnittlich;3;3.1;Computer;10.11.2025
+Musiala;Mittelfeld;FC Bayern München;0;13.780.000;13.200.000;8,0;Kaufen;Gut;4;N/A;Computer;10.11.2025
+Jenz;Abwehr;VfL Wolfsburg;21;1.660.000;1.690.000;2,6;Halten;Durchschnittlich;3;1.2;Computer;10.11.2025
+Kemlein;Mittelfeld;1. FC Union Berlin;22;1.990.000;2.030.000;2,8;Halten;Durchschnittlich;3;2.8;Computer;10.11.2025
+Lynen;Mittelfeld;SV Werder Bremen;29;3.330.000;3.590.000;3,2;Kaufen;Durchschnittlich;4;2;Computer;10.11.2025
+Hendriks;Abwehr;VfB Stuttgart;14;1.920.000;1.800.000;2,0;Halten;Schlecht;0;1.1;Computer;10.11.2025
+Sarco;Stürmer;Bayer 04 Leverkusen;3;570.000;730.000;3,0;Kaufen;Gut;5;0.6;Computer;10.11.2025
+Đurić;Mittelfeld;TSG Hoffenheim;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;10.11.2025
+Harchaoui;Mittelfeld;1. FC Köln;0;170.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;10.11.2025
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;10.11.2025
+Markgraf;Abwehr;1. FC Union Berlin;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;10.11.2025
+Bøving;Stürmer;1. FSV Mainz 05;3;680.000;660.000;1,5;Halten;Schlecht;0;0.2;Computer;10.11.2025
