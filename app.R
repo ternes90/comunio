@@ -27,7 +27,7 @@ suppressPackageStartupMessages(library(slider))
 
 # ---- Globale Daten ----
 
-today <- Sys.Date()
+
 
 #Startup log
 LOG_PATH <- "logs/perf_log.csv"
@@ -421,7 +421,6 @@ ui <- navbarPage(
           text-align: left !important;
         }
       "))
-      
     )
   ),
   
@@ -636,16 +635,8 @@ ui <- navbarPage(
                             )
                           )
                         )
-                      )
-                      
-                      
-                      
-                      
-                      
-                      
-                      
+                      )   
              )
-             
            )
   )
   ,
@@ -794,9 +785,6 @@ ui <- navbarPage(
                         column(6, plotOutput("rel_angebot_tag"))
                       )
              )
-             
-             
-            
            )
   ),
   
@@ -995,15 +983,13 @@ ui <- navbarPage(
              )
            )
   )
-  
-
-  
 )
 
 # ---- SERVER ----
 server <- function(input, output, session) {
   # Session-Startzeit
   session$userData$t0 <- Sys.time()
+  today <- Sys.Date()
   
   # Sobald der Dashboard-Tab das erste Mal aktiv ist, Zeiten loggen
   observeEvent(input$main_navbar, {
@@ -1334,13 +1320,17 @@ server <- function(input, output, session) {
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
+  # ANGEBOTE
+  # angebote <- read.csv2("data/ANGEBOTE.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8", check.names = FALSE) %>%
+  #   mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) 
+  
   # marktwertverlauf_gesamt
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
   # LI Info 
   li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
   
-  # ---- df lazy load ----
+  ## ---- df lazy load ----
   load_non_dashboard_data <- function() {
     safe <- function(expr) {
       tryCatch(eval(expr), error = function(e) {
@@ -1676,14 +1666,12 @@ server <- function(input, output, session) {
     req(input$main_navbar == "Dashboard")
     
     req(exists("li_df", inherits = TRUE), is.data.frame(li_df))
-    req(!is.null(mein_kader_df()))
-    kad <- mein_kader_df()
-    req("Spieler" %in% names(kad))
+    req(!is.null(meine_spieler()))
     
     need <- c("Comunio_Name","News1_Date","News1_URL","News2_Date","News2_URL","News3_Date","News3_URL")
     if (!all(need %in% names(li_df))) return(div("Keine News verfügbar"))
     
-    kad_namen <- unique(kad$Spieler)
+    kad_namen <- meine_spieler()
     li_sub <- li_df[li_df$Comunio_Name %in% kad_namen, , drop = FALSE]
     if (nrow(li_sub) == 0) return(div("Keine News verfügbar"))
     
@@ -3087,8 +3075,6 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 16)
   })
   
-  
-  
   ##### ---- Tägliches Speichern ----
   # 1. Täglicher Tick (einmal pro Minute prüfen)
   today_tick <- reactive({
@@ -3296,7 +3282,6 @@ server <- function(input, output, session) {
       )
     )
   })
-  
   
   #### ---- Vorhersagen-Check Tabelle ----
   output$mw_pred_ts_metrics <- renderUI({
@@ -4475,6 +4460,8 @@ server <- function(input, output, session) {
   ## ---- Transfer-Simulator ----
   # Reactive DataFrames vorbereiten
   meine_spieler <- reactive({
+    req(teams_df)
+    
     teams_df %>%
       filter(Manager == "Dominik") %>%
       pull(Spieler)
@@ -4482,77 +4469,106 @@ server <- function(input, output, session) {
   
   # Aktuelle Marktwerte
   aktuelle_mw <- reactive({
+    req(ap_df)
+    
     max_datum <- max(ap_df$Datum, na.rm = TRUE)
     ap_df %>%
       filter(Datum == max_datum) %>%
       transmute(Spieler, Marktwert = as.numeric(Marktwert))
   })
   
-  # Rohdaten der Angebote
-  angebote_raw <- angebote %>%
-    mutate(Status = ifelse(is.na(Status), "aktiv", Status))
-  
   angebote_df <- reactive({
-    angebote_raw %>%
+    req(input$main_navbar == "Transfermarkt")                       # korrekt prüfen
+    req(exists("angebote", inherits = TRUE), is.data.frame(angebote)) # Datei muss geladen sein
+    req(!is.null(meine_spieler()), length(meine_spieler()) > 0)     # eigene Spieler vorhanden
+    
+    # robusten Spaltennamen-Check
+    betrag_col <- if ("Angebot (€)" %in% names(angebote)) "Angebot (€)" else "Angebot"
+    
+    df <- angebote %>%
+      mutate(Status = ifelse(is.na(Status), "aktiv", Status)) %>%
       filter(Status == "aktiv") %>%
-      rename(Angebot = `Angebot (€)`) %>%
-      mutate(
-        Spieler = trimws(Spieler),
-        Angebot = as.numeric(gsub("\\.", "", Angebot))
-      ) %>%
+      mutate(Spieler = trimws(Spieler))
+    
+    # wenn Spalte fehlt, erzeugen, sonst bereinigen
+    if (!betrag_col %in% names(df)) {
+      df$Angebot <- NA_real_
+    } else {
+      df <- df %>% mutate(Angebot = as.numeric(gsub("\\.", "", .data[[betrag_col]])))
+    }
+    
+    df <- df %>%
+      select(Spieler, Datum, Angebot, Status)
+    
+    # join mit aktuellen Marktwerten (aktuelle_mw stellt selbst sicher, dass ap_df existiert)
+    df <- df %>%
       filter(Spieler %in% meine_spieler()) %>%
       left_join(aktuelle_mw(), by = "Spieler") %>%
       mutate(
         Marktwert     = ifelse(is.na(Marktwert), Angebot, Marktwert),
         Kreditverlust = Marktwert / 4
       )
+    
+    df
   })
   
+  
   team_spieler_df <- reactive({
+    req(input$main_navbar, "Transfermarkt")
+    
     aktuelle_mw() %>%
       semi_join(teams_df %>% filter(Manager == "Dominik"), by = "Spieler")
   })
   
   # UI-Inputs befüllen
-  observe({
-    # 1) Spieler-Liste
+  observeEvent(input$main_navbar, {
+    if (!identical(input$main_navbar, "Transfermarkt")) return()
+    
+    # warte auf nötige Daten (tm_df und angebote_df)
+    req(exists("tm_df", inherits = TRUE), is.data.frame(tm_df))
+    req(!is.null(angebote_df()))   # angebote_df() hat eigene reqs
+    
+    # 1) Spieler-Liste (tm_df kann lazy geladen werden)
     updateSelectInput(
       session, "spieler_select",
       choices = sort(unique(tm_df$Spieler))
     )
     
-    # 2) Zweite Spieler-Liste
     updateSelectInput(
       session, "spieler_select2",
       choices = sort(unique(tm_df$Spieler))
     )
     
-    # 3) Angebote-Checkboxes (eindeutige IDs)
-    if (nrow(angebote_df()) > 0) {
+    # 3) Angebote-Checkboxes
+    a_df <- angebote_df()
+    if (nrow(a_df) > 0) {
       angebot_labels <- paste0(
-        angebote_df()$Spieler,
-        " (", format(angebote_df()$Angebot, big.mark = ".", decimal.mark = ","), " €)"
+        a_df$Spieler,
+        " (", format(a_df$Angebot, big.mark = ".", decimal.mark = ","), " €)"
       )
-      angebot_ids <- paste0("A", seq_len(nrow(angebote_df())))
+      angebot_ids <- paste0("A", seq_len(nrow(a_df)))
       choices_a <- setNames(angebot_ids, angebot_labels)
     } else {
       choices_a <- character(0)
     }
     updateCheckboxGroupInput(session, "angebote_select", choices = choices_a)
     
-    # 4) Eigene Team-Spieler-Checkboxes (eindeutige IDs)
-    if (nrow(team_spieler_df()) > 0) {
+    # 4) Eigene Team-Spieler-Checkboxes
+    t_df <- team_spieler_df()   # team_spieler_df() benötigt ebenfalls tm_df/teams_df; hat eigene reqs
+    if (nrow(t_df) > 0) {
       team_labels <- paste0(
-        team_spieler_df()$Spieler,
-        " (", format(team_spieler_df()$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
+        t_df$Spieler,
+        " (", format(t_df$Marktwert, big.mark = ".", decimal.mark = ","), " €)"
       )
-      team_ids <- paste0("T", seq_len(nrow(team_spieler_df())))
+      team_ids <- paste0("T", seq_len(nrow(t_df)))
       choices_t <- setNames(team_ids, team_labels)
     } else {
       choices_t <- character(0)
     }
     updateCheckboxGroupInput(session, "team_select", choices = choices_t)
-  })
+    
+  }, ignoreInit = TRUE)
+  
   
   # 5) Plot rendern
   output$transfer_simulator_plot <- renderPlot({
@@ -4689,9 +4705,9 @@ server <- function(input, output, session) {
         colour = "black", size = 4
       ) +
       ggplot2::geom_hline(yintercept = mindest, linetype = "dashed",
-                          color = "darkred", size = 0.5) +
+                          color = "darkred", linewidth = 0.5) +
       ggplot2::geom_hline(yintercept = 0, linetype = "dashed",
-                          color = "black", size = 0.5) +
+                          color = "black", linewidth = 0.5) +
       # Zwei Häkchen nebeneinander (beide bei x="Verfügbar", horizontal genudged)
       ggplot2::geom_text(
         data = data.frame(x = "Verfügbar", y = y_checks,
@@ -5810,10 +5826,7 @@ server <- function(input, output, session) {
     }
   })
 
-
-  
   # ---- FLIP-ANALYSE ----
-  
   # -- Flip-Gewinn vorbereiten: alle Kauf→Verkauf-Zyklen je Spieler×Besitzer
   flip_data <- reactive({
     req(transfers)
@@ -5882,8 +5895,6 @@ server <- function(input, output, session) {
       arrange(Spieler, Besitzer, Einkaufsdatum)
   })
   
-  
-  
   ## ---- Flip-Gesamtsumme ----
   ## -- Flip-Gewinne pro Spieler (Beeswarm & Boxplot)
   output$flip_summarybar <- renderPlot({
@@ -5923,8 +5934,7 @@ server <- function(input, output, session) {
       )
   })
   
-  
-  ## ---- Flip-Verlauf kummuliert über Zeit ----
+  ## ---- Flip-Verlauf kumuliert über Zeit ----
   output$flip_cumulative <- renderPlot({
     req(nrow(flip_data()) > 0)
     
@@ -6009,7 +6019,6 @@ server <- function(input, output, session) {
       theme_minimal(base_size = 14) +
       theme(axis.text.x = element_text(angle = 30, hjust = 1))
   })
-  
   
   ## ---- Flip kumuliert je Flip-Art ----
   output$flip_cumcat <- renderPlot({
@@ -6315,7 +6324,6 @@ server <- function(input, output, session) {
     
   })
   
-  
   ## ---- Flip-Historie: MW-events ----
   output$manager_select_ui <- renderUI({
     # Besitzer ohne "Computer"
@@ -6482,9 +6490,7 @@ server <- function(input, output, session) {
     dt
   })
   
-  
   # ---- PERFORMANCE ----
-  
   ## ---- Platzierungen je Spieler ----
   output$patzierungen_table <- renderPlot({
     ymax <- max(patzierungen_df$Anzahl, na.rm = TRUE) + 1
@@ -6508,7 +6514,6 @@ server <- function(input, output, session) {
         strip.text         = element_text(size = 20, face = "bold")
       )
   })
-  
   
   ## ---- Podium ----
   # feste Manager-Reihenfolge für konsistente Farben
@@ -6543,7 +6548,6 @@ server <- function(input, output, session) {
   })
   
   # ---- KAPITALÜBERSICHT ----
-  
   ## ---- Kontostände je Spieler ----
   
   # Vornamen-Index für Startkapital
@@ -6758,7 +6762,6 @@ server <- function(input, output, session) {
     ts %>% filter(Datum >= as.Date("2025-08-22"))
   })
   
-  
   ## ---- Haupt-Tabelle ----
   output$kapital_uebersicht_table <- renderDT({
     kapital_df <- kapital_df_reactive()
@@ -6814,7 +6817,6 @@ server <- function(input, output, session) {
   })
   
   ## ---- Absolute Gewinne ----
-  
   ### ---- Flip-Saldo je Manager (Gewinne + Verluste) ----
   flip_gewinne_df <- reactive({
     req(flip_data())
@@ -6900,8 +6902,6 @@ server <- function(input, output, session) {
       )
   })
   
-
-  
   ## ---- Zeit im Minus ----
   output$kapital_minus_table <- DT::renderDT({
     ts <- kapital_ts_reactive()
@@ -6943,10 +6943,7 @@ server <- function(input, output, session) {
         currency = "", interval = 3, mark = ".", digits = 0, dec.mark = ","
       )
   })
-  
-  
 }
-
 
 # SHINY APP STARTEN
 shinyApp(ui, server)
