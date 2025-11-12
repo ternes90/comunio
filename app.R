@@ -27,8 +27,6 @@ suppressPackageStartupMessages(library(slider))
 
 # ---- Globale Daten ----
 
-
-
 #Startup log
 LOG_PATH <- "logs/perf_log.csv"
 if (!dir.exists(dirname(LOG_PATH))) dir.create(dirname(LOG_PATH), recursive = TRUE, showWarnings = FALSE)
@@ -126,20 +124,7 @@ seasons <- c("2004-05", "2005-06", "2006-07", "2007-08", "2008-09",
 real_seasons <- seasons[!grepl("^Sommerpause", seasons)]
 n_real       <- length(real_seasons)
 
-## ---- reactive_vals ----
-startup_time <- reactiveVal(NULL)
-verfuegbares_kapital_dominik <- reactiveVal(0)
-kontostand_dominik           <- reactiveVal(0)
-tm_trend_global <- reactiveVal(NULL)
-# reactiveVal für den gemeinsamen Transfermarkt DataFrame
-tm_common <- reactiveVal(NULL)
-# cache
-gebotsprofil_cache <- reactiveVal(NULL)
-spieler_stats_cache <- reactiveVal(NULL)
-dat_rel_angebote_cache <- reactiveVal(NULL)
-match_li_cache <- reactiveVal(list())
-mw_data_cache <- reactiveVal(NULL)
-mw_now_cache <- reactiveVal(NULL)
+
 
 ## ---- helpers ----
 # Spieler-Info reader
@@ -988,6 +973,22 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
+  ## ---- reactive_vals ----
+  startup_time <- reactiveVal(NULL)
+  verfuegbares_kapital_dominik <- reactiveVal(0)
+  kontostand_dominik           <- reactiveVal(0)
+  tm_trend_global <- reactiveVal(NULL)
+  # reactiveVal für den gemeinsamen Transfermarkt DataFrame
+  tm_common <- reactiveVal(NULL)
+  # cache
+  gebotsprofil_cache <- reactiveVal(NULL)
+  spieler_stats_cache <- reactiveVal(NULL)
+  dat_rel_angebote_cache <- reactiveVal(NULL)
+  match_li_cache <- reactiveVal(list())
+  mw_data_cache <- reactiveVal(NULL)
+  mw_now_cache <- reactiveVal(NULL)
+  mw_pred_cached <- reactiveVal(NULL)
+  
   # Session-Startzeit
   session$userData$t0 <- Sys.time()
   today <- Sys.Date()
@@ -1827,8 +1828,8 @@ server <- function(input, output, session) {
   output$mw_zeitachse_preview <- renderPlot({
     req(input$main_navbar == "Dashboard")
     
-    # Vorhersage optional holen
-    pred <- tryCatch(mw_pred(), error = function(e) NULL)
+    # Vorhersage optional aus dem Cache holen (nicht direkt mw_pred() aufrufen)
+    pred <- tryCatch(mw_pred_cached(), error = function(e) NULL)
     info <- if (!is.null(pred)) pred$info_txt else NULL
     
     df <- subset(gesamt_mw_df, !is.na(Datum))
@@ -2759,7 +2760,6 @@ server <- function(input, output, session) {
     df
   })
   
-  
   # Plot: Balken = Mittelwert, Fehlerbalken = ±SD
   output$mw_weekday_effect_plot <- renderPlot({
     df <- change_df_reactive() %>%
@@ -2811,29 +2811,7 @@ server <- function(input, output, session) {
   })
   
   ### ===== Optionen =====
-  ## ---- Early server start: stable contrasts ----
-  # Setze fixe Kontraste ganz am Anfang der server-Funktion
-  options(contrasts = c("contr.treatment", "contr.poly"))
-  
-  ## ---- Cache für historische Saison-Daten (einmalig beim Serverstart) ----
-  sp_all_cache <- reactiveVal(NULL)
-  observe({
-    out <- NULL
-    if (exists("post_sommerpause_data", mode = "function")) {
-      out <- tryCatch(post_sommerpause_data(), error = function(e) NULL)
-    }
-    if (is.null(out) && exists("sp", inherits = TRUE)) {
-      out <- tryCatch(get("sp", inherits = TRUE), error = function(e) NULL)
-    }
-    if (!is.null(out) && is.data.frame(out)) {
-      out$Datum <- as.Date(out$Datum)
-      sp_all_cache(out)
-    } else {
-      sp_all_cache(NULL)
-    }
-  }, once = TRUE)
-  
-  ## ---- Inputs -> options (optional, beibehalten) ----
+  # Inputs -> options()
   observe({
     if (!is.null(input$ref_use))    options(mw_ref_use    = input$ref_use)
     if (!is.null(input$ref_season)) options(mw_ref_season = input$ref_season)
@@ -2844,26 +2822,36 @@ server <- function(input, output, session) {
   })
   
   observeEvent(TRUE, {
-    updateCheckboxInput(session, "ref_use",    value = isTRUE(getOption("mw_ref_use", TRUE)))
-    updateSelectInput( session, "ref_season",  selected = as.character(getOption("mw_ref_season","2021-22")))
-    updateSliderInput( session, "ref_weight",  value = as.numeric(getOption("mw_ref_weight", 0.1)))
-    updateSliderInput( session, "w_perm",      value = as.numeric(getOption("mw_w_perm", 0.05)))
-    updateSliderInput( session, "w_wd",        value = as.numeric(getOption("mw_w_wd", 0.9)))
-    updateSliderInput( session, "w_l7",        value = as.numeric(getOption("mw_w_lag7", 0.05)))
+    updateCheckboxInput(session, "ref_use",   value = isTRUE(getOption("mw_ref_use", TRUE)))
+    updateSelectInput( session, "ref_season", selected = as.character(getOption("mw_ref_season", "2021-22")))
+    updateSliderInput( session, "ref_weight", value = as.numeric(getOption("mw_ref_weight", 0.1)))
+    updateSliderInput( session, "w_perm",     value = as.numeric(getOption("mw_w_perm", 0.05)))
+    updateSliderInput( session, "w_wd",       value = as.numeric(getOption("mw_w_wd", 0.9)))
+    updateSliderInput( session, "w_l7",       value = as.numeric(getOption("mw_w_lag7", 0.05)))
   }, once = TRUE)
   
-  #### ===== 2-Tages Vorhersage  + Ensemble + Saison-Analog-Boost (ohne Debug) =====
+  
+  ## --- mw_pred delayed compute einmal nach X Sekunden nach App-Start (deaktiviert, nur wenn gewünscht)
+  observe({
+    if (is.null(mw_pred_cached())) {
+      invalidateLater(1000, session)  # 1s nach Start
+      mw_pred_cached( tryCatch(mw_pred(), error = function(e) NULL) )
+    }
+  })
+  
+  #### ===== mw_pred =====
   mw_pred <- reactive({
-    # sicherstellen, dass UI-Inputs initialisiert sind
+    # zuerst warten, bis Inputs initialisiert sind
     req(!is.null(input$ref_use), !is.null(input$ref_season), !is.null(input$ref_weight),
         !is.null(input$w_perm),  !is.null(input$w_wd),      !is.null(input$w_l7))
     
-    # reaktive Abhängigkeit forcieren
+    # reaktive Abhängigkeit
     deps <- list(input$ref_use, input$ref_season, input$ref_weight,
                  input$w_perm,  input$w_wd,      input$w_l7)
     force(deps)
     
     clean_df <- gesamt_mw_df %>% filter(!is.na(Datum)) %>% arrange(Datum)
+    
     df <- clean_df %>%
       mutate(
         MW_vortag  = lag(MW_gesamt),
@@ -2877,6 +2865,7 @@ server <- function(input, output, session) {
                             levels = 1:7, labels = c("Mo","Di","Mi","Do","Fr","Sa","So"))
       ) %>%
       filter(is.finite(pct_change), is.finite(lag1))
+    
     if (nrow(df) < 30) return(NULL)
     
     last_date <- max(df$Datum)
@@ -2903,18 +2892,20 @@ server <- function(input, output, session) {
     if (nrow(wd_df) < 10) wd_df <- train_df
     w_wd <- w[match(wd_df$Datum, train_df$Datum, nomatch = NA)]
     
-    # --- Gewichte für Basismix aus UI-Inputs (direkt, nicht getOption) ---
-    w_perm <- as.numeric(input$w_perm); if (!is.finite(w_perm)) w_perm <- as.numeric(getOption("mw_w_perm", 0.6))
-    w_wd_m <- as.numeric(input$w_wd);  if (!is.finite(w_wd_m)) w_wd_m <- as.numeric(getOption("mw_w_wd", 0.3))
-    w_lag7 <- as.numeric(input$w_l7);  if (!is.finite(w_lag7)) w_lag7 <- as.numeric(getOption("mw_w_lag7", 0.1))
+    # --- Gewichte für Basismix aus Optionen ---
+    w_perm <- as.numeric(getOption("mw_w_perm", 0.6))
+    w_wd_m <- as.numeric(getOption("mw_w_wd", 0.3))
+    w_lag7 <- as.numeric(getOption("mw_w_lag7", 0.1))
     wsum   <- sum(w_perm, w_wd_m, w_lag7, na.rm = TRUE)
     if (!is.finite(wsum) || wsum <= 0) { w_perm <- 1; w_wd_m <- 0; w_lag7 <- 0; wsum <- 1 }
     a_perm <- w_perm/wsum; a_wd <- w_wd_m/wsum; a_lag7 <- w_lag7/wsum
     
     # --- Modelle ---
+    # Richtung (volle Spezifikation auf train_df)
     m_prob <- glm(I(pct_w > 0) ~ lag1 + lag2 + lag7 + wd,
                   data = train_df, family = quasibinomial(), weights = w)
     
+    # Drei Teilmodelle für Größenprognose
     m_perm <- lm(pct_w ~ lag1 + lag2, data = train_df, weights = w)
     m_wd   <- lm(pct_w ~ wd,          data = wd_df,    weights = w_wd)
     m_l7   <- lm(pct_w ~ lag7,        data = train_df, weights = w)
@@ -2943,14 +2934,18 @@ server <- function(input, output, session) {
       newd <- data.frame(lag1 = lag1_now, lag2 = lag2_now, lag7 = lag7_const,
                          wd = factor(next_wd[k], levels = levels(df$wd)))
       
+      # Richtung
       p_up_k <- as.numeric(predict(m_prob, newdata = newd, type = "response"))
       
+      # Teilvorhersagen + Unsicherheiten
       prP <- predict(m_perm, newdata = newd, se.fit = TRUE); fitP <- as.numeric(prP$fit); seP <- as.numeric(prP$se.fit); seP[!is.finite(seP)] <- 0
       prW <- predict(m_wd,   newdata = newd, se.fit = TRUE); fitW <- as.numeric(prW$fit); seW <- as.numeric(prW$se.fit); seW[!is.finite(seW)] <- 0
       prL <- predict(m_l7,   newdata = newd, se.fit = TRUE); fitL <- as.numeric(prL$fit); seL <- as.numeric(prL$se.fit); seL[!is.finite(seL)] <- 0
       
+      # Ensemble-Mittelpunkt
       y_base <- a_perm*fitP + a_wd*fitW + a_lag7*fitL
       
+      # Ensemble-Varianz-Approx
       var_predP <- seP^2 + sig_perm^2
       var_predW <- seW^2 + sig_wd^2
       var_predL <- seL^2 + sig_l7^2
@@ -2961,7 +2956,7 @@ server <- function(input, output, session) {
       lwr  <- y_base - crit*se_mix
       upr  <- y_base + crit*se_mix
       
-      # ---- Saison-Analog-Boost (verwendet cached sp_all) ----
+      # ---- Saison-Analog-Boost (unverändert)
       ref_use    <- isTRUE(input$ref_use)
       ref_season <- as.character(input$ref_season)
       ref_weight <- as.numeric(input$ref_weight)
@@ -2972,14 +2967,18 @@ server <- function(input, output, session) {
         ref_start  <- if (grepl("2021", ref_season)) as.Date("2021-06-01") else
           if (grepl("2024", ref_season)) as.Date("2024-06-01") else NA
         
-        sp_all <- sp_all_cache()  # <- verwendet den cached loader
-        
-        # falls keine historischen Daten vorhanden, deaktivieren
-        if (is.null(sp_all) || !is.data.frame(sp_all) || is.na(ref_start)) {
-          ref_use <- FALSE
+        get_sp_safe <- function(){
+          out <- NULL
+          if (exists("post_sommerpause_data", mode = "function"))
+            out <- tryCatch(post_sommerpause_data(), error = function(e) NULL)
+          if (is.null(out) && exists("sp", inherits = TRUE))
+            out <- tryCatch(get("sp", inherits = TRUE), error = function(e) NULL)
+          out
         }
+        sp_all <- get_sp_safe()
         
-        if (ref_use) {
+        # only enable analog boost when ref_start valid, ref_use TRUE and history present
+        if (!is.na(ref_start) && ref_use && !is.null(sp_all) && is.data.frame(sp_all)) {
           sp_ref <- sp_all %>%
             filter(Saison == ref_season) %>%
             mutate(Datum = as.Date(Datum)) %>%
@@ -3017,9 +3016,16 @@ server <- function(input, output, session) {
               }
             }
           } else {
-            # zu wenige Referenzdaten -> deaktivieren
+            # zu wenig Referenzdaten -> deaktivieren
             ref_use <- FALSE
+            message("Analog-Boost deaktiviert: zu wenige Referenzdaten für ", ref_season)
           }
+        } else {
+          # keine valide Referenzbasis -> deaktivieren
+          ref_use <- FALSE
+          if (is.na(ref_start)) message("Analog-Boost deaktiviert: ref_start NA für ", ref_season)
+          if (is.null(sp_all) || !is.data.frame(sp_all))
+            message("Analog-Boost deaktiviert: historische Saison-Daten nicht verfügbar für ", ref_season)
         }
       }
       # ---- Ende Analog-Boost
@@ -3052,9 +3058,6 @@ server <- function(input, output, session) {
     list(pred_df = pred_df, info_txt = paste(info_txt, collapse = "\n"))
   })
   
-  
-  
-  
   #### ---- 2-Tages Plot ----
   output$mw_predict_plot <- renderPlot({
     mp <- mw_pred()
@@ -3073,7 +3076,7 @@ server <- function(input, output, session) {
     # Farben je Sicherheit
     pred_df <- pred_df %>%
       dplyr::mutate(
-        prob_signed = ifelse(E_delta >= 0, P_up, -P_up),
+        prob_signed = ifelse(E_delta >= 0, P_up, -P_up),   # <- hier die Logik
         col_delta = dplyr::case_when(
           E_delta >= 0 & P_up > 0.75 ~ "#1B5E20",
           E_delta >= 0 & P_up > 0.25 ~ "#2E7D32",
@@ -3084,32 +3087,36 @@ server <- function(input, output, session) {
         )
       )
     
-    # Optionaler Subtitle (mit Debug-Info)
+    # Optionaler Subtitle
     ref_use <- isTRUE(getOption("mw_ref_use", TRUE))
-    ref_sea <- as.character(getOption("mw_ref_season", "2021-22"))
+    ref_sea <- as.character(getOption("mw_ref_season", 2021-22))
     ref_wgt <- getOption("mw_ref_weight", 0.1)
     sub_txt <- if (ref_use && is.finite(ref_wgt) && !is.na(ref_sea))
       sprintf("Analog-Boost: %s, Gewicht %.0f%%", ref_sea, 100*max(0,min(1,ref_wgt))) else NULL
     
-    if (isTRUE(getOption("mw_debug", FALSE))) {
-      extra <- sprintf(" | DEBUG opts: ref_use=%s ref_season=%s ref_weight=%.3f w_perm=%.3f w_wd=%.3f w_l7=%.3f",
-                       as.character(ref_use), ref_sea, ref_wgt,
-                       getOption("mw_w_perm", NA), getOption("mw_w_wd", NA), getOption("mw_w_lag7", NA))
-      sub_txt <- paste0(ifelse(is.null(sub_txt), "", sub_txt), extra)
-    }
-    
     ggplot(pred_df, aes(x = label)) +
+      # 1) Wahrscheinlichkeit: grauer Balken, bei negativem Δ nach unten
       geom_col(aes(y = prob_signed), width = 0.55, fill = "grey70") +
+      
+      # 2) Δ%: farbiger Balken um 0 herum (auf Primärachse gemappt)
       geom_col(aes(y = map_y(E_delta), fill = col_delta),
                width = 0.3, colour = "black", linewidth = 0.2) +
+      
+      # 3) Unsicherheit Δ: Fehlerbalken, grau, dashed, dicker
       geom_errorbar(aes(ymin = map_y(lwr), ymax = map_y(upr)),
-                    width = 0.12, linewidth = 0.8, linetype = "dashed", colour = "grey40") +
+                    width = 0.12, linewidth = 0.8,
+                    linetype = "dashed", colour = "grey40") +
+      
+      # Null-Linie
       geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
+      
+      # Labels oberhalb/unterhalb des Prob-Balkens
       geom_text(aes(y = ifelse(prob_signed >= 0,
                                pmin(1, prob_signed + 0.06),
                                pmax(-1, prob_signed - 0.06)),
                     label = combo_lbl),
                 size = 5, fontface = "bold") +
+      
       scale_fill_identity() +
       scale_y_continuous(
         limits = c(-1.1, 1.1),
@@ -3119,7 +3126,6 @@ server <- function(input, output, session) {
       labs(title = "2-Tages-Vorhersage", subtitle = sub_txt, x = NULL, y = NULL) +
       theme_minimal(base_size = 16)
   })
-  
   
   ##### ---- Tägliches Speichern ----
   # 1. Täglicher Tick (einmal pro Minute prüfen)
