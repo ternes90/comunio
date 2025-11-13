@@ -1,5 +1,6 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
+Thomas;Uzun;Sturm
 Thomas;Diomande;Sturm
 Thomas;Honorat;Sturm
 Thomas;Stage;Mittelfeld
@@ -22,6 +23,8 @@ Alfons;Remberg;Mittelfeld
 Alfons;Ginter;Abwehr
 Alfons;Querfeld;Abwehr
 Alfons;Pieper;Abwehr
+Alfons;Hranáč;Abwehr
+Alfons;da Costa;Abwehr
 Alfons;van den Berg;Abwehr
 Alfons;Schwäbe;Tor
 Alfons;Peretz;Tor
@@ -31,6 +34,7 @@ Christoph;Baumgartner;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
 Christoph;Avdullahu;Mittelfeld
+Christoph;Lee;Mittelfeld
 Christoph;Lukeba;Abwehr
 Christoph;Mainka;Abwehr
 Christoph;Upamecano;Abwehr
