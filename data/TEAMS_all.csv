@@ -11,9 +11,12 @@ Thomas;Grimaldo;Abwehr
 Thomas;Laimer;Abwehr
 Thomas;Arthur;Abwehr
 Thomas;Nübel;Tor
+Thomas;Feller;Tor
+Thomas;Pereira Cardoso;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
 Alfons;Boniface;Sturm
+Alfons;Hack;Sturm
 Alfons;Sarco;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
@@ -41,6 +44,7 @@ Christoph;Lee;Mittelfeld
 Christoph;Lukeba;Abwehr
 Christoph;Mainka;Abwehr
 Christoph;Upamecano;Abwehr
+Christoph;Deman;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Mittelfeld
