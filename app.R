@@ -179,9 +179,20 @@ shinyButton <- function(id, label = "→") {
 
 # GPT prompt Spieler-Info-Seite
 build_prompt <- function(sp, ve) {
-  paste0(
-    "Aufgabe: Analysiere den Bundesligaspieler ", sp, " (", ve, ").\n",
-    "Heutiges Datum (Europe/Berlin): ", today, ". Nutze NUR Inhalte der letzten 30 Tage; ältere als 'älter' kennzeichnen. Zeitbezüge strikt relativ zu diesem Datum.\n",
+  # Fallback-Konverter: falls ein Argument eine Funktion ist, deparse als Fallback
+  safe_chr <- function(x) {
+    if (is.function(x)) return(deparse(substitute(x)))
+    if (is.null(x)) return("")
+    as.character(x)
+  }
+  
+  sp_chr  <- safe_chr(sp)
+  ve_chr  <- safe_chr(ve)
+  today_s <- format(Sys.Date(), "%Y-%m-%d")
+  
+  parts <- c(
+    paste0("Aufgabe: Analysiere den Bundesligaspieler ", sp_chr, " (", ve_chr, ").\n"),
+    paste0("Heutiges Datum (Europe/Berlin): ", today_s, ". Nutze NUR Inhalte der letzten 30 Tage; ältere als 'älter' kennzeichnen. Zeitbezüge strikt relativ zu diesem Datum.\n"),
     "Quellen: Vereinsseiten, bundesliga.com, dfb.de, kicker.de, transfermarkt.de, LigaInsider, Comunio-Magazin, seriöse Regionalmedien. Keine Social Media/Foren. Jede Aussage mit [1], [2] … belegen; jüngste Quelle gewinnt. Unklares als 'Unklar'.\n",
     "Bestimme den nächsten Bundesligaspieltag inkl. Gegner, Datum, Ort aus offizieller Quelle.\n\n",
     "Liefere GENAU diese Abschnitte:\n",
@@ -193,7 +204,11 @@ build_prompt <- function(sp, ve) {
     "- Gegneranalyse nächster Spieltag:\n",
     "- Quellen (YYYY-MM-DD):"
   )
+  
+  # sichere Verkettung
+  paste0(vapply(parts, safe_chr, FUN.VALUE = character(1)), collapse = "")
 }
+
 
 make_links <- function(x){
   # 1) Markdown-Links -> HTML
@@ -632,6 +647,7 @@ ui <- navbarPage(
              id = "transfermarkt_tabs",               # id
              tabPanel("Transfermarkt Details",
                       uiOutput("bid_prediction"),
+                      uiOutput("blocked_managers"),
                       DTOutput("transfermarkt_detail")
              ),
              
@@ -711,8 +727,24 @@ ui <- navbarPage(
                
                tags$div("Leistungsdaten",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
-               div(style = "margin-bottom:20px;width:100%;",
-                   DTOutput("spieler_info_raw", width = "100%")),
+               div(style = "display:flex; gap:16px; width:100%; align-items:flex-start; margin-bottom:20px;",
+                   
+                   # linke Hälfte: CA data
+                   div(style = "flex:1 1 70%; text-align:center;",
+                       div("com-analytics", style = "font-size:14px;font-weight:bold;color:black;margin-bottom:8px;"),
+                       div(style = "margin:0 auto; width:95%;",
+                           DTOutput("spieler_info_raw", width = "100%")
+                       )
+                   ),
+                   
+                   # rechte Hälfte: Preis-Leistung
+                   div(style = "flex:1 1 30%; text-align:center;",
+                       tags$div("Preis/Leistung", style = "font-size:14px;font-weight:bold;color:black;margin-bottom:8px;"),
+                       div(style = "margin:0 auto; width:95%;",
+                           plotlyOutput("spieler_price_perf_small", height = "500px", width = "100%")
+                       )
+                   )
+               ),
                
                tags$div("Chat GPT Analyse",
                         style = "text-align:center;font-size:16px;font-weight:bold;color:black;margin-bottom:10px;"),
@@ -736,6 +768,14 @@ ui <- navbarPage(
                )
              ),
              
+             tabPanel(
+               title = "Preis-Leistung",
+               value = "price_perf_overview",
+               div(style = "width:100%;",
+                   plotlyOutput("price_perf_plot", height = 700, width = "100%")
+               )
+             ),
+             
              tabPanel(title = "Transfer-Simulator",
                       value = "transfer_simulator",
                       selectInput("spieler_select", "Spieler auf Transfermarkt:", choices = NULL),
@@ -745,6 +785,7 @@ ui <- navbarPage(
                         column(3, checkboxGroupInput("team_select",     "Eigene Spieler für Deckung:", choices = NULL))
                       )
              ),
+             
              tabPanel(title = "Angebot-Analyse",
                       value = "angebot_analyse",
                       
@@ -780,6 +821,12 @@ ui <- navbarPage(
              id = "kader_tabs",
              tabPanel(
                "Mein Kader",
+               selectInput(
+                 inputId = "manager_select_mein_kader",
+                 label   = "Manager:",
+                 choices = NULL,           # wird serverseitig befüllt
+                 selected = NULL
+               ),
                uiOutput("mein_kader")
              ),
              tabPanel(
@@ -973,7 +1020,7 @@ ui <- navbarPage(
 # ---- SERVER ----
 server <- function(input, output, session) {
   
-  ## ---- reactive_vals ----
+  # ---- reactive_vals(0) / observe ----
   startup_time <- reactiveVal(NULL)
   verfuegbares_kapital_dominik <- reactiveVal(0)
   kontostand_dominik           <- reactiveVal(0)
@@ -1049,19 +1096,19 @@ server <- function(input, output, session) {
   })
   
   # Action Button 1
-  # Server‑Logik zum Wechseln und Vorwählen für Transfer-Simulator
+  #Server‑Logik zum Wechseln und Vorwählen für Transfer-Simulator
   observeEvent(input$transfer_row, {
     idx <- input$transfer_row
     df  <- tm_trend_global()        # global gespeichertes DataFrame
     player <- df$Spieler[idx]
-    
+
     # Tab wechseln
     updateTabsetPanel(
       session,
-      inputId  = "transfermarkt_tabs", 
+      inputId  = "transfermarkt_tabs",
       selected = "transfer_simulator"      # <-- exakt der Wert aus value= oben
     )
-    
+
     # Spieler im SelectInput vorwählen
     updateSelectInput(
       session,
@@ -1098,7 +1145,7 @@ server <- function(input, output, session) {
         inputId  = "spieler_select2",
         selected = player
       )
-    }, delay = 0.2)   # 200 ms reicht meist
+    }, delay = 0.2)
   })
   
   # Action Button 3 (Mein Team)
@@ -1248,7 +1295,7 @@ server <- function(input, output, session) {
   
   # ---- data ----
   
-  ## ---- df ----
+  ## ---- df / transfers / transactions  ----
   
   teams_df <- read.csv2("data/TEAMS_all.csv", sep = ";", stringsAsFactors = FALSE)
   
@@ -1322,15 +1369,48 @@ server <- function(input, output, session) {
   ) %>%
     mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"))
   
-  # ANGEBOTE
-  # angebote <- read.csv2("data/ANGEBOTE.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8", check.names = FALSE) %>%
-  #   mutate(Datum = as.Date(Datum, format = "%d.%m.%Y")) 
-  
   # marktwertverlauf_gesamt
   mw_all <- read.csv("data/marktwertverlauf_gesamt.csv", sep = ";", encoding = "UTF-8")
   
   # LI Info 
   li_df <- read.csv2("data/LI_player_profiles.csv", sep = ";", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
+  
+  # robuster LI-Subset + Fallback-Berechnung für EQ-Werte
+  li_subset <- li_df %>%
+    select(any_of(c("Comunio_Name", "EQ_Gesamt_Quote", "EQ_Startelf_.",
+                    "Bilanz_Gesamt_Einsätze","Bilanz_Gesamt_Startelf",
+                    "Bilanz_Gesamt_Bank","Bilanz_Gesamt_Nicht_im_Kader"))) %>%
+    mutate(
+      Comunio_Name = trimws(as.character(Comunio_Name)),
+      
+      # bereits vorhandene EQ-Felder säubern (',' -> '.' ; '%' entfernen)
+      EQ_Gesamt_Quote = suppressWarnings(as.numeric(gsub(",", ".", gsub("%", "", as.character(EQ_Gesamt_Quote))))),
+      `EQ_Startelf_.` = suppressWarnings(as.numeric(gsub(",", ".", gsub("%", "", as.character(`EQ_Startelf_.`))))) ,
+      
+      # Bilanz-Felder in numerisch (nicht-numerische Zeichen entfernen; '-' -> NA)
+      Bil_Einsa = suppressWarnings(as.numeric(gsub("[^0-9]", "", as.character(Bilanz_Gesamt_Einsätze)))),
+      Bil_Start = suppressWarnings(as.numeric(gsub("[^0-9]", "", as.character(Bilanz_Gesamt_Startelf)))),
+      Bil_Bank  = suppressWarnings(as.numeric(gsub("[^0-9]", "", as.character(Bilanz_Gesamt_Bank)))),
+      Bil_NK    = suppressWarnings(as.numeric(gsub("[^0-9]", "", as.character(Bilanz_Gesamt_Nicht_im_Kader))))
+    ) %>%
+    # Fallback-Berechnungen nur wenn original NA und Bilanzzahlen vorhanden
+    mutate(
+      EQ_Gesamt_Quote = ifelse(
+        is.na(EQ_Gesamt_Quote) & !is.na(Bil_Einsa),
+        # Vermeide Division durch 0: falls Summe 0 -> NA
+        {
+          denom <- Bil_Einsa + coalesce(Bil_Bank, 0) + coalesce(Bil_NK, 0)
+          ifelse(denom > 0, round(100 * (Bil_Einsa / denom), 0), NA_real_)
+        },
+        EQ_Gesamt_Quote
+      ),
+      `EQ_Startelf_.` = ifelse(
+        is.na(`EQ_Startelf_.`) & !is.na(Bil_Start) & !is.na(Bil_Einsa) & Bil_Einsa > 0,
+        round(100 * (Bil_Start / Bil_Einsa), 0),
+        `EQ_Startelf_.`
+      )
+    ) %>%
+    select(Comunio_Name, EQ_Gesamt_Quote, `EQ_Startelf_.`)
   
   ## ---- df lazy load ----
   load_non_dashboard_data <- function() {
@@ -1346,13 +1426,13 @@ server <- function(input, output, session) {
       ca_df <<- safe(quote({
         read_delim("data/com_analytics_all_players.csv", delim = ";",
                    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-                   show_col_types = FALSE) %>%
+                   na = c("", "NA", "N/A", "n/a", "-", "–"), show_col_types = FALSE) %>%
           mutate(SPIELER = trimws(enc2utf8(as.character(SPIELER))),
                  Datum   = as.Date(Datum, format = "%d.%m.%Y")) %>%
-          filter(Datum == max(Datum, na.rm = TRUE)) %>%
-          transmute(SPIELER, Position = Positionsgruppe, Verein = POSITION,
+          filter(Datum == max(Datum, na.rm = TRUE)) %>% 
+          transmute(SPIELER, Position = Positionsgruppe, Verein = VEREIN,
                     Punkte_pro_Spiel = `PUNKTE PRO SPIEL`, Gesamtpunkte = GESAMTPUNKTE,
-                    Preis_Leistung = `PREIS-LEISTUNG`, Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`,
+                    Historische_Punkteausbeute = `HISTORISCHE PUNKTEAUSBEUTE`,
                     Verletzungsanfälligkeit = Verletzungsanfälligkeit)
       }))
     }
@@ -1361,10 +1441,20 @@ server <- function(input, output, session) {
       ca2_df <<- safe(quote({
         read_delim("data/com_analytics_transfer_market_computer.csv", delim = ";",
                    locale = locale(encoding = "UTF-8", decimal_mark = ".", grouping_mark = ","),
-                   na = c("", "NA", "N/A", "n/a", "-"), show_col_types = FALSE) %>%
+                   na = c("", "NA", "N/A", "n/a", "-", "–"), show_col_types = FALSE) %>%
           mutate(Datum = as.Date(Datum, format = "%d.%m.%Y"),
                  SPIELER = trimws(enc2utf8(as.character(SPIELER)))) %>%
-          filter(Datum == max(Datum, na.rm = TRUE))
+          filter(Datum == max(Datum, na.rm = TRUE)) %>%
+          # kleine Normalisierung: einheitliche Feldnamen
+          rename(
+            Punkte_pro_Spiel = `PUNKTE / SPIEL`,
+            Preis_Leistung   = `PREIS-LEISSTUNG`,
+            Marktwert        = MARKTWERT,
+            Zielwert         = ZIELWERT,
+            Kaufempfehlung   = KAUFEMPFEHLUNG,
+            Gebotsvorhersage = GEBOTSVORHERSAGE,
+            Erwartete_Punkte = `ERWARTETE PUNKTE`
+          )
       }))
     }
     
@@ -1388,7 +1478,7 @@ server <- function(input, output, session) {
   })
   
   
-  ## ---- reactives ----
+  ## ---- reactive ----
   
   # Global nicht möglich
   ### ---- spieler_stats_spielplan ----
@@ -1496,16 +1586,16 @@ server <- function(input, output, session) {
     if (!identical(input$main_navbar, "Transfermarkt")) return()
     if (is.null(input$spieler_select2) || !nzchar(input$spieler_select2)) return()
     if (!exists("li_df", inherits = TRUE) || !is.data.frame(li_df)) return()
-    
+
     k <- norm_key(input$spieler_select2)
     cache <- match_li_cache()
     if (!is.null(cache[[k]])) return()   # already cached
-    
+
     tmp <- li_df
     tmp$.k <- norm_key(tmp$Comunio_Name)
     out <- tmp[tmp$.k == k, , drop = FALSE]
     if (nrow(out) > 0) out <- out[1, , drop = FALSE]
-    
+
     cache[[k]] <- out
     match_li_cache(cache)
   }, ignoreInit = TRUE)
@@ -1625,34 +1715,172 @@ server <- function(input, output, session) {
       arrange(Bieter, MW_Klasse)
   })
   
+  ### ---- price_perf_df ----
+  price_perf_df <- reactive({
+    req(ap_df, ca_df)
+    
+    # inline, robustes Parsen von numerischen Strings (Tausender/Dezimal)
+    parse_num_inline <- function(x) {
+      x <- as.character(x)
+      x[is.na(x)] <- ""
+      x <- trimws(x)
+      x[x == ""] <- NA_character_
+      x <- gsub("\\s+", "", x)
+      
+      # beide "." und "," -> "." als Dezimal (also "." entfernen, ","->".")
+      idx_both <- grepl("\\.", x) & grepl(",", x)
+      if (any(idx_both, na.rm = TRUE)) {
+        x[idx_both] <- gsub("\\.", "", x[idx_both])
+        x[idx_both] <- gsub(",", ".", x[idx_both], fixed = TRUE)
+      }
+      
+      # nur "," -> Komma als Dezimal
+      idx_comma <- !grepl("\\.", x) & grepl(",", x)
+      if (any(idx_comma, na.rm = TRUE)) {
+        x[idx_comma] <- gsub(",", ".", x[idx_comma], fixed = TRUE)
+      }
+      
+      # nur "." bleibt (Punkt als Dezimal) -> nothing
+      # sonst: try numeric
+      suppressWarnings(as.numeric(x))
+    }
+    
+    # aktueller Marktwert pro Spieler (letzter Datumseintrag) — robust parsen
+    ap_latest <- ap_df %>%
+      group_by(Spieler) %>%
+      slice_max(Datum, with_ties = FALSE) %>%
+      ungroup() %>%
+      transmute(Spieler, Marktwert_num = parse_num_inline(Marktwert))
+    
+    # ca_df: SPIELER + Roh-PPS + Gesamtpunkte
+    ca_in <- ca_df %>%
+      transmute(
+        SPIELER = as.character(SPIELER),
+        PPS_raw = as.character(`Punkte_pro_Spiel`),
+        GESAMTPUNKTE = as.character(Gesamtpunkte)
+      )
+    
+    # join + Parsen
+    df <- ca_in %>%
+      left_join(ap_latest, by = c("SPIELER" = "Spieler")) %>%
+      mutate(
+        PPS_num = parse_num_inline(PPS_raw),
+        MW_num  = as.numeric(Marktwert_num)
+      )
+    
+    # brauchbare Fälle
+    mask <- df %>% filter(!is.na(MW_num) & !is.na(PPS_num) & PPS_num > 0 & PPS_num < 100)
+    if (nrow(mask) < 10) {
+      med_pps <- median(df$PPS_num, na.rm = TRUE)
+      if (!is.finite(med_pps) || is.na(med_pps)) med_pps <- 1
+      df <- df %>%
+        mutate(
+          expected_PPS = med_pps,
+          expected_PPS = pmax(expected_PPS, 0.1),
+          rel_diff = ifelse(is.na(PPS_num), NA_real_, (PPS_num - expected_PPS) / expected_PPS)
+        )
+    } else {
+      safe_x <- log1p(mask$MW_num)
+      try({
+        m_loess <- loess(PPS_num ~ safe_x, data = mask, span = 0.5, control = loess.control(surface = "direct"))
+        pred_all <- tryCatch(predict(m_loess, newdata = data.frame(safe_x = log1p(df$MW_num))), error = function(e) rep(NA_real_, nrow(df)))
+        pred_all[is.na(pred_all)] <- median(mask$PPS_num, na.rm = TRUE)
+        df$expected_PPS <- pred_all
+        df$expected_PPS <- pmax(df$expected_PPS, 0.1)
+        df$rel_diff <- ifelse(is.na(df$PPS_num), NA_real_, (df$PPS_num - df$expected_PPS) / df$expected_PPS)
+      }, silent = TRUE)
+      
+      if (!"expected_PPS" %in% names(df)) {
+        med_pps <- median(mask$PPS_num, na.rm = TRUE)
+        if (!is.finite(med_pps) || is.na(med_pps)) med_pps <- 1
+        df <- df %>% mutate(expected_PPS = med_pps, expected_PPS = pmax(expected_PPS, 0.1),
+                            rel_diff = ifelse(is.na(PPS_num), NA_real_, (PPS_num - med_pps) / med_pps))
+      }
+    }
+    
+    # Score, z und Perzentil-Labeling
+    df <- df %>%
+      mutate(
+        rel_pct = round(rel_diff * 100, 1),
+        Preis_Leistung_score = rel_pct
+      )
+    
+    sd_rel <- sd(df$rel_diff, na.rm = TRUE)
+    mean_rel <- mean(df$rel_diff, na.rm = TRUE)
+    df$rel_z <- ifelse(is.na(df$rel_diff) | is.na(sd_rel) | sd_rel == 0, NA_real_, (df$rel_diff - mean_rel) / sd_rel)
+    
+    q <- quantile(df$rel_diff, probs = c(0.10, 0.33, 0.67, 0.90), na.rm = TRUE, type = 7)
+    df$Preis_Leistung_label <- case_when(
+      is.na(df$rel_diff)           ~ NA_character_,
+      df$rel_diff >= q[4]         ~ "Sehr gut",
+      df$rel_diff >= q[3]         ~ "Gut",
+      df$rel_diff >= q[2]         ~ "Durchschnittlich",
+      df$rel_diff >= q[1]         ~ "Schlecht",
+      TRUE                        ~ "Sehr schlecht"
+    )
+    df$Preis_Leistung_label[is.na(df$Preis_Leistung_label)] <- "-"
+    
+    df %>%
+      select(SPIELER, MW_num, PPS_num, expected_PPS, Preis_Leistung_score, Preis_Leistung_label, rel_z)
+  })
+  
+  
+  
+  
   ## ---- helper functions ----
   # HELPER: GPT prompt builder für Spieler-Info Seite (muss im server sein, da sie auf Datensätze zugreift, die global nicht vorhanden sind) 
   get_verein <- function(sp) {
     norm <- function(x) tolower(trimws(enc2utf8(as.character(x))))
-    sel  <- norm(sp)
+    sel <- norm(sp)
     
-    if (exists("ap_df", inherits=TRUE) && is.data.frame(ap_df) && nrow(ap_df) > 0) {
-      tmp <- ap_df %>%
-        mutate(.k = norm(Spieler), Datum = as.Date(Datum)) %>%
-        filter(.k == sel)
-      if (nrow(tmp) > 0) {
-        row <- tmp %>% filter(Datum == today) %>% slice_tail(n=1)
-        if (nrow(row) == 0) row <- tmp %>% arrange(desc(Datum)) %>% slice_head(n=1)
+    # 1) Prüfe ap_df wie bisher
+    if (exists("ap_df", inherits = TRUE) && is.data.frame(ap_df) && nrow(ap_df) > 0) {
+      tmp <- ap_df
+      tmp$._k <- norm(tmp$Spieler)
+      tmp$Datum <- as.Date(tmp$Datum)
+      tmp2 <- tmp[tmp$._k == sel, , drop = FALSE]
+      if (nrow(tmp2) > 0) {
+        row <- tmp2[tmp2$Datum == Sys.Date(), , drop = FALSE]
+        if (nrow(row) == 0) row <- tmp2[order(-as.numeric(tmp2$Datum)), , drop = FALSE][1, , drop = FALSE]
         ve <- as.character(row$Verein[1])
-        if (nzchar(ve)) return(ve)
+        if (!is.na(ve) && nzchar(ve)) return(ve)
       }
     }
     
-    src <- if (exists("ca2_df", inherits=TRUE)) ca2_df
-    else if (exists("ca_df2", inherits=TRUE)) ca_df2
-    else if (exists("ca_df",  inherits=TRUE)) ca_df
-    else NULL
-    if (is.null(src) || !is.data.frame(src) || nrow(src) == 0) return("")
-    tmp2 <- src %>% mutate(.k = norm(SPIELER)) %>% filter(.k == sel)
-    if (nrow(tmp2) == 0) return("")
-    col <- if ("TEAM" %in% names(src)) "TEAM" else if ("VEREIN" %in% names(src)) "VEREIN" else return("")
-    v <- as.character(tmp2[[col]][1]); ifelse(is.na(v), "", v)
+    # 2) Stelle sicher, dass die ca*_Daten geladen sind (wenn Loader vorhanden)
+    if (!exists("ca2_df", inherits = TRUE) && exists("load_non_dashboard_data")) {
+      try(suppressWarnings(load_non_dashboard_data()), silent = TRUE)
+    }
+    
+    # 3) Wähle mögliche Quellen in Reihenfolge
+    src <- NULL
+    if (exists("ca2_df", inherits = TRUE) && is.data.frame(ca2_df) && nrow(ca2_df) > 0) src <- ca2_df
+    else if (exists("ca_df", inherits = TRUE) && is.data.frame(ca_df) && nrow(ca_df) > 0) src <- ca_df
+    if (is.null(src)) return("")
+    
+    # 4) Arbeite mit einer base-data.frame-Kopie (falltolerant bzgl. Groß-/Kleinschreibung)
+    src2 <- as.data.frame(src, stringsAsFactors = FALSE)
+    names_up <- toupper(names(src2))
+    
+    # Finde Spieler-Spalte
+    sp_col_idx <- which(names_up %in% c("SPIELER", "NAME"))
+    if (length(sp_col_idx) == 0) return("")
+    sp_col <- names(src2)[sp_col_idx[1]]
+    
+    # Finde Vereins-Spalte
+    ver_col_idx <- which(names_up %in% c("TEAM", "VEREIN", "CLUB", "POSITION"))
+    if (length(ver_col_idx) == 0) return("")
+    ver_col <- names(src2)[ver_col_idx[1]]
+    
+    # Filter nach Spieler
+    vals_sp <- tolower(trimws(enc2utf8(as.character(src2[[sp_col]]))))
+    match_idx <- which(vals_sp == sel)
+    if (length(match_idx) == 0) return("")
+    v <- as.character(src2[[ver_col]][match_idx[1]])
+    if (is.na(v)) return("")
+    v
   }
+  
   
   mw_aktuell_rx <- reactive({
     gesamt_mw_roh %>%
@@ -3050,19 +3278,33 @@ server <- function(input, output, session) {
         combo_lbl = sprintf("%.0f%% → %+.2f%%", 100 * P_up, E_delta)
       )
     
+    # Info-Test für Dashboard-Graphen
+    p_up <- pred_df$P_up
+    p_down <- 1 - p_up
+    
+    direction_lbl <- ifelse(p_up >= 0.5,
+                            paste0("P↑ ", sprintf("%.1f%%", 100 * p_up)),
+                            paste0("P↓ ", sprintf("%.1f%%", 100 * p_down)))
+    
     info_txt <- paste0(
-      pred_df$label_raw, ": P↑ ", sprintf("%d%%", round(100*pred_df$P_up)),
+      pred_df$label_raw, ": ", direction_lbl,
       ", Δ ", sprintf("%+.2f%%", pred_df$E_delta)
     )
+    
     
     list(pred_df = pred_df, info_txt = paste(info_txt, collapse = "\n"))
   })
   
   #### ---- 2-Tages Plot ----
   output$mw_predict_plot <- renderPlot({
-    mp <- mw_pred()
-    if (is.null(mp)) return(invisible(NULL))
+    # ausschliesslich Cache verwenden; wenn leer, neu versuchen in 1s
+    mp <- tryCatch(mw_pred_cached(), error = function(e) NULL)
+    if (is.null(mp)) {
+      invalidateLater(1000, session)   # re-evaluate in 1s
+      return(invisible(NULL))
+    }
     pred_df <- mp$pred_df
+    
     pred_df$label <- factor(pred_df$label_raw, levels = pred_df$label_raw)
     
     # Skala für Δ so, dass 0% -> 0 (gemeinsamer Ursprung)
@@ -3076,15 +3318,20 @@ server <- function(input, output, session) {
     # Farben je Sicherheit
     pred_df <- pred_df %>%
       dplyr::mutate(
-        prob_signed = ifelse(E_delta >= 0, P_up, -P_up),   # <- hier die Logik
+        p_down = 1 - P_up,
+        prob_signed = ifelse(E_delta >= 0, P_up, -p_down),   # <- geändert: nutzt p_down für negative Fälle
         col_delta = dplyr::case_when(
           E_delta >= 0 & P_up > 0.75 ~ "#1B5E20",
           E_delta >= 0 & P_up > 0.25 ~ "#2E7D32",
           E_delta >= 0               ~ "#66BB6A",
-          E_delta <  0 & P_up > 0.75 ~ "#B71C1C",
-          E_delta <  0 & P_up > 0.25 ~ "#D32F2F",
-          TRUE                       ~ "#EF5350"
-        )
+          E_delta <  0 & p_down > 0.75 ~ "#B71C1C",
+          E_delta <  0 & p_down > 0.25 ~ "#D32F2F",
+          TRUE                         ~ "#EF5350"
+        ),
+        prob_lbl = ifelse(E_delta >= 0,
+                          sprintf("P↑ %.1f%%", 100 * P_up),
+                          sprintf("P↓ %.1f%%", 100 * p_down)),
+        label_text = paste0(prob_lbl, "\n", sprintf("%+.2f%%", E_delta))
       )
     
     # Optionaler Subtitle
@@ -3094,37 +3341,39 @@ server <- function(input, output, session) {
     sub_txt <- if (ref_use && is.finite(ref_wgt) && !is.na(ref_sea))
       sprintf("Analog-Boost: %s, Gewicht %.0f%%", ref_sea, 100*max(0,min(1,ref_wgt))) else NULL
     
+    # dynamische Plot-Limits so, dass Δ und CIs vollständig sichtbar sind
+    y_min <- min(pred_df$lwr, pred_df$E_delta, -R * 1.1, na.rm = TRUE)
+    y_max <- max(pred_df$upr, pred_df$E_delta,  R * 1.1, na.rm = TRUE)
+    pad   <- 0.03 * (y_max - y_min); y_min <- y_min - pad; y_max <- y_max + pad
+    
     ggplot(pred_df, aes(x = label)) +
-      # 1) Wahrscheinlichkeit: grauer Balken, bei negativem Δ nach unten
-      geom_col(aes(y = prob_signed), width = 0.55, fill = "grey70") +
-      
-      # 2) Δ%: farbiger Balken um 0 herum (auf Primärachse gemappt)
-      geom_col(aes(y = map_y(E_delta), fill = col_delta),
+      # Wahrscheinlichkeit (zuerst, leicht transparent, liegt hinten)
+      geom_col(aes(y = prob_signed * R), width = 0.55, fill = "grey70", alpha = 0.35) +
+      # Δ% (darüber, voll sichtbar)
+      geom_col(aes(y = E_delta, fill = col_delta),
                width = 0.3, colour = "black", linewidth = 0.2) +
-      
-      # 3) Unsicherheit Δ: Fehlerbalken, grau, dashed, dicker
-      geom_errorbar(aes(ymin = map_y(lwr), ymax = map_y(upr)),
+      # Unsicherheit Δ (darüber)
+      geom_errorbar(aes(ymin = lwr, ymax = upr),
                     width = 0.12, linewidth = 0.8,
                     linetype = "dashed", colour = "grey40") +
-      
       # Null-Linie
       geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
-      
-      # Labels oberhalb/unterhalb des Prob-Balkens
+      # Labels nahe den Prob-Balken (in Primärachse-Einheiten)
       geom_text(aes(y = ifelse(prob_signed >= 0,
-                               pmin(1, prob_signed + 0.06),
-                               pmax(-1, prob_signed - 0.06)),
-                    label = combo_lbl),
+                               pmin(R * 1.05, prob_signed * R + 0.06 * R),
+                               pmax(-R * 1.05, prob_signed * R - 0.06 * R)),
+                    label = label_text),
                 size = 5, fontface = "bold") +
-      
       scale_fill_identity() +
       scale_y_continuous(
-        limits = c(-1.1, 1.1),
-        name   = "Wahrscheinlichkeit (signiert)",
-        sec.axis = sec_axis(~ inv_y(.), name = "Δ Marktwert (%)")
+        limits = c(y_min, y_max),
+        name   = "Δ Marktwert (%)",
+        sec.axis = sec_axis(~ . / R, name = "Wahrscheinlichkeit (signiert)")
       ) +
       labs(title = "2-Tages-Vorhersage", subtitle = sub_txt, x = NULL, y = NULL) +
       theme_minimal(base_size = 16)
+    
+    
   })
   
   ##### ---- Tägliches Speichern ----
@@ -3569,8 +3818,9 @@ server <- function(input, output, session) {
   
   ## ---- Gebote pro Wochentag ----
   
-  # 1) avg_bids_wd als Reactive (einmalig im Server)
+  # 1) avg_bids_wd (per-Manager Wochentag-Rang)
   avg_bids_wd <- reactive({
+    req(!is.null(gebotsprofil_cache()))
     gp <- gebotsprofil_clean() %>%
       group_by(Datum, Bieter) %>%
       summarise(Anzahl = n(), .groups = "drop") %>%
@@ -3581,56 +3831,99 @@ server <- function(input, output, session) {
         Bieter,
         Datum = seq(min(Datum), max(Datum), by = "day"),
         fill = list(Anzahl = 0)
-      ) %>% mutate(
-      Wochentag = factor(
-        weekdays(Datum, abbreviate = TRUE),
-        levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
-      )
-    ) %>%
+      ) %>%
+      mutate(
+        Wochentag = factor(
+          weekdays(Datum, abbreviate = TRUE),
+          levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
+        )
+      ) %>%
       group_by(Bieter, Wochentag) %>%
-      summarise(avg_bids = mean(Anzahl), .groups = "drop")
+      summarise(avg_bids = mean(Anzahl), .groups = "drop") %>%
+      group_by(Bieter) %>%
+      arrange(Bieter, desc(avg_bids)) %>%
+      mutate(rank = dense_rank(desc(avg_bids))) %>%  # Rang 1 = persönlich stärkster Wochentag
+      ungroup()
   })
   
-  # 2) Vorhersage-Box für heute
+  # 2) Einzeilige Vorhersage-Box für heute (per-Manager-Rang)
   output$bid_prediction <- renderUI({
-    # Welcher Wochentag ist heute?
     today_wd <- factor(
       weekdays(today, abbreviate = TRUE),
       levels = c("Mo","Di","Mi","Do","Fr","Sa","So")
     )
     
-    # Top-3 (ohne dich selbst und Dominik)
-    top3 <- avg_bids_wd() %>%
-      filter(
-        Wochentag == today_wd,
-        !Bieter %in% c("DeinBieterName","Dominik")
-      ) %>%
-      arrange(desc(avg_bids)) %>%
-      slice_head(n = 3)
+    df <- avg_bids_wd() %>%
+      filter(Wochentag == today_wd) %>%
+      filter(!Bieter %in% c("DeinBieterName","Dominik")) %>%
+      arrange(rank, desc(avg_bids))   # Rang 1 zuerst; bei Gleichstand nach avg_bids
     
-    # Wenn nichts da ist, gar nichts anzeigen
-    if (nrow(top3) == 0) return(NULL)
+    if (nrow(df) == 0) return(NULL)
     
-    # Beschriftung bauen
-    labels <- sprintf(
-      "<b>%s</b> (Ø %s Gebote)",
-      top3$Bieter,
-      format(round(top3$avg_bids, 2), decimal.mark = ",")
-    )
+    labels <- vapply(seq_len(nrow(df)), function(i) {
+      sprintf(
+        "<strong>%s:</strong>&nbsp;Rang&nbsp;%d&nbsp;(&gt;%s&lt;)",
+        df$Bieter[i],
+        df$rank[i],
+        format(round(df$avg_bids[i], 2), decimal.mark = ",")
+      )
+    }, FUN.VALUE = "")
     
-    HTML(paste0(
-      "<div style='margin:8px 0; padding:8px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;'>",
-      "<strong>Erwartete Bieter heute (", 
-      format(today, "%A, %d.%m.%Y"), "):</strong> ",
-      paste(labels, collapse = " | "),
-      "</div>"
+    line <- paste(labels[nzchar(labels)], collapse = "&nbsp;&middot;&nbsp;")
+    
+    HTML(sprintf(
+      "<div style='background:#f2f2f2;padding:6px;border-radius:6px;font-size:90%%;overflow-x:auto;white-space:nowrap;'>%s</div>",
+      line
     ))
   })
   
-
+  
+  ## ---- Blockierte Vereine ----
+  blocked_by_manager <- reactive({
+    req(teams_df, ca_df)
+    
+    pcm <- ca_df %>%
+      select(Spieler = SPIELER, Verein) %>%
+      distinct() 
+    
+    teams_df %>%
+      mutate(Spieler = trimws(as.character(Spieler)),
+             Manager = trimws(as.character(Manager))) %>%
+      left_join(pcm, by = "Spieler") %>%
+      mutate(Verein = ifelse(is.na(Verein), "", Verein)) %>%
+      group_by(Manager, Verein) %>%
+      summarise(cnt = n(), .groups = "drop") %>%
+      filter(Verein != "" & cnt >= 3) %>%
+      group_by(Manager) %>%
+      summarise(teams = list(Verein), .groups = "drop")
+  })
+  
+  output$blocked_managers <- renderUI({
+    req(blocked_by_manager())
+    blocked <- blocked_by_manager()
+    if (nrow(blocked) == 0) {
+      return(HTML("<div style='margin:4px 0;padding:6px;color:#666;font-size:90%;'>Keine Manager mit ≥3 Spielern desselben Vereins gefunden.</div>"))
+    }
+    blocked <- blocked %>% slice_head(n = 8)
+    items <- vapply(seq_len(nrow(blocked)), function(i) {
+      mgr <- blocked$Manager[i]
+      teams <- blocked$teams[[i]]
+      if (length(teams) == 0) return("")
+      logos_html <- vapply(teams, function(tm) {
+        lm <- logo_map[tm]
+        if (is.na(lm) || lm == "") sprintf("<span style='margin-left:6px;font-size:90%%;'>%s</span>", tm)
+        else sprintf('<img src="logos/%s" title="%s" style="height:18px;max-width:40px;width:auto;vertical-align:middle;margin-left:6px;object-fit:contain;"/>', lm, tm)
+      }, FUN.VALUE = "")
+      sprintf("<strong>%s:</strong>&nbsp;%s", mgr, paste(logos_html, collapse = ""))
+    }, FUN.VALUE = "")
+    line <- paste(items[nzchar(items)], collapse = "&nbsp;&nbsp;&middot;&nbsp;&nbsp;")
+    HTML(sprintf("<div style='background:#f2f2f2;padding:6px;border-radius:6px;font-size:90%%;overflow-x:auto;white-space:nowrap;'>%s</div>", line))
+  })
+  
+  
   ## ---- Tabelle ----
   
-  # 2) Observer oder reactive, der tm_common einmal neu berechnet, sobald tm_df oder ap_df sich ändern:
+  # Observer oder reactive, der tm_common einmal neu berechnet, sobald tm_df oder ap_df sich ändern:
   observeEvent(list(tm_df, ap_df), {
     
     df <- tm_df %>%
@@ -3880,19 +4173,43 @@ server <- function(input, output, session) {
     # 6) Historische Punkte & Details mergen
     df <- df %>%
       left_join(
-        ca2_df %>%
-            select(
-              SPIELER,
-              POSITION,
-              PUNKTE,
-              `Punkte pro Spiel` = `PUNKTE / SPIEL`,
-              `Preis-Leistung` = `PREIS-LEISSTUNG`,
-              Zielwert = `ZIELWERT`,
-              Empfehlung = `KAUFEMPFEHLUNG`,
-              Gebote = `GEBOTSVORHERSAGE`
-            ),
+        ca_df %>%
+          select(
+            SPIELER,
+            Position,
+            Gesamtpunkte,
+            Punkte_pro_Spiel
+          ),
+        by = c("Spieler" = "SPIELER")
+      ) %>%
+      mutate(
+             across(
+               c(Position, Punkte_pro_Spiel),
+               ~ ifelse(is.na(.x) | .x == "", "-", as.character(.x))
+             )
+      ) %>%  left_join(
+        price_perf_df() %>% transmute(SPIELER, `Preis-Leistung` = Preis_Leistung_label, Preis_Leistung_Score = Preis_Leistung_score),
         by = c("Spieler" = "SPIELER")
       )
+    
+    # 6.25) LI-Info E/S11 hinter Preis-Leistung Feld anzeigen
+    df <- df %>%
+      left_join(li_subset, by = c("Spieler" = "Comunio_Name")) %>%
+      mutate(
+        # roh reinigen, Prozentzeichen entfernen, Dezimal-Komma -> Punkt
+        EQ_Gesamt_num = suppressWarnings(as.numeric(gsub(",", ".", gsub("[^0-9,.-]", "", EQ_Gesamt_Quote)))),
+        EQ_S11_num    = suppressWarnings(as.numeric(gsub(",", ".", gsub("[^0-9,.-]", "", `EQ_Startelf_.`)))),
+        
+        # runden / NA handhaben (gute Basis für Sortierung)
+        EQ_Gesamt_num = ifelse(is.na(EQ_Gesamt_num), NA_real_, round(EQ_Gesamt_num)),
+        EQ_S11_num    = ifelse(is.na(EQ_S11_num),    NA_real_, round(EQ_S11_num)),
+        
+        # Anzeige-Strings (keine Prozentzeichen, damit DataTables numerisch sortiert)
+        EQ_Gesamt = ifelse(is.na(EQ_Gesamt_num), "-", as.character(EQ_Gesamt_num)),
+        EQ_S11    = ifelse(is.na(EQ_S11_num),    "-", as.character(EQ_S11_num))
+      )
+    
+    
     
     # 6.5) Status hinzufügen
     df <- df %>%
@@ -3983,13 +4300,13 @@ server <- function(input, output, session) {
           ")</span></div>",
           "</div>"
         )
-        
       )
-    
-    
+
     # fehlende Spalten auffüllen
-    needed <- c("Logo","Spieler","StatusTag","POSITION","PUNKTE","Punkte pro Spiel","Marktwert","Zielwert","Mindestgebot", "Gebote_minmax","Preis-Leistung",
-                "Gebote","Empfehlung","Besitzer","Verbleibende Zeit","Trend MW (3 Tage)","action2","action")
+    needed <- c("Logo","Spieler","StatusTag","Position","Gesamtpunkte","Punkte_pro_Spiel","Marktwert","Mindestgebot",
+                "Gebote_minmax","Preis-Leistung", "EQ_Gesamt","EQ_S11","EQ_Gesamt_num","EQ_S11_num",
+                "Verbleibende Zeit","Trend MW (3 Tage)","action2","action")
+    
     
     
     for (nm in setdiff(needed, names(df))) df[[nm]] <- NA_character_
@@ -4002,13 +4319,18 @@ server <- function(input, output, session) {
     # NACH sub_df gebaut wurde
     sub_df$MinGeb_Unter_MW <- df$MinGeb_Unter_MW
     
+    # indices für columnDefs (0-basiert für JS)
+    disp_eq_idx   <- which(names(sub_df) == "EQ_Gesamt") - 1L
+    disp_s11_idx  <- which(names(sub_df) == "EQ_S11") - 1L
+    num_eq_idx    <- which(names(sub_df) == "EQ_Gesamt_num") - 1L
+    num_s11_idx   <- which(names(sub_df) == "EQ_S11_num") - 1L
+    
     DT::datatable(
       sub_df,
       colnames = c(
         "","Spieler","","Position","Punkte","PPS","Marktwert",
-        "Zielwert","Mindestgebot","Gebote (Min/Ideal/Max)","Preis-Leistung", "Gebote",
+        "Mindestgebot","Gebote (Min/Ideal/Max)","Preis-Leistung", "EQ (%)", "S11 (%)",
         "Maximalgebot" = NULL,  # entfällt
-        "Empfehlung","Besitzer",
         "Angebotsende","Trend","Info","Rechner",""
       )
       ,
@@ -4051,12 +4373,17 @@ server <- function(input, output, session) {
         ordering   = TRUE,
         pageLength = 20,
         columnDefs = list(
-          list(className = 'dt-right', targets = 0),                 
-          list(className = 'dt-left',   targets = c(1, 2)),          
-          list(className = 'dt-center', targets = 3:8),              
-          list(className = 'dt-left',   targets = 9),                
-          list(className = 'dt-center', targets = 10:(ncol(sub_df)-1)),
-          list(visible = FALSE, targets = ncol(sub_df) - 1)        
+          list(className = 'dt-right', targets = 0),
+          list(className = 'dt-left',   targets = c(1, 2)),
+          list(className = 'dt-center', targets = 3:7),
+          list(className = 'dt-left',   targets = 8),
+          list(className = 'dt-center', targets = 9:(ncol(sub_df)-1)),
+          list(visible = FALSE, targets = ncol(sub_df) - 1),
+          # NUMERISCHER HACK: numerische Spalten ausblenden...
+          list(visible = FALSE, targets = c(num_eq_idx, num_s11_idx)),
+          # ...und Display-Spalten so sortieren lassen, dass sie orderData auf die numerischen Spalten verweisen
+          list(orderData = num_eq_idx,  targets = disp_eq_idx),
+          list(orderData = num_s11_idx, targets = disp_s11_idx)
         )
       )
       
@@ -4136,7 +4463,7 @@ server <- function(input, output, session) {
     news <- news[!is.na(news$url) & nzchar(news$url), , drop = FALSE]
     if (nrow(news) == 0) return(div("Keine LI-News"))
     
-    ### ---- Datum robust normalisieren + parsen ----
+    # Datum robust normalisieren + parsen
     ds <- trimws(news$date)
     ds <- gsub("[\u2013\u2014]", "-", ds)                    # en/em dash -> "-"
     ds <- gsub("\\s*-\\s*-\\s*", " - ", ds, perl = TRUE)     # " - - " -> " - "
@@ -4184,7 +4511,7 @@ server <- function(input, output, session) {
   })
   
 
-  # LI-Leistungsdaten: Summary (Note/Punkte/EQ)
+  ### ----  LI: Summary (Note/Punkte/EQ) ----
   output$spieler_li_perf_summary <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -4233,7 +4560,7 @@ server <- function(input, output, session) {
     
   })
   
-  # LI-Leistungsdaten: Bilanz (Gesamt | BL | Pokal) 
+  ### ----  LI: Bilanz (Gesamt/BL/Pokal)  ----
   output$spieler_li_perf_bilanz <- renderDT({
     row <- match_li_row()
     if (is.null(row) || nrow(row) == 0) {
@@ -4299,7 +4626,7 @@ server <- function(input, output, session) {
     
   })
   
-  # MW
+  ### ----  Spieler MW+Punkte  ----
   output$spieler_info_mw <- renderPlotly({
     req(input$spieler_select2, mw_all, ap_df, spieler_stats_spielplan())
     
@@ -4422,12 +4749,12 @@ server <- function(input, output, session) {
         annotations = ann,
         shapes = zero_lines,
         hovermode = "x unified",
-        xaxis  = list(type = "date", autorange = TRUE, title = NULL),  # << kein x-Titel
-        yaxis  = list(title = NULL, showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
+        xaxis  = list(type = "date", autorange = TRUE, title = list(text = "")),
+        yaxis  = list(title = list(text = ""), showticklabels = FALSE, zeroline = FALSE, showgrid = FALSE),
         yaxis2 = list(
           overlaying = "y",
           side = "right",
-          title = NULL,
+          title = list(text = ""),
           showticklabels = FALSE,
           zeroline = FALSE,
           showgrid = FALSE,
@@ -4439,33 +4766,178 @@ server <- function(input, output, session) {
         bargap  = 0,
         hoverlabel = list(align = "left")
       )
+    
   })
   
-  # Leistungsdaten 
+  ### ----  Com-Analytics ----
   output$spieler_info_raw <- DT::renderDT({
     req(input$spieler_select2)
     
-    left  <- ca_df  %>% filter(SPIELER == input$spieler_select2)
-    right <- ca2_df %>% filter(SPIELER == input$spieler_select2)
+    search_name <- tolower(trimws(enc2utf8(as.character(input$spieler_select2))))
     
-    df <- left %>% left_join(right, by = "SPIELER", suffix = c("", "_TM")) %>% 
-      rename(Spieler = SPIELER, PPS = Punkte_pro_Spiel, `Preis/Leistung` = Preis_Leistung, Historie = Historische_Punkteausbeute) %>%
-      select(-any_of(c("POSITION","TEAM","PUNKTE","PUNKTE / SPIEL"))) %>%
+    left  <- ca_df  %>% mutate(.S = tolower(trimws(enc2utf8(as.character(SPIELER))))) %>% filter(.S == search_name) %>% select(-.S)
+    right <- ca2_df %>% mutate(.S = tolower(trimws(enc2utf8(as.character(SPIELER))))) %>% filter(.S == search_name) %>% select(-.S)
+    
+    if (nrow(left) == 0 && nrow(right) == 0) {
+      return(DT::datatable(data.frame(Meldung = "Keine Daten für diesen Spieler"),
+                           escape = FALSE, rownames = FALSE,
+                           options = list(dom = 't', scrollX = TRUE, paging = FALSE)))
+    }
+    
+    df <- left %>%
+      left_join(right, by = "SPIELER", suffix = c("", "_TM")) %>%
+      rename(
+        Spieler  = SPIELER,
+        PPS      = Punkte_pro_Spiel,
+        `Preis/Leistung` = Preis_Leistung,
+        Historie = Historische_Punkteausbeute
+      ) %>%
+      mutate(
+        Marktwert_num = as.numeric(gsub("\\.", "", gsub("[^0-9,\\.]","", `Marktwert`))),
+        Zielwert_num  = as.numeric(gsub("\\.", "", gsub("[^0-9,\\.]","", `Zielwert`))),
+        Marktwertprognose_num = Marktwert_num - Zielwert_num,
+        Marktwertprognose = ifelse(is.na(Marktwertprognose_num), "-", format(round(Marktwertprognose_num), big.mark = ".", decimal.mark = ","))
+      ) %>% select(-any_of(c("Marktwert_num","Zielwert_num","Marktwertprognose_num"))) %>% 
+      # alte/raw-Spalten entfernen falls noch vorhanden
+      select(-POSITION,-TEAM,-PUNKTE,-BESITZER,-Punkte_pro_Spiel_TM) %>%
       select(where(~ !all(is.na(.))))
     
+    if (ncol(df) == 0) {
+      return(DT::datatable(data.frame(Meldung = "Keine Felder nach Filter"),
+                           escape = FALSE, rownames = FALSE,
+                           options = list(dom = 't', scrollX = TRUE, paging = FALSE)))
+    }
+    
+    # Key-Value Darstellung (Spalten vorher in character konvertieren; bestimmte Felder entfernen)
+    kv <- df %>%
+      select(-any_of(c("Spieler","Position","Verein","Datum"))) %>%
+      mutate(across(everything(), ~ as.character(.))) %>%
+      pivot_longer(everything(), names_to = "Feld", values_to = "Wert") %>%
+      mutate(Feld = case_when(
+        Feld == "PPS"                ~ "Punkte / Spiel (Montag)",
+        Feld == "Preis/Leistung"     ~ "Preis / Leistung (Montag)",
+        Feld == "Historie"           ~ "Historische Punkteausbeute",
+        Feld == "Marktwertprognose"  ~ "Marktwertprognose (com-analytics)",
+        Feld == "Kaufempfehlung"     ~ "Kaufempfehlung",
+        Feld == "Gebotsvorhersage"   ~ "Gebotsvorhersage",
+        Feld == "Erwartete_Punkte"   ~ "Erwartete Punkte",
+        TRUE                         ~ Feld
+      ))
+    
     DT::datatable(
-      df,
+      kv,
       escape = FALSE, rownames = FALSE,
-      options = list(dom = 't', scrollX = TRUE, paging = FALSE)
+      options = list(
+        dom = 't', scrollX = TRUE, paging = FALSE, ordering = FALSE,
+        columnDefs = list(list(className = 'dt-center', targets = 1))
+      ),
+      colnames = c("Feld", "Wert")
     )
+    
   })
   
+  ### ---- Preis-Leistungs Spieler-Info Graph ----
+  output$spieler_price_perf_small <- renderPlotly({
+    req(price_perf_df(), ca_df, input$spieler_select2)
+    df <- price_perf_df() %>%
+      left_join(
+        ca_df %>% transmute(SPIELER = as.character(SPIELER), Gesamtpunkte = as.character(Gesamtpunkte)),
+        by = "SPIELER"
+      ) %>%
+      filter(!is.na(MW_num) & !is.na(PPS_num))
+    if (nrow(df) == 0) return(plotly_empty())
+    
+    sel <- as.character(input$spieler_select2)
+    
+    df <- df %>%
+      mutate(
+        MW_fmt = paste0(format(round(MW_num), big.mark = ".", decimal.mark = ","), " €"),
+        hover = paste0(
+          "Spieler: ", SPIELER,
+          "<br>PPS: ", formatC(PPS_num, format = "f", digits = 2, decimal.mark = ","),
+          "<br>Marktwert: ", ifelse(is.na(MW_fmt), "-", MW_fmt),
+          "<br>Gesamtpunkte: ", ifelse(is.na(Gesamtpunkte) | Gesamtpunkte == "NA", "-", Gesamtpunkte),
+          "<br>Erwartet (PPS): ", ifelse(is.na(expected_PPS), "-", formatC(expected_PPS, format = "f", digits = 2, decimal.mark = ",")),
+          "<br>Label: ", Preis_Leistung_label
+        )
+      )
+    
+    # optional: loess-Trend (nur wenn genügend Punkte)
+    pred_df <- NULL
+    if (nrow(df) >= 6) {
+      df <- df %>% mutate(log_mw = log1p(MW_num))
+      lo <- tryCatch(
+        loess(PPS_num ~ log_mw, data = df, span = 0.5, control = loess.control(surface = "direct")),
+        error = function(e) NULL
+      )
+      if (!is.null(lo)) {
+        new_log <- seq(min(df$log_mw, na.rm = TRUE), max(df$log_mw, na.rm = TRUE), length.out = 200)
+        pred <- tryCatch(predict(lo, newdata = data.frame(log_mw = new_log)), error = function(e) rep(NA_real_, length(new_log)))
+        pred_df <- data.frame(MW_num = exp(new_log) - 1, pred = pred) %>% filter(is.finite(pred))
+      }
+    }
+    
+    y_max <- max(df$PPS_num, na.rm = TRUE)
+    
+    df$Preis_Leistung_label <- factor(df$Preis_Leistung_label,
+                                      levels = c("Sehr gut","Gut","Durchschnittlich","Schlecht","Sehr schlecht","-"))
+    
+    cols <- c(
+      "Sehr gut"         = "#006d2c",
+      "Gut"              = "#2ca25f",
+      "Durchschnittlich" = "#fdae61",
+      "Schlecht"         = "#f46d43",
+      "Sehr schlecht"    = "#d73027",
+      "-"                = "#bdbdbd"
+    )
+    
+    p <- ggplot(df, aes(x = MW_num, y = PPS_num, text = hover, color = Preis_Leistung_label)) +
+      geom_point(size = 3, alpha = 0.25) +
+      scale_color_manual(values = cols, na.value = "#bdbdbd")
+    
+    if (!is.null(pred_df) && nrow(pred_df) > 0) {
+      p <- p + geom_line(data = pred_df, aes(x = MW_num, y = pred), inherit.aes = FALSE,
+                         linetype = "dashed", size = 0.7, color = "black")
+    }
+    
+    p <- p +
+      scale_x_log10() +
+      labs(x = "Marktwert (log)", y = "Punkte pro Spiel (PPS)", color = "") +
+      coord_cartesian(ylim = c(0, max(ceiling(y_max * 0.95), 5))) +
+      theme_minimal() +
+      theme(
+        axis.title = element_blank(),
+        axis.text = element_text(size = 9),
+        plot.margin = margin(6,6,6,6),
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8)
+      )
+    
+    # ausgewählten Spieler oben drüber (sichtbar, alpha = 1)
+    if (!is.null(sel) && sel %in% df$SPIELER) {
+      p <- p + geom_point(data = df %>% filter(SPIELER == sel),
+                          aes(x = MW_num, y = PPS_num),
+                          inherit.aes = FALSE,
+                          color = "#d73027", size = 5, alpha = 1)
+    }
+    
+    ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest", margin = list(l = 40, r = 20, t = 8, b = 40))
+  })
+  
+  
+  
+  ### ----  GPT ----
   # Prompt zentral bauen
   gpt_prompt <- reactive({
     req(input$spieler_select2)
-    sp <- input$spieler_select2
-    ve <- get_verein(sp)
-    build_prompt(sp, ve)
+    
+    sp_raw <- input$spieler_select2
+    sp_chr <- if (is.function(sp_raw)) deparse(substitute(sp_raw)) else as.character(sp_raw)
+    
+    ve_raw <- tryCatch(get_verein(sp_chr), error = function(e) "") 
+    ve_chr <- if (is.function(ve_raw)) deparse(substitute(ve_raw)) else as.character(ve_raw)
+    
+    build_prompt(sp_chr, ve_chr)
   })
   
   output$gpt_prompt_preview <- renderText(gpt_prompt())
@@ -4508,6 +4980,88 @@ server <- function(input, output, session) {
       
     })
   })
+  
+  
+  ## ---- Preis-Leistung ----
+  output$price_perf_plot <- renderPlotly({
+    req(price_perf_df(), ca_df)
+    
+    df <- price_perf_df() %>%
+      left_join(
+        ca_df %>% transmute(SPIELER = as.character(SPIELER),
+                            Gesamtpunkte = as.character(Gesamtpunkte)),
+        by = "SPIELER"
+      ) %>%
+      filter(!is.na(MW_num) & !is.na(PPS_num) & PPS_num > 0 & PPS_num < 200) %>%
+      arrange(MW_num)
+    
+    if (nrow(df) == 0) return(plotly_empty())
+    
+    df <- df %>%
+      mutate(
+        MW_fmt = paste0(format(round(MW_num), big.mark = ".", decimal.mark = ","), " €"),
+        hover = paste0(
+          "Spieler: ", SPIELER,
+          "<br>PPS: ", formatC(PPS_num, format = "f", digits = 2, decimal.mark = ","),
+          "<br>Marktwert: ", ifelse(is.na(MW_fmt), "-", MW_fmt),
+          "<br>Gesamtpunkte: ", ifelse(is.na(Gesamtpunkte) | Gesamtpunkte == "NA", "-", Gesamtpunkte),
+          "<br>Erwartet (PPS): ", ifelse(is.na(expected_PPS), "-", formatC(expected_PPS, format = "f", digits = 2, decimal.mark = ",")),
+          "<br>Label: ", Preis_Leistung_label
+        )
+      )
+    
+    # Trendkurve (loess auf log1p(MW_num)) — nur wenn genug Punkte
+    pred_df <- NULL
+    if (nrow(df) >= 6) {
+      df <- df %>% mutate(log_mw = log1p(MW_num))
+      lo <- tryCatch(
+        loess(PPS_num ~ log_mw, data = df, span = 0.5, control = loess.control(surface = "direct")),
+        error = function(e) NULL
+      )
+      if (!is.null(lo)) {
+        new_log <- seq(min(df$log_mw, na.rm = TRUE), max(df$log_mw, na.rm = TRUE), length.out = 200)
+        pred <- tryCatch(predict(lo, newdata = data.frame(log_mw = new_log)), error = function(e) rep(NA_real_, length(new_log)))
+        pred_df <- data.frame(MW_num = exp(new_log) - 1, pred = pred)
+        pred_df <- pred_df %>% filter(is.finite(pred))
+      }
+    }
+    
+    # y-Limit-Sicherung
+    y_max <- max(c(df$PPS_num), na.rm = TRUE)
+    
+    # Reihenfolge sicherstellen
+    df$Preis_Leistung_label <- factor(df$Preis_Leistung_label,
+                                      levels = c("Sehr gut","Gut","Durchschnittlich","Schlecht","Sehr schlecht","-"))
+    
+    # Farbpalette (kontrastreich, lesbar)
+    cols <- c(
+      "Sehr gut"        = "#006d2c",  # dunkelgrün
+      "Gut"             = "#2ca25f",  # grün
+      "Durchschnittlich"= "#fdae61",  # orange-gelb
+      "Schlecht"        = "#f46d43",  # orange-rot
+      "Sehr schlecht"   = "#d73027",  # rot
+      "-"               = "#bdbdbd"   # grau für fehlende Werte
+    )
+    
+    p <- ggplot(df, aes(x = MW_num, y = PPS_num, text = hover)) +
+      geom_point(aes(color = Preis_Leistung_label), size = 3, alpha = 0.9)
+    
+    if (!is.null(pred_df) && nrow(pred_df) > 0) {
+      p <- p + geom_line(data = pred_df, aes(x = MW_num, y = pred), inherit.aes = FALSE,
+                         linetype = "dashed", size = 0.8, color = "black")
+    }
+    
+    p <- p +
+      scale_x_log10() +
+      labs(x = "Marktwert (log)", y = "Punkte pro Spiel (PPS)", color = "Preis/Leistung") +
+      coord_cartesian(ylim = c(0, max(ceiling(y_max*0.95), 5))) +
+      scale_color_manual(values = cols, na.value = "#bdbdbd") +
+      theme_minimal()
+    
+    ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
+  })
+  
+  
   
   ## ---- Transfer-Simulator ----
   # Reactive DataFrames vorbereiten
@@ -4583,11 +5137,6 @@ server <- function(input, output, session) {
     # 1) Spieler-Liste (tm_df kann lazy geladen werden)
     updateSelectInput(
       session, "spieler_select",
-      choices = sort(unique(tm_df$Spieler))
-    )
-    
-    updateSelectInput(
-      session, "spieler_select2",
       choices = sort(unique(tm_df$Spieler))
     )
     
@@ -4905,11 +5454,21 @@ server <- function(input, output, session) {
   
   # ---- KADER-ENTWICKLUNG ----
   ## ---- Mein Kader ----
+  
+  # Server: choices für manager_select_mein_kader aktualisieren
+  observe({
+    req(exists("transfers") && nrow(transfers) > 0)
+    mgrs <- setdiff(sort(unique(transfers$Besitzer)), "Computer")
+    if (length(mgrs) == 0) return()
+    sel <- if ("Dominik" %in% mgrs) "Dominik" else mgrs[1]
+    updateSelectInput(session, "manager_select_mein_kader", choices = mgrs, selected = sel)
+  })
+  
   # 1) Reaktive Daten-Vorbereitung
   mein_kader_df <- reactive({
-    # Basis: alle Spieler von Dominik
+    req(input$manager_select_mein_kader)            # neu: abhängig vom Select
     df0 <- teams_df %>%
-      filter(Manager == "Dominik") %>%
+      filter(Manager == input$manager_select_mein_kader) %>%
       mutate(
         Position = factor(Position,
                           levels = c("Tor", "Abwehr", "Mittelfeld", "Sturm"),
@@ -4928,7 +5487,7 @@ server <- function(input, output, session) {
     
     # Kaufpreise
     kaufpreise <- transfers %>%
-      filter(Hoechstbietender == "Dominik") %>%
+      filter(Hoechstbietender == input$manager_select_mein_kader) %>%
       group_by(Spieler) %>%
       arrange(desc(Datum)) %>%
       slice(1) %>%
@@ -5016,22 +5575,15 @@ server <- function(input, output, session) {
       ) %>%
       left_join(ca_df %>% select(-Verein, -Position, -Gesamtpunkte), by = c("Spieler" = "SPIELER")) %>%
       rename(
-        "Punkte pro Spiel"           = Punkte_pro_Spiel,
-        "Preis-Leistung"             = Preis_Leistung
+        "Punkte pro Spiel"           = Punkte_pro_Spiel
+      ) %>%  left_join(
+        price_perf_df() %>% transmute(SPIELER, `Preis-Leistung` = Preis_Leistung_label, Preis_Leistung_Score = Preis_Leistung_score),
+        by = c("Spieler" = "SPIELER")
       )
     
     # --- LI: Einsatzquote + Startelf-Prozent (kompakt "E/S11") ---
     df_pre <- df_pre %>%
-      left_join(
-        li_df %>%
-          select(Comunio_Name,
-                 any_of(c("EQ_Gesamt_Quote","EQ_Startelf_."))) %>%
-          mutate(
-            EQ_Gesamt_Quote = suppressWarnings(as.numeric(EQ_Gesamt_Quote)),
-            `EQ_Startelf_.` = suppressWarnings(as.numeric(`EQ_Startelf_.`))
-          ),
-        by = c("Spieler" = "Comunio_Name")
-      ) %>%
+      left_join(li_subset, by = c("Spieler" = "Comunio_Name")) %>%
       mutate(
         Einsatz_S11_fmt = case_when(
           is.na(EQ_Gesamt_Quote) & is.na(`EQ_Startelf_.`) ~ "-",
@@ -5040,7 +5592,6 @@ server <- function(input, output, session) {
                          ifelse(is.na(`EQ_Startelf_.`),   "-", as.character(round(`EQ_Startelf_.`))))
         )
       )
-    
     
     # StatusIcons
     df_pre <- df_pre %>%
