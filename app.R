@@ -653,13 +653,6 @@ ui <- navbarPage(
              
              tabPanel(
                title = "Spieler-Info", value = "spieler_info",
-               radioButtons(
-                 "spieler_filter",
-                 label = NULL,
-                 choices = c("Transfermarkt", "Alle", "Mein Team"),
-                 selected = "Transfermarkt",
-                 inline = TRUE
-               ),
                selectInput("spieler_select2", "Spieler:", choices = NULL),
                
                div(
@@ -1131,13 +1124,6 @@ server <- function(input, output, session) {
       selected = "spieler_info"
     )
     
-    # Filter zuerst setzen
-    updateRadioButtons(
-      session,
-      inputId  = "spieler_filter",
-      selected = "Transfermarkt"
-    )
-    
     # Mit kleinem Delay den Spieler wählen
     later(function() {
       updateSelectInput(
@@ -1155,46 +1141,23 @@ server <- function(input, output, session) {
     
     updateNavbarPage(session, "main_navbar", selected = "Transfermarkt")
     updateTabsetPanel(session, "transfermarkt_tabs", selected = "spieler_info")
-    updateRadioButtons(session, "spieler_filter", selected = "Mein Team")
     
     later(function() {
       updateSelectInput(session, "spieler_select2", selected = player)
     }, 0.2)
   })
   
-  # Spielerlisten für Spiler-Info wählen
-  observeEvent(input$spieler_filter, {
-    sel <- input$spieler_filter
+  # Spieler_select2 choice update
+  observe({
+    choices <- ap_df %>%
+      filter(Datum == today) %>%
+      pull(Spieler) %>%
+      unique() %>%
+      sort()
     
-    if (sel == "Transfermarkt") {
-      updateSelectInput(session, "spieler_select2",
-                        choices = sort(unique(tm_df$Spieler))
-      )
-      
-    } else if (sel == "Mein Team") {
-      choices <- teams_df %>%
-        filter(Manager == "Dominik") %>%
-        pull(Spieler) %>%
-        sort()
-      updateSelectInput(session, "spieler_select2", choices = choices)
-      
-    } else if (sel == "Alle") {
-      ap_df <- read.csv2(
-        "data/ALL_PLAYERS.csv",
-        sep = ";", na.strings = c("", "NA"),
-        stringsAsFactors = FALSE, fileEncoding = "UTF-8"
-      ) %>%
-        mutate(
-          Datum = as.Date(Datum, format = "%d.%m.%Y"),
-          Marktwert = as.numeric(Marktwert)
-        )
-      
-      choices <- ap_df %>%
-        filter(Datum == today) %>%
-        pull(Spieler) %>%
-        sort()
-      updateSelectInput(session, "spieler_select2", choices = choices)
-    }
+    updateSelectInput(session, "spieler_select2",
+                      choices = choices,
+                      selected = if (length(choices) > 0) choices[1] else NULL)
   })
   
   # Link vom Dashboard zum MW Trend tab
@@ -5786,7 +5749,7 @@ server <- function(input, output, session) {
     manager_list <- sort(unique(teams_df$Manager))
     mw_aktuell <- mw_aktuell_rx()
     
-    # NEU: Auswahl, wessen Kontostand eingerechnet wird
+    # Auswahl, wessen Kontostand eingerechnet wird
     saldo_ctrl <- div(
       style = "text-align:center; margin-bottom:10px;",
       radioButtons(
@@ -5797,7 +5760,6 @@ server <- function(input, output, session) {
         inline = TRUE
       )
     )
-    
     
     kaufpreise <- transfers %>%
       group_by(Spieler, Hoechstbietender) %>%
