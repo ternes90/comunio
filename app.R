@@ -265,6 +265,44 @@ vorname <- function(name) {
   strsplit(name, " ")[[1]][1]
 }
 
+# Hilfsfunktion: Marktwert vorhersagen
+predict_mw_in_3d <- function(current_mw, punkte_event, summary_df) {
+  if (is.na(current_mw) || is.na(punkte_event) || nrow(summary_df) == 0) return(NA_real_)
+  
+  # MW-Klasse basierend auf aktuellem Marktwert:
+  mw_klasse <- dplyr::case_when(
+    current_mw < 5e5   ~ "<0.5 Mio",
+    current_mw < 1e6   ~ "0.5–1 Mio",
+    current_mw < 2.5e6 ~ "1–2.5 Mio",
+    current_mw < 5e6   ~ "2.5–5 Mio",
+    current_mw < 1e7   ~ "5–10 Mio",
+    TRUE               ~ ">10 Mio"
+  )
+  
+  sub <- summary_df %>% filter(MW_Klasse == mw_klasse)
+  
+  # Fallback: wenn für diese MW-Klasse keine Daten vorliegen, nimm alle
+  if (nrow(sub) == 0) sub <- summary_df
+  
+  if (nrow(sub) == 0) return(NA_real_)
+  
+  # Punktzahl als numeric
+  p_val <- suppressWarnings(as.numeric(punkte_event))
+  if (is.na(p_val)) return(NA_real_)
+  
+  # nächstliegende Punktegruppe suchen
+  row <- sub %>%
+    mutate(dist = abs(Punkte - p_val)) %>%
+    arrange(dist) %>%
+    slice(1)
+  
+  delta_pct <- row$mean_delta3[1]
+  if (is.na(delta_pct)) return(NA_real_)
+  
+  current_mw * (1 + delta_pct / 100)
+}
+
+
 # ---- UI ----
 ui <- navbarPage(
   "Comunio Analyse", 
@@ -655,6 +693,14 @@ ui <- navbarPage(
                title = "Spieler-Info", value = "spieler_info",
                selectInput("spieler_select2", "Spieler:", choices = NULL),
                
+               numericInput(
+                 "hypo_punkte",
+                 label = "Erwartete Punkte im nächsten Spiel",
+                 value = 5, min = -10, max = 30, step = 1
+               ),
+               
+               textOutput("hypo_mw_prognose"),
+               
                div(
                  id = "spieler_container",
                  style = "display:flex; gap:16px; align-items:flex-start; width:100%; flex-wrap:wrap;",
@@ -759,13 +805,37 @@ ui <- navbarPage(
                    uiOutput("gpt_result_box")   # ersetzt früheres DTOutput("gpt_result")
                  )
                )
+               
              ),
              
              tabPanel(
                title = "Preis-Leistung",
                value = "price_perf_overview",
-               div(style = "width:100%;",
-                   plotlyOutput("price_perf_plot", height = 700, width = "100%")
+               
+               tabsetPanel(
+                 id = "pl_subtabs",
+                 
+                 tabPanel(
+                   title = "Preis-/Leistung Overview",
+                   value = "pl_overview",
+                   div(
+                     style = "width:100%;",
+                     plotlyOutput("price_perf_plot", height = 700, width = "100%")
+                   )
+                 ),
+                 
+                 tabPanel(
+                   title = "Punkte → MW-Entwicklung",
+                   value = "punkte_mw_tabs",
+                   div(
+                     style = "width:100%; margin-bottom:20px;",
+                     plotOutput("punkte_mw_avg_plot_static", height = 350, width = "100%")
+                   ),
+                   div(
+                     style = "width:100%;",
+                     plotOutput("punkte_mw_by_mwklasse", height = 350, width = "100%")
+                   )
+                 )
                )
              ),
              
@@ -1028,6 +1098,7 @@ server <- function(input, output, session) {
   mw_data_cache <- reactiveVal(NULL)
   mw_now_cache <- reactiveVal(NULL)
   mw_pred_cached <- reactiveVal(NULL)
+  punkte_mw_should_run <- reactiveVal(FALSE)
   
   # Session-Startzeit
   session$userData$t0 <- Sys.time()
@@ -1256,6 +1327,13 @@ server <- function(input, output, session) {
                          choices = sort(unique(ap_df$Verein)), server = TRUE)
   })
   
+  # punkte_mw_tabs 
+  observeEvent(input$pl_subtabs, {
+    if (identical(input$pl_subtabs, "punkte_mw_tabs")) {
+      punkte_mw_should_run(TRUE)
+    }
+  })
+  
   # ---- data ----
   
   ## ---- df / transfers / transactions  ----
@@ -1446,7 +1524,8 @@ server <- function(input, output, session) {
   # Global nicht möglich
   ### ---- spieler_stats_spielplan ----
   observeEvent(input$transfermarkt_tabs, {
-    if (input$transfermarkt_tabs != "spieler_info") return()
+    #if (input$transfermarkt_tabs != "spieler_info") return()
+    #if (!identical(input$main_navbar, "Transfermarkt")) return()
     if (!is.null(spieler_stats_cache())) return()
     
     path <- file.path("data", "PLAYER_STATS.csv")
@@ -1786,9 +1865,6 @@ server <- function(input, output, session) {
     df %>%
       select(SPIELER, MW_num, PPS_num, expected_PPS, Preis_Leistung_score, Preis_Leistung_label, rel_z)
   })
-  
-  
-  
   
   ## ---- helper functions ----
   # HELPER: GPT prompt builder für Spieler-Info Seite (muss im server sein, da sie auf Datensätze zugreift, die global nicht vorhanden sind) 
@@ -3781,7 +3857,7 @@ server <- function(input, output, session) {
   
   ## ---- Gebote pro Wochentag ----
   
-  # 1) avg_bids_wd (per-Manager Wochentag-Rang)
+  # avg_bids_wd
   avg_bids_wd <- reactive({
     req(!is.null(gebotsprofil_cache()))
     gp <- gebotsprofil_clean() %>%
@@ -3809,7 +3885,7 @@ server <- function(input, output, session) {
       ungroup()
   })
   
-  # 2) Einzeilige Vorhersage-Box für heute (per-Manager-Rang)
+  # Box bids
   output$bid_prediction <- renderUI({
     today_wd <- factor(
       weekdays(today, abbreviate = TRUE),
@@ -3842,6 +3918,8 @@ server <- function(input, output, session) {
   
   
   ## ---- Blockierte Vereine ----
+  
+  # blocked_by_manager
   blocked_by_manager <- reactive({
     req(teams_df, ca_df)
     
@@ -3861,6 +3939,7 @@ server <- function(input, output, session) {
       summarise(teams = list(Verein), .groups = "drop")
   })
   
+  # Box blocked
   output$blocked_managers <- renderUI({
     req(blocked_by_manager())
     blocked <- blocked_by_manager()
@@ -3882,7 +3961,6 @@ server <- function(input, output, session) {
     line <- paste(items[nzchar(items)], collapse = "&nbsp;&nbsp;&middot;&nbsp;&nbsp;")
     HTML(sprintf("<div style='background:#f2f2f2;padding:6px;border-radius:6px;font-size:90%%;overflow-x:auto;white-space:nowrap;'>%s</div>", line))
   })
-  
   
   ## ---- Tabelle ----
   
@@ -4366,6 +4444,55 @@ server <- function(input, output, session) {
   })
   
   ## ---- Spieler Info ----
+  
+  ### ----  aktueller Marktwert des ausgewählten Spielers (letzter Stand aus ap_df) ----
+  current_player_mw <- reactive({
+    req(input$spieler_select2, ap_df)
+    
+    norm_spieler <- function(x) trimws(enc2utf8(as.character(x)))
+    
+    ap_df %>%
+      mutate(
+        Datum   = as.Date(Datum),
+        Spieler = norm_spieler(Spieler),
+        Marktwert = as.numeric(Marktwert)
+      ) %>%
+      filter(Spieler == norm_spieler(input$spieler_select2)) %>%
+      filter(!is.na(Marktwert)) %>%
+      arrange(desc(Datum)) %>%
+      slice(1) %>%
+      pull(Marktwert) %>%
+      { if (length(.) == 0) NA_real_ else . }
+  })
+  
+  output$hypo_mw_prognose <- renderText({
+    req(punkte_mw_summary_cached())
+    mw_now <- current_player_mw()
+    pts    <- input$hypo_punkte
+    
+    if (is.null(pts) || is.na(mw_now)) return("Keine Prognose möglich (fehlender Marktwert oder Punkte).")
+    
+    mw_pred <- predict_mw_in_3d(
+      current_mw   = mw_now,
+      punkte_event = pts,
+      summary_df   = punkte_mw_summary_cached()   # <-- statt punkte_mw_summary()
+    )
+    
+    
+    if (is.na(mw_pred)) return("Keine Prognose möglich (zu wenige Vergleichsdaten).")
+    
+    delta_abs <- mw_pred - mw_now
+    delta_pct <- 100 * delta_abs / mw_now
+    
+    fmt_eur <- function(x) paste0(format(round(x), big.mark = ".", decimal.mark = ","), " €")
+    
+    paste0(
+      "Aktueller MW: ", fmt_eur(mw_now),
+      " → erwarteter MW in 3 Tagen: ", fmt_eur(mw_pred),
+      " (", sprintf("%+.1f", delta_pct), " %)"
+    )
+  })
+  
   ### ---- Header-Card Render ----
   output$spieler_card_header <- renderUI({
     row <- match_li_row()
@@ -4887,8 +5014,6 @@ server <- function(input, output, session) {
     ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest", margin = list(l = 40, r = 20, t = 8, b = 40))
   })
   
-  
-  
   ### ----  GPT ----
   # Prompt zentral bauen
   gpt_prompt <- reactive({
@@ -4943,7 +5068,6 @@ server <- function(input, output, session) {
       
     })
   })
-  
   
   ## ---- Preis-Leistung ----
   output$price_perf_plot <- renderPlotly({
@@ -5022,6 +5146,252 @@ server <- function(input, output, session) {
       theme_minimal()
     
     ggplotly(p, tooltip = "text") %>% layout(hovermode = "closest")
+  })
+  
+  ## ---- Preis-Performance ----
+  punkte_mw_relation <- reactive({
+    if (!punkte_mw_should_run()) return(NULL)
+    
+    req(spieler_stats_spielplan(), ap_df)
+    
+    norm_spieler <- function(x) trimws(enc2utf8(as.character(x)))
+    
+    # Saisonzeitraum
+    season_start <- as.Date("2025-08-22")
+    season_end   <- Sys.Date()
+    
+    # Events: nur Einsätze mit Punkten im Saisonzeitraum
+    stats <- spieler_stats_spielplan() %>%
+      mutate(
+        Datum   = as.Date(Datum),
+        Spieler = norm_spieler(Spieler),
+        Punkte  = suppressWarnings(as.numeric(Punkte))
+      ) %>%
+      filter(!is.na(Punkte),
+             Datum >= season_start,
+             Datum <= season_end) %>%
+      select(Spieler, Datum, Spieltag, Punkte, Note, Status) %>%
+      arrange(Spieler, Datum)
+    
+    if (nrow(stats) == 0) return(tibble::tibble())
+    
+    # Marktwerte bis heute, nur Spieler aus stats
+    mw <- ap_df %>%
+      mutate(
+        Datum     = as.Date(Datum),
+        Spieler   = norm_spieler(Spieler),
+        Marktwert = as.numeric(Marktwert)
+      ) %>%
+      filter(Spieler %in% unique(stats$Spieler),
+             Datum <= season_end) %>%
+      arrange(Spieler, Datum) %>%
+      select(Spieler, Datum, Marktwert)
+    
+    if (nrow(mw) == 0) return(tibble::tibble())
+    
+    mw_list <- split(mw, mw$Spieler)
+    
+    res <- stats %>%
+      rowwise() %>%
+      mutate(
+        cur_sp = Spieler,
+        cur_dt = Datum,
+        mw_before = {
+          tbl <- mw_list[[cur_sp]]
+          if (is.null(tbl) || nrow(tbl) == 0) {
+            NA_real_
+          } else {
+            tmp <- tbl %>%
+              filter(Datum <= cur_dt) %>%
+              arrange(desc(Datum)) %>%
+              slice_head(n = 1) %>%
+              pull(Marktwert)
+            if (length(tmp) == 0) NA_real_ else tmp
+          }
+        },
+        mw_3d = {
+          tbl <- mw_list[[cur_sp]]
+          if (is.null(tbl) || nrow(tbl) == 0) {
+            NA_real_
+          } else {
+            tmp <- tbl %>%
+              filter(Datum > cur_dt, Datum <= cur_dt + 3) %>%
+              arrange(Datum) %>%
+              slice_head(n = 1) %>%
+              pull(Marktwert)
+            if (length(tmp) == 0) NA_real_ else tmp
+          }
+        }
+      ) %>%
+      select(-cur_sp, -cur_dt) %>%
+      ungroup() %>%
+      mutate(
+        delta_3_abs = ifelse(is.na(mw_before) | is.na(mw_3d), NA_real_, mw_3d - mw_before),
+        delta_3_pct = ifelse(is.na(delta_3_abs) | mw_before == 0, NA_real_, 100 * delta_3_abs / mw_before)
+      ) %>%
+      mutate(
+        MW_Klasse = case_when(
+          is.na(mw_before)           ~ NA_character_,
+          mw_before < 5e5            ~ "<0.5 Mio",
+          mw_before < 1e6            ~ "0.5–1 Mio",
+          mw_before < 2.5e6          ~ "1–2.5 Mio",
+          mw_before < 5e6            ~ "2.5–5 Mio",
+          mw_before < 1e7            ~ "5–10 Mio",
+          TRUE                       ~ ">10 Mio"
+        )
+      ) %>%
+      filter(!is.na(delta_3_pct))
+    
+    res
+  })
+  
+  punkte_mw_summary <- reactive({
+    if (!punkte_mw_should_run()) return(NULL)
+    req(punkte_mw_relation())
+    
+    df <- punkte_mw_relation() %>%
+      filter(!is.na(Punkte), !is.na(MW_Klasse)) %>%
+      group_by(MW_Klasse, Punkte) %>%
+      summarise(
+        mean_delta3 = mean(delta_3_pct, na.rm = TRUE),
+        n           = n(),
+        .groups     = "drop"
+      )
+    
+    # --- CSV speichern ---
+    try({
+      write.csv2(df, "data/punkte_mw_summary_cache.csv",
+                 row.names = FALSE, fileEncoding = "UTF-8")
+    }, silent = TRUE)
+    
+    df
+  })
+  
+  punkte_mw_summary_cached <- reactive({
+    # Wenn CSV existiert → laden
+    path <- "data/punkte_mw_summary_cache.csv"
+    if (file.exists(path)) {
+      df <- try(read.csv2(path, stringsAsFactors = FALSE,
+                          fileEncoding = "UTF-8"), silent = TRUE)
+      if (!inherits(df, "try-error")) {
+        df$Punkte <- as.numeric(df$Punkte)
+        df$mean_delta3 <- as.numeric(df$mean_delta3)
+        return(df)
+      }
+    }
+    # sonst warten auf die Reactive (Tab muss geöffnet sein)
+    punkte_mw_summary()
+  })
+  
+  
+  output$punkte_mw_avg_plot_static <- renderPlot({
+    req(punkte_mw_relation())
+    df <- punkte_mw_relation()
+    if (nrow(df) == 0) return(invisible(NULL))
+    
+    df <- df %>% mutate(Punkte = suppressWarnings(as.numeric(Punkte)))
+    
+    agg <- df %>%
+      filter(!is.na(Punkte)) %>%
+      group_by(Punkte) %>%
+      summarise(
+        mean3 = mean(delta_3_pct, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    if (nrow(agg) == 0) return(invisible(NULL))
+    
+    x_vals <- sort(unique(agg$Punkte))
+    
+    y_min <- suppressWarnings(min(agg$mean3, na.rm = TRUE))
+    y_max <- suppressWarnings(max(agg$mean3, na.rm = TRUE))
+    if (!is.finite(y_min) || !is.finite(y_max)) {
+      y_min <- -1
+      y_max <- 1
+    }
+    pad  <- 0.05 * (y_max - y_min + 1e-6)
+    ylim <- c(y_min - pad, y_max + pad)
+    
+    y3 <- agg$mean3[match(x_vals, agg$Punkte)]
+    
+    plot(
+      x = x_vals, y = y3,
+      type = "n",
+      xlab = "Punkte",
+      ylab = "Durchschnittliche Marktwertänderung nach 3 Tagen (%)",
+      xlim = range(x_vals),
+      ylim = ylim,
+      main = "MW-Änderung nach Punktegröße (3 Tage)"
+    )
+    
+    abline(h = 0, lty = 3)
+    lines(x_vals, y3, type = "b", pch = 19, col = "blue")
+  })
+  
+  
+  output$punkte_mw_by_mwklasse <- renderPlot({
+    req(punkte_mw_relation())
+    df <- punkte_mw_relation()
+    if (nrow(df) == 0) return(invisible(NULL))
+    
+    df <- df %>%
+      mutate(Punkte = suppressWarnings(as.numeric(Punkte))) %>%
+      filter(!is.na(Punkte), !is.na(MW_Klasse))
+    
+    if (nrow(df) == 0) return(invisible(NULL))
+    
+    agg <- df %>%
+      group_by(MW_Klasse, Punkte) %>%
+      summarise(
+        mean3 = mean(delta_3_pct, na.rm = TRUE),
+        .groups = "drop"
+      )
+    
+    if (nrow(agg) == 0) return(invisible(NULL))
+    
+    klassen <- sort(unique(agg$MW_Klasse))
+    x_vals  <- sort(unique(agg$Punkte))
+    
+    y_min <- suppressWarnings(min(agg$mean3, na.rm = TRUE))
+    y_max <- suppressWarnings(max(agg$mean3, na.rm = TRUE))
+    if (!is.finite(y_min) || !is.finite(y_max)) {
+      y_min <- -1
+      y_max <- 1
+    }
+    pad  <- 0.05 * (y_max - y_min + 1e-6)
+    ylim <- c(y_min - pad, y_max + pad)
+    
+    plot(
+      x = x_vals, y = rep(NA_real_, length(x_vals)),
+      type = "n",
+      xlab = "Punkte",
+      ylab = "Durchschnittliche MW-Änderung 3 Tage (%)",
+      xlim = range(x_vals),
+      ylim = ylim,
+      main = "MW-Änderung nach Punkten und MW-Klasse (3 Tage)"
+    )
+    abline(h = 0, lty = 3)
+    
+    cols <- c("blue", "red", "darkgreen", "orange", "purple", "brown")
+    cols <- rep(cols, length.out = length(klassen))
+    
+    for (i in seq_along(klassen)) {
+      k   <- klassen[i]
+      sub <- agg %>% filter(MW_Klasse == k)
+      xs  <- sort(unique(sub$Punkte))
+      ys  <- sub$mean3[match(xs, sub$Punkte)]
+      
+      lines(xs, ys, type = "b", pch = 19, col = cols[i])
+    }
+    
+    legend(
+      "topright",
+      legend = klassen,
+      col    = cols,
+      pch    = 19,
+      bty    = "n",
+      title  = "MW-Klasse (vor Event)"
+    )
   })
   
   
