@@ -2175,15 +2175,30 @@ Hein;Torhüter;SV Werder Bremen;14;400.000;400.000;7,0;Halten;Gut;2;0.9;Computer
 Höfler;Mittelfeld;Sport-Club Freiburg;3;210.000;210.000;1,5;Halten;Schlecht;0;0;Computer;20.11.2025
 Gouweleeuw;Abwehr;FC Augsburg;10;1.680.000;1.680.000;2,0;Halten;Schlecht;0;0;Computer;20.11.2025
 Dorsch;Mittelfeld;1. FC Heidenheim 1846;23;1.240.000;1.280.000;2,6;Halten;Durchschnittlich;1;1.8;Computer;20.11.2025
-Keitel;Mittelfeld;VfB Stuttgart;0;160.000;160.000;2,6;Halten;Gut;1;N/A;Computer;20.11.2025
+Keitel;Mittelfeld;VfB Stuttgart;0;160.000;160.000;2,6;Halten;Gut;1;;Computer;20.11.2025
 Stanišić;Abwehr;FC Bayern München;17;3.550.000;3.510.000;3,4;Halten;Schlecht;0;2.3;Computer;20.11.2025
 Leweling;Mittelfeld;VfB Stuttgart;33;4.950.000;4.920.000;3,7;Halten;Schlecht;0;1.4;Computer;20.11.2025
-Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;20.11.2025
+Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;20.11.2025
 Pavlović;Mittelfeld;FC Bayern München;32;5.420.000;5.340.000;4,0;Halten;Durchschnittlich;1;4.4;Computer;20.11.2025
 Niehues;Mittelfeld;1. FC Heidenheim 1846;18;1.270.000;1.290.000;2,6;Halten;Durchschnittlich;1;1.2;Computer;20.11.2025
 Metcalfe;Mittelfeld;FC St. Pauli;22;1.340.000;1.390.000;2,4;Halten;Durchschnittlich;1;2.2;Computer;20.11.2025
-Fenyő;Mittelfeld;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;20.11.2025
-Swider;Mittelfeld;Borussia Mönchengladbach;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;20.11.2025
+Fenyő;Mittelfeld;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;20.11.2025
+Swider;Mittelfeld;Borussia Mönchengladbach;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;20.11.2025
 Quansah;Abwehr;Bayer 04 Leverkusen;35;4.000.000;4.010.000;4,4;Halten;Gut;0;4.3;Computer;20.11.2025
 Sebulonsen;Abwehr;1. FC Köln;24;1.370.000;1.370.000;2,4;Halten;Durchschnittlich;2;1.3;Computer;20.11.2025
 Kaars;Stürmer;FC St. Pauli;17;1.780.000;1.780.000;1,9;Halten;Schlecht;0;1.9;Computer;20.11.2025
+Höfler;Mittelfeld;Sport-Club Freiburg;3;220.000;220.000;1,5;Halten;Schlecht;0;-0.1;Computer;21.11.2025
+Stenzel;Abwehr;VfB Stuttgart;4;460.000;460.000;4,0;Halten;Gut;0;N/A;Computer;21.11.2025
+Gouweleeuw;Abwehr;FC Augsburg;10;1.580.000;1.580.000;2,0;Halten;Schlecht;0;0;Computer;21.11.2025
+Dorsch;Mittelfeld;1. FC Heidenheim 1846;23;1.220.000;1.230.000;2,6;Halten;Durchschnittlich;0;1.7;Computer;21.11.2025
+Stanišić;Abwehr;FC Bayern München;17;3.260.000;3.280.000;3,4;Halten;Durchschnittlich;0;2.3;Computer;21.11.2025
+Leweling;Mittelfeld;VfB Stuttgart;33;4.520.000;4.510.000;3,7;Halten;Durchschnittlich;0;1.3;Computer;21.11.2025
+Pejčinović;Stürmer;VfL Wolfsburg;12;1.070.000;1.080.000;2,0;Halten;Schlecht;0;-0.5;Computer;21.11.2025
+Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;21.11.2025
+Grüll;Stürmer;SV Werder Bremen;44;5.030.000;5.010.000;4,4;Halten;Gut;0;2.5;Computer;21.11.2025
+Niehues;Mittelfeld;1. FC Heidenheim 1846;18;1.250.000;1.270.000;2,6;Halten;Durchschnittlich;0;1.1;Computer;21.11.2025
+Metcalfe;Mittelfeld;FC St. Pauli;22;1.350.000;1.390.000;2,4;Halten;Durchschnittlich;0;2.2;Computer;21.11.2025
+Swider;Mittelfeld;Borussia Mönchengladbach;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;21.11.2025
+Quansah;Abwehr;Bayer 04 Leverkusen;35;3.870.000;3.880.000;4,4;Halten;Gut;0;4.4;Computer;21.11.2025
+Musah;Stürmer;SV Werder Bremen;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;21.11.2025
+Kaars;Stürmer;FC St. Pauli;17;1.820.000;1.820.000;1,9;Halten;Schlecht;0;1.8;Computer;21.11.2025
