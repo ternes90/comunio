@@ -1,8 +1,10 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Diomande;Sturm
+Thomas;Grüll;Sturm
 Thomas;Honorat;Sturm
 Thomas;Kaars;Sturm
+Thomas;Musah;Sturm
 Thomas;Stage;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Ouédraogo;Mittelfeld
@@ -12,11 +14,13 @@ Thomas;Gebel;Mittelfeld
 Thomas;Swider;Mittelfeld
 Thomas;Grimaldo;Abwehr
 Thomas;Laimer;Abwehr
+Thomas;Quansah;Abwehr
 Thomas;Nübel;Tor
 Thomas;Sippel;Tor
 Alfons;Asllani;Sturm
 Alfons;Sinani;Sturm
 Alfons;Boniface;Sturm
+Alfons;Pejčinović;Sturm
 Alfons;Sarco;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
