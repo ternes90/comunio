@@ -2217,17 +2217,32 @@ Telle;Abwehr;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;22.11
 Quansah;Abwehr;Bayer 04 Leverkusen;35;4.240.000;4.190.000;4,4;Halten;Durchschnittlich;0;4.5;Computer;22.11.2025
 Musah;Stürmer;SV Werder Bremen;0;270.000;270.000;0,0;Halten;Schlecht;0;;Computer;22.11.2025
 Dardari;Stürmer;FC Augsburg;3;410.000;410.000;1,5;Halten;Schlecht;0;0.3;Computer;22.11.2025
-Ulreich;Torhüter;FC Bayern München;0;160.000;160.000;3,0;Halten;Gut;1;N/A;Computer;23.11.2025
+Ulreich;Torhüter;FC Bayern München;0;160.000;160.000;3,0;Halten;Gut;1;;Computer;23.11.2025
 Zetterer;Torhüter;Eintracht Frankfurt;23;1.650.000;1.580.000;3,8;Halten;Gut;4;1.9;Computer;23.11.2025
-Stenzel;Abwehr;VfB Stuttgart;4;440.000;440.000;4,0;Halten;Gut;2;N/A;Computer;23.11.2025
-Hack;Stürmer;Borussia Mönchengladbach;12;5.800.000;5.660.000;4,0;Halten;Durchschnittlich;4;N/A;Computer;23.11.2025
-Ngankam;Stürmer;Eintracht Frankfurt;0;340.000;340.000;0,4;Halten;Schlecht;0;N/A;Computer;23.11.2025
-Keller;Abwehr;1. FC Heidenheim 1846;0;170.000;240.000;2,2;Halten;Gut;2;N/A;Computer;23.11.2025
+Stenzel;Abwehr;VfB Stuttgart;4;440.000;440.000;4,0;Halten;Gut;2;;Computer;23.11.2025
+Hack;Stürmer;Borussia Mönchengladbach;12;5.800.000;5.660.000;4,0;Halten;Durchschnittlich;4;;Computer;23.11.2025
+Ngankam;Stürmer;Eintracht Frankfurt;0;340.000;340.000;0,4;Halten;Schlecht;0;;Computer;23.11.2025
+Keller;Abwehr;1. FC Heidenheim 1846;0;170.000;240.000;2,2;Halten;Gut;2;;Computer;23.11.2025
 Demirović;Stürmer;VfB Stuttgart;34;6.060.000;6.030.000;5,7;Halten;Gut;5;0;Computer;23.11.2025
 Pavlović;Mittelfeld;FC Bayern München;32;5.740.000;6.580.000;4,0;Halten;Durchschnittlich;4;4.5;Computer;23.11.2025
-Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;23.11.2025
+Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;23.11.2025
 Hendriks;Abwehr;VfB Stuttgart;14;1.120.000;1.250.000;2,0;Halten;Schlecht;0;0;Computer;23.11.2025
 Essende;Stürmer;FC Augsburg;22;1.420.000;1.500.000;3,7;Halten;Gut;5;1.7;Computer;23.11.2025
-Schmitz;Mittelfeld;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;23.11.2025
-Telle;Abwehr;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;23.11.2025
+Schmitz;Mittelfeld;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;23.11.2025
+Telle;Abwehr;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;23.11.2025
 Dardari;Stürmer;FC Augsburg;3;410.000;410.000;1,5;Halten;Schlecht;0;0.3;Computer;23.11.2025
+Ulreich;Torhüter;FC Bayern München;0;160.000;160.000;3,0;Halten;Gut;1;N/A;Computer;24.11.2025
+M. Philipp;Stürmer;Sport-Club Freiburg;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;24.11.2025
+Zetterer;Torhüter;Eintracht Frankfurt;22;1.710.000;1.630.000;3,1;Halten;Schlecht;2;1.7;Computer;24.11.2025
+Hack;Stürmer;Borussia Mönchengladbach;14;5.640.000;5.920.000;3,5;Halten;Schlecht;0;0.2;Computer;24.11.2025
+Keller;Abwehr;1. FC Heidenheim 1846;2;190.000;240.000;2,0;Halten;Durchschnittlich;1;0.1;Computer;24.11.2025
+Demirović;Stürmer;VfB Stuttgart;34;5.520.000;5.340.000;5,7;Halten;Gut;5;N/A;Computer;24.11.2025
+Pavlović;Mittelfeld;FC Bayern München;41;6.870.000;7.410.000;4,6;Kaufen;Durchschnittlich;5;4.7;Computer;24.11.2025
+Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;24.11.2025
+Hendriks;Abwehr;VfB Stuttgart;15;1.010.000;1.150.000;1,9;Halten;Schlecht;0;2.4;Computer;24.11.2025
+Essende;Stürmer;FC Augsburg;24;1.370.000;1.490.000;3,4;Halten;Gut;5;0.9;Computer;24.11.2025
+Schmitz;Mittelfeld;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;24.11.2025
+Telle;Abwehr;1. FC Köln;0;170.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;24.11.2025
+Dardari;Stürmer;FC Augsburg;3;380.000;380.000;1,5;Halten;Schlecht;0;0;Computer;24.11.2025
+Fernández;Mittelfeld;Bayer 04 Leverkusen;17;2.010.000;1.950.000;3,4;Halten;Gut;4;0;Computer;24.11.2025
+J. Bürger;Abwehr;VfL Wolfsburg;1;200.000;220.000;1,0;N/A;Schlecht;0;0;Computer;24.11.2025
