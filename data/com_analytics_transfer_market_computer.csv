@@ -2262,17 +2262,32 @@ Kofane;Stürmer;Bayer 04 Leverkusen;36;4.000.000;4.050.000;3,6;Halten;Durchschni
 Fernández;Mittelfeld;Bayer 04 Leverkusen;17;2.070.000;2.110.000;3,4;Halten;Gut;4;0;Computer;25.11.2025
 Eriksen;Mittelfeld;VfL Wolfsburg;21;3.060.000;3.150.000;2,6;Halten;Schlecht;0;1.7;Computer;25.11.2025
 Höfler;Mittelfeld;Sport-Club Freiburg;3;170.000;170.000;1,5;Halten;Schlecht;0;0.3;Computer;26.11.2025
-M. Philipp;Stürmer;Sport-Club Freiburg;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;26.11.2025
+M. Philipp;Stürmer;Sport-Club Freiburg;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;26.11.2025
 Guirassy;Stürmer;Borussia Dortmund;62;15.720.000;15.050.000;6,2;Halten;Schlecht;2;3.9;Computer;26.11.2025
 Führich;Mittelfeld;VfB Stuttgart;38;3.840.000;3.790.000;4,2;Halten;Gut;4;3.7;Computer;26.11.2025
 Vagnoman;Abwehr;VfB Stuttgart;32;2.350.000;2.310.000;4,6;Halten;Gut;5;2.3;Computer;26.11.2025
-D. Nemeth;Abwehr;FC St. Pauli;0;180.000;180.000;3,2;Kaufen;Gut;5;N/A;Computer;26.11.2025
+D. Nemeth;Abwehr;FC St. Pauli;0;180.000;180.000;3,2;Kaufen;Gut;5;;Computer;26.11.2025
 Svanberg;Mittelfeld;VfL Wolfsburg;30;2.780.000;2.800.000;3,0;Halten;Durchschnittlich;3;2.2;Computer;26.11.2025
 Majer;Mittelfeld;VfL Wolfsburg;28;2.590.000;2.590.000;3,1;Halten;Durchschnittlich;3;1.5;Computer;26.11.2025
-Vandevoordt;Torhüter;RB Leipzig;0;210.000;220.000;1,5;Halten;Durchschnittlich;1;N/A;Computer;26.11.2025
-Preu;Mittelfeld;1. FC Union Berlin;0;160.000;160.000;1,0;Halten;Schlecht;0;N/A;Computer;26.11.2025
+Vandevoordt;Torhüter;RB Leipzig;0;210.000;220.000;1,5;Halten;Durchschnittlich;1;;Computer;26.11.2025
+Preu;Mittelfeld;1. FC Union Berlin;0;160.000;160.000;1,0;Halten;Schlecht;0;;Computer;26.11.2025
 Claude-Maurice;Mittelfeld;FC Augsburg;20;3.390.000;3.410.000;2,5;Halten;Schlecht;0;2.5;Computer;26.11.2025
-Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;26.11.2025
+Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;26.11.2025
 Kofane;Stürmer;Bayer 04 Leverkusen;36;4.000.000;4.050.000;3,6;Halten;Durchschnittlich;4;3.7;Computer;26.11.2025
 Fernández;Mittelfeld;Bayer 04 Leverkusen;17;2.290.000;2.180.000;3,4;Halten;Gut;4;0;Computer;26.11.2025
 Eriksen;Mittelfeld;VfL Wolfsburg;21;3.090.000;3.140.000;2,6;Halten;Schlecht;0;1.6;Computer;26.11.2025
+Höfler;Mittelfeld;Sport-Club Freiburg;3;180.000;170.000;1,5;Halten;Schlecht;0;0.4;Computer;27.11.2025
+K. Müller;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;27.11.2025
+Führich;Mittelfeld;VfB Stuttgart;38;3.910.000;3.920.000;4,2;Halten;Gut;4;3.7;Computer;27.11.2025
+Vagnoman;Abwehr;VfB Stuttgart;32;2.320.000;2.270.000;4,6;Halten;Gut;5;2.4;Computer;27.11.2025
+D. Nemeth;Abwehr;FC St. Pauli;0;170.000;170.000;3,2;Halten;Gut;4;N/A;Computer;27.11.2025
+Svanberg;Mittelfeld;VfL Wolfsburg;30;2.560.000;2.550.000;3,0;Halten;Durchschnittlich;3;2.1;Computer;27.11.2025
+Beck;Mittelfeld;1. FC Heidenheim 1846;23;1.280.000;1.280.000;2,3;Halten;Schlecht;0;1.6;Computer;27.11.2025
+Majer;Mittelfeld;VfL Wolfsburg;28;2.550.000;2.540.000;3,1;Halten;Durchschnittlich;3;1.4;Computer;27.11.2025
+Vandevoordt;Torhüter;RB Leipzig;0;210.000;220.000;1,5;Halten;Durchschnittlich;1;N/A;Computer;27.11.2025
+Preu;Mittelfeld;1. FC Union Berlin;0;160.000;160.000;1,0;Halten;Schlecht;0;N/A;Computer;27.11.2025
+Claude-Maurice;Mittelfeld;FC Augsburg;20;3.360.000;3.350.000;2,5;Halten;Schlecht;0;2.5;Computer;27.11.2025
+Mokwa;Stürmer;TSG Hoffenheim;0;170.000;170.000;1,5;Halten;Schlecht;0;N/A;Computer;27.11.2025
+Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;27.11.2025
+Kofane;Stürmer;Bayer 04 Leverkusen;36;4.090.000;4.100.000;3,6;Halten;Durchschnittlich;4;3.8;Computer;27.11.2025
+Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;27.11.2025
