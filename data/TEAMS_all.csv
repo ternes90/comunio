@@ -13,6 +13,7 @@ Thomas;Quansah;Abwehr
 Thomas;J. Bürger;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
+Alfons;Guirassy;Sturm
 Alfons;Sinani;Sturm
 Alfons;Boniface;Sturm
 Alfons;Ngankam;Sturm
@@ -20,7 +21,6 @@ Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
 Alfons;Remberg;Mittelfeld
 Alfons;Pavlović;Mittelfeld
-Alfons;Martel;Mittelfeld
 Alfons;Tella;Mittelfeld
 Alfons;Querfeld;Abwehr
 Alfons;Ginter;Abwehr
@@ -84,6 +84,7 @@ Nico;Fellhauer;Mittelfeld
 Nico;Fujita;Mittelfeld
 Nico;Lynen;Mittelfeld
 Nico;Haberer;Mittelfeld
+Nico;Eriksen;Mittelfeld
 Nico;Doekhi;Abwehr
 Nico;Muheim;Abwehr
 Nico;Trimmel;Abwehr
