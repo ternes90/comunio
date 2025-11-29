@@ -2291,18 +2291,33 @@ Mokwa;Stürmer;TSG Hoffenheim;0;170.000;170.000;1,5;Halten;Schlecht;0;;Computer;
 Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;27.11.2025
 Kofane;Stürmer;Bayer 04 Leverkusen;36;4.090.000;4.100.000;3,6;Halten;Durchschnittlich;4;3.8;Computer;27.11.2025
 Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;27.11.2025
-Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;1;N/A;Computer;28.11.2025
-K. Müller;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;28.11.2025
-Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Durchschnittlich;1;N/A;Computer;28.11.2025
+Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;1;;Computer;28.11.2025
+K. Müller;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;2,5;Halten;Gut;1;;Computer;28.11.2025
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Durchschnittlich;1;;Computer;28.11.2025
 Schick;Stürmer;Bayer 04 Leverkusen;57;14.980.000;14.970.000;6,3;Halten;Schlecht;2;5.9;Computer;28.11.2025
 Fraulo;Mittelfeld;Borussia Mönchengladbach;16;1.040.000;1.030.000;4,0;Halten;Gut;2;1.4;Computer;28.11.2025
 Jenz;Abwehr;VfL Wolfsburg;21;720.000;710.000;2,6;Halten;Gut;2;0;Computer;28.11.2025
 Beck;Mittelfeld;1. FC Heidenheim 1846;23;1.280.000;1.320.000;2,3;Halten;Durchschnittlich;1;1.5;Computer;28.11.2025
-Vandevoordt;Torhüter;RB Leipzig;0;200.000;190.000;1,5;Halten;Durchschnittlich;1;N/A;Computer;28.11.2025
+Vandevoordt;Torhüter;RB Leipzig;0;200.000;190.000;1,5;Halten;Durchschnittlich;1;;Computer;28.11.2025
 Vasilj;Torhüter;FC St. Pauli;38;1.490.000;1.480.000;3,5;Halten;Durchschnittlich;3;2.1;Computer;28.11.2025
-Chaves;Abwehr;TSG Hoffenheim;9;400.000;400.000;2,3;Halten;Durchschnittlich;1;N/A;Computer;28.11.2025
+Chaves;Abwehr;TSG Hoffenheim;9;400.000;400.000;2,3;Halten;Durchschnittlich;1;;Computer;28.11.2025
 Claude-Maurice;Mittelfeld;FC Augsburg;20;3.530.000;3.510.000;2,5;Halten;Schlecht;0;2.3;Computer;28.11.2025
-Mokwa;Stürmer;TSG Hoffenheim;0;170.000;170.000;1,5;Halten;Schlecht;0;N/A;Computer;28.11.2025
-Kujović;Mittelfeld;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;28.11.2025
-Mohya;Mittelfeld;Borussia Mönchengladbach;0;740.000;670.000;0,0;Halten;Schlecht;0;N/A;Computer;28.11.2025
-Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;28.11.2025
+Mokwa;Stürmer;TSG Hoffenheim;0;170.000;170.000;1,5;Halten;Schlecht;0;;Computer;28.11.2025
+Kujović;Mittelfeld;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;28.11.2025
+Mohya;Mittelfeld;Borussia Mönchengladbach;0;740.000;670.000;0,0;Halten;Schlecht;0;;Computer;28.11.2025
+Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;28.11.2025
+Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;1;N/A;Computer;29.11.2025
+K. Müller;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;29.11.2025
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Durchschnittlich;1;N/A;Computer;29.11.2025
+Schick;Stürmer;Bayer 04 Leverkusen;57;14.980.000;15.020.000;6,3;Halten;Schlecht;2;5.9;Computer;29.11.2025
+Martel;Mittelfeld;1. FC Köln;40;3.180.000;3.190.000;3,6;Halten;Gut;2;1.8;Computer;29.11.2025
+Ramaj;Torhüter;1. FC Heidenheim 1846;40;1.440.000;1.390.000;3,6;Halten;Gut;4;2.4;Computer;29.11.2025
+Fraulo;Mittelfeld;Borussia Mönchengladbach;16;1.020.000;1.230.000;4,0;Kaufen;Gut;3;1.4;Computer;29.11.2025
+Jenz;Abwehr;VfL Wolfsburg;21;720.000;710.000;2,6;Halten;Gut;2;0;Computer;29.11.2025
+Vasilj;Torhüter;FC St. Pauli;38;1.390.000;1.420.000;3,5;Halten;Gut;4;2.1;Computer;29.11.2025
+Chaves;Abwehr;TSG Hoffenheim;9;380.000;380.000;2,3;Halten;Durchschnittlich;1;N/A;Computer;29.11.2025
+Mokwa;Stürmer;TSG Hoffenheim;0;170.000;170.000;1,5;Halten;Schlecht;0;N/A;Computer;29.11.2025
+Schmied;Abwehr;1. FC Köln;20;1.160.000;1.160.000;1,8;Halten;Schlecht;0;0;Computer;29.11.2025
+Kujović;Mittelfeld;1. FC Köln;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;29.11.2025
+Mohya;Mittelfeld;Borussia Mönchengladbach;0;700.000;650.000;0,0;Halten;Schlecht;0;N/A;Computer;29.11.2025
+Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;29.11.2025
