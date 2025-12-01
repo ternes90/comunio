@@ -17,12 +17,11 @@ Alfons;Boniface;Sturm
 Alfons;Ngankam;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
-Alfons;Remberg;Mittelfeld
 Alfons;Pavlović;Mittelfeld
+Alfons;Remberg;Mittelfeld
 Alfons;Beck;Mittelfeld
-Alfons;Tella;Mittelfeld
-Alfons;Querfeld;Abwehr
 Alfons;Ginter;Abwehr
+Alfons;Querfeld;Abwehr
 Alfons;Giannoulis;Abwehr
 Alfons;Pieper;Abwehr
 Alfons;Keller;Abwehr
@@ -33,17 +32,18 @@ Christoph;Baumgartner;Mittelfeld
 Christoph;Amiri;Mittelfeld
 Christoph;B. Touré;Mittelfeld
 Christoph;Avdullahu;Mittelfeld
+Christoph;Martel;Mittelfeld
 Christoph;Lee;Mittelfeld
 Christoph;Lukeba;Abwehr
-Christoph;Upamecano;Abwehr
 Christoph;Mainka;Abwehr
+Christoph;Upamecano;Abwehr
 Christoph;Hendriks;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Kramarić;Mittelfeld
 Pascal;Kainz;Mittelfeld
-Pascal;Larsson;Mittelfeld
 Pascal;Skhiri;Mittelfeld
+Pascal;Larsson;Mittelfeld
 Pascal;Can;Mittelfeld
 Pascal;Irvine;Mittelfeld
 Pascal;W. Orbán;Abwehr
@@ -61,8 +61,8 @@ Andreas;Schmid;Mittelfeld
 Andreas;Reitz;Mittelfeld
 Andreas;L. Vušković;Abwehr
 Andreas;Bensebaini;Abwehr
-Andreas;Matsima;Abwehr
 Andreas;Bernardo;Abwehr
+Andreas;Matsima;Abwehr
 Andreas;Heuer Fernandes;Tor
 Dominik;Luis Díaz;Sturm
 Dominik;Kofane;Sturm
@@ -81,25 +81,26 @@ Nico;Olise;Sturm
 Nico;Höler;Sturm
 Nico;Glatzel;Sturm
 Nico;Fellhauer;Mittelfeld
-Nico;Fujita;Mittelfeld
 Nico;Lynen;Mittelfeld
+Nico;Fujita;Mittelfeld
 Nico;Eriksen;Mittelfeld
 Nico;Doekhi;Abwehr
 Nico;Muheim;Abwehr
 Nico;Trimmel;Abwehr
+Nico;Ramaj;Tor
 Nico;Zentner;Tor
 Christian;Pereira Lage;Sturm
-Christian;Chaïbi;Mittelfeld
 Christian;Khedira;Mittelfeld
+Christian;Chaïbi;Mittelfeld
 Christian;Vini Souza;Mittelfeld
 Christian;Rexhbeçaj;Mittelfeld
-Christian;Jeong;Mittelfeld
 Christian;Schöppner;Mittelfeld
+Christian;Jeong;Mittelfeld
 Christian;Tapsoba;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
-Christian;Elfadli;Abwehr
-Christian;Föhrenbach;Abwehr
 Christian;Kim;Abwehr
+Christian;Föhrenbach;Abwehr
+Christian;Elfadli;Abwehr
 Christian;Köhn;Abwehr
 Christian;Grabara;Tor
 Christian;Zieler;Tor
