@@ -2382,17 +2382,32 @@ Darvich;Mittelfeld;VfB Stuttgart;0;350.000;350.000;0,0;Halten;Schlecht;0;;Comput
 Ćatović;Mittelfeld;VfB Stuttgart;0;190.000;200.000;0,0;Halten;Schlecht;0;;Computer;03.12.2025
 Dardari;Stürmer;FC Augsburg;3;310.000;330.000;1,5;Halten;Schlecht;0;-0.1;Computer;03.12.2025
 Bell;Abwehr;1. FSV Mainz 05;17;1.060.000;1.030.000;1,7;Halten;Schlecht;0;0.7;Computer;04.12.2025
-Batz;Torhüter;1. FSV Mainz 05;0;160.000;160.000;4,0;Halten;Gut;1;N/A;Computer;04.12.2025
-K. Müller;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;04.12.2025
+Batz;Torhüter;1. FSV Mainz 05;0;160.000;160.000;4,0;Halten;Gut;1;;Computer;04.12.2025
+K. Müller;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;2,5;Halten;Gut;1;;Computer;04.12.2025
 Stenzel;Abwehr;VfB Stuttgart;6;360.000;410.000;3,0;Halten;Gut;2;0.1;Computer;04.12.2025
 Maloney;Mittelfeld;1. FSV Mainz 05;14;1.020.000;1.040.000;2,0;Halten;Schlecht;0;0.6;Computer;04.12.2025
 Krauß;Mittelfeld;1. FC Köln;22;870.000;910.000;2,8;Halten;Gut;1;1.9;Computer;04.12.2025
 Wind;Stürmer;VfL Wolfsburg;18;2.500.000;2.480.000;2,6;Halten;Schlecht;0;0;Computer;04.12.2025
 Y. Engelhardt;Mittelfeld;Borussia Mönchengladbach;42;5.100.000;5.070.000;4,2;Halten;Durchschnittlich;2;4.6;Computer;04.12.2025
-Stergiou;Abwehr;VfB Stuttgart;0;340.000;330.000;3,7;Halten;Gut;2;N/A;Computer;04.12.2025
-Højlund;Mittelfeld;Eintracht Frankfurt;3;830.000;840.000;0,4;Halten;Schlecht;0;N/A;Computer;04.12.2025
-Swider;Mittelfeld;Borussia Mönchengladbach;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;04.12.2025
+Stergiou;Abwehr;VfB Stuttgart;0;340.000;330.000;3,7;Halten;Gut;2;;Computer;04.12.2025
+Højlund;Mittelfeld;Eintracht Frankfurt;3;830.000;840.000;0,4;Halten;Schlecht;0;;Computer;04.12.2025
+Swider;Mittelfeld;Borussia Mönchengladbach;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;04.12.2025
 Schmied;Abwehr;1. FC Köln;20;860.000;850.000;1,8;Halten;Schlecht;0;0;Computer;04.12.2025
-Darvich;Mittelfeld;VfB Stuttgart;0;340.000;350.000;0,0;Halten;Schlecht;0;N/A;Computer;04.12.2025
-Sorg;Abwehr;FC Augsburg;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;04.12.2025
-Ćatović;Mittelfeld;VfB Stuttgart;0;190.000;190.000;0,0;Halten;Schlecht;0;N/A;Computer;04.12.2025
+Darvich;Mittelfeld;VfB Stuttgart;0;340.000;350.000;0,0;Halten;Schlecht;0;;Computer;04.12.2025
+Sorg;Abwehr;FC Augsburg;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;04.12.2025
+Ćatović;Mittelfeld;VfB Stuttgart;0;190.000;190.000;0,0;Halten;Schlecht;0;;Computer;04.12.2025
+Batz;Torhüter;1. FSV Mainz 05;0;160.000;160.000;4,0;Halten;Gut;1;N/A;Computer;05.12.2025
+Mwene;Abwehr;1. FSV Mainz 05;31;1.540.000;1.500.000;2,6;Halten;Durchschnittlich;0;1.7;Computer;05.12.2025
+Stenzel;Abwehr;VfB Stuttgart;6;360.000;370.000;3,0;Halten;Gut;0;0.1;Computer;05.12.2025
+Katterbach;Abwehr;Hamburger SV;0;170.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;05.12.2025
+Krauß;Mittelfeld;1. FC Köln;22;880.000;900.000;2,8;Halten;Gut;0;1.9;Computer;05.12.2025
+Wind;Stürmer;VfL Wolfsburg;18;2.320.000;2.300.000;2,6;Halten;Schlecht;0;0;Computer;05.12.2025
+Traoré;Abwehr;1. FC Heidenheim 1846;18;940.000;980.000;1,5;Halten;Schlecht;0;0.7;Computer;05.12.2025
+Stergiou;Abwehr;VfB Stuttgart;0;340.000;340.000;3,7;Halten;Gut;0;N/A;Computer;05.12.2025
+Swider;Mittelfeld;Borussia Mönchengladbach;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;05.12.2025
+Skov Olsen;Stürmer;VfL Wolfsburg;26;1.480.000;1.420.000;3,7;Halten;Gut;0;1.7;Computer;05.12.2025
+Schmied;Abwehr;1. FC Köln;20;810.000;800.000;1,8;Halten;Schlecht;0;0;Computer;05.12.2025
+Bellingham;Mittelfeld;Borussia Dortmund;29;3.180.000;3.180.000;2,4;Halten;Schlecht;0;3.5;Computer;05.12.2025
+Darvich;Mittelfeld;VfB Stuttgart;0;330.000;330.000;0,0;Halten;Schlecht;0;N/A;Computer;05.12.2025
+Capaldo;Mittelfeld;Hamburger SV;34;2.860.000;2.910.000;3,4;Halten;Durchschnittlich;0;2.9;Computer;05.12.2025
+Sorg;Abwehr;FC Augsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;05.12.2025
