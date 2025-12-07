@@ -2413,16 +2413,31 @@ Capaldo;Mittelfeld;Hamburger SV;34;2.860.000;2.910.000;3,4;Halten;Durchschnittli
 Sorg;Abwehr;FC Augsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;05.12.2025
 Mwene;Abwehr;1. FSV Mainz 05;31;1.640.000;1.580.000;2,4;Halten;Durchschnittlich;3;1.7;Computer;06.12.2025
 Neuhaus;Mittelfeld;Borussia Mönchengladbach;30;3.470.000;3.300.000;3,0;Verkaufen;Schlecht;0;0;Computer;06.12.2025
-Katterbach;Abwehr;Hamburger SV;0;170.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;06.12.2025
-Bobzien;Stürmer;1. FSV Mainz 05;3;200.000;200.000;3,0;Halten;Gut;2;N/A;Computer;06.12.2025
+Katterbach;Abwehr;Hamburger SV;0;170.000;170.000;1,0;Halten;Schlecht;0;;Computer;06.12.2025
+Bobzien;Stürmer;1. FSV Mainz 05;3;200.000;200.000;3,0;Halten;Gut;2;;Computer;06.12.2025
 Wind;Stürmer;VfL Wolfsburg;18;2.360.000;2.270.000;2,6;Halten;Schlecht;0;0;Computer;06.12.2025
-Diehl;Stürmer;VfB Stuttgart;0;300.000;300.000;2,4;Kaufen;Durchschnittlich;3;N/A;Computer;06.12.2025
+Diehl;Stürmer;VfB Stuttgart;0;300.000;300.000;2,4;Kaufen;Durchschnittlich;3;;Computer;06.12.2025
 Traoré;Abwehr;1. FC Heidenheim 1846;18;920.000;960.000;1,5;Halten;Schlecht;0;0.7;Computer;06.12.2025
-Swider;Mittelfeld;Borussia Mönchengladbach;0;180.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;06.12.2025
+Swider;Mittelfeld;Borussia Mönchengladbach;0;180.000;170.000;0,0;Halten;Schlecht;0;;Computer;06.12.2025
 Skov Olsen;Stürmer;VfL Wolfsburg;26;1.490.000;1.470.000;3,7;Halten;Gut;3;1.7;Computer;06.12.2025
 Schmied;Abwehr;1. FC Köln;20;770.000;760.000;1,8;Halten;Schlecht;0;0;Computer;06.12.2025
 Røssing-Lelesiit;Stürmer;Hamburger SV;13;720.000;760.000;1,6;Halten;Schlecht;0;0;Computer;06.12.2025
 Bellingham;Mittelfeld;Borussia Dortmund;29;3.040.000;3.060.000;2,4;Halten;Schlecht;0;3.6;Computer;06.12.2025
 Kawasaki;Mittelfeld;1. FSV Mainz 05;5;750.000;720.000;1,7;Halten;Schlecht;0;0.3;Computer;06.12.2025
 Capaldo;Mittelfeld;Hamburger SV;34;2.880.000;2.880.000;3,4;Halten;Durchschnittlich;0;2.9;Computer;06.12.2025
-Sorg;Abwehr;FC Augsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;06.12.2025
+Sorg;Abwehr;FC Augsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;06.12.2025
+Mwene;Abwehr;1. FSV Mainz 05;31;1.560.000;1.510.000;2,4;Halten;Durchschnittlich;2;1.7;Computer;07.12.2025
+Goretzka;Mittelfeld;FC Bayern München;45;5.910.000;5.810.000;3,8;Halten;Durchschnittlich;1;6;Computer;07.12.2025
+Batshuayi;Stürmer;Eintracht Frankfurt;13;1.980.000;1.940.000;2,2;Halten;Schlecht;0;0;Computer;07.12.2025
+Neuhaus;Mittelfeld;Borussia Mönchengladbach;30;3.340.000;3.210.000;3,0;Verkaufen;Durchschnittlich;0;0;Computer;07.12.2025
+Katterbach;Abwehr;Hamburger SV;0;170.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;07.12.2025
+Bobzien;Stürmer;1. FSV Mainz 05;3;200.000;210.000;3,0;Halten;Gut;2;N/A;Computer;07.12.2025
+Njinmah;Stürmer;SV Werder Bremen;33;1.840.000;1.800.000;3,0;Halten;Gut;3;2.1;Computer;07.12.2025
+Diehl;Stürmer;VfB Stuttgart;0;290.000;290.000;2,4;Kaufen;Durchschnittlich;3;N/A;Computer;07.12.2025
+Traoré;Abwehr;1. FC Heidenheim 1846;18;920.000;990.000;1,4;Halten;Schlecht;0;0.6;Computer;07.12.2025
+Skov Olsen;Stürmer;VfL Wolfsburg;26;1.380.000;1.360.000;3,7;Halten;Gut;3;1.6;Computer;07.12.2025
+Đurić;Mittelfeld;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;07.12.2025
+Røssing-Lelesiit;Stürmer;Hamburger SV;13;730.000;740.000;1,6;Halten;Schlecht;0;0;Computer;07.12.2025
+Bellingham;Mittelfeld;Borussia Dortmund;29;2.900.000;2.890.000;2,4;Halten;Schlecht;0;3.6;Computer;07.12.2025
+Kawasaki;Mittelfeld;1. FSV Mainz 05;5;760.000;750.000;1,7;Halten;Schlecht;0;0.3;Computer;07.12.2025
+Özkacar;Abwehr;1. FC Köln;21;1.500.000;1.440.000;3,5;Halten;Gut;3;2.6;Computer;07.12.2025
