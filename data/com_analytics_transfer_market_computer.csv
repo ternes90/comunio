@@ -2473,16 +2473,31 @@ Meiser;Abwehr;FC Augsburg;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;09.1
 Badé;Abwehr;Bayer 04 Leverkusen;44;3.980.000;3.860.000;3,7;Halten;Durchschnittlich;1;4.5;Computer;09.12.2025
 Sabitzer;Mittelfeld;Borussia Dortmund;32;2.610.000;2.670.000;3,2;Halten;Durchschnittlich;0;3;Computer;10.12.2025
 Dahmen;Torhüter;FC Augsburg;29;1.080.000;1.090.000;2,2;Halten;Schlecht;1;2.5;Computer;10.12.2025
-Bredlow;Torhüter;VfB Stuttgart;0;160.000;160.000;6,3;Halten;Gut;1;N/A;Computer;10.12.2025
-Palacios;Mittelfeld;Bayer 04 Leverkusen;4;2.070.000;2.050.000;2,0;Kaufen;Schlecht;2;N/A;Computer;10.12.2025
+Bredlow;Torhüter;VfB Stuttgart;0;160.000;160.000;6,3;Halten;Gut;1;;Computer;10.12.2025
+Palacios;Mittelfeld;Bayer 04 Leverkusen;4;2.070.000;2.050.000;2,0;Kaufen;Schlecht;2;;Computer;10.12.2025
 Netz;Abwehr;Borussia Mönchengladbach;25;1.970.000;1.960.000;2,8;Halten;Durchschnittlich;4;1.6;Computer;10.12.2025
-Caci;Abwehr;1. FSV Mainz 05;20;2.400.000;2.370.000;5,0;Halten;Gut;5;N/A;Computer;10.12.2025
-Wöber;Abwehr;SV Werder Bremen;0;680.000;700.000;3,6;Halten;Gut;4;N/A;Computer;10.12.2025
-Mæhle;Abwehr;VfL Wolfsburg;13;560.000;570.000;2,2;Halten;Durchschnittlich;2;N/A;Computer;10.12.2025
-Baum;Abwehr;Eintracht Frankfurt;0;290.000;300.000;1,3;Halten;Schlecht;0;N/A;Computer;10.12.2025
+Caci;Abwehr;1. FSV Mainz 05;20;2.400.000;2.370.000;5,0;Halten;Gut;5;;Computer;10.12.2025
+Wöber;Abwehr;SV Werder Bremen;0;680.000;700.000;3,6;Halten;Gut;4;;Computer;10.12.2025
+Mæhle;Abwehr;VfL Wolfsburg;13;560.000;570.000;2,2;Halten;Durchschnittlich;2;;Computer;10.12.2025
+Baum;Abwehr;Eintracht Frankfurt;0;290.000;300.000;1,3;Halten;Schlecht;0;;Computer;10.12.2025
 Veratschnig;Mittelfeld;1. FSV Mainz 05;13;500.000;530.000;1,4;Halten;Schlecht;0;-0.3;Computer;10.12.2025
 Sieb;Stürmer;1. FSV Mainz 05;29;1.410.000;1.450.000;2,6;Halten;Durchschnittlich;1;-0.4;Computer;10.12.2025
-Telle;Abwehr;1. FC Köln;0;170.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;10.12.2025
+Telle;Abwehr;1. FC Köln;0;170.000;180.000;0,0;Halten;Schlecht;0;;Computer;10.12.2025
 Gui Ramos;Abwehr;Hamburger SV;6;280.000;300.000;3,0;Halten;Gut;4;-0.3;Computer;10.12.2025
-Meiser;Abwehr;FC Augsburg;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;10.12.2025
+Meiser;Abwehr;FC Augsburg;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;10.12.2025
 Daghim;Stürmer;VfL Wolfsburg;24;2.420.000;2.410.000;3,4;Halten;Gut;2;0;Computer;10.12.2025
+Huth;Torhüter;Sport-Club Freiburg;0;160.000;160.000;-0,2;Halten;Schlecht;0;N/A;Computer;11.12.2025
+Sabitzer;Mittelfeld;Borussia Dortmund;32;2.550.000;2.590.000;3,2;Halten;Durchschnittlich;2;0;Computer;11.12.2025
+Bredlow;Torhüter;VfB Stuttgart;0;170.000;170.000;6,3;Halten;Gut;1;N/A;Computer;11.12.2025
+Palacios;Mittelfeld;Bayer 04 Leverkusen;4;2.140.000;2.140.000;2,0;Kaufen;Schlecht;2;N/A;Computer;11.12.2025
+Schimmer;Stürmer;1. FC Heidenheim 1846;47;3.560.000;3.660.000;5,9;Halten;Gut;4;2.5;Computer;11.12.2025
+Netz;Abwehr;Borussia Mönchengladbach;25;2.100.000;2.110.000;2,8;Halten;Durchschnittlich;4;1.6;Computer;11.12.2025
+Wöber;Abwehr;SV Werder Bremen;0;740.000;740.000;3,6;Kaufen;Gut;5;N/A;Computer;11.12.2025
+Baum;Abwehr;Eintracht Frankfurt;0;300.000;300.000;1,3;Halten;Schlecht;0;N/A;Computer;11.12.2025
+Alvero;Mittelfeld;SV Werder Bremen;6;270.000;280.000;3,0;Halten;Gut;1;N/A;Computer;11.12.2025
+Veratschnig;Mittelfeld;1. FSV Mainz 05;13;470.000;470.000;1,4;Halten;Schlecht;0;-0.3;Computer;11.12.2025
+Amoura;Stürmer;VfL Wolfsburg;69;8.600.000;8.770.000;5,3;Halten;Durchschnittlich;2;0;Computer;11.12.2025
+Gui Ramos;Abwehr;Hamburger SV;6;270.000;270.000;3,0;Halten;Gut;4;-0.4;Computer;11.12.2025
+Meiser;Abwehr;FC Augsburg;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;11.12.2025
+Echeverri;Mittelfeld;Bayer 04 Leverkusen;8;1.010.000;1.030.000;1,3;Halten;Schlecht;0;1.4;Computer;11.12.2025
+Daghim;Stürmer;VfL Wolfsburg;24;2.300.000;2.300.000;3,4;Halten;Gut;4;0;Computer;11.12.2025
