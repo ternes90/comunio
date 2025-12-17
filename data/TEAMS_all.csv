@@ -1,9 +1,11 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
+Thomas;Tabaković;Sturm
 Thomas;Grüll;Sturm
 Thomas;Honorat;Sturm
 Thomas;Stage;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
+Thomas;Kömür;Mittelfeld
 Thomas;Schlager;Mittelfeld
 Thomas;Gerhardt;Mittelfeld
 Thomas;Grimaldo;Abwehr
@@ -23,7 +25,6 @@ Alfons;Giannoulis;Abwehr
 Alfons;Ginter;Abwehr
 Alfons;Pieper;Abwehr
 Alfons;Boey;Abwehr
-Alfons;Stenzel;Abwehr
 Alfons;Schwäbe;Tor
 Alfons;Batz;Tor
 Christoph;Baumgartner;Mittelfeld
@@ -40,10 +41,12 @@ Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
 Pascal;Ansah;Sturm
 Pascal;Königsdörffer;Sturm
+Pascal;Campbell;Sturm
 Pascal;Kramarić;Mittelfeld
 Pascal;Irvine;Mittelfeld
 Pascal;Can;Mittelfeld
 Pascal;Castro-Montes;Mittelfeld
+Pascal;Ćatović;Mittelfeld
 Pascal;W. Orbán;Abwehr
 Pascal;Elvedi;Abwehr
 Pascal;Svensson;Abwehr
@@ -74,6 +77,8 @@ Dominik;Chabot;Abwehr
 Dominik;K. Schlotterbeck;Abwehr
 Dominik;Günter;Abwehr
 Dominik;Lucas Vázquez;Abwehr
+Dominik;Henrichs;Abwehr
+Dominik;Gendrey;Abwehr
 Dominik;Kobel;Tor
 Nico;Olise;Sturm
 Nico;Höler;Sturm
