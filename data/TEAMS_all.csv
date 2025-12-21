@@ -1,21 +1,20 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Tabaković;Sturm
-Thomas;Grüll;Sturm
 Thomas;Honorat;Sturm
 Thomas;Ranos;Sturm
 Thomas;Wagner;Sturm
 Thomas;Stage;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Kömür;Mittelfeld
-Thomas;Dorsch;Mittelfeld
 Thomas;Schlager;Mittelfeld
+Thomas;Dorsch;Mittelfeld
 Thomas;Grimaldo;Abwehr
 Thomas;Laimer;Abwehr
 Thomas;Widmer;Abwehr
 Thomas;Hübers;Abwehr
-Thomas;A. Jung;Abwehr
 Thomas;Itō;Abwehr
+Thomas;A. Jung;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Schick;Sturm
@@ -28,8 +27,8 @@ Alfons;Krauß;Mittelfeld
 Alfons;Giannoulis;Abwehr
 Alfons;Ginter;Abwehr
 Alfons;Pieper;Abwehr
-Alfons;Traoré;Abwehr
 Alfons;Kabak;Abwehr
+Alfons;Traoré;Abwehr
 Alfons;Omari;Abwehr
 Alfons;Schwäbe;Tor
 Alfons;Batz;Tor
@@ -63,8 +62,8 @@ Andreas;Reitz;Mittelfeld
 Andreas;Schmid;Mittelfeld
 Andreas;L. Vušković;Abwehr
 Andreas;Bensebaini;Abwehr
-Andreas;Matsima;Abwehr
 Andreas;Bernardo;Abwehr
+Andreas;Matsima;Abwehr
 Andreas;Heuer Fernandes;Tor
 Dominik;Luis Díaz;Sturm
 Dominik;Pieringer;Sturm
@@ -97,8 +96,8 @@ Christian;Pereira Lage;Sturm
 Christian;Khedira;Mittelfeld
 Christian;Chaïbi;Mittelfeld
 Christian;Vini Souza;Mittelfeld
-Christian;Schöppner;Mittelfeld
 Christian;Rexhbeçaj;Mittelfeld
+Christian;Schöppner;Mittelfeld
 Christian;Jeong;Mittelfeld
 Christian;Tapsoba;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
