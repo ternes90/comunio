@@ -2651,10 +2651,10 @@ Gazibegović;Abwehr;1. FC Köln;1;170.000;170.000;1,0;Halten;Schlecht;0;;Compute
 Baldé;Stürmer;Hamburger SV;19;1.540.000;1.710.000;2,4;Kaufen;Durchschnittlich;2;0.7;Computer;21.12.2025
 Bakayoko;Stürmer;RB Leipzig;47;6.760.000;6.710.000;3,9;Halten;Durchschnittlich;2;0;Computer;21.12.2025
 Benjamin;Stürmer;TSG Hoffenheim;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;21.12.2025
-Sippel;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;-2,0;Halten;Schlecht;0;N/A;Computer;22.12.2025
-Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;22.12.2025
+Sippel;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;-2,0;Halten;Schlecht;0;;Computer;22.12.2025
+Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Gut;1;;Computer;22.12.2025
 Ritzka;Abwehr;FC St. Pauli;15;280.000;330.000;1,9;Halten;Durchschnittlich;0;0.5;Computer;22.12.2025
-Pervan;Torhüter;VfL Wolfsburg;0;160.000;170.000;1,6;Halten;Durchschnittlich;1;N/A;Computer;22.12.2025
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;170.000;1,6;Halten;Durchschnittlich;1;;Computer;22.12.2025
 Beste;Mittelfeld;Sport-Club Freiburg;32;2.710.000;2.500.000;3,2;Halten;Durchschnittlich;3;0;Computer;22.12.2025
 Doan;Mittelfeld;Eintracht Frankfurt;82;11.860.000;11.720.000;5,5;Halten;Schlecht;2;4.4;Computer;22.12.2025
 Matanović;Stürmer;Sport-Club Freiburg;40;2.130.000;2.140.000;3,3;Halten;Gut;2;2.3;Computer;22.12.2025
@@ -2662,7 +2662,22 @@ Hollerbach;Stürmer;1. FSV Mainz 05;19;3.110.000;3.220.000;1,7;Halten;Schlecht;0
 Finkgräfe;Abwehr;RB Leipzig;4;450.000;470.000;4,0;Halten;Gut;0;0.5;Computer;22.12.2025
 Sinani;Stürmer;FC St. Pauli;62;3.410.000;3.180.000;4,8;Halten;Gut;2;1.8;Computer;22.12.2025
 Jeltsch;Abwehr;VfB Stuttgart;29;2.870.000;3.150.000;3,6;Kaufen;Gut;3;1.2;Computer;22.12.2025
-Masanka Bungi;Mittelfeld;RB Leipzig;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;22.12.2025
-Markgraf;Abwehr;1. FC Union Berlin;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;22.12.2025
+Masanka Bungi;Mittelfeld;RB Leipzig;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;22.12.2025
+Markgraf;Abwehr;1. FC Union Berlin;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;22.12.2025
 Bakayoko;Stürmer;RB Leipzig;47;6.600.000;6.410.000;3,9;Kaufen;Schlecht;2;0;Computer;22.12.2025
-Benjamin;Stürmer;TSG Hoffenheim;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;22.12.2025
+Benjamin;Stürmer;TSG Hoffenheim;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;22.12.2025
+Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;23.12.2025
+Friedl;Abwehr;SV Werder Bremen;62;3.540.000;3.780.000;4,4;Halten;Gut;2;3.2;Computer;23.12.2025
+Zagadou;Abwehr;VfB Stuttgart;14;1.050.000;1.020.000;7,0;Halten;Gut;1;N/A;Computer;23.12.2025
+Agu;Abwehr;SV Werder Bremen;17;880.000;860.000;2,8;Kaufen;Gut;2;N/A;Computer;23.12.2025
+Doan;Mittelfeld;Eintracht Frankfurt;82;12.010.000;11.440.000;5,5;Halten;Schlecht;2;4.4;Computer;23.12.2025
+Nsoki;Abwehr;1. FC Union Berlin;8;1.030.000;980.000;4,0;Halten;Gut;1;0.5;Computer;23.12.2025
+Matanović;Stürmer;Sport-Club Freiburg;40;2.200.000;2.190.000;3,3;Halten;Gut;2;2.4;Computer;23.12.2025
+Finkgräfe;Abwehr;RB Leipzig;4;450.000;480.000;4,0;Halten;Gut;0;0.5;Computer;23.12.2025
+Conteh;Stürmer;1. FC Heidenheim 1846;18;950.000;970.000;3,6;Halten;Gut;1;0.2;Computer;23.12.2025
+Sinani;Stürmer;FC St. Pauli;62;3.570.000;3.420.000;4,8;Halten;Gut;2;1.7;Computer;23.12.2025
+B. Touré;Mittelfeld;TSG Hoffenheim;65;4.630.000;4.540.000;4,6;Halten;Gut;4;0;Computer;23.12.2025
+Jeltsch;Abwehr;VfB Stuttgart;29;2.900.000;3.200.000;3,6;Kaufen;Gut;3;1.2;Computer;23.12.2025
+Tape;Abwehr;Bayer 04 Leverkusen;5;1.180.000;1.160.000;1,0;Halten;Schlecht;0;0.2;Computer;23.12.2025
+Markgraf;Abwehr;1. FC Union Berlin;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;23.12.2025
+Gharbi;Stürmer;FC Augsburg;9;400.000;410.000;2,3;Halten;Durchschnittlich;0;0;Computer;23.12.2025
