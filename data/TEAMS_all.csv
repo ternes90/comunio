@@ -1,6 +1,7 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
 Thomas;Tabaković;Sturm
+Thomas;Nusa;Sturm
 Thomas;Bakayoko;Sturm
 Thomas;Honorat;Sturm
 Thomas;Stage;Mittelfeld
@@ -12,6 +13,7 @@ Thomas;Grimaldo;Abwehr
 Thomas;Laimer;Abwehr
 Thomas;Widmer;Abwehr
 Thomas;Hübers;Abwehr
+Thomas;Caci;Abwehr
 Thomas;Itō;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
@@ -32,6 +34,7 @@ Alfons;Kabak;Abwehr
 Alfons;Agu;Abwehr
 Alfons;Ritzka;Abwehr
 Alfons;Zagadou;Abwehr
+Alfons;Gimber;Abwehr
 Alfons;Omari;Abwehr
 Alfons;Schwäbe;Tor
 Alfons;Batz;Tor
