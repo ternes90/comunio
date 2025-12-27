@@ -184,14 +184,29 @@ Götze;Mittelfeld;Eintracht Frankfurt;25;1.890.000;1.880.000;2,3;Halten;Schlecht
 Höfler;Mittelfeld;Sport-Club Freiburg;6;330.000;350.000;2,0;Halten;Schlecht;0;0.6;Computer;26.12.2025
 Batshuayi;Stürmer;Eintracht Frankfurt;15;910.000;890.000;2,5;Halten;Durchschnittlich;1;0;Computer;26.12.2025
 Knauff;Mittelfeld;Eintracht Frankfurt;56;5.780.000;5.710.000;4,0;Halten;Durchschnittlich;5;2.6;Computer;26.12.2025
-Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;170.000;1,7;Kaufen;Schlecht;0;N/A;Computer;26.12.2025
-Jenz;Abwehr;VfL Wolfsburg;21;1.230.000;1.250.000;2,6;Halten;Durchschnittlich;0;N/A;Computer;26.12.2025
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;170.000;1,7;Kaufen;Schlecht;0;;Computer;26.12.2025
+Jenz;Abwehr;VfL Wolfsburg;21;1.230.000;1.250.000;2,6;Halten;Durchschnittlich;0;;Computer;26.12.2025
 Larsson;Mittelfeld;Eintracht Frankfurt;32;4.140.000;4.190.000;3,6;Halten;Durchschnittlich;5;2.8;Computer;26.12.2025
 Boniface;Stürmer;SV Werder Bremen;35;3.060.000;3.060.000;3,2;Halten;Durchschnittlich;3;0;Computer;26.12.2025
-Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;N/A;Computer;26.12.2025
-Chaves;Abwehr;TSG Hoffenheim;9;250.000;250.000;2,3;Halten;Durchschnittlich;0;N/A;Computer;26.12.2025
-Siljević;Torhüter;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;26.12.2025
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;;Computer;26.12.2025
+Chaves;Abwehr;TSG Hoffenheim;9;250.000;250.000;2,3;Halten;Durchschnittlich;0;;Computer;26.12.2025
+Siljević;Torhüter;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;26.12.2025
 Maksimović;Mittelfeld;RB Leipzig;9;1.480.000;1.500.000;2,3;Halten;Schlecht;0;1.3;Computer;26.12.2025
 Chema Andrés;Mittelfeld;VfB Stuttgart;45;4.240.000;4.180.000;5,0;Halten;Gut;5;1.8;Computer;26.12.2025
 Moreno Fell;Stürmer;1. FSV Mainz 05;1;470.000;460.000;1,0;Halten;Schlecht;0;0;Computer;26.12.2025
-Arrhov;Mittelfeld;Eintracht Frankfurt;0;1.220.000;1.210.000;0,0;N/A;Schlecht;0;N/A;Computer;26.12.2025
+Arrhov;Mittelfeld;Eintracht Frankfurt;0;1.220.000;1.210.000;0,0;;Schlecht;0;;Computer;26.12.2025
+Götze;Mittelfeld;Eintracht Frankfurt;25;1.800.000;1.800.000;2,3;Halten;Schlecht;0;0;Computer;27.12.2025
+Meffert;Mittelfeld;Hamburger SV;7;480.000;480.000;2,3;Halten;Durchschnittlich;4;0.2;Computer;27.12.2025
+Batshuayi;Stürmer;Eintracht Frankfurt;15;880.000;870.000;2,5;Halten;Durchschnittlich;1;0;Computer;27.12.2025
+Knauff;Mittelfeld;Eintracht Frankfurt;56;5.650.000;5.610.000;4,0;Halten;Durchschnittlich;5;2.6;Computer;27.12.2025
+Bobzien;Stürmer;1. FSV Mainz 05;3;250.000;250.000;3,0;Halten;Gut;2;N/A;Computer;27.12.2025
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;160.000;160.000;1,7;Halten;Schlecht;0;N/A;Computer;27.12.2025
+Larsson;Mittelfeld;Eintracht Frankfurt;32;4.030.000;4.080.000;3,6;Halten;Durchschnittlich;5;2.7;Computer;27.12.2025
+Finkgräfe;Abwehr;RB Leipzig;4;370.000;370.000;4,0;Halten;Gut;0;0.5;Computer;27.12.2025
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;N/A;Computer;27.12.2025
+Chaves;Abwehr;TSG Hoffenheim;9;240.000;240.000;2,3;Halten;Durchschnittlich;0;N/A;Computer;27.12.2025
+Siljević;Torhüter;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;27.12.2025
+Maksimović;Mittelfeld;RB Leipzig;9;1.380.000;1.400.000;2,3;Halten;Schlecht;0;1.3;Computer;27.12.2025
+Sorg;Abwehr;FC Augsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;27.12.2025
+Chema Andrés;Mittelfeld;VfB Stuttgart;45;3.950.000;3.910.000;5,0;Halten;Gut;5;1.8;Computer;27.12.2025
+Arrhov;Mittelfeld;Eintracht Frankfurt;0;1.260.000;1.330.000;0,0;N/A;Schlecht;0;N/A;Computer;27.12.2025
