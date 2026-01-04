@@ -300,18 +300,33 @@ Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer
 Spari;Torhüter;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;02.01.2026
 Quansah;Abwehr;Bayer 04 Leverkusen;45;3.730.000;3.750.000;4,1;Halten;Gut;2;2;Computer;02.01.2026
 Bøving;Stürmer;1. FSV Mainz 05;11;1.400.000;1.390.000;2,8;Halten;Durchschnittlich;1;0.4;Computer;02.01.2026
-Zingerle;Torhüter;RB Leipzig;0;160.000;160.000;2,4;Halten;Gut;1;N/A;Computer;03.01.2026
+Zingerle;Torhüter;RB Leipzig;0;160.000;160.000;2,4;Halten;Gut;1;;Computer;03.01.2026
 Zentner;Torhüter;1. FSV Mainz 05;27;1.270.000;1.270.000;3,0;Halten;Durchschnittlich;2;0;Computer;03.01.2026
 Jatta;Stürmer;Hamburger SV;10;1.150.000;1.170.000;3,3;Halten;Gut;2;0.1;Computer;03.01.2026
-Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Halten;Schlecht;0;N/A;Computer;03.01.2026
+Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Halten;Schlecht;0;;Computer;03.01.2026
 Ngankam;Stürmer;Eintracht Frankfurt;5;550.000;550.000;1,7;Halten;Schlecht;0;0.2;Computer;03.01.2026
 Skarke;Stürmer;1. FC Union Berlin;30;1.150.000;1.140.000;2,5;Halten;Schlecht;0;3.6;Computer;03.01.2026
 Buta;Abwehr;Eintracht Frankfurt;1;330.000;340.000;0,3;Halten;Schlecht;0;0.2;Computer;03.01.2026
 Undav;Stürmer;VfB Stuttgart;76;15.830.000;15.780.000;6,9;Halten;Durchschnittlich;4;6.5;Computer;03.01.2026
-Stevens;Abwehr;FC St. Pauli;0;170.000;170.000;-1,0;Halten;Schlecht;0;N/A;Computer;03.01.2026
-Ogbemudia;Abwehr;1. FC Union Berlin;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;03.01.2026
-Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;03.01.2026
-Spari;Torhüter;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;03.01.2026
+Stevens;Abwehr;FC St. Pauli;0;170.000;170.000;-1,0;Halten;Schlecht;0;;Computer;03.01.2026
+Ogbemudia;Abwehr;1. FC Union Berlin;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;03.01.2026
+Hermann;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;03.01.2026
+Spari;Torhüter;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;03.01.2026
 Jovanović;Stürmer;VfB Stuttgart;6;320.000;320.000;2,0;Halten;Schlecht;0;0.1;Computer;03.01.2026
-Frees;Abwehr;TSG Hoffenheim;0;170.000;170.000;0,0;Verkaufen;Schlecht;0;N/A;Computer;03.01.2026
+Frees;Abwehr;TSG Hoffenheim;0;170.000;170.000;0,0;Verkaufen;Schlecht;0;;Computer;03.01.2026
 Bøving;Stürmer;1. FSV Mainz 05;11;1.330.000;1.320.000;2,8;Halten;Durchschnittlich;1;0;Computer;03.01.2026
+Zentner;Torhüter;1. FSV Mainz 05;27;1.190.000;1.190.000;3,0;Halten;Durchschnittlich;2;0;Computer;04.01.2026
+Jatta;Stürmer;Hamburger SV;10;1.120.000;1.140.000;3,3;Halten;Gut;2;0.1;Computer;04.01.2026
+Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Halten;Schlecht;0;N/A;Computer;04.01.2026
+Ngankam;Stürmer;Eintracht Frankfurt;5;520.000;520.000;1,7;Halten;Schlecht;0;0.2;Computer;04.01.2026
+Schimmer;Stürmer;1. FC Heidenheim 1846;51;3.050.000;3.060.000;5,1;Halten;Gut;3;3.1;Computer;04.01.2026
+Buta;Abwehr;Eintracht Frankfurt;1;320.000;330.000;0,3;Halten;Schlecht;0;0.2;Computer;04.01.2026
+Undav;Stürmer;VfB Stuttgart;76;15.980.000;15.920.000;6,9;Halten;Durchschnittlich;4;6.5;Computer;04.01.2026
+Mets;Abwehr;FC St. Pauli;26;1.530.000;1.530.000;2,9;Halten;Durchschnittlich;0;2.5;Computer;04.01.2026
+Stevens;Abwehr;FC St. Pauli;0;170.000;170.000;-1,0;Halten;Schlecht;0;N/A;Computer;04.01.2026
+Ogbemudia;Abwehr;1. FC Union Berlin;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;04.01.2026
+Čović;Mittelfeld;SV Werder Bremen;12;400.000;400.000;1,5;Halten;Schlecht;0;0.4;Computer;04.01.2026
+Bos;Abwehr;1. FSV Mainz 05;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;04.01.2026
+Spari;Torhüter;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;04.01.2026
+Jovanović;Stürmer;VfB Stuttgart;6;310.000;310.000;2,0;Halten;Schlecht;0;0;Computer;04.01.2026
+Frees;Abwehr;TSG Hoffenheim;0;170.000;170.000;0,0;Verkaufen;Schlecht;0;N/A;Computer;04.01.2026
