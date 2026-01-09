@@ -376,17 +376,32 @@ Maksimović;Mittelfeld;RB Leipzig;9;910.000;920.000;2,3;Halten;Schlecht;0;1.5;Co
 Seelt;Abwehr;VfL Wolfsburg;20;1.560.000;1.560.000;2,2;Halten;Schlecht;0;0;Computer;07.01.2026
 Daghim;Stürmer;VfL Wolfsburg;26;2.110.000;2.140.000;3,3;Halten;Durchschnittlich;1;0.3;Computer;07.01.2026
 Heintz;Abwehr;1. FC Köln;16;1.120.000;1.130.000;2,3;Halten;Schlecht;0;1.4;Computer;08.01.2026
-Keïta;Mittelfeld;SV Werder Bremen;0;160.000;160.000;1,3;Halten;Schlecht;0;N/A;Computer;08.01.2026
-Geiger;Mittelfeld;TSG Hoffenheim;0;200.000;200.000;1,8;Halten;Schlecht;0;N/A;Computer;08.01.2026
+Keïta;Mittelfeld;SV Werder Bremen;0;160.000;160.000;1,3;Halten;Schlecht;0;;Computer;08.01.2026
+Geiger;Mittelfeld;TSG Hoffenheim;0;200.000;200.000;1,8;Halten;Schlecht;0;;Computer;08.01.2026
 Beier;Stürmer;Borussia Dortmund;55;6.380.000;6.350.000;4,2;Halten;Durchschnittlich;1;4.5;Computer;08.01.2026
-Drljača;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;08.01.2026
-Duranville;Stürmer;Borussia Dortmund;0;800.000;790.000;1,3;Halten;Schlecht;0;N/A;Computer;08.01.2026
+Drljača;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;08.01.2026
+Duranville;Stürmer;Borussia Dortmund;0;800.000;790.000;1,3;Halten;Schlecht;0;;Computer;08.01.2026
 O. Traoré;Abwehr;1. FC Heidenheim 1846;20;710.000;710.000;1,3;Halten;Schlecht;0;1.1;Computer;08.01.2026
-Wöber;Abwehr;SV Werder Bremen;0;1.630.000;1.630.000;3,6;Halten;Gut;2;N/A;Computer;08.01.2026
+Wöber;Abwehr;SV Werder Bremen;0;1.630.000;1.630.000;3,6;Halten;Gut;2;;Computer;08.01.2026
 Smith;Abwehr;FC St. Pauli;46;3.510.000;3.580.000;3,3;Halten;Schlecht;0;1.1;Computer;08.01.2026
 Querfeld;Abwehr;1. FC Union Berlin;66;5.360.000;5.350.000;4,4;Halten;Durchschnittlich;2;5.4;Computer;08.01.2026
-Micheler;Mittelfeld;TSG Hoffenheim;0;160.000;160.000;1,0;Halten;Schlecht;0;N/A;Computer;08.01.2026
-Pereira Cardoso;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;4,6;Halten;Gut;1;N/A;Computer;08.01.2026
-Hefti;Abwehr;Hamburger SV;0;230.000;230.000;0,0;Halten;Schlecht;0;N/A;Computer;08.01.2026
+Micheler;Mittelfeld;TSG Hoffenheim;0;160.000;160.000;1,0;Halten;Schlecht;0;;Computer;08.01.2026
+Pereira Cardoso;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;4,6;Halten;Gut;1;;Computer;08.01.2026
+Hefti;Abwehr;Hamburger SV;0;230.000;230.000;0,0;Halten;Schlecht;0;;Computer;08.01.2026
 Maksimović;Mittelfeld;RB Leipzig;9;860.000;870.000;2,3;Halten;Schlecht;0;1.5;Computer;08.01.2026
 Sugawara;Abwehr;SV Werder Bremen;37;2.050.000;2.050.000;2,6;Halten;Schlecht;0;1.2;Computer;08.01.2026
+Mwene;Abwehr;1. FSV Mainz 05;31;940.000;930.000;2,4;Halten;Durchschnittlich;0;0;Computer;09.01.2026
+Geiger;Mittelfeld;TSG Hoffenheim;0;190.000;190.000;1,8;Halten;Schlecht;0;N/A;Computer;09.01.2026
+Skhiri;Mittelfeld;Eintracht Frankfurt;24;1.310.000;1.300.000;2,7;Halten;Durchschnittlich;5;0;Computer;09.01.2026
+Beier;Stürmer;Borussia Dortmund;55;6.370.000;6.350.000;4,2;Halten;Durchschnittlich;1;4.5;Computer;09.01.2026
+Berisha;Stürmer;TSG Hoffenheim;0;740.000;740.000;2,7;Halten;Durchschnittlich;0;N/A;Computer;09.01.2026
+Duranville;Stürmer;Borussia Dortmund;0;800.000;790.000;1,3;Halten;Schlecht;0;N/A;Computer;09.01.2026
+O. Traoré;Abwehr;1. FC Heidenheim 1846;20;700.000;700.000;1,3;Halten;Schlecht;0;1.1;Computer;09.01.2026
+Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;09.01.2026
+Smith;Abwehr;FC St. Pauli;46;3.590.000;3.580.000;3,3;Halten;Schlecht;0;1;Computer;09.01.2026
+Querfeld;Abwehr;1. FC Union Berlin;66;5.160.000;5.060.000;4,4;Halten;Durchschnittlich;2;5.4;Computer;09.01.2026
+Sieb;Stürmer;1. FSV Mainz 05;32;1.100.000;1.120.000;2,7;Halten;Durchschnittlich;0;0.5;Computer;09.01.2026
+Hefti;Abwehr;Hamburger SV;0;220.000;220.000;0,0;Halten;Schlecht;0;N/A;Computer;09.01.2026
+Bellingham;Mittelfeld;Borussia Dortmund;27;2.340.000;2.360.000;2,1;Halten;Schlecht;0;0;Computer;09.01.2026
+Sugawara;Abwehr;SV Werder Bremen;37;2.100.000;2.090.000;2,6;Halten;Schlecht;0;1.1;Computer;09.01.2026
+Hensel;Mittelfeld;VfL Wolfsburg;2;200.000;200.000;2,0;Halten;Schlecht;0;-0.2;Computer;09.01.2026
