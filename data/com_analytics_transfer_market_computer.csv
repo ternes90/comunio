@@ -423,15 +423,30 @@ Potulski;Abwehr;1. FSV Mainz 05;20;3.540.000;3.540.000;6,7;Halten;Gut;2;0.9;Comp
 Andrich;Mittelfeld;Bayer 04 Leverkusen;46;4.140.000;4.080.000;3,1;Halten;Schlecht;0;5.4;Computer;11.01.2026
 Mwene;Abwehr;1. FSV Mainz 05;31;820.000;810.000;2,4;Halten;Durchschnittlich;0;0;Computer;11.01.2026
 M. Wolf;Abwehr;FC Augsburg;26;850.000;870.000;2,6;Halten;Durchschnittlich;0;0.6;Computer;11.01.2026
-Keitel;Mittelfeld;FC Augsburg;0;1.870.000;1.870.000;2,6;Halten;Durchschnittlich;5;N/A;Computer;11.01.2026
+Keitel;Mittelfeld;FC Augsburg;0;1.870.000;1.870.000;2,6;Halten;Durchschnittlich;5;;Computer;11.01.2026
 Skarke;Stürmer;1. FC Union Berlin;30;1.120.000;1.230.000;2,5;Halten;Durchschnittlich;1;0;Computer;11.01.2026
-Berisha;Stürmer;TSG Hoffenheim;0;660.000;660.000;2,7;Halten;Durchschnittlich;1;N/A;Computer;11.01.2026
+Berisha;Stürmer;TSG Hoffenheim;0;660.000;660.000;2,7;Halten;Durchschnittlich;1;;Computer;11.01.2026
 Kaufmann;Stürmer;1. FC Heidenheim 1846;31;980.000;1.050.000;3,1;Halten;Gut;2;0.8;Computer;11.01.2026
-Alvero;Mittelfeld;SV Werder Bremen;6;200.000;200.000;3,0;Halten;Gut;5;N/A;Computer;11.01.2026
-Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;11.01.2026
-Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;N/A;Computer;11.01.2026
+Alvero;Mittelfeld;SV Werder Bremen;6;200.000;200.000;3,0;Halten;Gut;5;;Computer;11.01.2026
+Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;11.01.2026
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;;Computer;11.01.2026
 Sieb;Stürmer;1. FSV Mainz 05;32;1.010.000;1.040.000;2,5;Halten;Durchschnittlich;1;0.5;Computer;11.01.2026
 Amoura;Stürmer;VfL Wolfsburg;77;7.870.000;7.880.000;5,5;Halten;Gut;4;0;Computer;11.01.2026
 Kawasaki;Mittelfeld;1. FSV Mainz 05;9;680.000;630.000;2,3;Halten;Durchschnittlich;4;0.4;Computer;11.01.2026
 Fernández;Mittelfeld;Bayer 04 Leverkusen;21;4.700.000;4.880.000;3,0;Halten;Schlecht;0;0.8;Computer;11.01.2026
 Potulski;Abwehr;1. FSV Mainz 05;20;3.460.000;3.120.000;6,7;Halten;Gut;2;0.9;Computer;11.01.2026
+Andrich;Mittelfeld;Bayer 04 Leverkusen;46;4.140.000;4.230.000;3,1;Halten;Schlecht;0;5.4;Computer;12.01.2026
+Mwene;Abwehr;1. FSV Mainz 05;31;820.000;790.000;2,4;Halten;Durchschnittlich;0;0;Computer;12.01.2026
+M. Wolf;Abwehr;FC Augsburg;26;850.000;990.000;2,4;Halten;Durchschnittlich;0;0.6;Computer;12.01.2026
+Keitel;Mittelfeld;FC Augsburg;0;1.870.000;1.690.000;2,6;Halten;Durchschnittlich;3;N/A;Computer;12.01.2026
+Skarke;Stürmer;1. FC Union Berlin;30;1.120.000;1.070.000;2,5;Halten;Durchschnittlich;3;0;Computer;12.01.2026
+Berisha;Stürmer;TSG Hoffenheim;0;660.000;650.000;2,7;Halten;Durchschnittlich;3;N/A;Computer;12.01.2026
+Kaufmann;Stürmer;1. FC Heidenheim 1846;31;980.000;1.080.000;3,1;Kaufen;Gut;5;0.8;Computer;12.01.2026
+Alvero;Mittelfeld;SV Werder Bremen;6;200.000;200.000;3,0;Halten;Gut;2;N/A;Computer;12.01.2026
+Petersson;Torhüter;TSG Hoffenheim;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;12.01.2026
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;N/A;Computer;12.01.2026
+Sieb;Stürmer;1. FSV Mainz 05;32;1.010.000;1.040.000;2,5;Halten;Durchschnittlich;3;0.5;Computer;12.01.2026
+Amoura;Stürmer;VfL Wolfsburg;77;7.870.000;7.720.000;5,5;Halten;Gut;5;0;Computer;12.01.2026
+Kawasaki;Mittelfeld;1. FSV Mainz 05;9;680.000;660.000;2,3;Halten;Durchschnittlich;1;0.4;Computer;12.01.2026
+Fernández;Mittelfeld;Bayer 04 Leverkusen;21;4.700.000;4.960.000;3,0;Halten;Schlecht;0;0.8;Computer;12.01.2026
+Potulski;Abwehr;1. FSV Mainz 05;20;3.460.000;3.400.000;6,7;Halten;Gut;2;0.9;Computer;12.01.2026
