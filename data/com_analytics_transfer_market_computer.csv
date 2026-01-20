@@ -542,16 +542,31 @@ Kumbedi;Abwehr;VfL Wolfsburg;15;1.510.000;1.600.000;1,3;Halten;Schlecht;0;2.4;Co
 Urbich;Stürmer;Borussia Mönchengladbach;6;220.000;220.000;2,0;Halten;Schlecht;0;;Computer;18.01.2026
 Götze;Mittelfeld;Eintracht Frankfurt;27;1.330.000;1.290.000;2,1;Kaufen;Schlecht;1;0;Computer;19.01.2026
 Batz;Torhüter;1. FSV Mainz 05;25;900.000;990.000;4,2;Halten;Gut;1;4.1;Computer;19.01.2026
-Lomb;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;-1,0;Halten;Schlecht;0;N/A;Computer;19.01.2026
-Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Schlecht;0;N/A;Computer;19.01.2026
+Lomb;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;-1,0;Halten;Schlecht;0;;Computer;19.01.2026
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Schlecht;0;;Computer;19.01.2026
 Pherai;Mittelfeld;Hamburger SV;-6;260.000;260.000;-3,0;Halten;Schlecht;0;-0.1;Computer;19.01.2026
 Stanišić;Abwehr;FC Bayern München;60;4.270.000;4.010.000;5,5;Verkaufen;Gut;0;0;Computer;19.01.2026
-Ostrzinski;Torhüter;Borussia Dortmund;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;19.01.2026
+Ostrzinski;Torhüter;Borussia Dortmund;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;19.01.2026
 Njinmah;Stürmer;SV Werder Bremen;56;4.140.000;4.440.000;3,5;Kaufen;Durchschnittlich;2;1.5;Computer;19.01.2026
-Finkgräfe;Abwehr;RB Leipzig;4;350.000;370.000;4,0;Halten;Gut;0;N/A;Computer;19.01.2026
-Fenyő;Mittelfeld;Eintracht Frankfurt;0;160.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;19.01.2026
+Finkgräfe;Abwehr;RB Leipzig;4;350.000;370.000;4,0;Halten;Gut;0;;Computer;19.01.2026
+Fenyő;Mittelfeld;Eintracht Frankfurt;0;160.000;170.000;0,0;Halten;Schlecht;0;;Computer;19.01.2026
 Sieb;Stürmer;1. FSV Mainz 05;36;1.140.000;1.390.000;2,4;Kaufen;Schlecht;0;1.9;Computer;19.01.2026
 Røssing-Lelesiit;Stürmer;Hamburger SV;17;650.000;670.000;1,7;Halten;Schlecht;0;0.9;Computer;19.01.2026
-Jovanović;Stürmer;VfB Stuttgart;6;270.000;260.000;2,0;Halten;Schlecht;0;N/A;Computer;19.01.2026
+Jovanović;Stürmer;VfB Stuttgart;6;270.000;260.000;2,0;Halten;Schlecht;0;;Computer;19.01.2026
 Gocholeishvili;Abwehr;Hamburger SV;18;640.000;880.000;1,4;Kaufen;Schlecht;0;0.8;Computer;19.01.2026
 Puertas;Mittelfeld;SV Werder Bremen;33;1.680.000;1.670.000;2,5;Halten;Schlecht;0;0.9;Computer;19.01.2026
+Lomb;Torhüter;Bayer 04 Leverkusen;0;170.000;170.000;-1,0;Halten;Schlecht;0;N/A;Computer;20.01.2026
+Zingerle;Torhüter;RB Leipzig;0;160.000;160.000;2,4;Halten;Durchschnittlich;0;N/A;Computer;20.01.2026
+Pervan;Torhüter;VfL Wolfsburg;0;160.000;160.000;1,6;Halten;Schlecht;0;N/A;Computer;20.01.2026
+Thielmann;Stürmer;1. FC Köln;54;3.100.000;3.110.000;3,6;Halten;Gut;0;0.9;Computer;20.01.2026
+Pherai;Mittelfeld;Hamburger SV;-6;250.000;250.000;-3,0;Halten;Schlecht;0;-0.1;Computer;20.01.2026
+Ostrzinski;Torhüter;Borussia Dortmund;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;20.01.2026
+Diogo Leite;Abwehr;1. FC Union Berlin;42;2.610.000;2.730.000;3,0;Halten;Durchschnittlich;0;1.9;Computer;20.01.2026
+Finkgräfe;Abwehr;RB Leipzig;4;340.000;340.000;4,0;Halten;Gut;0;N/A;Computer;20.01.2026
+Fenyő;Mittelfeld;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;20.01.2026
+Querfeld;Abwehr;1. FC Union Berlin;78;5.240.000;5.480.000;4,3;Halten;Durchschnittlich;1;3.5;Computer;20.01.2026
+H. Behrens;Abwehr;1. FC Heidenheim 1846;0;490.000;470.000;2,0;Halten;Durchschnittlich;0;N/A;Computer;20.01.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;17;690.000;730.000;1,7;Halten;Schlecht;0;0.8;Computer;20.01.2026
+Jovanović;Stürmer;VfB Stuttgart;6;260.000;280.000;2,0;Halten;Schlecht;0;N/A;Computer;20.01.2026
+Hellstern;Torhüter;VfB Stuttgart;0;160.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;20.01.2026
+Puertas;Mittelfeld;SV Werder Bremen;33;1.700.000;1.710.000;2,5;Halten;Schlecht;0;0.8;Computer;20.01.2026
