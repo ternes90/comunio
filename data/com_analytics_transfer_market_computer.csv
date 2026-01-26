@@ -630,18 +630,33 @@ Philippe;Stürmer;Hamburger SV;59;3.500.000;3.370.000;3,5;Halten;Durchschnittlic
 Kawasaki;Mittelfeld;1. FSV Mainz 05;9;460.000;460.000;2,3;Halten;Schlecht;0;1.6;Computer;24.01.2026
 Fábio Silva;Stürmer;Borussia Dortmund;29;6.320.000;6.210.000;2,9;Halten;Schlecht;0;4.5;Computer;24.01.2026
 Takai;Abwehr;Borussia Mönchengladbach;1;2.490.000;2.440.000;0,5;Halten;Schlecht;0;-0.1;Computer;24.01.2026
-Mwene;Abwehr;1. FSV Mainz 05;31;840.000;880.000;2,2;Halten;Durchschnittlich;0;N/A;Computer;25.01.2026
-Gouweleeuw;Abwehr;FC Augsburg;10;530.000;540.000;2,0;Halten;Durchschnittlich;0;N/A;Computer;25.01.2026
+Mwene;Abwehr;1. FSV Mainz 05;31;840.000;880.000;2,2;Halten;Durchschnittlich;0;;Computer;25.01.2026
+Gouweleeuw;Abwehr;FC Augsburg;10;530.000;540.000;2,0;Halten;Durchschnittlich;0;;Computer;25.01.2026
 Jatta;Stürmer;Hamburger SV;17;1.550.000;1.620.000;2,8;Halten;Durchschnittlich;0;1.1;Computer;25.01.2026
 Guirassy;Stürmer;Borussia Dortmund;87;13.000.000;13.260.000;4,8;Halten;Schlecht;2;6.6;Computer;25.01.2026
 Paredes;Mittelfeld;VfL Wolfsburg;9;1.260.000;1.240.000;3,0;Halten;Gut;3;0.4;Computer;25.01.2026
-Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;25.01.2026
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;170.000;1,7;Halten;Schlecht;0;;Computer;25.01.2026
 Honsak;Stürmer;1. FC Heidenheim 1846;34;1.310.000;1.600.000;2,1;Kaufen;Schlecht;1;0;Computer;25.01.2026
-Boey;Abwehr;FC Bayern München;15;440.000;420.000;1,7;Kaufen;Schlecht;0;N/A;Computer;25.01.2026
+Boey;Abwehr;FC Bayern München;15;440.000;420.000;1,7;Kaufen;Schlecht;0;;Computer;25.01.2026
 Vasilj;Torhüter;FC St. Pauli;55;1.980.000;2.060.000;3,1;Halten;Schlecht;2;2.5;Computer;25.01.2026
-Adeh;Mittelfeld;SV Werder Bremen;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;25.01.2026
+Adeh;Mittelfeld;SV Werder Bremen;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;25.01.2026
 Philippe;Stürmer;Hamburger SV;59;3.210.000;3.210.000;3,5;Halten;Gut;0;2.4;Computer;25.01.2026
 Kawasaki;Mittelfeld;1. FSV Mainz 05;9;440.000;420.000;2,3;Halten;Durchschnittlich;1;1.6;Computer;25.01.2026
 Massengo;Mittelfeld;FC Augsburg;56;2.880.000;3.440.000;2,9;Kaufen;Durchschnittlich;2;1;Computer;25.01.2026
-Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;25.01.2026
+Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;25.01.2026
 Takai;Abwehr;Borussia Mönchengladbach;1;2.530.000;2.480.000;0,5;Halten;Schlecht;0;-0.1;Computer;25.01.2026
+da Costa;Abwehr;1. FSV Mainz 05;59;2.730.000;2.990.000;3,1;Kaufen;Durchschnittlich;2;N/A;Computer;26.01.2026
+Mwene;Abwehr;1. FSV Mainz 05;32;900.000;1.030.000;2,3;Halten;Durchschnittlich;0;N/A;Computer;26.01.2026
+Jatta;Stürmer;Hamburger SV;19;1.590.000;1.620.000;3,2;Halten;Gut;2;N/A;Computer;26.01.2026
+Guirassy;Stürmer;Borussia Dortmund;93;13.450.000;13.370.000;5,2;Halten;Schlecht;2;N/A;Computer;26.01.2026
+Pedersen;Abwehr;FC Augsburg;8;820.000;820.000;1,6;Halten;Schlecht;0;N/A;Computer;26.01.2026
+Paredes;Mittelfeld;VfL Wolfsburg;9;1.250.000;1.220.000;3,0;Halten;Durchschnittlich;2;N/A;Computer;26.01.2026
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;26.01.2026
+Diogo Leite;Abwehr;1. FC Union Berlin;45;2.920.000;3.070.000;3,0;Halten;Schlecht;0;N/A;Computer;26.01.2026
+Honsak;Stürmer;1. FC Heidenheim 1846;37;1.470.000;1.690.000;2,3;Kaufen;Schlecht;1;N/A;Computer;26.01.2026
+Vasilj;Torhüter;FC St. Pauli;61;2.060.000;2.090.000;3,4;Halten;Schlecht;2;2.1;Computer;26.01.2026
+Adeh;Mittelfeld;SV Werder Bremen;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;26.01.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;600.000;650.000;1,7;Halten;Schlecht;0;N/A;Computer;26.01.2026
+Massengo;Mittelfeld;FC Augsburg;68;3.310.000;3.870.000;3,6;Kaufen;Durchschnittlich;2;N/A;Computer;26.01.2026
+Coulibaly;Abwehr;SV Werder Bremen;36;2.180.000;2.390.000;2,1;Kaufen;Schlecht;2;0.9;Computer;26.01.2026
+Bärtl;Torhüter;FC Bayern München;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;26.01.2026
