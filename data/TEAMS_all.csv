@@ -12,6 +12,7 @@ Thomas;Grimaldo;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Schick;Sturm
+Alfons;Honsak;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Pavlović;Mittelfeld
 Alfons;Führich;Mittelfeld
@@ -21,6 +22,8 @@ Alfons;Sands;Mittelfeld
 Alfons;Kristensen;Abwehr
 Alfons;Smith;Abwehr
 Alfons;Ginter;Abwehr
+Alfons;Diogo Leite;Abwehr
+Alfons;Coulibaly;Abwehr
 Alfons;M. Wolf;Abwehr
 Alfons;Mwene;Abwehr
 Alfons;Ritzka;Abwehr
@@ -60,6 +63,7 @@ Andreas;Keïta;Mittelfeld
 Andreas;L. Vušković;Abwehr
 Andreas;Bernardo;Abwehr
 Andreas;Bensebaini;Abwehr
+Andreas;da Costa;Abwehr
 Andreas;Heuer Fernandes;Tor
 Dominik;Luis Díaz;Sturm
 Dominik;Amoura;Sturm
