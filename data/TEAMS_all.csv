@@ -9,6 +9,8 @@ Thomas;M. Eggestein;Mittelfeld
 Thomas;Schlager;Mittelfeld
 Thomas;Raum;Abwehr
 Thomas;Grimaldo;Abwehr
+Thomas;Lund;Abwehr
+Thomas;Markgraf;Abwehr
 Thomas;Nübel;Tor
 Alfons;Asllani;Sturm
 Alfons;Schick;Sturm
@@ -69,6 +71,7 @@ Dominik;Amoura;Sturm
 Dominik;Lemperle;Sturm
 Dominik;Pieringer;Sturm
 Dominik;Kimmich;Mittelfeld
+Dominik;Knauff;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
 Dominik;Nartey;Mittelfeld
 Dominik;Fernández;Mittelfeld
@@ -80,7 +83,6 @@ Dominik;Lucas Vázquez;Abwehr
 Dominik;Günter;Abwehr
 Dominik;Henrichs;Abwehr
 Dominik;Kobel;Tor
-Dominik;Vasilj;Tor
 Nico;Olise;Sturm
 Nico;Fellhauer;Mittelfeld
 Nico;Fujita;Mittelfeld
