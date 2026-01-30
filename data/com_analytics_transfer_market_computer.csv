@@ -693,15 +693,30 @@ Neuendorff;Abwehr;Eintracht Frankfurt;0;190.000;190.000;0,0;Halten;Schlecht;0;;C
 Stöger;Mittelfeld;Borussia Mönchengladbach;35;1.390.000;1.420.000;2,5;Halten;Schlecht;0;1.1;Computer;29.01.2026
 Werner;Stürmer;RB Leipzig;2;430.000;440.000;1,0;Halten;Schlecht;0;0.9;Computer;29.01.2026
 A. Jung;Abwehr;Sport-Club Freiburg;11;800.000;780.000;1,4;Halten;Schlecht;0;0.2;Computer;29.01.2026
-Maier;Mittelfeld;FC Augsburg;0;270.000;280.000;2,1;Halten;Schlecht;0;N/A;Computer;29.01.2026
+Maier;Mittelfeld;FC Augsburg;0;270.000;280.000;2,1;Halten;Schlecht;0;;Computer;29.01.2026
 Backhaus;Torhüter;SV Werder Bremen;71;2.810.000;2.750.000;4,2;Halten;Durchschnittlich;2;3.2;Computer;29.01.2026
-Ngoumou;Stürmer;Borussia Mönchengladbach;0;280.000;300.000;3,3;Halten;Gut;1;N/A;Computer;29.01.2026
-Boniface;Stürmer;SV Werder Bremen;35;720.000;720.000;3,2;Halten;Gut;0;N/A;Computer;29.01.2026
+Ngoumou;Stürmer;Borussia Mönchengladbach;0;280.000;300.000;3,3;Halten;Gut;1;;Computer;29.01.2026
+Boniface;Stürmer;SV Werder Bremen;35;720.000;720.000;3,2;Halten;Gut;0;;Computer;29.01.2026
 Majer;Mittelfeld;VfL Wolfsburg;61;3.360.000;3.290.000;3,6;Halten;Durchschnittlich;0;2.8;Computer;29.01.2026
-Vandevoordt;Torhüter;RB Leipzig;0;210.000;200.000;1,5;Halten;Schlecht;0;N/A;Computer;29.01.2026
+Vandevoordt;Torhüter;RB Leipzig;0;210.000;200.000;1,5;Halten;Schlecht;0;;Computer;29.01.2026
 Sarco;Stürmer;Borussia Mönchengladbach;8;1.710.000;1.750.000;2,0;Halten;Schlecht;0;0.7;Computer;29.01.2026
 Ljubičić;Stürmer;1. FC Union Berlin;16;2.060.000;2.000.000;8,0;Halten;Gut;0;0.6;Computer;29.01.2026
 Diks;Abwehr;Borussia Mönchengladbach;82;4.840.000;4.710.000;4,6;Halten;Durchschnittlich;1;0;Computer;29.01.2026
-Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;29.01.2026
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;29.01.2026
 Hajdari;Abwehr;TSG Hoffenheim;69;5.010.000;4.950.000;4,3;Halten;Durchschnittlich;1;4.2;Computer;29.01.2026
-Neuendorff;Abwehr;Eintracht Frankfurt;0;190.000;190.000;0,0;Halten;Schlecht;0;N/A;Computer;29.01.2026
+Neuendorff;Abwehr;Eintracht Frankfurt;0;190.000;190.000;0,0;Halten;Schlecht;0;;Computer;29.01.2026
+Stöger;Mittelfeld;Borussia Mönchengladbach;35;1.460.000;1.530.000;2,5;Halten;Schlecht;0;1.2;Computer;30.01.2026
+A. Jung;Abwehr;Sport-Club Freiburg;11;760.000;780.000;1,4;Halten;Schlecht;0;0.2;Computer;30.01.2026
+Maier;Mittelfeld;FC Augsburg;0;270.000;270.000;2,1;Halten;Schlecht;0;N/A;Computer;30.01.2026
+Palacios;Mittelfeld;Bayer 04 Leverkusen;6;5.720.000;5.640.000;2,0;Halten;Schlecht;0;0.6;Computer;30.01.2026
+Ngoumou;Stürmer;Borussia Mönchengladbach;0;270.000;270.000;3,3;Halten;Gut;1;N/A;Computer;30.01.2026
+Boniface;Stürmer;SV Werder Bremen;35;760.000;740.000;3,2;Halten;Gut;0;N/A;Computer;30.01.2026
+Vandevoordt;Torhüter;RB Leipzig;0;220.000;220.000;1,5;Halten;Schlecht;0;N/A;Computer;30.01.2026
+Machino;Stürmer;Borussia Mönchengladbach;63;3.440.000;3.520.000;3,5;Halten;Durchschnittlich;0;3.3;Computer;30.01.2026
+Sarco;Stürmer;Borussia Mönchengladbach;8;1.780.000;1.780.000;2,0;Halten;Schlecht;0;0.8;Computer;30.01.2026
+Ljubičić;Stürmer;1. FC Union Berlin;16;1.960.000;1.960.000;8,0;Halten;Gut;0;0;Computer;30.01.2026
+Diks;Abwehr;Borussia Mönchengladbach;82;4.780.000;4.650.000;4,6;Halten;Gut;1;0;Computer;30.01.2026
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;30.01.2026
+Assignon;Abwehr;VfB Stuttgart;9;720.000;710.000;1,0;Halten;Schlecht;0;1.1;Computer;30.01.2026
+Hajdari;Abwehr;TSG Hoffenheim;69;5.050.000;5.070.000;4,3;Halten;Durchschnittlich;1;4.3;Computer;30.01.2026
+Neuendorff;Abwehr;Eintracht Frankfurt;0;190.000;190.000;0,0;Halten;Schlecht;0;N/A;Computer;30.01.2026
