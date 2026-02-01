@@ -720,18 +720,33 @@ Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlech
 Assignon;Abwehr;VfB Stuttgart;9;720.000;710.000;1,0;Halten;Schlecht;0;1.1;Computer;30.01.2026
 Hajdari;Abwehr;TSG Hoffenheim;69;5.050.000;5.070.000;4,3;Halten;Durchschnittlich;1;4.3;Computer;30.01.2026
 Neuendorff;Abwehr;Eintracht Frankfurt;0;190.000;190.000;0,0;Halten;Schlecht;0;;Computer;30.01.2026
-Friedrich;Abwehr;Borussia Mönchengladbach;4;630.000;630.000;1,3;Halten;Schlecht;0;N/A;Computer;31.01.2026
-Meyer;Torhüter;Borussia Dortmund;0;160.000;160.000;4,0;Halten;Gut;1;N/A;Computer;31.01.2026
+Friedrich;Abwehr;Borussia Mönchengladbach;4;630.000;630.000;1,3;Halten;Schlecht;0;;Computer;31.01.2026
+Meyer;Torhüter;Borussia Dortmund;0;160.000;160.000;4,0;Halten;Gut;1;;Computer;31.01.2026
 Palacios;Mittelfeld;Bayer 04 Leverkusen;6;5.720.000;5.580.000;2,0;Halten;Schlecht;0;0.6;Computer;31.01.2026
 Keitel;Mittelfeld;FC Augsburg;4;1.560.000;1.560.000;2,0;Halten;Schlecht;0;0.4;Computer;31.01.2026
 Wimmer;Stürmer;VfL Wolfsburg;51;3.760.000;4.030.000;3,0;Kaufen;Schlecht;2;1.7;Computer;31.01.2026
-Ngoumou;Stürmer;Borussia Mönchengladbach;0;280.000;280.000;3,3;Halten;Gut;2;N/A;Computer;31.01.2026
-Hansen-Aarøen;Mittelfeld;SV Werder Bremen;0;160.000;160.000;-1,5;Halten;Schlecht;0;N/A;Computer;31.01.2026
+Ngoumou;Stürmer;Borussia Mönchengladbach;0;280.000;280.000;3,3;Halten;Gut;2;;Computer;31.01.2026
+Hansen-Aarøen;Mittelfeld;SV Werder Bremen;0;160.000;160.000;-1,5;Halten;Schlecht;0;;Computer;31.01.2026
 Machino;Stürmer;Borussia Mönchengladbach;63;3.390.000;3.410.000;3,5;Halten;Durchschnittlich;3;3.3;Computer;31.01.2026
-Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;N/A;Computer;31.01.2026
-Siljević;Torhüter;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;31.01.2026
-Ljubičić;Stürmer;1. FC Union Berlin;16;1.960.000;1.960.000;8,0;Halten;Gut;3;N/A;Computer;31.01.2026
-Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;200.000;200.000;0,0;Halten;Schlecht;0;N/A;Computer;31.01.2026
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;;Computer;31.01.2026
+Siljević;Torhüter;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;31.01.2026
+Ljubičić;Stürmer;1. FC Union Berlin;16;1.960.000;1.960.000;8,0;Halten;Gut;3;;Computer;31.01.2026
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;200.000;200.000;0,0;Halten;Schlecht;0;;Computer;31.01.2026
 Assignon;Abwehr;VfB Stuttgart;9;710.000;710.000;1,0;Halten;Schlecht;0;1.2;Computer;31.01.2026
 Hountondji;Stürmer;FC St. Pauli;41;650.000;650.000;3,4;Halten;Gut;2;0;Computer;31.01.2026
 Sambi Lokonga;Mittelfeld;Hamburger SV;68;4.640.000;4.600.000;4,9;Halten;Gut;2;2.4;Computer;31.01.2026
+Friedrich;Abwehr;Borussia Mönchengladbach;4;690.000;850.000;1,0;Halten;Schlecht;0;N/A;Computer;01.02.2026
+Özcan;Mittelfeld;Borussia Dortmund;5;610.000;630.000;2,5;Halten;Durchschnittlich;0;0.5;Computer;01.02.2026
+Meyer;Torhüter;Borussia Dortmund;0;160.000;160.000;4,0;Halten;Gut;1;N/A;Computer;01.02.2026
+Keitel;Mittelfeld;FC Augsburg;4;1.530.000;1.660.000;1,3;Halten;Schlecht;0;0.4;Computer;01.02.2026
+Wimmer;Stürmer;VfL Wolfsburg;51;4.020.000;4.270.000;3,0;Kaufen;Schlecht;2;1.7;Computer;01.02.2026
+Jakić;Mittelfeld;FC Augsburg;58;1.560.000;1.550.000;3,9;Halten;Gut;2;0;Computer;01.02.2026
+Alvero;Mittelfeld;SV Werder Bremen;6;260.000;280.000;3,0;Halten;Gut;1;N/A;Computer;01.02.2026
+Hansen-Aarøen;Mittelfeld;SV Werder Bremen;0;170.000;170.000;-1,5;Halten;Schlecht;0;N/A;Computer;01.02.2026
+Machino;Stürmer;Borussia Mönchengladbach;63;3.260.000;3.320.000;3,3;Halten;Durchschnittlich;4;3.3;Computer;01.02.2026
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Gut;1;N/A;Computer;01.02.2026
+Siljević;Torhüter;Eintracht Frankfurt;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;01.02.2026
+Dickes;Torhüter;Hamburger SV;0;160.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;01.02.2026
+Hountondji;Stürmer;FC St. Pauli;41;660.000;660.000;3,4;Halten;Gut;5;0;Computer;01.02.2026
+Bogdanov;Stürmer;1. FC Union Berlin;0;200.000;210.000;0,0;Halten;Schlecht;0;N/A;Computer;01.02.2026
+Sambi Lokonga;Mittelfeld;Hamburger SV;68;4.760.000;4.970.000;4,5;Halten;Gut;2;2.4;Computer;01.02.2026
