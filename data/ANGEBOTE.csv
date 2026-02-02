@@ -1,12 +1,11 @@
 ﻿Spieler;Angebot (€);Datum;Status
-Jóhannesson;1848000;01.02.2026;aktiv
+Jóhannesson;1848000;01.02.2026;inaktiv
 K. Schlotterbeck;3986100;01.02.2026;inaktiv
-Kimmich;17794400;01.02.2026;aktiv
-Knauff;3675000;01.02.2026;aktiv
-Kobel;1837500;01.02.2026;aktiv
+Kimmich;17794400;01.02.2026;inaktiv
+Knauff;3675000;01.02.2026;inaktiv
+Kobel;1837500;01.02.2026;inaktiv
 Lucas Vázquez;3772800;01.02.2026;inaktiv
-Luis Díaz;21156300;01.02.2026;aktiv
-Nartey;4773600;01.02.2026;aktiv
+Luis Díaz;21156300;01.02.2026;inaktiv
 Sarco;1678100;01.02.2026;inaktiv
 Amenda;665000;01.10.2025;inaktiv
 Chabot;5783400;01.10.2025;inaktiv
@@ -48,6 +47,14 @@ N. Schlotterbeck;7760000;01.12.2025;inaktiv
 Pieringer;2255700;01.12.2025;inaktiv
 Sebulonsen;1580000;01.12.2025;inaktiv
 Vagnoman;2213500;01.12.2025;inaktiv
+Jóhannesson;1593600;02.02.2026;aktiv
+K. Schlotterbeck;4128300;02.02.2026;aktiv
+Kimmich;16329600;02.02.2026;aktiv
+Knauff;3240000;02.02.2026;aktiv
+Kobel;1804800;02.02.2026;aktiv
+Lucas Vázquez;3998400;02.02.2026;aktiv
+Luis Díaz;21588800;02.02.2026;aktiv
+Nartey;4773600;02.02.2026;aktiv
 Harder;7660800;02.10.2025;inaktiv
 Jóhannesson;3957600;02.10.2025;inaktiv
 Bischof;4659200;02.11.2025;inaktiv
