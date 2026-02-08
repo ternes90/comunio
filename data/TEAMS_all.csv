@@ -1,57 +1,6 @@
 ﻿Manager;Spieler;Position
-Thomas;Kane;Sturm
-Thomas;Tabaković;Sturm
-Thomas;Nusa;Sturm
-Thomas;Njinmah;Sturm
-Thomas;Dinkçi;Sturm
-Thomas;García;Mittelfeld
-Thomas;Stage;Mittelfeld
-Thomas;M. Eggestein;Mittelfeld
-Thomas;Schlager;Mittelfeld
-Thomas;Raum;Abwehr
-Thomas;Grimaldo;Abwehr
-Thomas;Belocian;Abwehr
-Thomas;Nübel;Tor
-Thomas;Bredlow;Tor
-Alfons;Asllani;Sturm
-Alfons;Schick;Sturm
-Alfons;Grifo;Mittelfeld
-Alfons;Pavlović;Mittelfeld
-Alfons;Sano;Mittelfeld
-Alfons;Remberg;Mittelfeld
-Alfons;Sambi Lokonga;Mittelfeld
-Alfons;Suzuki;Mittelfeld
-Alfons;Stöger;Mittelfeld
-Alfons;Kristensen;Abwehr
-Alfons;Ginter;Abwehr
-Alfons;Mwene;Abwehr
-Alfons;Omari;Abwehr
-Alfons;Schwäbe;Tor
-Christoph;Diomande;Sturm
-Christoph;Undav;Sturm
-Christoph;Amiri;Mittelfeld
-Christoph;Baumgartner;Mittelfeld
-Christoph;F. Nmecha;Mittelfeld
-Christoph;Avdullahu;Mittelfeld
-Christoph;Massengo;Mittelfeld
-Christoph;Mainka;Abwehr
-Christoph;Ryerson;Abwehr
-Christoph;Jeltsch;Abwehr
-Christoph;Chaves;Abwehr
-Christoph;Atubolu;Tor
-Christoph;F. Müller;Tor
-Pascal;Ansah;Sturm
-Pascal;Scherhant;Sturm
-Pascal;Kramarić;Mittelfeld
-Pascal;Claude-Maurice;Mittelfeld
-Pascal;Irvine;Mittelfeld
-Pascal;W. Orbán;Abwehr
-Pascal;Elvedi;Abwehr
-Pascal;Svensson;Abwehr
-Pascal;Baumann;Tor
-Pascal;L. Philipp;Tor
-Andreas;Dompé;Sturm
 Andreas;Ache;Sturm
+Andreas;Dompé;Sturm
 Andreas;Doan;Mittelfeld
 Andreas;Schmid;Mittelfeld
 Andreas;Reitz;Mittelfeld
@@ -85,8 +34,8 @@ Nico;Eriksen;Mittelfeld
 Nico;Andrich;Mittelfeld
 Nico;Karazor;Mittelfeld
 Nico;Doekhi;Abwehr
-Nico;Muheim;Abwehr
 Nico;Querfeld;Abwehr
+Nico;Muheim;Abwehr
 Nico;Badé;Abwehr
 Nico;Ramaj;Tor
 Christian;Pereira Lage;Sturm
