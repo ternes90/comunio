@@ -12,6 +12,7 @@ Thomas;Raum;Abwehr
 Thomas;Grimaldo;Abwehr
 Thomas;Belocian;Abwehr
 Thomas;Nübel;Tor
+Thomas;Bredlow;Tor
 Alfons;Asllani;Sturm
 Alfons;Schick;Sturm
 Alfons;Grifo;Mittelfeld
@@ -23,7 +24,6 @@ Alfons;Suzuki;Mittelfeld
 Alfons;Stöger;Mittelfeld
 Alfons;Kristensen;Abwehr
 Alfons;Ginter;Abwehr
-Alfons;Smith;Abwehr
 Alfons;Mwene;Abwehr
 Alfons;Omari;Abwehr
 Alfons;Schwäbe;Tor
@@ -72,10 +72,13 @@ Dominik;Kimmich;Mittelfeld
 Dominik;El Khannouss;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
 Dominik;Fernández;Mittelfeld
+Dominik;Castrop;Mittelfeld
+Dominik;Götze;Mittelfeld
 Dominik;Palacios;Mittelfeld
 Dominik;N. Schlotterbeck;Abwehr
 Dominik;Chabot;Abwehr
 Dominik;K. Schlotterbeck;Abwehr
+Dominik;Saliakas;Abwehr
 Dominik;Lucas Vázquez;Abwehr
 Dominik;Stark;Abwehr
 Dominik;Kobel;Tor
