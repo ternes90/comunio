@@ -885,18 +885,33 @@ Coulibaly;Abwehr;SV Werder Bremen;47;1.990.000;2.230.000;2,4;Kaufen;Schlecht;2;1
 Schmetgens;Abwehr;SV Werder Bremen;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;10.02.2026
 Kaars;Stürmer;FC St. Pauli;47;2.730.000;2.720.000;2,8;Halten;Schlecht;0;-0.1;Computer;10.02.2026
 Shiogai;Stürmer;VfL Wolfsburg;3;3.480.000;3.340.000;1,0;Halten;Schlecht;0;-0.1;Computer;10.02.2026
-Klostermann;Abwehr;RB Leipzig;3;280.000;280.000;1,5;Halten;Schlecht;0;N/A;Computer;11.02.2026
+Klostermann;Abwehr;RB Leipzig;3;280.000;280.000;1,5;Halten;Schlecht;0;;Computer;11.02.2026
 Özcan;Mittelfeld;Borussia Dortmund;5;480.000;470.000;2,5;Halten;Durchschnittlich;0;1.2;Computer;11.02.2026
-Zagadou;Abwehr;VfB Stuttgart;14;570.000;580.000;7,0;Halten;Gut;0;N/A;Computer;11.02.2026
+Zagadou;Abwehr;VfB Stuttgart;14;570.000;580.000;7,0;Halten;Gut;0;;Computer;11.02.2026
 Bülter;Stürmer;1. FC Köln;85;4.180.000;4.170.000;4,5;Halten;Gut;0;1.4;Computer;11.02.2026
 Svanberg;Mittelfeld;VfL Wolfsburg;39;960.000;1.010.000;2,2;Halten;Schlecht;0;0.6;Computer;11.02.2026
 Larsson;Mittelfeld;Eintracht Frankfurt;40;2.980.000;3.010.000;3,1;Halten;Durchschnittlich;0;1.7;Computer;11.02.2026
-Mæhle;Abwehr;VfL Wolfsburg;13;270.000;280.000;2,2;Halten;Durchschnittlich;0;N/A;Computer;11.02.2026
+Mæhle;Abwehr;VfL Wolfsburg;13;270.000;280.000;2,2;Halten;Durchschnittlich;0;;Computer;11.02.2026
 Mets;Abwehr;FC St. Pauli;45;1.820.000;1.910.000;3,0;Halten;Durchschnittlich;0;1.5;Computer;11.02.2026
-Gebel;Mittelfeld;RB Leipzig;0;170.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;11.02.2026
+Gebel;Mittelfeld;RB Leipzig;0;170.000;170.000;1,0;Halten;Schlecht;0;;Computer;11.02.2026
 Königsdörffer;Stürmer;Hamburger SV;55;3.200.000;3.470.000;2,8;Kaufen;Schlecht;2;3.4;Computer;11.02.2026
 Coulibaly;Abwehr;SV Werder Bremen;47;1.880.000;2.060.000;2,4;Kaufen;Schlecht;2;1.1;Computer;11.02.2026
-Stange;Stürmer;Hamburger SV;3;1.100.000;1.100.000;3,0;Halten;Durchschnittlich;0;N/A;Computer;11.02.2026
-Ćatović;Mittelfeld;VfB Stuttgart;0;180.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;11.02.2026
+Stange;Stürmer;Hamburger SV;3;1.100.000;1.100.000;3,0;Halten;Durchschnittlich;0;;Computer;11.02.2026
+Ćatović;Mittelfeld;VfB Stuttgart;0;180.000;170.000;0,0;Halten;Schlecht;0;;Computer;11.02.2026
 Kaars;Stürmer;FC St. Pauli;47;2.720.000;2.720.000;2,8;Halten;Schlecht;0;-0.1;Computer;11.02.2026
 Shiogai;Stürmer;VfL Wolfsburg;3;3.430.000;3.300.000;1,0;Halten;Schlecht;0;-0.1;Computer;11.02.2026
+Zetterer;Torhüter;Eintracht Frankfurt;31;550.000;560.000;2,8;Halten;Durchschnittlich;1;N/A;Computer;12.02.2026
+Özcan;Mittelfeld;Borussia Dortmund;5;480.000;480.000;2,5;Halten;Durchschnittlich;0;1.2;Computer;12.02.2026
+Zagadou;Abwehr;VfB Stuttgart;14;570.000;560.000;7,0;Halten;Gut;0;N/A;Computer;12.02.2026
+Bischof;Mittelfeld;FC Bayern München;59;3.170.000;3.150.000;3,9;Halten;Gut;0;3.8;Computer;12.02.2026
+Svanberg;Mittelfeld;VfL Wolfsburg;39;990.000;1.010.000;2,2;Halten;Schlecht;0;0.5;Computer;12.02.2026
+Mæhle;Abwehr;VfL Wolfsburg;13;260.000;260.000;2,2;Halten;Durchschnittlich;0;N/A;Computer;12.02.2026
+Mets;Abwehr;FC St. Pauli;45;1.800.000;1.840.000;3,0;Halten;Durchschnittlich;0;1.5;Computer;12.02.2026
+Ouédraogo;Mittelfeld;RB Leipzig;63;3.170.000;3.160.000;6,3;Halten;Gut;0;0;Computer;12.02.2026
+Gebel;Mittelfeld;RB Leipzig;0;170.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;12.02.2026
+Königsdörffer;Stürmer;Hamburger SV;55;3.650.000;3.790.000;2,8;Halten;Schlecht;0;3.3;Computer;12.02.2026
+Oppie;Abwehr;FC St. Pauli;49;1.050.000;1.040.000;2,7;Halten;Durchschnittlich;0;0.3;Computer;12.02.2026
+Coulibaly;Abwehr;SV Werder Bremen;47;1.790.000;1.900.000;2,4;Halten;Schlecht;0;1;Computer;12.02.2026
+Stange;Stürmer;Hamburger SV;3;1.050.000;1.050.000;3,0;Halten;Durchschnittlich;0;N/A;Computer;12.02.2026
+Ćatović;Mittelfeld;VfB Stuttgart;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;12.02.2026
+Shiogai;Stürmer;VfL Wolfsburg;3;3.420.000;3.360.000;1,0;Halten;Schlecht;0;-0.1;Computer;12.02.2026
