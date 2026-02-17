@@ -961,17 +961,32 @@ Neuendorff;Abwehr;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;;C
 Arrhov;Mittelfeld;Eintracht Frankfurt;0;610.000;610.000;0,0;Halten;Schlecht;0;;Computer;15.02.2026
 Sapoko Ndiaye;Mittelfeld;FC Bayern München;0;540.000;550.000;0,0;Halten;Schlecht;0;;Computer;15.02.2026
 Bell;Abwehr;1. FSV Mainz 05;64;2.580.000;2.460.000;3,6;Halten;Durchschnittlich;1;0;Computer;16.02.2026
-Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;16.02.2026
-Katterbach;Abwehr;Hamburger SV;0;230.000;240.000;1,0;Halten;Schlecht;0;N/A;Computer;16.02.2026
+Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Gut;1;;Computer;16.02.2026
+Katterbach;Abwehr;Hamburger SV;0;230.000;240.000;1,0;Halten;Schlecht;0;;Computer;16.02.2026
 Glatzel;Stürmer;Hamburger SV;33;1.650.000;1.830.000;2,5;Kaufen;Schlecht;1;0.7;Computer;16.02.2026
 Jakić;Mittelfeld;FC Augsburg;64;2.260.000;2.480.000;3,8;Kaufen;Gut;4;1.8;Computer;16.02.2026
 Zehnter;Abwehr;VfL Wolfsburg;50;870.000;870.000;3,3;Halten;Gut;1;0;Computer;16.02.2026
-Boniface;Stürmer;SV Werder Bremen;35;480.000;470.000;3,2;Halten;Gut;5;N/A;Computer;16.02.2026
+Boniface;Stürmer;SV Werder Bremen;35;480.000;470.000;3,2;Halten;Gut;5;;Computer;16.02.2026
 Koulierakis;Abwehr;VfL Wolfsburg;57;2.790.000;2.620.000;3,0;Halten;Schlecht;0;3.7;Computer;16.02.2026
 H. Behrens;Abwehr;1. FC Heidenheim 1846;14;2.220.000;2.390.000;3,5;Kaufen;Gut;3;1.2;Computer;16.02.2026
-Raab;Torhüter;1. FC Union Berlin;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;16.02.2026
+Raab;Torhüter;1. FC Union Berlin;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;16.02.2026
 Jones;Stürmer;FC St. Pauli;28;1.040.000;1.000.000;3,5;Halten;Gut;5;0;Computer;16.02.2026
 Kumbedi;Abwehr;VfL Wolfsburg;25;1.100.000;1.320.000;1,7;Kaufen;Schlecht;1;2.2;Computer;16.02.2026
-Ben Seghir;Stürmer;Bayer 04 Leverkusen;18;520.000;500.000;3,0;Halten;Gut;5;N/A;Computer;16.02.2026
+Ben Seghir;Stürmer;Bayer 04 Leverkusen;18;520.000;500.000;3,0;Halten;Gut;5;;Computer;16.02.2026
 Arrhov;Mittelfeld;Eintracht Frankfurt;0;580.000;560.000;0,0;Halten;Schlecht;0;-0.2;Computer;16.02.2026
-Sapoko Ndiaye;Mittelfeld;FC Bayern München;0;520.000;500.000;0,0;Halten;Schlecht;0;N/A;Computer;16.02.2026
+Sapoko Ndiaye;Mittelfeld;FC Bayern München;0;520.000;500.000;0,0;Halten;Schlecht;0;;Computer;16.02.2026
+Bell;Abwehr;1. FSV Mainz 05;64;2.420.000;2.380.000;3,6;Halten;Gut;2;0;Computer;17.02.2026
+Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Gut;1;N/A;Computer;17.02.2026
+Kübler;Abwehr;Sport-Club Freiburg;67;970.000;960.000;4,2;Halten;Gut;1;0;Computer;17.02.2026
+Katterbach;Abwehr;Hamburger SV;0;220.000;220.000;1,0;Halten;Schlecht;0;N/A;Computer;17.02.2026
+Rothe;Abwehr;1. FC Union Berlin;26;370.000;380.000;2,2;Halten;Durchschnittlich;0;N/A;Computer;17.02.2026
+Zehnter;Abwehr;VfL Wolfsburg;50;880.000;860.000;3,3;Halten;Gut;1;0;Computer;17.02.2026
+Topp;Stürmer;SV Werder Bremen;43;2.050.000;1.980.000;2,9;Halten;Durchschnittlich;4;2.3;Computer;17.02.2026
+Boniface;Stürmer;SV Werder Bremen;35;460.000;460.000;3,2;Halten;Gut;5;N/A;Computer;17.02.2026
+H. Behrens;Abwehr;1. FC Heidenheim 1846;14;2.280.000;2.420.000;3,5;Halten;Gut;2;1.1;Computer;17.02.2026
+Raab;Torhüter;1. FC Union Berlin;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;17.02.2026
+Jones;Stürmer;FC St. Pauli;28;1.040.000;1.100.000;3,5;Halten;Gut;5;0;Computer;17.02.2026
+Quansah;Abwehr;Bayer 04 Leverkusen;81;6.230.000;6.550.000;4,8;Halten;Durchschnittlich;2;6.6;Computer;17.02.2026
+Kumbedi;Abwehr;VfL Wolfsburg;25;1.120.000;1.300.000;1,7;Kaufen;Schlecht;1;2.3;Computer;17.02.2026
+Gharbi;Stürmer;FC Augsburg;11;310.000;320.000;2,2;Halten;Schlecht;0;0;Computer;17.02.2026
+Arrhov;Mittelfeld;Eintracht Frankfurt;0;590.000;560.000;0,0;Halten;Schlecht;0;-0.2;Computer;17.02.2026
