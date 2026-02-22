@@ -1035,18 +1035,33 @@ Baldé;Stürmer;Hamburger SV;23;530.000;530.000;2,6;Halten;Durchschnittlich;3;0.
 Bos;Abwehr;1. FSV Mainz 05;0;180.000;180.000;0,0;Kaufen;Schlecht;0;;Computer;20.02.2026
 Mbangula;Stürmer;SV Werder Bremen;75;4.440.000;4.500.000;4,2;Halten;Gut;0;3.1;Computer;20.02.2026
 Andō;Abwehr;FC St. Pauli;13;2.110.000;2.110.000;2,6;Halten;Schlecht;0;1.4;Computer;20.02.2026
-Grahl;Torhüter;Eintracht Frankfurt;0;160.000;160.000;4,0;Halten;Gut;1;N/A;Computer;21.02.2026
+Grahl;Torhüter;Eintracht Frankfurt;0;160.000;160.000;4,0;Halten;Gut;1;;Computer;21.02.2026
 Henrichs;Abwehr;RB Leipzig;8;2.980.000;2.980.000;2,7;Halten;Schlecht;0;1.1;Computer;21.02.2026
-Kleindienst;Stürmer;Borussia Mönchengladbach;2;3.030.000;2.870.000;2,0;Halten;Schlecht;0;N/A;Computer;21.02.2026
-Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Verkaufen;Schlecht;0;N/A;Computer;21.02.2026
+Kleindienst;Stürmer;Borussia Mönchengladbach;2;3.030.000;2.870.000;2,0;Halten;Schlecht;0;;Computer;21.02.2026
+Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Verkaufen;Schlecht;0;;Computer;21.02.2026
 Silas;Mittelfeld;1. FSV Mainz 05;15;3.830.000;3.940.000;2,5;Halten;Schlecht;0;3.8;Computer;21.02.2026
-Leitsch;Abwehr;1. FSV Mainz 05;8;200.000;200.000;2,7;Halten;Gut;0;N/A;Computer;21.02.2026
-Caci;Abwehr;1. FSV Mainz 05;20;530.000;530.000;5,0;Halten;Gut;0;N/A;Computer;21.02.2026
-Diehl;Stürmer;VfB Stuttgart;0;160.000;160.000;2,4;Halten;Durchschnittlich;0;N/A;Computer;21.02.2026
+Leitsch;Abwehr;1. FSV Mainz 05;8;200.000;200.000;2,7;Halten;Gut;0;;Computer;21.02.2026
+Caci;Abwehr;1. FSV Mainz 05;20;530.000;530.000;5,0;Halten;Gut;0;;Computer;21.02.2026
+Diehl;Stürmer;VfB Stuttgart;0;160.000;160.000;2,4;Halten;Durchschnittlich;0;;Computer;21.02.2026
 Zesiger;Abwehr;FC Augsburg;38;1.360.000;1.380.000;2,5;Halten;Durchschnittlich;0;2;Computer;21.02.2026
-Campbell;Stürmer;TSG Hoffenheim;2;360.000;360.000;2,0;Halten;Schlecht;0;N/A;Computer;21.02.2026
+Campbell;Stürmer;TSG Hoffenheim;2;360.000;360.000;2,0;Halten;Schlecht;0;;Computer;21.02.2026
 Giannoulis;Abwehr;FC Augsburg;74;3.440.000;3.460.000;4,4;Halten;Gut;0;2.4;Computer;21.02.2026
-Nedeljković;Abwehr;RB Leipzig;-1;250.000;250.000;-0,2;Halten;Schlecht;0;N/A;Computer;21.02.2026
+Nedeljković;Abwehr;RB Leipzig;-1;250.000;250.000;-0,2;Halten;Schlecht;0;;Computer;21.02.2026
 Suzuki;Mittelfeld;Sport-Club Freiburg;65;4.730.000;4.700.000;3,8;Halten;Durchschnittlich;0;5.8;Computer;21.02.2026
 Mbangula;Stürmer;SV Werder Bremen;75;4.340.000;4.380.000;4,2;Halten;Gut;0;3.1;Computer;21.02.2026
-Kaltefleiter;Mittelfeld;RB Leipzig;0;160.000;230.000;0,0;N/A;Schlecht;0;N/A;Computer;21.02.2026
+Kaltefleiter;Mittelfeld;RB Leipzig;0;160.000;230.000;0,0;;Schlecht;0;;Computer;21.02.2026
+Haberer;Mittelfeld;1. FC Union Berlin;46;910.000;1.030.000;2,3;Halten;Schlecht;0;0;Computer;22.02.2026
+Henrichs;Abwehr;RB Leipzig;8;2.920.000;2.840.000;2,0;Halten;Schlecht;0;1.1;Computer;22.02.2026
+Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Verkaufen;Schlecht;0;N/A;Computer;22.02.2026
+Silas;Mittelfeld;1. FSV Mainz 05;15;3.860.000;3.980.000;2,5;Halten;Schlecht;0;3.8;Computer;22.02.2026
+Rieß;Torhüter;1. FSV Mainz 05;10;160.000;170.000;2,5;Halten;Gut;1;N/A;Computer;22.02.2026
+Pieringer;Stürmer;1. FC Heidenheim 1846;55;1.610.000;1.610.000;3,4;Halten;Gut;3;0.8;Computer;22.02.2026
+Diehl;Stürmer;VfB Stuttgart;0;160.000;160.000;2,4;Halten;Durchschnittlich;1;N/A;Computer;22.02.2026
+Zesiger;Abwehr;FC Augsburg;38;1.450.000;1.480.000;2,4;Halten;Durchschnittlich;0;2;Computer;22.02.2026
+Giannoulis;Abwehr;FC Augsburg;74;3.620.000;3.830.000;4,1;Halten;Gut;0;2.4;Computer;22.02.2026
+Gebel;Mittelfeld;RB Leipzig;0;160.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;22.02.2026
+Nedeljković;Abwehr;RB Leipzig;-1;240.000;240.000;-0,2;Halten;Schlecht;0;N/A;Computer;22.02.2026
+Suzuki;Mittelfeld;Sport-Club Freiburg;65;4.510.000;4.460.000;3,8;Halten;Durchschnittlich;0;5.8;Computer;22.02.2026
+Kiala;Abwehr;FC Bayern München;0;190.000;190.000;0,0;Halten;Schlecht;0;N/A;Computer;22.02.2026
+Gazdov;Torhüter;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;22.02.2026
+Kaltefleiter;Mittelfeld;RB Leipzig;0;160.000;190.000;0,0;N/A;Schlecht;0;N/A;Computer;22.02.2026
