@@ -3,7 +3,6 @@ Thomas;Kane;Sturm
 Thomas;Tabaković;Sturm
 Thomas;Nusa;Sturm
 Thomas;Rômulo;Sturm
-Thomas;Njinmah;Sturm
 Thomas;García;Mittelfeld
 Thomas;Stage;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
@@ -22,14 +21,13 @@ Alfons;Pavlović;Mittelfeld
 Alfons;Grifo;Mittelfeld
 Alfons;Sano;Mittelfeld
 Alfons;Remberg;Mittelfeld
-Alfons;Stöger;Mittelfeld
 Alfons;Larsson;Mittelfeld
 Alfons;Gerhardt;Mittelfeld
 Alfons;Ginter;Abwehr
 Alfons;Giannoulis;Abwehr
 Alfons;Treu;Abwehr
-Alfons;Mwene;Abwehr
 Alfons;Zesiger;Abwehr
+Alfons;Mwene;Abwehr
 Alfons;Özkacar;Abwehr
 Alfons;Omari;Abwehr
 Alfons;Andō;Abwehr
@@ -59,14 +57,14 @@ Pascal;J. Hofmann;Mittelfeld
 Pascal;Bellingham;Mittelfeld
 Pascal;Irvine;Mittelfeld
 Pascal;W. Orbán;Abwehr
-Pascal;Elvedi;Abwehr
 Pascal;Svensson;Abwehr
+Pascal;Elvedi;Abwehr
 Pascal;Baumann;Tor
 Pascal;L. Philipp;Tor
 Andreas;Ache;Sturm
 Andreas;Dompé;Sturm
-Andreas;Doan;Mittelfeld
 Andreas;Schmid;Mittelfeld
+Andreas;Doan;Mittelfeld
 Andreas;Reitz;Mittelfeld
 Andreas;Avdullahu;Mittelfeld
 Andreas;L. Vušković;Abwehr
@@ -82,14 +80,14 @@ Dominik;Baldé;Sturm
 Dominik;Downs;Sturm
 Dominik;Kimmich;Mittelfeld
 Dominik;El Khannouss;Mittelfeld
-Dominik;Bischof;Mittelfeld
 Dominik;Jóhannesson;Mittelfeld
+Dominik;Bischof;Mittelfeld
 Dominik;Fernández;Mittelfeld
 Dominik;Götze;Mittelfeld
 Dominik;Palacios;Mittelfeld
 Dominik;N. Schlotterbeck;Abwehr
-Dominik;Chabot;Abwehr
 Dominik;Quansah;Abwehr
+Dominik;Chabot;Abwehr
 Dominik;K. Schlotterbeck;Abwehr
 Dominik;Zagadou;Abwehr
 Dominik;Stark;Abwehr
@@ -97,12 +95,12 @@ Dominik;Kobel;Tor
 Nico;Olise;Sturm
 Nico;Fellhauer;Mittelfeld
 Nico;Eriksen;Mittelfeld
-Nico;Niehues;Mittelfeld
 Nico;Andrich;Mittelfeld
-Nico;Jakić;Mittelfeld
+Nico;Niehues;Mittelfeld
 Nico;Karazor;Mittelfeld
-Nico;Doekhi;Abwehr
+Nico;Jakić;Mittelfeld
 Nico;Querfeld;Abwehr
+Nico;Doekhi;Abwehr
 Nico;Muheim;Abwehr
 Nico;Ramaj;Tor
 Nico;Urbig;Tor
@@ -118,8 +116,8 @@ Christian;Vini Souza;Mittelfeld
 Christian;Tapsoba;Abwehr
 Christian;Kim;Abwehr
 Christian;Raphaël Guerreiro;Abwehr
-Christian;Föhrenbach;Abwehr
 Christian;Köhn;Abwehr
+Christian;Föhrenbach;Abwehr
 Christian;Elfadli;Abwehr
 Christian;Seelt;Abwehr
 Christian;Grabara;Tor
