@@ -1158,15 +1158,30 @@ Reggiani;Abwehr;Borussia Dortmund;4;1.530.000;1.520.000;2,0;Halten;Schlecht;0;0;
 Akpoguma;Abwehr;TSG Hoffenheim;-9;220.000;230.000;-3,0;Halten;Schlecht;0;0;Computer;01.03.2026
 Gulácsi;Torhüter;RB Leipzig;77;800.000;790.000;3,5;Halten;Gut;1;0;Computer;01.03.2026
 Koch;Abwehr;Eintracht Frankfurt;93;4.700.000;4.680.000;4,2;Halten;Durchschnittlich;0;5;Computer;01.03.2026
-Skov;Mittelfeld;1. FC Union Berlin;5;160.000;160.000;1,7;Halten;Schlecht;0;N/A;Computer;01.03.2026
-Kyereh;Mittelfeld;Sport-Club Freiburg;0;160.000;160.000;1,7;Verkaufen;Schlecht;0;N/A;Computer;01.03.2026
-Hanche-Olsen;Abwehr;1. FSV Mainz 05;39;500.000;500.000;3,0;Halten;Gut;0;N/A;Computer;01.03.2026
-Mæhle;Abwehr;VfL Wolfsburg;13;270.000;270.000;2,2;Kaufen;Durchschnittlich;0;N/A;Computer;01.03.2026
+Skov;Mittelfeld;1. FC Union Berlin;5;160.000;160.000;1,7;Halten;Schlecht;0;;Computer;01.03.2026
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;160.000;160.000;1,7;Verkaufen;Schlecht;0;;Computer;01.03.2026
+Hanche-Olsen;Abwehr;1. FSV Mainz 05;39;500.000;500.000;3,0;Halten;Gut;0;;Computer;01.03.2026
+Mæhle;Abwehr;VfL Wolfsburg;13;270.000;270.000;2,2;Kaufen;Durchschnittlich;0;;Computer;01.03.2026
 Vasilj;Torhüter;FC St. Pauli;76;1.280.000;1.400.000;3,2;Halten;Durchschnittlich;2;1.9;Computer;01.03.2026
-Ouédraogo;Mittelfeld;RB Leipzig;63;3.290.000;3.370.000;6,3;Kaufen;Gut;2;N/A;Computer;01.03.2026
+Ouédraogo;Mittelfeld;RB Leipzig;63;3.290.000;3.370.000;6,3;Kaufen;Gut;2;;Computer;01.03.2026
 Prass;Abwehr;TSG Hoffenheim;53;2.050.000;2.250.000;2,7;Kaufen;Durchschnittlich;2;3.4;Computer;01.03.2026
-Zieliński;Torhüter;VfL Wolfsburg;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;01.03.2026
-Oppie;Abwehr;FC St. Pauli;49;730.000;730.000;2,7;Halten;Gut;0;N/A;Computer;01.03.2026
+Zieliński;Torhüter;VfL Wolfsburg;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;01.03.2026
+Oppie;Abwehr;FC St. Pauli;49;730.000;730.000;2,7;Halten;Gut;0;;Computer;01.03.2026
 Coulibaly;Abwehr;SV Werder Bremen;47;960.000;900.000;2,2;Halten;Durchschnittlich;0;0;Computer;01.03.2026
-Hensel;Mittelfeld;VfL Wolfsburg;2;190.000;190.000;2,0;Halten;Schlecht;0;N/A;Computer;01.03.2026
+Hensel;Mittelfeld;VfL Wolfsburg;2;190.000;190.000;2,0;Halten;Schlecht;0;;Computer;01.03.2026
 Reggiani;Abwehr;Borussia Dortmund;4;1.580.000;1.520.000;2,0;Halten;Schlecht;0;0;Computer;01.03.2026
+Akpoguma;Abwehr;TSG Hoffenheim;-9;210.000;210.000;-3,0;Halten;Schlecht;0;N/A;Computer;02.03.2026
+Gulácsi;Torhüter;RB Leipzig;77;730.000;740.000;3,5;Halten;Gut;0;N/A;Computer;02.03.2026
+Gnabry;Stürmer;FC Bayern München;103;9.000.000;8.880.000;5,4;Halten;Gut;1;N/A;Computer;02.03.2026
+Koch;Abwehr;Eintracht Frankfurt;98;5.100.000;5.400.000;4,3;Kaufen;Durchschnittlich;2;N/A;Computer;02.03.2026
+Skov;Mittelfeld;1. FC Union Berlin;5;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;02.03.2026
+Siersleben;Abwehr;1. FC Heidenheim 1846;37;460.000;450.000;2,6;Halten;Durchschnittlich;0;N/A;Computer;02.03.2026
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;160.000;170.000;1,7;Verkaufen;Schlecht;0;N/A;Computer;02.03.2026
+Ouédraogo;Mittelfeld;RB Leipzig;63;3.670.000;3.400.000;6,3;Kaufen;Gut;2;N/A;Computer;02.03.2026
+Hendriks;Abwehr;VfB Stuttgart;56;2.810.000;3.220.000;2,8;Kaufen;Schlecht;2;N/A;Computer;02.03.2026
+Prass;Abwehr;TSG Hoffenheim;56;2.040.000;2.190.000;2,8;Halten;Durchschnittlich;0;N/A;Computer;02.03.2026
+Zieliński;Torhüter;VfL Wolfsburg;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;02.03.2026
+Oppie;Abwehr;FC St. Pauli;49;700.000;690.000;2,7;Halten;Durchschnittlich;0;N/A;Computer;02.03.2026
+Hensel;Mittelfeld;VfL Wolfsburg;3;310.000;390.000;1,5;Halten;Schlecht;0;N/A;Computer;02.03.2026
+Shiogai;Stürmer;VfL Wolfsburg;15;3.550.000;3.680.000;2,5;Halten;Schlecht;0;N/A;Computer;02.03.2026
+Reggiani;Abwehr;Borussia Dortmund;4;1.550.000;1.520.000;2,0;Halten;Schlecht;0;N/A;Computer;02.03.2026
