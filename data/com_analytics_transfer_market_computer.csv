@@ -1185,18 +1185,33 @@ Oppie;Abwehr;FC St. Pauli;49;700.000;690.000;2,7;Halten;Durchschnittlich;0;;Comp
 Hensel;Mittelfeld;VfL Wolfsburg;3;310.000;390.000;1,5;Halten;Schlecht;0;;Computer;02.03.2026
 Shiogai;Stürmer;VfL Wolfsburg;15;3.550.000;3.680.000;2,5;Halten;Schlecht;0;;Computer;02.03.2026
 Reggiani;Abwehr;Borussia Dortmund;4;1.550.000;1.520.000;2,0;Halten;Schlecht;0;;Computer;02.03.2026
-Goretzka;Mittelfeld;FC Bayern München;88;4.450.000;4.130.000;4,6;Verkaufen;Gut;0;N/A;Computer;03.03.2026
-Gulácsi;Torhüter;RB Leipzig;77;710.000;690.000;3,5;Halten;Gut;0;N/A;Computer;03.03.2026
-Gnabry;Stürmer;FC Bayern München;103;9.300.000;9.290.000;5,4;Halten;Gut;1;N/A;Computer;03.03.2026
-Siersleben;Abwehr;1. FC Heidenheim 1846;37;460.000;480.000;2,6;Halten;Durchschnittlich;0;N/A;Computer;03.03.2026
-Y. Engelhardt;Mittelfeld;Borussia Mönchengladbach;83;2.980.000;3.160.000;4,0;Halten;Gut;0;N/A;Computer;03.03.2026
-Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;190.000;1,7;Verkaufen;Schlecht;0;N/A;Computer;03.03.2026
-Mets;Abwehr;FC St. Pauli;49;1.340.000;1.460.000;2,7;Halten;Durchschnittlich;0;N/A;Computer;03.03.2026
-Hendriks;Abwehr;VfB Stuttgart;56;2.970.000;3.260.000;2,8;Kaufen;Schlecht;2;N/A;Computer;03.03.2026
-Stevens;Abwehr;FC St. Pauli;0;180.000;170.000;-1,0;Halten;Schlecht;0;N/A;Computer;03.03.2026
-Chaves;Abwehr;FC Augsburg;30;1.810.000;1.840.000;4,3;Halten;Gut;0;N/A;Computer;03.03.2026
-Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;180.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;03.03.2026
-Zieliński;Torhüter;VfL Wolfsburg;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;03.03.2026
-Mike;Stürmer;FC Bayern München;6;230.000;240.000;2,0;Halten;Schlecht;0;N/A;Computer;03.03.2026
-Shiogai;Stürmer;VfL Wolfsburg;15;3.550.000;3.510.000;2,5;Halten;Schlecht;0;N/A;Computer;03.03.2026
+Goretzka;Mittelfeld;FC Bayern München;88;4.450.000;4.130.000;4,6;Verkaufen;Gut;0;;Computer;03.03.2026
+Gulácsi;Torhüter;RB Leipzig;77;710.000;690.000;3,5;Halten;Gut;0;;Computer;03.03.2026
+Gnabry;Stürmer;FC Bayern München;103;9.300.000;9.290.000;5,4;Halten;Gut;1;;Computer;03.03.2026
+Siersleben;Abwehr;1. FC Heidenheim 1846;37;460.000;480.000;2,6;Halten;Durchschnittlich;0;;Computer;03.03.2026
+Y. Engelhardt;Mittelfeld;Borussia Mönchengladbach;83;2.980.000;3.160.000;4,0;Halten;Gut;0;;Computer;03.03.2026
+Kyereh;Mittelfeld;Sport-Club Freiburg;0;170.000;190.000;1,7;Verkaufen;Schlecht;0;;Computer;03.03.2026
+Mets;Abwehr;FC St. Pauli;49;1.340.000;1.460.000;2,7;Halten;Durchschnittlich;0;;Computer;03.03.2026
+Hendriks;Abwehr;VfB Stuttgart;56;2.970.000;3.260.000;2,8;Kaufen;Schlecht;2;;Computer;03.03.2026
+Stevens;Abwehr;FC St. Pauli;0;180.000;170.000;-1,0;Halten;Schlecht;0;;Computer;03.03.2026
+Chaves;Abwehr;FC Augsburg;30;1.810.000;1.840.000;4,3;Halten;Gut;0;;Computer;03.03.2026
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;180.000;170.000;0,0;Halten;Schlecht;0;;Computer;03.03.2026
+Zieliński;Torhüter;VfL Wolfsburg;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;03.03.2026
+Mike;Stürmer;FC Bayern München;6;230.000;240.000;2,0;Halten;Schlecht;0;;Computer;03.03.2026
+Shiogai;Stürmer;VfL Wolfsburg;15;3.550.000;3.510.000;2,5;Halten;Schlecht;0;;Computer;03.03.2026
 Otele;Stürmer;Hamburger SV;15;7.060.000;6.910.000;3,8;Halten;Schlecht;0;1.1;Computer;03.03.2026
+Goretzka;Mittelfeld;FC Bayern München;88;4.220.000;4.150.000;4,6;Halten;Gut;0;N/A;Computer;04.03.2026
+Laimer;Abwehr;FC Bayern München;83;6.310.000;6.200.000;4,4;Halten;Schlecht;1;N/A;Computer;04.03.2026
+Siersleben;Abwehr;1. FC Heidenheim 1846;37;440.000;440.000;2,6;Halten;Durchschnittlich;0;N/A;Computer;04.03.2026
+Y. Engelhardt;Mittelfeld;Borussia Mönchengladbach;83;3.050.000;3.240.000;4,0;Halten;Gut;0;N/A;Computer;04.03.2026
+Zesiger;Abwehr;FC Augsburg;44;1.370.000;1.440.000;2,6;Halten;Durchschnittlich;0;N/A;Computer;04.03.2026
+Mets;Abwehr;FC St. Pauli;49;1.250.000;1.320.000;2,7;Halten;Durchschnittlich;0;N/A;Computer;04.03.2026
+Brown;Abwehr;Eintracht Frankfurt;101;8.780.000;8.730.000;4,4;Halten;Schlecht;2;N/A;Computer;04.03.2026
+Stevens;Abwehr;FC St. Pauli;0;170.000;170.000;-1,0;Halten;Schlecht;0;N/A;Computer;04.03.2026
+Chaves;Abwehr;FC Augsburg;30;1.700.000;1.700.000;4,3;Halten;Gut;0;N/A;Computer;04.03.2026
+Pereira Cardoso;Torhüter;Borussia Mönchengladbach;0;160.000;170.000;4,6;Halten;Gut;1;N/A;Computer;04.03.2026
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;04.03.2026
+Mike;Stürmer;FC Bayern München;6;220.000;230.000;2,0;Halten;Schlecht;0;N/A;Computer;04.03.2026
+Sambi Lokonga;Mittelfeld;Hamburger SV;77;5.080.000;4.980.000;4,5;Halten;Gut;1;1.3;Computer;04.03.2026
+Shiogai;Stürmer;VfL Wolfsburg;15;3.560.000;3.770.000;2,5;Kaufen;Schlecht;2;N/A;Computer;04.03.2026
+Otele;Stürmer;Hamburger SV;15;7.210.000;7.040.000;3,8;Halten;Schlecht;0;1.1;Computer;04.03.2026
