@@ -1222,11 +1222,26 @@ Y. Engelhardt;Mittelfeld;Borussia Mönchengladbach;83;2.960.000;3.020.000;4,0;Ha
 Zesiger;Abwehr;FC Augsburg;44;1.280.000;1.290.000;2,6;Halten;Durchschnittlich;0;0;Computer;05.03.2026
 Mets;Abwehr;FC St. Pauli;49;1.180.000;1.270.000;2,7;Halten;Durchschnittlich;0;0;Computer;05.03.2026
 Brown;Abwehr;Eintracht Frankfurt;101;8.780.000;8.930.000;4,4;Halten;Schlecht;2;6.1;Computer;05.03.2026
-Stevens;Abwehr;FC St. Pauli;0;170.000;170.000;-1,0;Halten;Schlecht;0;N/A;Computer;05.03.2026
+Stevens;Abwehr;FC St. Pauli;0;170.000;170.000;-1,0;Halten;Schlecht;0;;Computer;05.03.2026
 Chaves;Abwehr;FC Augsburg;30;1.740.000;1.710.000;4,3;Halten;Gut;2;0.2;Computer;05.03.2026
-Nedeljković;Abwehr;RB Leipzig;-1;170.000;170.000;-0,2;Halten;Schlecht;0;N/A;Computer;05.03.2026
-Pereira Cardoso;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;4,6;Halten;Gut;1;N/A;Computer;05.03.2026
-Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;05.03.2026
-Mike;Stürmer;FC Bayern München;6;220.000;230.000;2,0;Halten;Schlecht;0;N/A;Computer;05.03.2026
+Nedeljković;Abwehr;RB Leipzig;-1;170.000;170.000;-0,2;Halten;Schlecht;0;;Computer;05.03.2026
+Pereira Cardoso;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;4,6;Halten;Gut;1;;Computer;05.03.2026
+Rothweiler;Mittelfeld;1. FC Heidenheim 1846;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;05.03.2026
+Mike;Stürmer;FC Bayern München;6;220.000;230.000;2,0;Halten;Schlecht;0;;Computer;05.03.2026
 Sambi Lokonga;Mittelfeld;Hamburger SV;80;5.040.000;5.120.000;4,4;Halten;Gut;3;1.9;Computer;05.03.2026
 Otele;Stürmer;Hamburger SV;15;6.960.000;6.730.000;3,8;Halten;Schlecht;0;0;Computer;05.03.2026
+Bittencourt;Mittelfeld;SV Werder Bremen;16;660.000;660.000;1,8;Halten;Schlecht;0;0.2;Computer;06.03.2026
+Özcan;Mittelfeld;Borussia Dortmund;5;280.000;280.000;2,5;Halten;Durchschnittlich;0;1.1;Computer;06.03.2026
+Krauß;Mittelfeld;1. FC Köln;72;2.970.000;2.990.000;3,6;Halten;Durchschnittlich;0;1.5;Computer;06.03.2026
+Scally;Abwehr;Borussia Mönchengladbach;63;1.650.000;1.670.000;2,9;Halten;Durchschnittlich;0;0.5;Computer;06.03.2026
+Dinkçi;Stürmer;1. FC Heidenheim 1846;31;3.310.000;3.330.000;2,4;Halten;Schlecht;0;0.6;Computer;06.03.2026
+Rothe;Abwehr;1. FC Union Berlin;26;270.000;270.000;2,2;Halten;Durchschnittlich;0;N/A;Computer;06.03.2026
+Zesiger;Abwehr;FC Augsburg;44;1.190.000;1.200.000;2,6;Halten;Durchschnittlich;0;0;Computer;06.03.2026
+Kerber;Mittelfeld;1. FC Heidenheim 1846;15;180.000;180.000;1,7;Halten;Schlecht;0;N/A;Computer;06.03.2026
+Uzun;Stürmer;Eintracht Frankfurt;79;8.370.000;8.200.000;5,6;Kaufen;Gut;3;N/A;Computer;06.03.2026
+Ceesay;Stürmer;FC St. Pauli;22;380.000;380.000;1,8;Halten;Schlecht;0;-0.1;Computer;06.03.2026
+Nedeljković;Abwehr;RB Leipzig;-1;170.000;170.000;-0,2;Halten;Schlecht;0;N/A;Computer;06.03.2026
+Pereira Cardoso;Torhüter;Borussia Mönchengladbach;0;160.000;160.000;4,6;Halten;Gut;1;N/A;Computer;06.03.2026
+Burger;Mittelfeld;TSG Hoffenheim;116;9.890.000;9.860.000;5,5;Halten;Durchschnittlich;2;3.5;Computer;06.03.2026
+Stange;Stürmer;Hamburger SV;6;760.000;760.000;3,0;Halten;Durchschnittlich;3;N/A;Computer;06.03.2026
+Inácio;Stürmer;Borussia Dortmund;2;920.000;960.000;2,0;Halten;Schlecht;0;0.6;Computer;06.03.2026
