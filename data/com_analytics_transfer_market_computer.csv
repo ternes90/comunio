@@ -1262,16 +1262,31 @@ Moreno Fell;Stürmer;1. FSV Mainz 05;1;170.000;170.000;1,0;Halten;Schlecht;0;;Co
 Inácio;Stürmer;Borussia Dortmund;2;1.170.000;1.270.000;2,0;Halten;Schlecht;0;0.6;Computer;07.03.2026
 Bittencourt;Mittelfeld;SV Werder Bremen;16;610.000;610.000;1,8;Halten;Schlecht;0;0.2;Computer;08.03.2026
 Can;Abwehr;Borussia Dortmund;50;2.050.000;2.070.000;5,6;Halten;Gut;0;0;Computer;08.03.2026
-Özcan;Mittelfeld;Borussia Dortmund;5;270.000;270.000;2,5;Halten;Durchschnittlich;0;N/A;Computer;08.03.2026
+Özcan;Mittelfeld;Borussia Dortmund;5;270.000;270.000;2,5;Halten;Durchschnittlich;0;;Computer;08.03.2026
 Burkardt;Stürmer;Eintracht Frankfurt;81;17.260.000;17.180.000;6,8;Halten;Durchschnittlich;2;0.8;Computer;08.03.2026
-Rothe;Abwehr;1. FC Union Berlin;26;260.000;260.000;2,2;Halten;Durchschnittlich;0;N/A;Computer;08.03.2026
+Rothe;Abwehr;1. FC Union Berlin;26;260.000;260.000;2,2;Halten;Durchschnittlich;0;;Computer;08.03.2026
 Y. Engelhardt;Mittelfeld;Borussia Mönchengladbach;83;3.130.000;2.940.000;4,0;Halten;Gut;0;0;Computer;08.03.2026
-Ngoumou;Stürmer;Borussia Mönchengladbach;0;220.000;250.000;3,3;Kaufen;Gut;0;N/A;Computer;08.03.2026
-Juranović;Abwehr;1. FC Union Berlin;18;790.000;800.000;3,6;Halten;Gut;0;N/A;Computer;08.03.2026
+Ngoumou;Stürmer;Borussia Mönchengladbach;0;220.000;250.000;3,3;Kaufen;Gut;0;;Computer;08.03.2026
+Juranović;Abwehr;1. FC Union Berlin;18;790.000;800.000;3,6;Halten;Gut;0;;Computer;08.03.2026
 Mets;Abwehr;FC St. Pauli;49;1.020.000;1.010.000;2,7;Halten;Durchschnittlich;0;0;Computer;08.03.2026
-Klaus;Torhüter;1. FC Union Berlin;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;08.03.2026
+Klaus;Torhüter;1. FC Union Berlin;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;08.03.2026
 Ceesay;Stürmer;FC St. Pauli;22;380.000;380.000;1,8;Halten;Schlecht;0;-0.1;Computer;08.03.2026
 Kofane;Stürmer;Bayer 04 Leverkusen;79;7.220.000;8.050.000;3,6;Kaufen;Schlecht;2;2.2;Computer;08.03.2026
-Stange;Stürmer;Hamburger SV;6;780.000;800.000;3,0;Halten;Durchschnittlich;0;N/A;Computer;08.03.2026
+Stange;Stürmer;Hamburger SV;6;780.000;800.000;3,0;Halten;Durchschnittlich;0;;Computer;08.03.2026
 Daghim;Stürmer;VfL Wolfsburg;55;2.730.000;2.780.000;3,1;Halten;Durchschnittlich;0;2.2;Computer;08.03.2026
-Moreno Fell;Stürmer;1. FSV Mainz 05;1;170.000;170.000;1,0;Halten;Schlecht;0;N/A;Computer;08.03.2026
+Moreno Fell;Stürmer;1. FSV Mainz 05;1;170.000;170.000;1,0;Halten;Schlecht;0;;Computer;08.03.2026
+Can;Abwehr;Borussia Dortmund;50;1.940.000;1.950.000;5,6;Halten;Gut;0;0;Computer;09.03.2026
+A. Jung;Abwehr;Sport-Club Freiburg;16;550.000;580.000;1,6;Halten;Schlecht;0;N/A;Computer;09.03.2026
+Kamiński;Mittelfeld;1. FC Köln;136;7.590.000;8.110.000;5,4;Halten;Gut;1;3.7;Computer;09.03.2026
+Damar;Mittelfeld;TSG Hoffenheim;31;470.000;510.000;3,1;Halten;Gut;0;0.5;Computer;09.03.2026
+Ngoumou;Stürmer;Borussia Mönchengladbach;0;210.000;210.000;3,3;Kaufen;Gut;4;N/A;Computer;09.03.2026
+Juranović;Abwehr;1. FC Union Berlin;18;790.000;760.000;3,6;Halten;Gut;0;N/A;Computer;09.03.2026
+Wöber;Abwehr;SV Werder Bremen;0;160.000;170.000;3,6;Halten;Gut;0;N/A;Computer;09.03.2026
+Mets;Abwehr;FC St. Pauli;49;960.000;900.000;2,7;Halten;Durchschnittlich;0;0;Computer;09.03.2026
+Klaus;Torhüter;1. FC Union Berlin;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;09.03.2026
+Theate;Abwehr;Eintracht Frankfurt;66;1.400.000;1.260.000;3,5;Halten;Gut;0;N/A;Computer;09.03.2026
+Tape;Abwehr;Bayer 04 Leverkusen;5;1.620.000;1.580.000;0,8;Halten;Schlecht;0;-0.1;Computer;09.03.2026
+Kofane;Stürmer;Bayer 04 Leverkusen;89;7.720.000;8.190.000;4,0;Kaufen;Schlecht;2;2.6;Computer;09.03.2026
+Daghim;Stürmer;VfL Wolfsburg;58;2.890.000;3.110.000;3,2;Kaufen;Durchschnittlich;2;1.3;Computer;09.03.2026
+Moreno Fell;Stürmer;1. FSV Mainz 05;1;170.000;180.000;1,0;Halten;Schlecht;0;N/A;Computer;09.03.2026
+Otele;Stürmer;Hamburger SV;19;6.150.000;6.440.000;3,8;Halten;Schlecht;0;2.3;Computer;09.03.2026
