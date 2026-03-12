@@ -1305,18 +1305,33 @@ Ceesay;Stürmer;FC St. Pauli;22;350.000;380.000;1,8;Halten;Schlecht;0;-0.1;Compu
 Banzuzi;Mittelfeld;RB Leipzig;48;1.350.000;1.390.000;2,4;Halten;Schlecht;0;1.5;Computer;10.03.2026
 Tape;Abwehr;Bayer 04 Leverkusen;5;1.500.000;1.420.000;0,8;Halten;Schlecht;0;-0.1;Computer;10.03.2026
 Otele;Stürmer;Hamburger SV;19;6.130.000;6.220.000;3,8;Halten;Schlecht;0;2.3;Computer;10.03.2026
-Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;170.000;3,7;Halten;Gut;1;N/A;Computer;11.03.2026
-A. Jung;Abwehr;Sport-Club Freiburg;16;530.000;540.000;1,6;Halten;Schlecht;0;N/A;Computer;11.03.2026
-Kübler;Abwehr;Sport-Club Freiburg;67;850.000;810.000;4,2;Halten;Gut;0;N/A;Computer;11.03.2026
+Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;170.000;3,7;Halten;Gut;1;;Computer;11.03.2026
+A. Jung;Abwehr;Sport-Club Freiburg;16;530.000;540.000;1,6;Halten;Schlecht;0;;Computer;11.03.2026
+Kübler;Abwehr;Sport-Club Freiburg;67;850.000;810.000;4,2;Halten;Gut;0;;Computer;11.03.2026
 Davies;Abwehr;FC Bayern München;23;4.980.000;5.000.000;2,9;Halten;Schlecht;1;0;Computer;11.03.2026
 Silas;Mittelfeld;1. FSV Mainz 05;21;2.250.000;2.340.000;2,6;Halten;Schlecht;0;1.6;Computer;11.03.2026
-Wöber;Abwehr;SV Werder Bremen;0;160.000;160.000;3,6;Halten;Gut;0;N/A;Computer;11.03.2026
+Wöber;Abwehr;SV Werder Bremen;0;160.000;160.000;3,6;Halten;Gut;0;;Computer;11.03.2026
 Campbell;Stürmer;TSG Hoffenheim;2;320.000;310.000;2,0;Halten;Schlecht;0;0.4;Computer;11.03.2026
-Theate;Abwehr;Eintracht Frankfurt;66;1.450.000;1.470.000;3,5;Kaufen;Gut;1;N/A;Computer;11.03.2026
+Theate;Abwehr;Eintracht Frankfurt;66;1.450.000;1.470.000;3,5;Kaufen;Gut;1;;Computer;11.03.2026
 Ceesay;Stürmer;FC St. Pauli;22;350.000;350.000;1,8;Halten;Schlecht;0;-0.1;Computer;11.03.2026
 Banzuzi;Mittelfeld;RB Leipzig;48;1.480.000;1.510.000;2,4;Halten;Schlecht;0;1.5;Computer;11.03.2026
 Diks;Abwehr;Borussia Mönchengladbach;101;5.590.000;5.570.000;4,6;Halten;Durchschnittlich;1;2.9;Computer;11.03.2026
 Kölle;Abwehr;1. FC Heidenheim 1846;13;170.000;170.000;2,6;Halten;Gut;0;-0.1;Computer;11.03.2026
 Tape;Abwehr;Bayer 04 Leverkusen;5;1.480.000;1.450.000;0,8;Halten;Schlecht;0;-0.1;Computer;11.03.2026
-Hountondji;Stürmer;FC St. Pauli;41;500.000;480.000;3,4;Halten;Gut;0;N/A;Computer;11.03.2026
+Hountondji;Stürmer;FC St. Pauli;41;500.000;480.000;3,4;Halten;Gut;0;;Computer;11.03.2026
 Chávez;Mittelfeld;1. FC Köln;8;970.000;950.000;2,0;Halten;Schlecht;0;0.1;Computer;11.03.2026
+Ma. Müller;Torhüter;VfL Wolfsburg;0;160.000;160.000;3,7;Halten;Gut;1;N/A;Computer;12.03.2026
+Gregoritsch;Stürmer;FC Augsburg;44;4.710.000;4.660.000;4,9;Halten;Gut;5;1.5;Computer;12.03.2026
+Kübler;Abwehr;Sport-Club Freiburg;67;850.000;840.000;4,2;Halten;Gut;3;N/A;Computer;12.03.2026
+Davies;Abwehr;FC Bayern München;23;4.650.000;4.800.000;2,9;Halten;Schlecht;0;0;Computer;12.03.2026
+Silas;Mittelfeld;1. FSV Mainz 05;21;2.130.000;2.190.000;2,6;Halten;Schlecht;0;1.6;Computer;12.03.2026
+Ramaj;Torhüter;1. FC Heidenheim 1846;78;950.000;930.000;3,3;Kaufen;Durchschnittlich;4;2.1;Computer;12.03.2026
+Omlin;Torhüter;Bayer 04 Leverkusen;0;250.000;250.000;2,1;Halten;Schlecht;0;N/A;Computer;12.03.2026
+Campbell;Stürmer;TSG Hoffenheim;2;320.000;340.000;2,0;Halten;Schlecht;0;0.4;Computer;12.03.2026
+Koulierakis;Abwehr;VfL Wolfsburg;63;2.200.000;2.340.000;3,0;Halten;Durchschnittlich;3;0.9;Computer;12.03.2026
+Ceesay;Stürmer;FC St. Pauli;22;370.000;370.000;1,8;Halten;Schlecht;0;-0.1;Computer;12.03.2026
+Diks;Abwehr;Borussia Mönchengladbach;101;5.590.000;5.640.000;4,6;Halten;Durchschnittlich;4;3;Computer;12.03.2026
+Kölle;Abwehr;1. FC Heidenheim 1846;13;170.000;170.000;2,6;Halten;Gut;2;-0.1;Computer;12.03.2026
+Hountondji;Stürmer;FC St. Pauli;41;630.000;610.000;3,4;Halten;Gut;5;N/A;Computer;12.03.2026
+Gocholeishvili;Abwehr;Hamburger SV;29;970.000;990.000;1,7;Halten;Schlecht;0;0.7;Computer;12.03.2026
+Chávez;Mittelfeld;1. FC Köln;8;980.000;970.000;2,0;Halten;Schlecht;0;0.1;Computer;12.03.2026
