@@ -1339,14 +1339,29 @@ Heintz;Abwehr;1. FC Köln;16;340.000;350.000;2,3;Halten;Durchschnittlich;0;0;Com
 Gregoritsch;Stürmer;FC Augsburg;44;4.500.000;4.500.000;4,9;Halten;Gut;1;1.3;Computer;13.03.2026
 Nicolas;Torhüter;Borussia Mönchengladbach;111;2.320.000;2.360.000;4,4;Halten;Gut;2;3.2;Computer;13.03.2026
 Davies;Abwehr;FC Bayern München;23;4.300.000;4.480.000;2,9;Halten;Schlecht;0;0;Computer;13.03.2026
-Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Verkaufen;Schlecht;0;N/A;Computer;13.03.2026
+Kilian;Abwehr;1. FC Köln;0;170.000;170.000;0,9;Verkaufen;Schlecht;0;;Computer;13.03.2026
 Ramaj;Torhüter;1. FC Heidenheim 1846;78;940.000;960.000;3,3;Halten;Durchschnittlich;1;2.1;Computer;13.03.2026
 Pieringer;Stürmer;1. FC Heidenheim 1846;60;1.420.000;1.440.000;3,2;Halten;Durchschnittlich;0;0.5;Computer;13.03.2026
-Omlin;Torhüter;Bayer 04 Leverkusen;0;230.000;230.000;2,1;Halten;Schlecht;0;N/A;Computer;13.03.2026
-Norbye;Abwehr;RB Leipzig;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;13.03.2026
-Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Durchschnittlich;0;N/A;Computer;13.03.2026
+Omlin;Torhüter;Bayer 04 Leverkusen;0;230.000;230.000;2,1;Halten;Schlecht;0;;Computer;13.03.2026
+Norbye;Abwehr;RB Leipzig;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;13.03.2026
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Durchschnittlich;0;;Computer;13.03.2026
 Koulierakis;Abwehr;VfL Wolfsburg;63;2.260.000;2.300.000;3,0;Halten;Durchschnittlich;1;0.8;Computer;13.03.2026
-Røssing-Lelesiit;Stürmer;Hamburger SV;19;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;13.03.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;170.000;170.000;1,7;Halten;Schlecht;0;;Computer;13.03.2026
 Gocholeishvili;Abwehr;Hamburger SV;29;950.000;960.000;1,7;Halten;Schlecht;0;0.8;Computer;13.03.2026
-Hellstern;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;13.03.2026
-Tangvik;Torhüter;Hamburger SV;0;230.000;230.000;0,0;Halten;Schlecht;0;N/A;Computer;13.03.2026
+Hellstern;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;13.03.2026
+Tangvik;Torhüter;Hamburger SV;0;230.000;230.000;0,0;Halten;Schlecht;0;;Computer;13.03.2026
+Heintz;Abwehr;1. FC Köln;16;360.000;370.000;2,3;Halten;Durchschnittlich;0;0;Computer;14.03.2026
+Gregoritsch;Stürmer;FC Augsburg;44;4.400.000;4.460.000;4,9;Halten;Gut;2;1.2;Computer;14.03.2026
+Wahl;Abwehr;FC St. Pauli;84;3.300.000;3.450.000;3,8;Halten;Gut;2;2.3;Computer;14.03.2026
+Nicolas;Torhüter;Borussia Mönchengladbach;111;2.530.000;2.490.000;4,3;Halten;Durchschnittlich;2;3.2;Computer;14.03.2026
+Kilian;Abwehr;1. FC Köln;0;180.000;180.000;0,9;Verkaufen;Schlecht;0;N/A;Computer;14.03.2026
+Pieringer;Stürmer;1. FC Heidenheim 1846;60;1.410.000;1.430.000;3,2;Halten;Durchschnittlich;1;0.4;Computer;14.03.2026
+Omlin;Torhüter;Bayer 04 Leverkusen;0;230.000;230.000;2,1;Halten;Schlecht;0;N/A;Computer;14.03.2026
+Norbye;Abwehr;RB Leipzig;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;14.03.2026
+Labrović;Torhüter;FC Augsburg;0;160.000;160.000;2,8;Halten;Durchschnittlich;0;N/A;Computer;14.03.2026
+Manzambi;Mittelfeld;Sport-Club Freiburg;82;6.820.000;6.790.000;4,3;Halten;Durchschnittlich;2;3;Computer;14.03.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;14.03.2026
+Gocholeishvili;Abwehr;Hamburger SV;29;900.000;910.000;1,7;Halten;Schlecht;0;0.8;Computer;14.03.2026
+Hellstern;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;14.03.2026
+Bärtl;Torhüter;FC Bayern München;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;14.03.2026
+Tangvik;Torhüter;Hamburger SV;0;220.000;220.000;0,0;Halten;Schlecht;0;N/A;Computer;14.03.2026
