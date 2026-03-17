@@ -14,13 +14,16 @@ Thomas;Grimaldo;Abwehr
 Thomas;Prass;Abwehr
 Thomas;Nübel;Tor
 Thomas;Bredlow;Tor
+Thomas;Bärtl;Tor
 Alfons;Asllani;Sturm
 Alfons;Kofane;Sturm
 Alfons;Burkardt;Sturm
+Alfons;Kaufmann;Sturm
 Alfons;Grifo;Mittelfeld
 Alfons;Pavlović;Mittelfeld
 Alfons;Sano;Mittelfeld
 Alfons;Remberg;Mittelfeld
+Alfons;Reitz;Mittelfeld
 Alfons;Larsson;Mittelfeld
 Alfons;Ginter;Abwehr
 Alfons;Diks;Abwehr
@@ -28,7 +31,6 @@ Alfons;Giannoulis;Abwehr
 Alfons;Kübler;Abwehr
 Alfons;Mæhle;Abwehr
 Alfons;Nicolas;Tor
-Alfons;Vasilj;Tor
 Alfons;Dahmen;Tor
 Christoph;Diomande;Sturm
 Christoph;Undav;Sturm
@@ -37,6 +39,7 @@ Christoph;Burger;Mittelfeld
 Christoph;Seiwald;Mittelfeld
 Christoph;F. Nmecha;Mittelfeld
 Christoph;Massengo;Mittelfeld
+Christoph;Jóhannesson;Mittelfeld
 Christoph;Koch;Abwehr
 Christoph;Mainka;Abwehr
 Christoph;Brown;Abwehr
@@ -67,6 +70,7 @@ Andreas;L. Vušković;Abwehr
 Andreas;Laimer;Abwehr
 Andreas;Wahl;Abwehr
 Andreas;Hajdari;Abwehr
+Andreas;Theate;Abwehr
 Andreas;Hendriks;Abwehr
 Andreas;Heuer Fernandes;Tor
 Dominik;Luis Díaz;Sturm
@@ -85,8 +89,9 @@ Dominik;Chabot;Abwehr
 Dominik;K. Schlotterbeck;Abwehr
 Dominik;Koulierakis;Abwehr
 Dominik;Heintz;Abwehr
-Dominik;Kilian;Abwehr
+Dominik;Stenzel;Abwehr
 Dominik;Kobel;Tor
+Dominik;Gazdov;Tor
 Nico;Olise;Sturm
 Nico;Otele;Sturm
 Nico;Fellhauer;Mittelfeld
