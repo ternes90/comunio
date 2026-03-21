@@ -1443,15 +1443,30 @@ Neumann;Abwehr;1. FC Köln;0;160.000;160.000;0,0;Halten;Schlecht;0;0.1;Computer;
 Neuer;Torhüter;FC Bayern München;57;550.000;550.000;3,0;Halten;Durchschnittlich;1;0;Computer;20.03.2026
 Bittencourt;Mittelfeld;SV Werder Bremen;26;1.340.000;1.410.000;2,4;Halten;Schlecht;0;1.3;Computer;20.03.2026
 Dorsch;Mittelfeld;1. FC Heidenheim 1846;73;1.330.000;1.370.000;3,0;Halten;Durchschnittlich;0;0.7;Computer;20.03.2026
-Ostrzinski;Torhüter;Borussia Dortmund;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;20.03.2026
+Ostrzinski;Torhüter;Borussia Dortmund;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;20.03.2026
 Rothe;Abwehr;1. FC Union Berlin;26;590.000;600.000;2,2;Halten;Durchschnittlich;0;0;Computer;20.03.2026
 Král;Mittelfeld;1. FC Union Berlin;31;500.000;530.000;1,9;Halten;Schlecht;0;-0.1;Computer;20.03.2026
-Bitshiabu;Abwehr;RB Leipzig;17;460.000;450.000;2,8;Halten;Gut;0;N/A;Computer;20.03.2026
+Bitshiabu;Abwehr;RB Leipzig;17;460.000;450.000;2,8;Halten;Gut;0;;Computer;20.03.2026
 Lynen;Mittelfeld;SV Werder Bremen;75;1.550.000;1.530.000;3,1;Halten;Durchschnittlich;0;0;Computer;20.03.2026
-Eduardo;Stürmer;TSG Hoffenheim;0;300.000;300.000;0,0;Halten;Schlecht;0;N/A;Computer;20.03.2026
-Kristensen;Abwehr;Eintracht Frankfurt;86;1.130.000;1.120.000;4,5;Halten;Gut;0;N/A;Computer;20.03.2026
+Eduardo;Stürmer;TSG Hoffenheim;0;300.000;300.000;0,0;Halten;Schlecht;0;;Computer;20.03.2026
+Kristensen;Abwehr;Eintracht Frankfurt;86;1.130.000;1.120.000;4,5;Halten;Gut;0;;Computer;20.03.2026
 Gomis;Stürmer;RB Leipzig;31;740.000;730.000;2,4;Halten;Schlecht;0;1.4;Computer;20.03.2026
-Darvich;Mittelfeld;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;20.03.2026
-Gharbi;Stürmer;FC Augsburg;11;270.000;270.000;2,2;Halten;Schlecht;0;N/A;Computer;20.03.2026
-Engelns;Abwehr;TSG Hoffenheim;0;270.000;270.000;0,0;Halten;Schlecht;0;N/A;Computer;20.03.2026
+Darvich;Mittelfeld;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;20.03.2026
+Gharbi;Stürmer;FC Augsburg;11;270.000;270.000;2,2;Halten;Schlecht;0;;Computer;20.03.2026
+Engelns;Abwehr;TSG Hoffenheim;0;270.000;270.000;0,0;Halten;Schlecht;0;;Computer;20.03.2026
 Neumann;Abwehr;1. FC Köln;0;160.000;160.000;0,0;Halten;Schlecht;0;0.1;Computer;20.03.2026
+Neuer;Torhüter;FC Bayern München;57;560.000;550.000;3,0;Halten;Durchschnittlich;0;0;Computer;21.03.2026
+Süle;Abwehr;Borussia Dortmund;27;1.590.000;1.570.000;3,4;Halten;Gut;0;2;Computer;21.03.2026
+Stanišić;Abwehr;FC Bayern München;95;8.100.000;8.050.000;5,3;Halten;Durchschnittlich;2;4.9;Computer;21.03.2026
+Rothe;Abwehr;1. FC Union Berlin;26;560.000;580.000;2,2;Halten;Durchschnittlich;0;-0.1;Computer;21.03.2026
+Král;Mittelfeld;1. FC Union Berlin;31;480.000;480.000;1,9;Halten;Schlecht;0;-0.2;Computer;21.03.2026
+Juranović;Abwehr;1. FC Union Berlin;20;1.270.000;1.320.000;3,3;Halten;Gut;0;0.1;Computer;21.03.2026
+Bitshiabu;Abwehr;RB Leipzig;17;440.000;440.000;2,8;Halten;Gut;0;N/A;Computer;21.03.2026
+Lynen;Mittelfeld;SV Werder Bremen;75;1.610.000;1.560.000;3,1;Halten;Durchschnittlich;0;0;Computer;21.03.2026
+Chaves;Abwehr;FC Augsburg;32;1.270.000;1.260.000;3,6;Halten;Gut;0;0.5;Computer;21.03.2026
+Gomis;Stürmer;RB Leipzig;31;730.000;690.000;2,4;Halten;Schlecht;0;1.4;Computer;21.03.2026
+Kiala;Abwehr;FC Bayern München;0;180.000;180.000;0,0;Kaufen;Schlecht;0;N/A;Computer;21.03.2026
+Gharbi;Stürmer;FC Augsburg;11;260.000;260.000;2,2;Halten;Schlecht;0;N/A;Computer;21.03.2026
+Engelns;Abwehr;TSG Hoffenheim;0;260.000;270.000;0,0;Halten;Schlecht;0;N/A;Computer;21.03.2026
+Neumann;Abwehr;1. FC Köln;0;160.000;160.000;0,0;Halten;Schlecht;0;0.1;Computer;21.03.2026
+Prescott;Torhüter;FC Bayern München;0;430.000;430.000;0,0;Halten;Schlecht;0;N/A;Computer;21.03.2026
