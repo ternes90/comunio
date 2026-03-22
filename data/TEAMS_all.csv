@@ -4,8 +4,8 @@ Thomas;Tabaković;Sturm
 Thomas;Nusa;Sturm
 Thomas;Rômulo;Sturm
 Thomas;García;Mittelfeld
-Thomas;Stage;Mittelfeld
 Thomas;Kamiński;Mittelfeld
+Thomas;Stage;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
 Thomas;Raum;Abwehr
 Thomas;Grimaldo;Abwehr
@@ -35,17 +35,17 @@ Alfons;Mæhle;Abwehr
 Alfons;Nicolas;Tor
 Alfons;Neuer;Tor
 Alfons;Schlich;Tor
-Christoph;Diomande;Sturm
 Christoph;Undav;Sturm
+Christoph;Diomande;Sturm
 Christoph;Baumgartner;Mittelfeld
 Christoph;Burger;Mittelfeld
 Christoph;Seiwald;Mittelfeld
 Christoph;F. Nmecha;Mittelfeld
 Christoph;Massengo;Mittelfeld
 Christoph;Jóhannesson;Mittelfeld
-Christoph;Koch;Abwehr
-Christoph;Mainka;Abwehr
 Christoph;Brown;Abwehr
+Christoph;Mainka;Abwehr
+Christoph;Koch;Abwehr
 Christoph;Bernardo;Abwehr
 Christoph;Atubolu;Tor
 Christoph;F. Müller;Tor
@@ -61,8 +61,8 @@ Pascal;Svensson;Abwehr
 Pascal;Elvedi;Abwehr
 Pascal;Baumann;Tor
 Pascal;L. Philipp;Tor
-Andreas;Ache;Sturm
 Andreas;Gnabry;Sturm
+Andreas;Ache;Sturm
 Andreas;Dompé;Sturm
 Andreas;Schmid;Mittelfeld
 Andreas;Doan;Mittelfeld
@@ -79,8 +79,8 @@ Dominik;Kalimuendo;Sturm
 Dominik;Hountondji;Sturm
 Dominik;Kimmich;Mittelfeld
 Dominik;El Khannouss;Mittelfeld
-Dominik;Y. Engelhardt;Mittelfeld
 Dominik;Sambi Lokonga;Mittelfeld
+Dominik;Y. Engelhardt;Mittelfeld
 Dominik;Palacios;Mittelfeld
 Dominik;N. Schlotterbeck;Abwehr
 Dominik;Quansah;Abwehr
@@ -91,8 +91,8 @@ Dominik;Heintz;Abwehr
 Dominik;Kobel;Tor
 Nico;Olise;Sturm
 Nico;Otele;Sturm
-Nico;Fellhauer;Mittelfeld
 Nico;Eriksen;Mittelfeld
+Nico;Fellhauer;Mittelfeld
 Nico;Andrich;Mittelfeld
 Nico;Karazor;Mittelfeld
 Nico;Ouédraogo;Mittelfeld
