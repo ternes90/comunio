@@ -1576,17 +1576,32 @@ Coufal;Abwehr;TSG Hoffenheim;124;7.890.000;7.910.000;4,6;Halten;Schlecht;1;3.8;C
 Kumbedi;Abwehr;VfL Wolfsburg;37;1.360.000;1.370.000;1,9;Halten;Schlecht;0;0.8;Computer;28.03.2026
 Schenten;Stürmer;1. FC Köln;8;310.000;310.000;2,0;Halten;Schlecht;0;0;Computer;28.03.2026
 Can;Abwehr;Borussia Dortmund;50;700.000;690.000;5,6;Halten;Gut;0;0;Computer;29.03.2026
-Zentner;Torhüter;1. FSV Mainz 05;27;600.000;600.000;3,0;Kaufen;Durchschnittlich;2;N/A;Computer;29.03.2026
+Zentner;Torhüter;1. FSV Mainz 05;27;600.000;600.000;3,0;Kaufen;Durchschnittlich;2;;Computer;29.03.2026
 Dahmen;Torhüter;FC Augsburg;79;1.490.000;1.420.000;2,9;Halten;Schlecht;2;2.9;Computer;29.03.2026
 Maloney;Mittelfeld;1. FSV Mainz 05;26;270.000;270.000;1,7;Halten;Schlecht;0;0.2;Computer;29.03.2026
 Nebel;Mittelfeld;1. FSV Mainz 05;90;11.100.000;11.110.000;3,9;Halten;Schlecht;2;5.2;Computer;29.03.2026
 Lindstrøm;Mittelfeld;VfL Wolfsburg;17;1.620.000;1.620.000;1,9;Halten;Schlecht;0;0.4;Computer;29.03.2026
 Honsak;Stürmer;1. FC Heidenheim 1846;45;590.000;590.000;2,1;Halten;Schlecht;0;0.2;Computer;29.03.2026
-Hollerbach;Stürmer;1. FSV Mainz 05;33;300.000;300.000;2,4;Halten;Schlecht;0;N/A;Computer;29.03.2026
+Hollerbach;Stürmer;1. FSV Mainz 05;33;300.000;300.000;2,4;Halten;Schlecht;0;;Computer;29.03.2026
 Veratschnig;Mittelfeld;1. FSV Mainz 05;28;320.000;330.000;1,8;Halten;Schlecht;0;0.1;Computer;29.03.2026
-Schmied;Abwehr;1. FC Köln;23;280.000;280.000;1,8;Halten;Schlecht;0;N/A;Computer;29.03.2026
-Røssing-Lelesiit;Stürmer;Hamburger SV;19;180.000;180.000;1,7;Halten;Schlecht;0;N/A;Computer;29.03.2026
-Markgraf;Abwehr;1. FC Union Berlin;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;29.03.2026
+Schmied;Abwehr;1. FC Köln;23;280.000;280.000;1,8;Halten;Schlecht;0;;Computer;29.03.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;180.000;180.000;1,7;Halten;Schlecht;0;;Computer;29.03.2026
+Markgraf;Abwehr;1. FC Union Berlin;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;29.03.2026
 Philippe;Stürmer;Hamburger SV;75;1.510.000;1.500.000;3,6;Halten;Gut;2;1.5;Computer;29.03.2026
 Schenten;Stürmer;1. FC Köln;8;300.000;300.000;2,0;Halten;Schlecht;0;-0.2;Computer;29.03.2026
 Niang;Stürmer;1. FC Köln;7;580.000;570.000;2,3;Halten;Schlecht;0;0.2;Computer;29.03.2026
+Can;Abwehr;Borussia Dortmund;50;670.000;660.000;5,6;Halten;Gut;0;0;Computer;30.03.2026
+Ritzka;Abwehr;FC St. Pauli;33;560.000;570.000;2,2;Halten;Schlecht;0;0;Computer;30.03.2026
+Dahmen;Torhüter;FC Augsburg;79;1.480.000;1.440.000;2,9;Halten;Schlecht;2;2.9;Computer;30.03.2026
+Maloney;Mittelfeld;1. FSV Mainz 05;26;280.000;280.000;1,7;Halten;Schlecht;0;0.2;Computer;30.03.2026
+Nebel;Mittelfeld;1. FSV Mainz 05;90;11.080.000;11.020.000;3,9;Halten;Schlecht;2;5.2;Computer;30.03.2026
+Lindstrøm;Mittelfeld;VfL Wolfsburg;17;1.640.000;1.650.000;1,9;Halten;Schlecht;0;0.4;Computer;30.03.2026
+Honsak;Stürmer;1. FC Heidenheim 1846;45;580.000;570.000;2,1;Halten;Schlecht;0;0.2;Computer;30.03.2026
+Hollerbach;Stürmer;1. FSV Mainz 05;33;290.000;290.000;2,4;Halten;Schlecht;0;N/A;Computer;30.03.2026
+Veratschnig;Mittelfeld;1. FSV Mainz 05;28;310.000;310.000;1,8;Halten;Schlecht;0;0.1;Computer;30.03.2026
+Schmied;Abwehr;1. FC Köln;23;270.000;270.000;1,8;Halten;Schlecht;0;N/A;Computer;30.03.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;190.000;190.000;1,7;Halten;Schlecht;0;N/A;Computer;30.03.2026
+Markgraf;Abwehr;1. FC Union Berlin;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;30.03.2026
+Philippe;Stürmer;Hamburger SV;75;1.420.000;1.420.000;3,6;Halten;Gut;2;1.5;Computer;30.03.2026
+Schenten;Stürmer;1. FC Köln;8;290.000;290.000;2,0;Halten;Schlecht;0;-0.2;Computer;30.03.2026
+Niang;Stürmer;1. FC Köln;7;550.000;550.000;2,3;Halten;Schlecht;0;0.2;Computer;30.03.2026
