@@ -1636,17 +1636,32 @@ Gharbi;Stürmer;FC Augsburg;11;190.000;190.000;2,2;Halten;Schlecht;0;;Computer;0
 Rasmussen;Mittelfeld;FC St. Pauli;11;720.000;740.000;2,2;Halten;Schlecht;0;0.7;Computer;01.04.2026
 Megeed;Mittelfeld;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;01.04.2026
 Batz;Torhüter;1. FSV Mainz 05;66;1.480.000;1.440.000;4,4;Halten;Gut;2;3.3;Computer;02.04.2026
-Stenzel;Abwehr;VfB Stuttgart;6;170.000;170.000;3,0;Halten;Gut;0;N/A;Computer;02.04.2026
+Stenzel;Abwehr;VfB Stuttgart;6;170.000;170.000;3,0;Halten;Gut;0;;Computer;02.04.2026
 Rönnow;Torhüter;1. FC Union Berlin;71;1.170.000;1.180.000;2,7;Halten;Schlecht;2;2.8;Computer;02.04.2026
-Leitsch;Abwehr;1. FSV Mainz 05;8;170.000;170.000;2,7;Halten;Durchschnittlich;0;N/A;Computer;02.04.2026
+Leitsch;Abwehr;1. FSV Mainz 05;8;170.000;170.000;2,7;Halten;Durchschnittlich;0;;Computer;02.04.2026
 Jenz;Abwehr;VfL Wolfsburg;48;990.000;1.000.000;2,5;Halten;Durchschnittlich;0;0;Computer;02.04.2026
 Beck;Mittelfeld;1. FC Heidenheim 1846;60;550.000;550.000;3,0;Halten;Gut;1;0.6;Computer;02.04.2026
 Lukeba;Abwehr;RB Leipzig;93;6.200.000;6.160.000;4,2;Halten;Schlecht;1;2.6;Computer;02.04.2026
 Dźwigała;Abwehr;FC St. Pauli;56;600.000;590.000;3,5;Halten;Gut;0;0.6;Computer;02.04.2026
-Schmitz;Mittelfeld;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;02.04.2026
+Schmitz;Mittelfeld;FC St. Pauli;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;02.04.2026
 Assignon;Abwehr;VfB Stuttgart;26;910.000;920.000;1,6;Halten;Schlecht;0;1.7;Computer;02.04.2026
 Massengo;Mittelfeld;FC Augsburg;93;2.350.000;2.340.000;3,4;Halten;Durchschnittlich;2;1.5;Computer;02.04.2026
 Bakayoko;Stürmer;RB Leipzig;54;1.550.000;1.540.000;3,6;Halten;Gut;2;2.5;Computer;02.04.2026
-Gharbi;Stürmer;FC Augsburg;11;190.000;190.000;2,2;Halten;Schlecht;0;N/A;Computer;02.04.2026
+Gharbi;Stürmer;FC Augsburg;11;190.000;190.000;2,2;Halten;Schlecht;0;;Computer;02.04.2026
 Rasmussen;Mittelfeld;FC St. Pauli;11;750.000;770.000;2,2;Halten;Schlecht;0;0.7;Computer;02.04.2026
-Megeed;Mittelfeld;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;02.04.2026
+Megeed;Mittelfeld;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;02.04.2026
+Batz;Torhüter;1. FSV Mainz 05;66;1.440.000;1.440.000;4,4;Halten;Gut;4;3.3;Computer;03.04.2026
+Goretzka;Mittelfeld;FC Bayern München;104;6.970.000;6.890.000;4,7;Halten;Durchschnittlich;1;2.9;Computer;03.04.2026
+Rönnow;Torhüter;1. FC Union Berlin;71;1.150.000;1.130.000;2,7;Halten;Schlecht;2;2.8;Computer;03.04.2026
+Knauff;Mittelfeld;Eintracht Frankfurt;81;3.200.000;3.210.000;3,9;Halten;Gut;2;0.5;Computer;03.04.2026
+Lee;Mittelfeld;1. FSV Mainz 05;105;6.320.000;6.370.000;4,2;Halten;Durchschnittlich;1;3.1;Computer;03.04.2026
+Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;03.04.2026
+Lukeba;Abwehr;RB Leipzig;93;6.390.000;6.390.000;4,2;Halten;Schlecht;1;2.6;Computer;03.04.2026
+Eduardo;Stürmer;TSG Hoffenheim;0;230.000;230.000;0,0;Halten;Schlecht;0;N/A;Computer;03.04.2026
+Schmitz;Mittelfeld;FC St. Pauli;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;03.04.2026
+Dickes;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Verkaufen;Schlecht;0;N/A;Computer;03.04.2026
+Massengo;Mittelfeld;FC Augsburg;93;2.360.000;2.340.000;3,4;Halten;Durchschnittlich;2;1.5;Computer;03.04.2026
+I. Schmidt;Abwehr;SV Werder Bremen;39;300.000;300.000;2,6;Halten;Durchschnittlich;0;0.3;Computer;03.04.2026
+Gharbi;Stürmer;FC Augsburg;11;190.000;190.000;2,2;Halten;Schlecht;0;N/A;Computer;03.04.2026
+Harder;Stürmer;RB Leipzig;65;2.160.000;2.160.000;3,1;Halten;Durchschnittlich;1;4;Computer;03.04.2026
+Megeed;Mittelfeld;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;03.04.2026
