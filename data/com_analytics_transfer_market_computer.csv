@@ -1666,17 +1666,32 @@ Gharbi;Stürmer;FC Augsburg;11;190.000;190.000;2,2;Halten;Schlecht;0;;Computer;0
 Harder;Stürmer;RB Leipzig;65;2.160.000;2.160.000;3,1;Halten;Durchschnittlich;1;4;Computer;03.04.2026
 Megeed;Mittelfeld;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;03.04.2026
 Goretzka;Mittelfeld;FC Bayern München;104;6.910.000;6.870.000;4,7;Halten;Durchschnittlich;1;3;Computer;04.04.2026
-Jatta;Stürmer;Hamburger SV;27;780.000;780.000;2,5;Halten;Schlecht;0;N/A;Computer;04.04.2026
+Jatta;Stürmer;Hamburger SV;27;780.000;780.000;2,5;Halten;Schlecht;0;;Computer;04.04.2026
 Krauß;Mittelfeld;1. FC Köln;76;1.450.000;1.440.000;3,5;Halten;Gut;0;1.1;Computer;04.04.2026
 Knauff;Mittelfeld;Eintracht Frankfurt;81;3.130.000;3.150.000;3,9;Halten;Gut;0;0.5;Computer;04.04.2026
 Lee;Mittelfeld;1. FSV Mainz 05;105;6.430.000;6.430.000;4,2;Halten;Durchschnittlich;1;3;Computer;04.04.2026
-Diehl;Stürmer;VfB Stuttgart;0;170.000;170.000;2,4;Halten;Schlecht;0;N/A;Computer;04.04.2026
-Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;04.04.2026
-Eduardo;Stürmer;TSG Hoffenheim;0;220.000;220.000;0,0;Halten;Schlecht;0;N/A;Computer;04.04.2026
+Diehl;Stürmer;VfB Stuttgart;0;170.000;170.000;2,4;Halten;Schlecht;0;;Computer;04.04.2026
+Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;04.04.2026
+Eduardo;Stürmer;TSG Hoffenheim;0;220.000;220.000;0,0;Halten;Schlecht;0;;Computer;04.04.2026
 Uzun;Stürmer;Eintracht Frankfurt;81;9.260.000;9.130.000;5,4;Halten;Gut;1;0.8;Computer;04.04.2026
-Dickes;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Verkaufen;Schlecht;0;N/A;Computer;04.04.2026
+Dickes;Torhüter;Hamburger SV;0;160.000;160.000;0,0;Verkaufen;Schlecht;0;;Computer;04.04.2026
 Mikelbrencis;Abwehr;Hamburger SV;35;1.200.000;1.220.000;1,9;Halten;Schlecht;0;2.9;Computer;04.04.2026
 Kofane;Stürmer;Bayer 04 Leverkusen;92;4.550.000;4.590.000;4,0;Halten;Durchschnittlich;0;5.3;Computer;04.04.2026
 I. Schmidt;Abwehr;SV Werder Bremen;39;310.000;310.000;2,6;Halten;Durchschnittlich;0;0.2;Computer;04.04.2026
 Harder;Stürmer;RB Leipzig;65;2.110.000;2.090.000;3,1;Halten;Durchschnittlich;0;4.1;Computer;04.04.2026
 Potulski;Abwehr;1. FSV Mainz 05;41;850.000;840.000;3,7;Halten;Gut;0;0.8;Computer;04.04.2026
+Goretzka;Mittelfeld;FC Bayern München;104;6.820.000;6.630.000;4,5;Halten;Durchschnittlich;1;3;Computer;05.04.2026
+Jatta;Stürmer;Hamburger SV;27;780.000;790.000;2,5;Halten;Durchschnittlich;0;N/A;Computer;05.04.2026
+Krauß;Mittelfeld;1. FC Köln;76;1.400.000;1.380.000;3,5;Halten;Gut;0;1;Computer;05.04.2026
+Lee;Mittelfeld;1. FSV Mainz 05;105;6.530.000;6.180.000;4,0;Halten;Durchschnittlich;1;3;Computer;05.04.2026
+Diehl;Stürmer;VfB Stuttgart;0;160.000;170.000;2,4;Halten;Durchschnittlich;0;N/A;Computer;05.04.2026
+Tschernuth;Torhüter;1. FC Heidenheim 1846;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;05.04.2026
+Eduardo;Stürmer;TSG Hoffenheim;0;210.000;210.000;0,0;Halten;Schlecht;0;N/A;Computer;05.04.2026
+Uzun;Stürmer;Eintracht Frankfurt;81;9.860.000;9.750.000;5,4;Halten;Gut;1;0.8;Computer;05.04.2026
+Dickes;Torhüter;Hamburger SV;0;160.000;180.000;0,0;Verkaufen;Schlecht;0;N/A;Computer;05.04.2026
+Mikelbrencis;Abwehr;Hamburger SV;35;1.310.000;1.480.000;1,8;Kaufen;Schlecht;1;2.9;Computer;05.04.2026
+Karl;Mittelfeld;FC Bayern München;96;9.890.000;10.510.000;4,2;Halten;Schlecht;2;2.7;Computer;05.04.2026
+Kofane;Stürmer;Bayer 04 Leverkusen;92;4.510.000;4.930.000;3,8;Kaufen;Durchschnittlich;2;5.3;Computer;05.04.2026
+I. Schmidt;Abwehr;SV Werder Bremen;39;290.000;290.000;2,6;Halten;Durchschnittlich;0;0.2;Computer;05.04.2026
+Harder;Stürmer;RB Leipzig;65;2.030.000;2.110.000;3,0;Halten;Durchschnittlich;0;4.1;Computer;05.04.2026
+Potulski;Abwehr;1. FSV Mainz 05;41;920.000;1.160.000;3,4;Kaufen;Gut;1;0.8;Computer;05.04.2026
