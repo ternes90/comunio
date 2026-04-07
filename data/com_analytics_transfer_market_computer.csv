@@ -1699,14 +1699,29 @@ Arnold;Mittelfeld;VfL Wolfsburg;104;4.930.000;4.800.000;4,5;Halten;Gut;1;1.5;Com
 Gerhardt;Mittelfeld;VfL Wolfsburg;39;720.000;700.000;3,0;Halten;Durchschnittlich;0;0.6;Computer;06.04.2026
 Vagnoman;Abwehr;VfB Stuttgart;66;1.630.000;1.630.000;3,3;Halten;Durchschnittlich;0;1.4;Computer;06.04.2026
 Scally;Abwehr;Borussia Mönchengladbach;69;1.070.000;1.020.000;2,7;Verkaufen;Durchschnittlich;0;1;Computer;06.04.2026
-Diehl;Stürmer;VfB Stuttgart;0;170.000;170.000;2,4;Halten;Durchschnittlich;0;N/A;Computer;06.04.2026
+Diehl;Stürmer;VfB Stuttgart;0;170.000;170.000;2,4;Halten;Durchschnittlich;0;;Computer;06.04.2026
 Topp;Stürmer;SV Werder Bremen;53;840.000;860.000;2,8;Halten;Durchschnittlich;0;0;Computer;06.04.2026
 Vandevoordt;Torhüter;RB Leipzig;26;1.330.000;1.310.000;3,7;Halten;Durchschnittlich;2;1.9;Computer;06.04.2026
-B. Dárdai;Mittelfeld;VfL Wolfsburg;3;160.000;170.000;3,0;Halten;Gut;0;N/A;Computer;06.04.2026
+B. Dárdai;Mittelfeld;VfL Wolfsburg;3;160.000;170.000;3,0;Halten;Gut;0;;Computer;06.04.2026
 Couto;Abwehr;Borussia Dortmund;64;880.000;860.000;4,0;Halten;Gut;0;1.1;Computer;06.04.2026
 Čović;Mittelfeld;SV Werder Bremen;28;530.000;590.000;2,2;Halten;Schlecht;0;0.5;Computer;06.04.2026
-Robatsch;Abwehr;FC St. Pauli;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;06.04.2026
+Robatsch;Abwehr;FC St. Pauli;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;06.04.2026
 Karl;Mittelfeld;FC Bayern München;105;10.050.000;10.410.000;4,6;Halten;Schlecht;2;2.5;Computer;06.04.2026
-Hellstern;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;06.04.2026
+Hellstern;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;06.04.2026
 Arévalo;Stürmer;VfB Stuttgart;10;460.000;450.000;2,5;Halten;Durchschnittlich;0;1.6;Computer;06.04.2026
-Nandja;Abwehr;Hamburger SV;0;160.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;06.04.2026
+Nandja;Abwehr;Hamburger SV;0;160.000;170.000;0,0;Halten;Schlecht;0;;Computer;06.04.2026
+Arnold;Mittelfeld;VfL Wolfsburg;104;4.880.000;4.840.000;4,5;Halten;Gut;1;1.3;Computer;07.04.2026
+Gerhardt;Mittelfeld;VfL Wolfsburg;39;680.000;690.000;3,0;Halten;Durchschnittlich;0;0.5;Computer;07.04.2026
+Hack;Stürmer;Borussia Mönchengladbach;14;1.720.000;1.630.000;3,5;Halten;Gut;0;N/A;Computer;07.04.2026
+Vagnoman;Abwehr;VfB Stuttgart;66;1.510.000;1.460.000;3,3;Halten;Gut;0;1.4;Computer;07.04.2026
+Scally;Abwehr;Borussia Mönchengladbach;69;1.020.000;1.010.000;2,7;Halten;Durchschnittlich;0;0.4;Computer;07.04.2026
+Topp;Stürmer;SV Werder Bremen;53;790.000;780.000;2,8;Halten;Durchschnittlich;0;0;Computer;07.04.2026
+Vandevoordt;Torhüter;RB Leipzig;26;1.410.000;1.390.000;3,7;Halten;Durchschnittlich;2;3.2;Computer;07.04.2026
+B. Dárdai;Mittelfeld;VfL Wolfsburg;3;160.000;160.000;3,0;Halten;Gut;1;N/A;Computer;07.04.2026
+Rieder;Mittelfeld;FC Augsburg;104;4.080.000;4.270.000;4,2;Halten;Gut;0;3.7;Computer;07.04.2026
+Couto;Abwehr;Borussia Dortmund;64;810.000;790.000;4,0;Halten;Gut;1;1.1;Computer;07.04.2026
+Čović;Mittelfeld;SV Werder Bremen;28;570.000;610.000;2,2;Halten;Schlecht;0;1.2;Computer;07.04.2026
+Robatsch;Abwehr;FC St. Pauli;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;07.04.2026
+Hellstern;Torhüter;VfB Stuttgart;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;07.04.2026
+Arévalo;Stürmer;VfB Stuttgart;10;440.000;430.000;2,5;Halten;Durchschnittlich;0;1.9;Computer;07.04.2026
+Nandja;Abwehr;Hamburger SV;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;07.04.2026
