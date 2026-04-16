@@ -1830,8 +1830,8 @@ Manzambi;Mittelfeld;Sport-Club Freiburg;110;8.210.000;8.420.000;4,8;Halten;Durch
 Frees;Abwehr;TSG Hoffenheim;0;170.000;170.000;0,0;Halten;Schlecht;0;;Computer;14.04.2026
 I. Schmidt;Abwehr;SV Werder Bremen;39;240.000;230.000;2,4;Halten;Durchschnittlich;1;0.9;Computer;14.04.2026
 Cleiton;Abwehr;VfL Wolfsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;14.04.2026
-Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Durchschnittlich;0;N/A;Computer;15.04.2026
-Kleindienst;Stürmer;Borussia Mönchengladbach;2;990.000;970.000;2,0;Halten;Schlecht;0;N/A;Computer;15.04.2026
+Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Durchschnittlich;0;;Computer;15.04.2026
+Kleindienst;Stürmer;Borussia Mönchengladbach;2;990.000;970.000;2,0;Halten;Schlecht;0;;Computer;15.04.2026
 Lienhart;Abwehr;Sport-Club Freiburg;49;3.750.000;3.840.000;3,3;Halten;Schlecht;0;0.7;Computer;15.04.2026
 Schick;Stürmer;Bayer 04 Leverkusen;124;12.000.000;11.890.000;5,4;Halten;Schlecht;2;6.9;Computer;15.04.2026
 Svanberg;Mittelfeld;VfL Wolfsburg;49;520.000;510.000;2,3;Halten;Schlecht;0;0;Computer;15.04.2026
@@ -1840,8 +1840,23 @@ Juranović;Abwehr;1. FC Union Berlin;22;660.000;660.000;3,1;Halten;Gut;2;0.5;Com
 Honsak;Stürmer;1. FC Heidenheim 1846;62;1.600.000;1.910.000;2,7;Kaufen;Schlecht;1;1.2;Computer;15.04.2026
 Sinani;Stürmer;FC St. Pauli;120;4.220.000;4.270.000;4,8;Halten;Gut;4;4.7;Computer;15.04.2026
 Manzambi;Mittelfeld;Sport-Club Freiburg;110;8.140.000;8.390.000;4,8;Halten;Durchschnittlich;1;0;Computer;15.04.2026
-Røssing-Lelesiit;Stürmer;Hamburger SV;19;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;15.04.2026
-Frees;Abwehr;TSG Hoffenheim;0;170.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;15.04.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;170.000;170.000;1,7;Halten;Schlecht;0;;Computer;15.04.2026
+Frees;Abwehr;TSG Hoffenheim;0;170.000;160.000;0,0;Halten;Schlecht;0;;Computer;15.04.2026
 I. Schmidt;Abwehr;SV Werder Bremen;39;240.000;230.000;2,4;Halten;Durchschnittlich;1;0.9;Computer;15.04.2026
 Arrhov;Mittelfeld;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;-0.3;Computer;15.04.2026
 Simpson-Pusey;Abwehr;1. FC Köln;13;1.540.000;1.640.000;1,9;Halten;Schlecht;0;-0.1;Computer;15.04.2026
+Drewes;Torhüter;Borussia Dortmund;0;160.000;160.000;2,5;Halten;Durchschnittlich;0;N/A;Computer;16.04.2026
+Gouweleeuw;Abwehr;FC Augsburg;13;2.280.000;2.310.000;2,2;Halten;Schlecht;0;0.2;Computer;16.04.2026
+Kleindienst;Stürmer;Borussia Mönchengladbach;2;960.000;940.000;2,0;Halten;Schlecht;0;N/A;Computer;16.04.2026
+Lienhart;Abwehr;Sport-Club Freiburg;49;3.790.000;3.890.000;3,3;Halten;Schlecht;0;0.7;Computer;16.04.2026
+Schick;Stürmer;Bayer 04 Leverkusen;124;12.570.000;12.510.000;5,4;Halten;Schlecht;2;7;Computer;16.04.2026
+Ibrahimović;Mittelfeld;1. FC Heidenheim 1846;100;2.430.000;2.520.000;3,7;Halten;Gut;2;0.7;Computer;16.04.2026
+Juranović;Abwehr;1. FC Union Berlin;22;630.000;660.000;3,1;Halten;Gut;2;0.5;Computer;16.04.2026
+Honsak;Stürmer;1. FC Heidenheim 1846;62;1.680.000;1.840.000;2,7;Halten;Schlecht;0;1.1;Computer;16.04.2026
+Jeltsch;Abwehr;VfB Stuttgart;59;2.020.000;2.000.000;3,0;Halten;Durchschnittlich;3;0.8;Computer;16.04.2026
+Røssing-Lelesiit;Stürmer;Hamburger SV;19;170.000;170.000;1,7;Halten;Schlecht;0;N/A;Computer;16.04.2026
+Frees;Abwehr;TSG Hoffenheim;0;170.000;170.000;0,0;Halten;Schlecht;0;N/A;Computer;16.04.2026
+I. Schmidt;Abwehr;SV Werder Bremen;39;240.000;240.000;2,4;Halten;Durchschnittlich;1;1;Computer;16.04.2026
+Arrhov;Mittelfeld;Eintracht Frankfurt;0;170.000;170.000;0,0;Halten;Schlecht;0;-0.3;Computer;16.04.2026
+Simpson-Pusey;Abwehr;1. FC Köln;13;1.630.000;1.660.000;1,9;Halten;Schlecht;0;-0.1;Computer;16.04.2026
+Niang;Stürmer;1. FC Köln;7;360.000;360.000;2,3;Halten;Schlecht;0;0.3;Computer;16.04.2026
