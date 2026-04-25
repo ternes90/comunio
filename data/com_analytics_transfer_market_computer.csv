@@ -1966,17 +1966,32 @@ Jovanović;Stürmer;VfB Stuttgart;6;160.000;160.000;2,0;Halten;Schlecht;0;;Compu
 Badé;Abwehr;Bayer 04 Leverkusen;88;5.450.000;5.470.000;4,0;Halten;Schlecht;1;2.8;Computer;23.04.2026
 Schlich;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;23.04.2026
 Kohr;Abwehr;1. FSV Mainz 05;82;2.080.000;2.200.000;3,3;Halten;Durchschnittlich;1;1.8;Computer;24.04.2026
-Stenzel;Abwehr;VfB Stuttgart;6;190.000;190.000;3,0;Halten;Gut;0;N/A;Computer;24.04.2026
+Stenzel;Abwehr;VfB Stuttgart;6;190.000;190.000;3,0;Halten;Gut;0;;Computer;24.04.2026
 Gnabry;Stürmer;FC Bayern München;124;8.270.000;8.240.000;5,9;Halten;Gut;1;0;Computer;24.04.2026
-Hübers;Abwehr;1. FC Köln;30;160.000;160.000;3,8;Halten;Gut;0;N/A;Computer;24.04.2026
+Hübers;Abwehr;1. FC Köln;30;160.000;160.000;3,8;Halten;Gut;0;;Computer;24.04.2026
 Dahmen;Torhüter;FC Augsburg;94;1.240.000;1.320.000;3,1;Halten;Schlecht;2;3.3;Computer;24.04.2026
 Scherhant;Stürmer;Sport-Club Freiburg;84;2.320.000;2.310.000;3,1;Halten;Durchschnittlich;1;0.5;Computer;24.04.2026
 Nsoki;Abwehr;1. FC Union Berlin;32;430.000;430.000;2,7;Halten;Durchschnittlich;0;0.5;Computer;24.04.2026
 Stergiou;Abwehr;1. FC Heidenheim 1846;9;280.000;280.000;2,3;Halten;Durchschnittlich;0;0.5;Computer;24.04.2026
 Amenda;Abwehr;Eintracht Frankfurt;54;3.300.000;3.240.000;3,0;Halten;Schlecht;0;3.5;Computer;24.04.2026
-Adeh;Mittelfeld;SV Werder Bremen;0;170.000;170.000;0,0;Kaufen;Schlecht;0;N/A;Computer;24.04.2026
+Adeh;Mittelfeld;SV Werder Bremen;0;170.000;170.000;0,0;Kaufen;Schlecht;0;;Computer;24.04.2026
 B. Touré;Mittelfeld;TSG Hoffenheim;112;6.310.000;6.290.000;4,3;Halten;Durchschnittlich;2;5.3;Computer;24.04.2026
 Königsdörffer;Stürmer;Hamburger SV;97;3.430.000;3.440.000;3,2;Halten;Durchschnittlich;1;2.2;Computer;24.04.2026
 Capaldo;Mittelfeld;Hamburger SV;80;3.280.000;3.300.000;3,6;Halten;Durchschnittlich;3;1.1;Computer;24.04.2026
-Cleiton;Abwehr;VfL Wolfsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;N/A;Computer;24.04.2026
-Schlich;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;24.04.2026
+Cleiton;Abwehr;VfL Wolfsburg;0;180.000;180.000;0,0;Halten;Schlecht;0;;Computer;24.04.2026
+Schlich;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;0,0;Halten;Schlecht;0;;Computer;24.04.2026
+Heintz;Abwehr;1. FC Köln;16;160.000;160.000;2,3;Halten;Durchschnittlich;0;N/A;Computer;25.04.2026
+Kohr;Abwehr;1. FSV Mainz 05;82;2.180.000;2.180.000;3,3;Halten;Durchschnittlich;0;1.7;Computer;25.04.2026
+Stenzel;Abwehr;VfB Stuttgart;6;190.000;190.000;3,0;Halten;Gut;0;N/A;Computer;25.04.2026
+Hübers;Abwehr;1. FC Köln;30;160.000;160.000;3,8;Halten;Gut;0;N/A;Computer;25.04.2026
+Glatzel;Stürmer;Hamburger SV;49;2.410.000;2.500.000;2,9;Halten;Schlecht;0;1.4;Computer;25.04.2026
+Scherhant;Stürmer;Sport-Club Freiburg;84;2.200.000;2.190.000;3,1;Halten;Durchschnittlich;0;0.4;Computer;25.04.2026
+Stergiou;Abwehr;1. FC Heidenheim 1846;9;280.000;280.000;2,3;Halten;Durchschnittlich;0;0.5;Computer;25.04.2026
+Amenda;Abwehr;Eintracht Frankfurt;54;3.240.000;3.200.000;3,0;Halten;Schlecht;0;3.5;Computer;25.04.2026
+Højlund;Mittelfeld;Eintracht Frankfurt;41;3.170.000;3.210.000;2,0;Halten;Schlecht;0;2.7;Computer;25.04.2026
+Adeh;Mittelfeld;SV Werder Bremen;0;170.000;170.000;0,0;Kaufen;Schlecht;0;N/A;Computer;25.04.2026
+M. El Mala;Stürmer;1. FC Köln;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;25.04.2026
+Capaldo;Mittelfeld;Hamburger SV;80;3.290.000;3.280.000;3,6;Halten;Durchschnittlich;0;1;Computer;25.04.2026
+Omari;Abwehr;Hamburger SV;38;1.340.000;1.370.000;2,4;Halten;Schlecht;0;1.4;Computer;25.04.2026
+Cleiton;Abwehr;VfL Wolfsburg;0;190.000;190.000;0,0;Kaufen;Schlecht;0;N/A;Computer;25.04.2026
+Schlich;Torhüter;Bayer 04 Leverkusen;0;160.000;160.000;0,0;Halten;Schlecht;0;N/A;Computer;25.04.2026
