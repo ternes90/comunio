@@ -1,15 +1,15 @@
 ﻿Manager;Spieler;Position
 Thomas;Kane;Sturm
-Thomas;Nusa;Sturm
 Thomas;Schick;Sturm
+Thomas;Nusa;Sturm
 Thomas;Rômulo;Sturm
 Thomas;Demirović;Sturm
 Thomas;Ogundu;Sturm
 Thomas;García;Mittelfeld
 Thomas;Kamiński;Mittelfeld
 Thomas;M. Eggestein;Mittelfeld
-Thomas;Raum;Abwehr
 Thomas;Grimaldo;Abwehr
+Thomas;Raum;Abwehr
 Thomas;Prass;Abwehr
 Thomas;Nübel;Tor
 Thomas;Bredlow;Tor
@@ -24,12 +24,12 @@ Alfons;Manzambi;Mittelfeld
 Alfons;Reitz;Mittelfeld
 Alfons;Remberg;Mittelfeld
 Alfons;Ginter;Abwehr
-Alfons;Stanišić;Abwehr
 Alfons;Bensebaini;Abwehr
+Alfons;Stanišić;Abwehr
 Alfons;Upamecano;Abwehr
 Alfons;Badé;Abwehr
-Alfons;Kristensen;Abwehr
 Alfons;Kohr;Abwehr
+Alfons;Kristensen;Abwehr
 Alfons;Amenda;Abwehr
 Alfons;Nicolas;Tor
 Alfons;Dahmen;Tor
@@ -62,8 +62,8 @@ Andreas;Matanović;Sturm
 Andreas;Njinmah;Sturm
 Andreas;Königsdörffer;Sturm
 Andreas;Schmid;Mittelfeld
-Andreas;Sano;Mittelfeld
 Andreas;Doan;Mittelfeld
+Andreas;Sano;Mittelfeld
 Andreas;Kerber;Mittelfeld
 Andreas;L. Vušković;Abwehr
 Andreas;Laimer;Abwehr
@@ -72,8 +72,8 @@ Andreas;Theate;Abwehr
 Andreas;Heuer Fernandes;Tor
 Dominik;Luis Díaz;Sturm
 Dominik;Guirassy;Sturm
-Dominik;Scherhant;Sturm
 Dominik;Uzun;Sturm
+Dominik;Scherhant;Sturm
 Dominik;Amaimouni-Echghouyab;Sturm
 Dominik;Kimmich;Mittelfeld
 Dominik;El Khannouss;Mittelfeld
@@ -81,8 +81,8 @@ Dominik;B. Touré;Mittelfeld
 Dominik;Nebel;Mittelfeld
 Dominik;Palacios;Mittelfeld
 Dominik;N. Schlotterbeck;Abwehr
-Dominik;Chabot;Abwehr
 Dominik;Quansah;Abwehr
+Dominik;Chabot;Abwehr
 Dominik;Kobel;Tor
 Nico;Olise;Sturm
 Nico;Höler;Sturm
